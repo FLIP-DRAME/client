@@ -120,7 +120,7 @@ class _TopNavigation extends StatelessWidget {
             child: Row(
               children: <Widget>[
                 const Text(
-                  'DRAME',
+                  'Drame',
                   style: TextStyle(
                     color: _navy,
                     fontSize: 34,
@@ -133,10 +133,10 @@ class _TopNavigation extends StatelessWidget {
                   _NavText('견적요청'),
                   _NavText('촬영자 찾기'),
                   _NavText('포트폴리오'),
-                  _NavText('커뮤니티'),
+                  // _NavText('커뮤니티'),
                 ],
                 const Spacer(),
-                if (!compact) const _TopSearch(),
+                // if (!compact) const _TopSearch(),
                 const SizedBox(width: 22),
                 TextButton(onPressed: () {}, child: const Text('로그인 / 회원가입')),
                 FilledButton(
@@ -176,18 +176,18 @@ class _HeroIntro extends StatelessWidget {
       child: Column(
         children: <Widget>[
           const Text(
-            'DRAME: 드론 매칭 플랫폼',
+            '필요한 드론 작업, 검증된 조종사와 빠르게 연결하세요',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: _ink,
-              fontSize: 34,
+              fontSize: 32,
               fontWeight: FontWeight.w900,
               letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 16),
           const Text(
-            '촬영, 방제, 점검, 측량까지 필요한 드론 서비스를 검증된 운용자와 바로 연결합니다.',
+            '항공 촬영부터 방제, 점검, 측량까지 한 번에',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: _muted,
@@ -235,8 +235,8 @@ class _CategoryStrip extends StatelessWidget {
         label: '행사촬영',
         color: Color(0xFF8D6BFF),
       ),
-      (icon: Icons.flash_on_rounded, label: '라이트쇼', color: Color(0xFF2D9CDB)),
-      (icon: Icons.waves_rounded, label: '해양·산림', color: Color(0xFF1F9D78)),
+      // (icon: Icons.flash_on_rounded, label: '라이트쇼', color: Color(0xFF2D9CDB)),
+      // (icon: Icons.waves_rounded, label: '해양·산림', color: Color(0xFF1F9D78)),
     ];
 
     return SingleChildScrollView(

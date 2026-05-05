@@ -77,10 +77,10 @@ class _AreaFilter extends StatelessWidget {
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 14,
+                      vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: selected ? _ink : Colors.white,
+                      color: selected ? Color(0xFF1E3A5F) : Colors.white,
                       borderRadius: BorderRadius.circular(8), // 기존 디자인 유지
                       border: Border.all(color: selected ? _ink : _line),
                     ),
@@ -215,11 +215,11 @@ class _PilotPanel extends StatelessWidget {
               label: '촬영 가능 위치',
               value: pilot.availableAreas.join(', '),
             ),
-            _InfoRow(
-              icon: Icons.verified_user_outlined,
-              label: '허가 지역',
-              value: pilot.permittedAreas.join(', '),
-            ),
+            // _InfoRow(
+            //   icon: Icons.verified_user_outlined,
+            //   label: '허가 지역',
+            //   value: pilot.permittedAreas.join(', '),
+            // ),
             _InfoRow(
               icon: Icons.call_outlined,
               label: '연락처',
