@@ -21,6 +21,7 @@ class DrameApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'DRAME',
       theme: ThemeData(
+        fontFamily: 'Pretendard',
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2563EB),
           primary: const Color(0xFF111827),

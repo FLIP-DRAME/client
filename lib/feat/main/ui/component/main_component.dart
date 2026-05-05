@@ -1,5 +1,122 @@
 part of '../pages/main_page.dart';
 
+class AppText {
+  static const TextStyle eyebrow = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: -0.1,
+    color: _muted,
+  );
+
+  static const TextStyle sectionTitle = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    letterSpacing: -0.6,
+    color: _ink,
+  );
+
+  static const TextStyle nav = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+    letterSpacing: -0.2,
+    color: _ink,
+  );
+
+  static const TextStyle chip = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    height: 1.25,
+    letterSpacing: -0.2,
+  );
+
+  static const TextStyle cardTitle = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 22,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    letterSpacing: -0.45,
+    color: _ink,
+  );
+
+  static const TextStyle cardSubtitle = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.45,
+    letterSpacing: -0.1,
+    color: _muted,
+  );
+
+  static const TextStyle infoLabel = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+    letterSpacing: -0.1,
+    color: _muted,
+  );
+
+  static const TextStyle infoValue = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    letterSpacing: -0.1,
+    color: _ink,
+  );
+
+  static const TextStyle metricLabel = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    height: 1.35,
+    letterSpacing: -0.1,
+    color: _muted,
+  );
+
+  static const TextStyle metricValue = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 21,
+    fontWeight: FontWeight.w800,
+    height: 1.2,
+    letterSpacing: -0.4,
+    color: _ink,
+  );
+
+  static const TextStyle portfolioTitle = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    height: 1.3,
+    letterSpacing: -0.25,
+    color: _ink,
+  );
+
+  static const TextStyle smallStrong = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+    letterSpacing: -0.15,
+    color: _ink,
+  );
+
+  static const TextStyle button = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: -0.15,
+  );
+}
+
 class _PopularPortfolioSection extends StatelessWidget {
   const _PopularPortfolioSection({required this.store});
 
@@ -80,16 +197,16 @@ class _AreaFilter extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: selected ? Color(0xFF1E3A5F) : Colors.white,
+                      color: selected ? Colors.black : Colors.white,
                       borderRadius: BorderRadius.circular(8), // 기존 디자인 유지
                       border: Border.all(color: selected ? _ink : _line),
                     ),
                     child: Text(
                       area,
-                      style: TextStyle(
+                      style: AppText.chip.copyWith(
                         color: selected ? Colors.white : _ink,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w600,
                       ),
                     ),
                   ),
@@ -183,27 +300,12 @@ class _PilotPanel extends StatelessWidget {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Expanded(
-                  child: Text(
-                    pilot.name,
-                    style: const TextStyle(
-                      color: _ink,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
+                Expanded(child: Text(pilot.name, style: AppText.cardTitle)),
                 if (hasPriority) const _PriorityBadge(),
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              pilot.specialty,
-              style: const TextStyle(
-                color: _muted,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            Text(pilot.specialty, style: AppText.cardSubtitle),
             const SizedBox(height: 20),
             _InfoRow(
               icon: Icons.place_outlined,
@@ -238,10 +340,20 @@ class _PilotPanel extends StatelessWidget {
                 _Metric(label: '완료 촬영', value: '${pilot.completedJobs}건'),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 28),
             FilledButton.icon(
+              style: FilledButton.styleFrom(
+                textStyle: AppText.button,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 26,
+                  vertical: 28,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               onPressed: () => _openPortfolio(context, pilot),
-              icon: const Icon(Icons.arrow_forward_rounded),
+              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
               label: const Text('촬영 제안 보내기'),
             ),
           ],
@@ -292,23 +404,9 @@ class _SectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                eyebrow,
-                style: const TextStyle(
-                  color: _muted,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text(eyebrow, style: AppText.eyebrow),
               const SizedBox(height: 7),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: _ink,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+              Text(title, style: AppText.sectionTitle),
             ],
           ),
         ),
@@ -360,14 +458,7 @@ class _NavText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(right: 24),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: _ink,
-          fontSize: 16,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+      child: Text(label, style: AppText.nav),
     );
   }
 }
@@ -408,9 +499,9 @@ class _PortfolioCategoryChips extends StatelessWidget {
                   ),
                   child: Text(
                     category,
-                    style: TextStyle(
+                    style: AppText.chip.copyWith(
                       color: selected ? Colors.white : _ink,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                     ),
                   ),
                 ),
@@ -454,20 +545,10 @@ class _PilotPortfolioCard extends StatelessWidget {
                     pilot.specialty,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _muted,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppText.cardSubtitle,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    pilot.name,
-                    style: const TextStyle(
-                      color: _ink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+                  Text(pilot.name, style: AppText.portfolioTitle),
                   const SizedBox(height: 9),
                   Row(
                     children: <Widget>[
@@ -479,18 +560,12 @@ class _PilotPortfolioCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${pilot.rating.toStringAsFixed(1)} (${pilot.completedJobs})',
-                        style: const TextStyle(
-                          color: _ink,
-                          fontWeight: FontWeight.w900,
-                        ),
+                        style: AppText.smallStrong,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '· ${pilot.priceLabel}',
-                        style: const TextStyle(
-                          color: _muted,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: AppText.cardSubtitle,
                       ),
                     ],
                   ),
@@ -588,19 +663,27 @@ class _PermitPill extends StatelessWidget {
         area == '전체' ? '지역 선택 시 허가 운용자 우선 표시' : '$area 허가 운용자 우선 표시 중';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
+        color: Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: _line),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(Icons.verified_outlined, color: _mint, size: 18),
-          const SizedBox(width: 8),
+          const Icon(Icons.verified_outlined, color: _mint, size: 17),
+          const SizedBox(width: 7),
           Text(
             message,
-            style: const TextStyle(color: _ink, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              color: _ink,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.25,
+              letterSpacing: -0.1,
+            ),
           ),
         ],
       ),
@@ -986,22 +1069,8 @@ class _InfoRow extends StatelessWidget {
         children: <Widget>[
           Icon(icon, size: 20, color: _navy),
           const SizedBox(width: 10),
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: _muted,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: _ink, fontWeight: FontWeight.w900),
-            ),
-          ),
+          SizedBox(width: 100, child: Text(label, style: AppText.infoLabel)),
+          Expanded(child: Text(value, style: AppText.infoValue)),
         ],
       ),
     );
@@ -1026,22 +1095,9 @@ class _Metric extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              label,
-              style: const TextStyle(
-                color: _muted,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            Text(label, style: AppText.metricLabel),
             const SizedBox(height: 5),
-            Text(
-              value,
-              style: const TextStyle(
-                color: _ink,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+            Text(value, style: AppText.metricValue),
           ],
         ),
       ),

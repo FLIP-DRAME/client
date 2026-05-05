@@ -59,14 +59,7 @@ class _PortfolioMain extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      pilot.name,
-                      style: const TextStyle(
-                        color: _ink,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                    Text(pilot.name, style: PortfolioText.profileName),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 12,
@@ -89,11 +82,7 @@ class _PortfolioMain extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       '${pilot.specialty}를 중심으로 촬영 전 허가와 현장 동선을 함께 설계합니다.',
-                      style: const TextStyle(
-                        color: Color(0xFF5F6B7B),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: PortfolioText.profileDescription,
                     ),
                   ],
                 ),
@@ -127,11 +116,7 @@ class _PortfolioMain extends StatelessWidget {
           '촬영 목적에 맞춰 비행 가능 지역, 날씨, 촬영 동선, 납품 포맷을 사전에 조율합니다. '
           '현장에서는 안전거리를 확보하고, 촬영 후에는 원본 이미지와 편집본을 요청 범위에 맞게 제공합니다. '
           '도심 홍보 영상, 부동산 항공 컷, 농경지 방제 기록, 시설 점검 리포트까지 다양한 프로젝트를 진행할 수 있습니다.',
-          style: const TextStyle(
-            color: _muted,
-            height: 1.7,
-            fontWeight: FontWeight.w700,
-          ),
+          style: PortfolioText.body,
         ),
         const SizedBox(height: 40),
         const _SectionTitle('사진 포트폴리오'),
@@ -162,7 +147,7 @@ class _PortfolioMain extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               '${pilot.rating.toStringAsFixed(1)} / 5.0',
-              style: const TextStyle(color: _ink, fontWeight: FontWeight.w900),
+              style: PortfolioText.rating,
             ),
           ],
         ),
@@ -203,22 +188,11 @@ class _QuoteCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Text(
-            '견적 요청하기',
-            style: TextStyle(
-              color: _ink,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
+          const Text('견적 요청하기', style: PortfolioText.quoteTitle),
           const SizedBox(height: 14),
           Text(
             '${pilot.name}에게 원하는 촬영 서비스의 견적을 받아보세요.',
-            style: const TextStyle(
-              color: _muted,
-              height: 1.6,
-              fontWeight: FontWeight.w700,
-            ),
+            style: PortfolioText.quoteBody,
           ),
           const SizedBox(height: 22),
           _QuotePriceRow(label: '촬영가 제안가', value: pilot.priceLabel),
@@ -230,7 +204,19 @@ class _QuoteCard extends StatelessWidget {
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(onPressed: () {}, child: const Text('촬영 요청하기')),
+            child: FilledButton(
+              onPressed: () {},
+              style: FilledButton.styleFrom(
+                backgroundColor: _navy,
+                foregroundColor: Colors.white,
+                textStyle: PortfolioText.button,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('촬영 요청하기'),
+            ),
           ),
         ],
       ),
@@ -251,10 +237,7 @@ class _ProfileMeta extends StatelessWidget {
       children: <Widget>[
         Icon(icon, color: _muted, size: 20),
         const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(color: _muted, fontWeight: FontWeight.w800),
-        ),
+        Text(text, style: PortfolioText.profileMeta),
       ],
     );
   }
@@ -267,14 +250,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: _ink,
-        fontSize: 22,
-        fontWeight: FontWeight.w900,
-      ),
-    );
+    return Text(text, style: PortfolioText.sectionTitle);
   }
 }
 
@@ -295,13 +271,7 @@ class _InfoBlock extends StatelessWidget {
                   Icon(row.icon, color: _navy, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      row.text,
-                      style: const TextStyle(
-                        color: _muted,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    child: Text(row.text, style: PortfolioText.infoText),
                   ),
                 ],
               ),
@@ -345,13 +315,7 @@ class _ReviewTile extends StatelessWidget {
               children: <Widget>[
                 Row(
                   children: <Widget>[
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        color: _ink,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                    Text(name, style: PortfolioText.reviewName),
                     const SizedBox(width: 8),
                     const Icon(
                       Icons.star_rounded,
@@ -360,22 +324,12 @@ class _ReviewTile extends StatelessWidget {
                     ),
                     Text(
                       rating.toStringAsFixed(1),
-                      style: const TextStyle(
-                        color: _ink,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: PortfolioText.rating,
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  text,
-                  style: const TextStyle(
-                    color: _muted,
-                    height: 1.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(text, style: PortfolioText.reviewBody),
               ],
             ),
           ),
@@ -397,15 +351,9 @@ class _QuotePriceRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: <Widget>[
-          Text(
-            label,
-            style: const TextStyle(color: _muted, fontWeight: FontWeight.w800),
-          ),
+          Text(label, style: PortfolioText.quoteLabel),
           const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(color: _ink, fontWeight: FontWeight.w900),
-          ),
+          Text(value, style: PortfolioText.quoteValue),
         ],
       ),
     );
