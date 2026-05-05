@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'feat/ui/drame_home_page.dart';
+import 'feat/main/ui/pages/main_page.dart';
 
 void main() {
   runApp(

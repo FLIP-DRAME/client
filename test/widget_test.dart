@@ -1,13 +1,11 @@
-import 'package:drane/feat/network/mock_drone_pilot_api.dart';
-import 'package:drane/feat/ui/drame_home_page.dart';
+import 'package:drane/feat/main/network/mock_drone_pilot_api.dart';
+import 'package:drane/feat/main/ui/pages/main_page.dart';
 import 'package:drane/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  testWidgets('renders navy map hero as the first home content', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('renders service-style Drame home', (WidgetTester tester) async {
     await tester.pumpWidget(
       ChangeNotifierProvider(
         create: (_) => DrameStore(),
@@ -17,11 +15,10 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Drame'), findsWidgets);
-    expect(find.text('로그인'), findsOneWidget);
-    expect(find.text('드론 매칭 플랫폼'), findsOneWidget);
-    expect(find.text('촬영 제안 보내기'), findsOneWidget);
-    expect(find.text('지도 촬영자 목록'), findsNothing);
+    expect(find.text('DRAME: 드론 매칭 플랫폼'), findsOneWidget);
+    expect(find.text('촬영'), findsWidgets);
+    expect(find.text('농약방제'), findsWidgets);
+    expect(find.text('지도에서 바로 촬영자 선택'), findsOneWidget);
   });
 
   test('prioritizes permitted pilots for selected area', () async {

@@ -24,12 +24,12 @@ class MockDronePilotApi {
 const List<String> mockServiceAreas = <String>[
   '전체',
   '서울',
-  '경기',
-  '강원',
-  '충청',
-  '전라',
-  '경상',
-  '제주',
+  '경기도',
+  '강원도',
+  '충청도',
+  '전라도',
+  '경상도',
+  '제주도',
 ];
 
 const List<DronePilot> mockPilots = <DronePilot>[

@@ -1,0 +1,3 @@
+class FeedPostSeed {
+  const FeedPostSeed();
+}
