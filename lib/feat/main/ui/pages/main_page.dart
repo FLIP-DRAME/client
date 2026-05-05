@@ -8,7 +8,62 @@ import '../../network/mock_drone_pilot_api.dart';
 
 part '../component/main_component.dart';
 
-const _navy = Color(0xFF1F3F68);
+class HomeText {
+  static const TextStyle logo = TextStyle(
+    fontFamily: 'Pretendard',
+    color: Color(0xFF1F3F68),
+    fontSize: 28,
+    fontWeight: FontWeight.w800,
+    height: 1.1,
+    letterSpacing: -0.6,
+  );
+
+  static const TextStyle heroTitle = TextStyle(
+    fontFamily: 'Pretendard',
+    color: _ink,
+    fontSize: 34,
+    fontWeight: FontWeight.w800,
+    height: 1.22,
+    letterSpacing: -0.9,
+  );
+
+  static const TextStyle heroSubtitle = TextStyle(
+    fontFamily: 'Pretendard',
+    color: _muted,
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+    height: 1.55,
+    letterSpacing: -0.15,
+  );
+
+  static const TextStyle categoryLabel = TextStyle(
+    fontFamily: 'Pretendard',
+    color: Color(0xFF5F6B7B),
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    height: 1.35,
+    letterSpacing: -0.2,
+  );
+
+  static const TextStyle topButton = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.2,
+    letterSpacing: -0.1,
+  );
+
+  static const TextStyle primaryButton = TextStyle(
+    fontFamily: 'Pretendard',
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: -0.1,
+  );
+}
+
+const _navy = Colors.black;
+// 0xFF1F3F68
 const _ink = Color(0xFF172338);
 const _muted = Color(0xFF718096);
 const _soft = Color(0xFFF3F6FA);
@@ -119,18 +174,9 @@ class _TopNavigation extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: <Widget>[
-                const Text(
-                  'Drame',
-                  style: TextStyle(
-                    color: _navy,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0,
-                  ),
-                ),
+                const Text('Drame', style: HomeText.logo),
                 if (!compact) ...const <Widget>[
                   SizedBox(width: 36),
-                  _NavText('견적요청'),
                   _NavText('촬영자 찾기'),
                   _NavText('포트폴리오'),
                   // _NavText('커뮤니티'),
@@ -138,18 +184,26 @@ class _TopNavigation extends StatelessWidget {
                 const Spacer(),
                 // if (!compact) const _TopSearch(),
                 const SizedBox(width: 22),
-                TextButton(onPressed: () {}, child: const Text('로그인 / 회원가입')),
+                TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    textStyle: HomeText.topButton,
+                    foregroundColor: _ink,
+                  ),
+                  child: const Text('로그인 / 회원가입'),
+                ),
                 FilledButton(
                   onPressed: () {},
                   style: FilledButton.styleFrom(
-                    backgroundColor: _navy,
+                    backgroundColor: const Color(0xFF1F3F68),
                     foregroundColor: Colors.white,
+                    textStyle: HomeText.primaryButton,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
-                      vertical: 14,
+                      vertical: 13,
                     ),
                   ),
                   child: const Text('촬영자 등록'),
@@ -178,27 +232,17 @@ class _HeroIntro extends StatelessWidget {
           const Text(
             '필요한 드론 작업, 검증된 조종사와 빠르게 연결하세요',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: _ink,
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 0,
-            ),
+            style: HomeText.heroTitle,
           ),
           const SizedBox(height: 16),
           const Text(
             '항공 촬영부터 방제, 점검, 측량까지 한 번에',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: _muted,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+            style: HomeText.heroSubtitle,
           ),
           const SizedBox(height: 32),
           const _CategoryStrip(),
           const SizedBox(height: 22),
-          _AreaFilter(store: store),
         ],
       ),
     );
@@ -268,11 +312,7 @@ class _CategoryStrip extends StatelessWidget {
                       child: Text(
                         category.label,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Color(0xFF5F6B7B),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                        ),
+                        style: HomeText.categoryLabel,
                       ),
                     ),
                   ],
@@ -305,6 +345,9 @@ class _MapSection extends StatelessWidget {
             action: '공역 확인',
           ),
           const SizedBox(height: 22),
+          _AreaFilter(store: store),
+          const SizedBox(height: 22),
+
           if (wide)
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,

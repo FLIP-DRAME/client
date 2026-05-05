@@ -41,23 +41,9 @@ class _FeedSectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                eyebrow,
-                style: const TextStyle(
-                  color: _muted,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text(eyebrow, style: FeedText.eyebrow),
               const SizedBox(height: 7),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: _ink,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+              Text(title, style: FeedText.sectionTitle),
             ],
           ),
         ),
@@ -313,11 +299,7 @@ class _DroneFeedSectionState extends State<DroneFeedSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _FeedSectionHeader(
-            eyebrow: '실제 작업 리뷰',
-            title: '드론으로 찍은 사진 피드',
-            action: '더보기',
-          ),
+          const _FeedSectionHeader(eyebrow: '실제 작업 리뷰', title: '드론으로 찍은 사진 피드'),
           const SizedBox(height: 22),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -369,7 +351,7 @@ class _DroneFeedSectionState extends State<DroneFeedSection> {
                     horizontal: 22,
                     vertical: 16,
                   ),
-                  textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  textStyle: FeedText.button,
                 ),
               ),
             ),
@@ -423,15 +405,7 @@ class _FeedCard extends StatelessWidget {
                 ),
               ),
             ),
-            const Positioned(
-              right: 12,
-              top: 12,
-              child: Icon(
-                Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 30,
-              ),
-            ),
+
             Positioned(
               left: 16,
               right: 16,
@@ -444,23 +418,19 @@ class _FeedCard extends StatelessWidget {
                     location,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: FeedText.feedLocation,
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    category,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  // Text(
+                  //   category,
+                  //   maxLines: 1,
+                  //   overflow: TextOverflow.ellipsis,
+                  //   style: const TextStyle(
+                  //     color: Colors.white,
+                  //     fontSize: 15,
+                  //     fontWeight: FontWeight.w800,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -618,8 +588,10 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                 child: Text(
                   widget.post.authorName.substring(0, 1),
                   style: const TextStyle(
+                    fontFamily: 'Pretendard',
                     color: Colors.white,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -628,21 +600,9 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      widget.post.authorName,
-                      style: const TextStyle(
-                        color: _ink,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                    Text(widget.post.authorName, style: FeedText.authorName),
                     const SizedBox(height: 3),
-                    Text(
-                      widget.post.authorRole,
-                      style: const TextStyle(
-                        color: _muted,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text(widget.post.authorRole, style: FeedText.authorRole),
                   ],
                 ),
               ),
@@ -662,6 +622,18 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                 children: <Widget>[
                   Expanded(
                     child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _navy,
+                        foregroundColor: Colors.white,
+                        textStyle: FeedText.button,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 13,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
                       onPressed: () {
                         final pilot = mockPilots.firstWhere(
                           (candidate) => widget.post.authorName.startsWith(
@@ -672,7 +644,7 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                         Navigator.of(context).pop();
                         _openPortfolio(context, pilot);
                       },
-                      icon: const Icon(Icons.grid_view_rounded, size: 18),
+                      icon: const Icon(Icons.grid_view_rounded, size: 17),
                       label: const Text('포트폴리오 보러가기'),
                     ),
                   ),
@@ -695,21 +667,10 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
               const SizedBox(height: 12),
               Text(
                 '${widget.post.location}에서 진행한 ${widget.post.category} 작업입니다.',
-                style: const TextStyle(
-                  color: _ink,
-                  fontWeight: FontWeight.w800,
-                  height: 1.5,
-                ),
+                style: FeedText.bodyStrong,
               ),
               const SizedBox(height: 20),
-              const Text(
-                '댓글',
-                style: TextStyle(
-                  color: _ink,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+              const Text('댓글', style: FeedText.dialogTitle),
               const SizedBox(height: 12),
               ..._comments.map((comment) => _CommentTile(comment: comment)),
             ],
@@ -750,10 +711,7 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              '좋아요 $likes개',
-              style: const TextStyle(color: _ink, fontWeight: FontWeight.w900),
-            ),
+            child: Text('좋아요 $likes개', style: FeedText.likeCount),
           ),
         ),
         Padding(
@@ -765,15 +723,29 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
               Expanded(
                 child: TextField(
                   controller: _commentController,
+                  style: FeedText.input,
                   decoration: const InputDecoration(
                     hintText: '댓글 달기...',
+                    hintStyle: TextStyle(
+                      fontFamily: 'Pretendard',
+                      color: _muted,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
                     border: InputBorder.none,
                     isDense: true,
                   ),
                   onSubmitted: (_) => _submitComment(),
                 ),
               ),
-              TextButton(onPressed: _submitComment, child: const Text('게시')),
+              TextButton(
+                onPressed: _submitComment,
+                style: TextButton.styleFrom(
+                  textStyle: FeedText.button,
+                  foregroundColor: _navy,
+                ),
+                child: const Text('게시'),
+              ),
             ],
           ),
         ),
@@ -846,10 +818,7 @@ class _PostMetaPill extends StatelessWidget {
         children: <Widget>[
           Icon(icon, color: _navy, size: 16),
           const SizedBox(width: 6),
-          Text(
-            text,
-            style: const TextStyle(color: _ink, fontWeight: FontWeight.w800),
-          ),
+          Text(text, style: FeedText.metaPill),
         ],
       ),
     );
@@ -881,7 +850,7 @@ class _CommentTile extends StatelessWidget {
                 children: <TextSpan>[
                   const TextSpan(
                     text: 'drame_user ',
-                    style: TextStyle(fontWeight: FontWeight.w900),
+                    style: FeedText.commentUser,
                   ),
                   TextSpan(text: comment),
                 ],
