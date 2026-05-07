@@ -39,7 +39,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('촬영 지역을 선택하세요'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('area-서울')));
+    final seoulChip = find.byKey(const ValueKey('area-서울'));
+    await tester.ensureVisible(seoulChip);
+    await tester.pumpAndSettle();
+    await tester.tap(seoulChip);
     await tester.pumpAndSettle();
 
     expect(find.text('조건에 맞는 운용자'), findsOneWidget);
