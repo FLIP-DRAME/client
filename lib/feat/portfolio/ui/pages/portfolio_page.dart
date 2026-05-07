@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../main/network/drone_pilot_model.dart';
+import '../../../quote/ui/pages/quote_request_page.dart';
 
 part '../component/portfolio_component.dart';
 
@@ -210,4 +211,10 @@ class PilotPortfolioPage extends StatelessWidget {
       ),
     );
   }
+}
+
+void _openQuoteRequest(BuildContext context, DronePilot pilot) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (_) => QuoteRequestPage(pilot: pilot)),
+  );
 }

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../feed/ui/pages/feed_page.dart';
 import '../../../portfolio/ui/pages/portfolio_page.dart';
+import '../../../quote/network/mock_quote_api.dart';
+import '../../../quote/network/quote_model.dart';
 import '../../network/drone_pilot_model.dart';
 import '../../network/mock_drone_pilot_api.dart';
 
@@ -20,34 +22,34 @@ class HomeText {
 
   static const TextStyle heroTitle = TextStyle(
     fontFamily: 'Pretendard',
-    color: _ink,
-    fontSize: 34,
-    fontWeight: FontWeight.w800,
-    height: 1.22,
-    letterSpacing: -0.9,
+    color: Colors.white,
+    fontSize: 58,
+    fontWeight: FontWeight.w900,
+    height: 1.12,
+    letterSpacing: -1.4,
   );
 
   static const TextStyle heroSubtitle = TextStyle(
     fontFamily: 'Pretendard',
-    color: _muted,
-    fontSize: 16,
-    fontWeight: FontWeight.w500,
-    height: 1.55,
-    letterSpacing: -0.15,
+    color: Color(0xFFB9C7D8),
+    fontSize: 19,
+    fontWeight: FontWeight.w700,
+    height: 1.4,
+    letterSpacing: -0.25,
   );
 
-  static const TextStyle categoryLabel = TextStyle(
+  static const TextStyle heroSearch = TextStyle(
     fontFamily: 'Pretendard',
-    color: Color(0xFF5F6B7B),
-    fontSize: 13,
-    fontWeight: FontWeight.w500,
-    height: 1.35,
-    letterSpacing: -0.2,
+    color: Color(0xFF8D9CB0),
+    fontSize: 17,
+    fontWeight: FontWeight.w700,
+    height: 1.2,
+    letterSpacing: -0.1,
   );
 
   static const TextStyle topButton = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     height: 1.2,
     letterSpacing: -0.1,
@@ -55,14 +57,14 @@ class HomeText {
 
   static const TextStyle primaryButton = TextStyle(
     fontFamily: 'Pretendard',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: FontWeight.w700,
     height: 1.2,
     letterSpacing: -0.1,
   );
 }
 
-const _navy = Colors.black;
+const _navy = Color(0xFF1F3A5F);
 // 0xFF1F3F68
 const _ink = Color(0xFF172338);
 const _muted = Color(0xFF718096);
@@ -77,23 +79,41 @@ void _openPortfolio(BuildContext context, DronePilot pilot) {
 }
 
 class DrameStore extends ChangeNotifier {
-  DrameStore({MockDronePilotApi? api}) : _api = api ?? MockDronePilotApi();
+  DrameStore({MockDronePilotApi? api, MockQuoteApi? quoteApi})
+    : _api = api ?? MockDronePilotApi(),
+      _quoteApi = quoteApi ?? MockQuoteApi();
 
   final MockDronePilotApi _api;
+  final MockQuoteApi _quoteApi;
 
   List<DronePilot> pilots = const <DronePilot>[];
+  DroneCategory? selectedCategory;
   DronePilot? selectedPilot;
   String selectedArea = '전체';
+  QuoteRequest? quoteRequest;
+  QuoteEstimate? estimate;
+  PaymentInstruction? paymentInstruction;
+  ContactAccess? contactAccess;
+  bool paymentConfirmed = false;
   bool isLoading = true;
 
   Future<void> load() async {
     isLoading = true;
     notifyListeners();
 
-    pilots = await _api.fetchPilots(priorityArea: selectedArea);
+    pilots = await _api.fetchPilots(
+      priorityArea: selectedArea,
+      category: selectedCategory?.label,
+    );
     selectedPilot = pilots.isEmpty ? null : pilots.first;
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> selectCategory(DroneCategory category) async {
+    selectedCategory = category;
+    selectedArea = '전체';
+    await load();
   }
 
   Future<void> selectArea(String area) async {
@@ -103,6 +123,25 @@ class DrameStore extends ChangeNotifier {
 
   void selectPilot(DronePilot pilot) {
     selectedPilot = pilot;
+    notifyListeners();
+  }
+
+  Future<QuoteEstimate> submitQuoteRequest(QuoteRequest request) async {
+    quoteRequest = request;
+    estimate = await _quoteApi.createEstimate(request);
+    paymentInstruction = _quoteApi.createPaymentInstruction(estimate!);
+    contactAccess = null;
+    paymentConfirmed = false;
+    notifyListeners();
+    return estimate!;
+  }
+
+  void confirmPayment() {
+    if (estimate == null) {
+      return;
+    }
+    paymentConfirmed = true;
+    contactAccess = _quoteApi.createContactAccess(estimate!);
     notifyListeners();
   }
 }
@@ -126,7 +165,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF1F5FA),
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder: (context, store, _) {
@@ -137,9 +176,24 @@ class _DrameHomePageState extends State<DrameHomePage> {
             return CustomScrollView(
               slivers: <Widget>[
                 const SliverToBoxAdapter(child: _TopNavigation()),
-                SliverToBoxAdapter(child: _HeroIntro(store: store)),
-                SliverToBoxAdapter(child: _MapSection(store: store)),
-                const SliverToBoxAdapter(child: DroneFeedSection()),
+                const SliverToBoxAdapter(child: _SecondaryNavigation()),
+                const SliverToBoxAdapter(child: _LandingHeroSection()),
+                SliverToBoxAdapter(
+                  child: _CategorySelectionSection(store: store),
+                ),
+                if (store.selectedCategory != null)
+                  SliverToBoxAdapter(
+                    child: _AreaSelectionSection(store: store),
+                  ),
+                if (store.selectedCategory != null &&
+                    store.selectedArea != '전체')
+                  SliverToBoxAdapter(child: _OperatorListSection(store: store)),
+                const SliverToBoxAdapter(
+                  child: ColoredBox(
+                    color: Colors.white,
+                    child: DroneFeedSection(),
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: _PopularPortfolioSection(store: store),
                 ),
@@ -176,13 +230,10 @@ class _TopNavigation extends StatelessWidget {
               children: <Widget>[
                 const Text('Drame', style: HomeText.logo),
                 if (!compact) ...const <Widget>[
-                  SizedBox(width: 36),
-                  _NavText('촬영자 찾기'),
-                  _NavText('포트폴리오'),
-                  // _NavText('커뮤니티'),
+                  SizedBox(width: 54),
+                  _TopSearch(),
                 ],
                 const Spacer(),
-                // if (!compact) const _TopSearch(),
                 const SizedBox(width: 22),
                 TextButton(
                   onPressed: () {},
@@ -217,113 +268,221 @@ class _TopNavigation extends StatelessWidget {
   }
 }
 
-class _HeroIntro extends StatelessWidget {
-  const _HeroIntro({required this.store});
-
-  final DrameStore store;
+class _SecondaryNavigation extends StatelessWidget {
+  const _SecondaryNavigation();
 
   @override
   Widget build(BuildContext context) {
-    return _PageShell(
-      top: 58,
-      bottom: 34,
-      child: Column(
+    final compact = MediaQuery.sizeOf(context).width < 760;
+    const tabs = <({IconData icon, String label})>[
+      (icon: Icons.person_search_rounded, label: '촬영자 찾기'),
+      (icon: Icons.grid_view_rounded, label: '포트폴리오'),
+      (icon: Icons.info_outline_rounded, label: 'Drame 소개'),
+      (icon: Icons.map_outlined, label: '비행공역 확인'),
+    ];
+
+    return Container(
+      height: compact ? 58 : 54,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: _line)),
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1280),
+          child: SizedBox(
+            width: double.infinity,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children:
+                    tabs.map((tab) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 34),
+                        child: _SubNavTab(icon: tab.icon, label: tab.label),
+                      );
+                    }).toList(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SubNavTab extends StatelessWidget {
+  const _SubNavTab({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: () {},
+      style: TextButton.styleFrom(
+        foregroundColor: const Color(0xFF6E7F99),
+        textStyle: const TextStyle(
+          fontFamily: 'Pretendard',
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          height: 1.2,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 15),
+      ),
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+    );
+  }
+}
+
+class _LandingHeroSection extends StatelessWidget {
+  const _LandingHeroSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 580,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: _navy,
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Color(0x331F3F68),
+              blurRadius: 32,
+              offset: Offset(0, 18),
+            ),
+          ],
+        ),
+        child: _PageShell(
+          top: 36,
+          bottom: 0,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              const _HeroStatusBadge(),
+              const SizedBox(height: 36),
+              const Text(
+                '필요한 드론 작업,\n검증된 조종사와 빠르게 연결하세요',
+                textAlign: TextAlign.center,
+                style: HomeText.heroTitle,
+              ),
+              const SizedBox(height: 22),
+              const Text(
+                '항공 촬영부터 방제, 점검, 측량까지 한번에',
+                textAlign: TextAlign.center,
+                style: HomeText.heroSubtitle,
+              ),
+              const SizedBox(height: 66),
+              const _HeroSearchBar(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroStatusBadge extends StatelessWidget {
+  const _HeroStatusBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Text(
-            '필요한 드론 작업, 검증된 조종사와 빠르게 연결하세요',
-            textAlign: TextAlign.center,
-            style: HomeText.heroTitle,
+          Icon(Icons.circle, color: _mint, size: 8),
+          SizedBox(width: 8),
+          Text(
+            '자격증·보험 검증 완료 운용자 매칭',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              color: Color(0xFFD5E4F3),
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              height: 1.2,
+            ),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            '항공 촬영부터 방제, 점검, 측량까지 한 번에',
-            textAlign: TextAlign.center,
-            style: HomeText.heroSubtitle,
-          ),
-          const SizedBox(height: 32),
-          const _CategoryStrip(),
-          const SizedBox(height: 22),
         ],
       ),
     );
   }
 }
 
-class _CategoryStrip extends StatelessWidget {
-  const _CategoryStrip();
+class _HeroSearchBar extends StatelessWidget {
+  const _HeroSearchBar();
 
   @override
   Widget build(BuildContext context) {
-    const categories = <({IconData icon, String label, Color color})>[
-      (icon: Icons.apps_rounded, label: '전체보기', color: Color(0xFF818796)),
-      (icon: Icons.photo_camera_rounded, label: '촬영', color: _navy),
-      (
-        icon: Icons.energy_savings_leaf_rounded,
-        label: '농약방제',
-        color: Color(0xFF18B979),
-      ),
-      (icon: Icons.apartment_rounded, label: '부동산', color: Color(0xFF2E9BFF)),
-      (
-        icon: Icons.construction_rounded,
-        label: '건설현장',
-        color: Color(0xFFFFA726),
-      ),
-      (icon: Icons.map_rounded, label: '측량·매핑', color: Color(0xFF00A6A6)),
-      (
-        icon: Icons.manage_search_rounded,
-        label: '시설점검',
-        color: Color(0xFFFF5BB7),
-      ),
-      (
-        icon: Icons.celebration_rounded,
-        label: '행사촬영',
-        color: Color(0xFF8D6BFF),
-      ),
-      // (icon: Icons.flash_on_rounded, label: '라이트쇼', color: Color(0xFF2D9CDB)),
-      // (icon: Icons.waves_rounded, label: '해양·산림', color: Color(0xFF1F9D78)),
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children:
-            categories.map((category) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: BoxDecoration(
-                        color: category.color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Icon(
-                        category.icon,
-                        color: category.color,
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: 76,
-                      child: Text(
-                        category.label,
-                        textAlign: TextAlign.center,
-                        style: HomeText.categoryLabel,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 760),
+      child: Container(
+        height: 86,
+        padding: const EdgeInsets.only(left: 28, right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Row(
+          children: <Widget>[
+            const Icon(
+              Icons.search_rounded,
+              color: Color(0xFF96A5B8),
+              size: 26,
+            ),
+            const SizedBox(width: 18),
+            const Expanded(
+              child: Text('어떤 드론 작업이 필요하세요?', style: HomeText.heroSearch),
+            ),
+            const Text(
+              '가입 없이 30초 만에',
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                color: Color(0xFFC6D1DE),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                color: _navy,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_forward_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ignore: unused_element
 class _MapSection extends StatelessWidget {
   const _MapSection({required this.store});
 
@@ -333,39 +492,43 @@ class _MapSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 980;
 
-    return _PageShell(
-      top: 34,
-      bottom: 58,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const _SectionHeader(
-            eyebrow: '지역 기반 실시간 매칭',
-            title: '지도에서 바로 촬영자 선택',
-            action: '공역 확인',
-          ),
-          const SizedBox(height: 22),
-          _AreaFilter(store: store),
-          const SizedBox(height: 22),
-
-          if (wide)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(flex: 7, child: _MapPanel(store: store)),
-                const SizedBox(width: 18),
-                Expanded(flex: 5, child: _PilotPanel(store: store)),
-              ],
-            )
-          else
-            Column(
-              children: <Widget>[
-                _MapPanel(store: store),
-                const SizedBox(height: 16),
-                _PilotPanel(store: store),
-              ],
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFEAF1F8),
+      child: _PageShell(
+        top: 56,
+        bottom: 66,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const _SectionHeader(
+              eyebrow: '지역 기반 실시간 매칭',
+              title: '지도에서 바로 촬영자 선택',
+              action: '공역 확인',
             ),
-        ],
+            const SizedBox(height: 22),
+            _AreaFilter(store: store),
+            const SizedBox(height: 22),
+
+            if (wide)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(flex: 7, child: _MapPanel(store: store)),
+                  const SizedBox(width: 18),
+                  Expanded(flex: 5, child: _PilotPanel(store: store)),
+                ],
+              )
+            else
+              Column(
+                children: <Widget>[
+                  _MapPanel(store: store),
+                  const SizedBox(height: 16),
+                  _PilotPanel(store: store),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

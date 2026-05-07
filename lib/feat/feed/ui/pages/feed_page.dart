@@ -6,7 +6,6 @@ import '../../../portfolio/ui/pages/portfolio_page.dart';
 
 part '../component/feed_component.dart';
 
-
 const _navy = Color(0xFF1F3F68);
 const _ink = Color(0xFF172338);
 const _muted = Color(0xFF718096);
@@ -25,7 +24,7 @@ class FeedText {
 
   static const TextStyle sectionTitle = TextStyle(
     fontFamily: 'Pretendard',
-    color: _ink,
+    color: _navy,
     fontSize: 26,
     fontWeight: FontWeight.w800,
     height: 1.25,
