@@ -1,4 +1,4 @@
-part of '../pages/main_page.dart';
+﻿part of '../pages/main_page.dart';
 
 class AppText {
   static const TextStyle eyebrow = TextStyle(
@@ -492,6 +492,1663 @@ class _EmptyOperatorState extends StatelessWidget {
   }
 }
 
+class _PilotLandingSection extends StatelessWidget {
+  const _PilotLandingSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFF3F6FA),
+      child: Column(
+        children: <Widget>[
+          SizedBox(
+            height: compact ? 500 : 560,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                Image.network(
+                  'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1800&q=85',
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (context, error, stackTrace) => Container(
+                        color: _navy,
+                        child: const Icon(
+                          Icons.flight_takeoff_rounded,
+                          color: Colors.white,
+                          size: 64,
+                        ),
+                      ),
+                ),
+                Container(color: Colors.black.withValues(alpha: 0.48)),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const Text(
+                          '드론 비즈니스의 시작\nDrame과 함께',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Pretendard',
+                            color: Colors.white,
+                            fontSize: 42,
+                            fontWeight: FontWeight.w900,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 34),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: <BoxShadow>[
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.28),
+                                blurRadius: 24,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: FilledButton.icon(
+                            onPressed: store.openPilotOnboarding,
+                            icon: const Icon(Icons.verified_user_outlined),
+                            label: const Text('운용자 등록하기'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF2B527F),
+                              foregroundColor: Colors.white,
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.42),
+                                width: 1.2,
+                              ),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 68,
+                                vertical: 24,
+                              ),
+                              textStyle: AppText.button,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _PageShell(
+            top: 56,
+            bottom: 70,
+            child:
+                compact
+                    ? const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Drame 운용자가 된다는 건\n검증된 요청을 꾸준히 만난다는 것',
+                          style: AppText.sectionTitle,
+                        ),
+                        SizedBox(height: 24),
+                        _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
+                        SizedBox(height: 12),
+                        _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
+                        SizedBox(height: 12),
+                        _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
+                      ],
+                    )
+                    : const Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            'Drame 운용자가 된다는 건\n검증된 요청을 꾸준히 만난다는 것',
+                            style: AppText.sectionTitle,
+                          ),
+                        ),
+                        SizedBox(width: 28),
+                        _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
+                        SizedBox(width: 14),
+                        _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
+                        SizedBox(width: 14),
+                        _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
+                      ],
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PilotLandingMetric extends StatelessWidget {
+  const _PilotLandingMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 250,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF0F7),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        children: <Widget>[
+          Text(label, style: AppText.cardSubtitle, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          Text(value, style: AppText.metricValue, textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
+class _PilotAuthSection extends StatelessWidget {
+  const _PilotAuthSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 840;
+
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFEAF0F7),
+      child: _PageShell(
+        top: 46,
+        bottom: 88,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 960),
+            child: Container(
+              padding: EdgeInsets.all(compact ? 22 : 32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _line),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    color: _navy.withValues(alpha: 0.07),
+                    blurRadius: 28,
+                    offset: const Offset(0, 16),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  TextButton.icon(
+                    onPressed: () => store.setPilotMode(false),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: const Text('메인으로'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: _navy,
+                      textStyle: AppText.button,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    store.isLoginMode ? '로그인' : '회원가입',
+                    style: AppText.cardTitle,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '운용자 등록 전 계정 유형과 기본 정보를 먼저 확인합니다.',
+                    style: AppText.cardSubtitle,
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: _soft,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: _line),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        _AuthModeTab(
+                          label: '회원가입',
+                          selected: !store.isLoginMode,
+                          onTap: () => store.updateAuth(loginMode: false),
+                        ),
+                        _AuthModeTab(
+                          label: '로그인',
+                          selected: store.isLoginMode,
+                          onTap: () => store.updateAuth(loginMode: true),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  const Text('계정 유형', style: AppText.smallStrong),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: <Widget>[
+                      _AuthRoleChip(
+                        label: '운용자',
+                        selected: store.accountRole == '운용자',
+                        onTap: () => store.updateAuth(role: '운용자'),
+                      ),
+                      _AuthRoleChip(
+                        label: '사용자',
+                        selected: store.accountRole == '사용자',
+                        onTap: () => store.updateAuth(role: '사용자'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final twoColumns = constraints.maxWidth >= 720;
+                      final fields = <Widget>[
+                        _AuthField(
+                          label: '이메일',
+                          value: store.accountEmail,
+                          keyboardType: TextInputType.emailAddress,
+                          onChanged: (value) => store.updateAuth(email: value),
+                        ),
+                        _AuthField(
+                          label: '아이디',
+                          value: store.accountId,
+                          onChanged:
+                              (value) => store.updateAuth(accountId: value),
+                        ),
+                        _AuthField(
+                          label: '비밀번호',
+                          value: store.accountPassword,
+                          obscureText: true,
+                          onChanged:
+                              (value) => store.updateAuth(password: value),
+                        ),
+                        if (!store.isLoginMode)
+                          _AuthField(
+                            label: '이름',
+                            value: store.accountName,
+                            onChanged: (value) => store.updateAuth(name: value),
+                          ),
+                        if (!store.isLoginMode)
+                          _AuthField(
+                            label: '닉네임',
+                            value: store.accountNickname,
+                            onChanged:
+                                (value) => store.updateAuth(nickname: value),
+                          ),
+                      ];
+
+                      if (!twoColumns) {
+                        return Column(
+                          children:
+                              fields
+                                  .map(
+                                    (field) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: field,
+                                    ),
+                                  )
+                                  .toList(),
+                        );
+                      }
+
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children:
+                            fields
+                                .map(
+                                  (field) => SizedBox(
+                                    width: (constraints.maxWidth - 12) / 2,
+                                    child: field,
+                                  ),
+                                )
+                                .toList(),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: store.submitAuth,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _navy,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 19),
+                        textStyle: AppText.button,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        store.accountRole == '운용자'
+                            ? store.isLoginMode
+                                ? '로그인하고 운용자 등록 계속하기'
+                                : '가입하고 운용자 등록 시작하기'
+                            : store.isLoginMode
+                            ? '로그인하기'
+                            : '사용자 계정 만들기',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthModeTab extends StatelessWidget {
+  const _AuthModeTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? _navy : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: AppText.smallStrong.copyWith(
+            color: selected ? Colors.white : _muted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthRoleChip extends StatelessWidget {
+  const _AuthRoleChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      selectedColor: _navy,
+      backgroundColor: Colors.white,
+      side: BorderSide(color: selected ? _navy : _line),
+      labelStyle: AppText.chip.copyWith(color: selected ? Colors.white : _navy),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    );
+  }
+}
+
+class _AuthField extends StatelessWidget {
+  const _AuthField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.keyboardType,
+    this.obscureText = false,
+  });
+
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      initialValue: value,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _line),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _line),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _navy, width: 1.4),
+        ),
+      ),
+    );
+  }
+}
+
+class _PilotDashboardSection extends StatelessWidget {
+  const _PilotDashboardSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 940;
+    final displayName = store.accountName.isEmpty ? '운용자' : store.accountName;
+    final nickname =
+        store.accountNickname.isEmpty ? displayName : store.accountNickname;
+
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFF6F8FB),
+      child: _PageShell(
+        top: 52,
+        bottom: 92,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text('$nickname 운용자 페이지', style: AppText.cardTitle),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '프로필과 요청 현황을 한 곳에서 관리하세요.',
+                        style: AppText.cardSubtitle,
+                      ),
+                    ],
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: store.openPilotOnboarding,
+                  icon: const Icon(Icons.edit_note_rounded),
+                  label: const Text('등록 정보 수정'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _navy,
+                    textStyle: AppText.button,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+            if (!store.operatorPortfolioCompleted) ...<Widget>[
+              _PortfolioPromptCard(
+                name: displayName,
+                onTap: store.completeOperatorPortfolio,
+              ),
+              const SizedBox(height: 24),
+            ],
+            compact
+                ? Column(
+                  children: <Widget>[
+                    _OperatorProfileCard(
+                      name: displayName,
+                      nickname: nickname,
+                      store: store,
+                    ),
+                    const SizedBox(height: 18),
+                    _OperatorSideCard(
+                      portfolioDone: store.operatorPortfolioCompleted,
+                    ),
+                  ],
+                )
+                : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 2,
+                      child: _OperatorProfileCard(
+                        name: displayName,
+                        nickname: nickname,
+                        store: store,
+                      ),
+                    ),
+                    const SizedBox(width: 22),
+                    Expanded(
+                      child: _OperatorSideCard(
+                        portfolioDone: store.operatorPortfolioCompleted,
+                      ),
+                    ),
+                  ],
+                ),
+            const SizedBox(height: 32),
+            store.operatorPortfolioCompleted
+                ? const _IncomingRequestsPanel()
+                : const _ProfileCompletionPanel(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PortfolioPromptCard extends StatelessWidget {
+  const _PortfolioPromptCard({required this.name, required this.onTap});
+
+  final String name;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF0F7),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _line),
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _line),
+              ),
+              child: const Icon(Icons.auto_awesome_rounded, color: _navy),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    '$name님의 포트폴리오를 완성하세요',
+                    style: AppText.smallStrong.copyWith(fontSize: 16),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    '작업 사진과 대표 서비스를 채우면 고객 요청을 받을 수 있습니다.',
+                    style: AppText.cardSubtitle,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: _navy),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OperatorProfileCard extends StatelessWidget {
+  const _OperatorProfileCard({
+    required this.name,
+    required this.nickname,
+    required this.store,
+  });
+
+  final String name;
+  final String nickname;
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              CircleAvatar(
+                radius: 38,
+                backgroundColor: const Color(0xFFEAF0F7),
+                child: Text(
+                  nickname.characters.first,
+                  style: AppText.cardTitle,
+                ),
+              ),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(name, style: AppText.portfolioTitle),
+                    const SizedBox(height: 6),
+                    Text(
+                      '$nickname 운용자의 항공촬영·방제 서비스',
+                      style: AppText.cardSubtitle,
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: const <Widget>[
+                        _MiniChip(label: '리뷰 0'),
+                        _MiniChip(label: '응답 30분 내'),
+                        _MiniChip(label: '인증 완료'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: store.openPilotOnboarding,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _navy,
+                    textStyle: AppText.button,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('내 소개 편집'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _navy,
+                    textStyle: AppText.button,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('미리보기'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OperatorSideCard extends StatelessWidget {
+  const _OperatorSideCard({required this.portfolioDone});
+
+  final bool portfolioDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(
+            portfolioDone
+                ? Icons.mark_chat_unread_outlined
+                : Icons.rate_review_outlined,
+            color: _navy,
+            size: 34,
+          ),
+          const SizedBox(height: 18),
+          Text(
+            portfolioDone ? '새 요청을 확인하세요' : '아직 포트폴리오가 없다면?',
+            style: AppText.portfolioTitle,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            portfolioDone
+                ? '고객이 남긴 견적 요청에 빠르게 응답하면 매칭 확률이 올라갑니다.'
+                : '대표 서비스와 작업 사진을 추가하면 프로필이 고객에게 노출됩니다.',
+            style: AppText.cardSubtitle,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileCompletionPanel extends StatelessWidget {
+  const _ProfileCompletionPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const Text('프로필 항목을 완성해보세요', style: AppText.portfolioTitle),
+        const SizedBox(height: 14),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 960 ? 3 : 1;
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: columns,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: columns == 1 ? 2.8 : 1.25,
+              children: const <Widget>[
+                _CompletionCard(
+                  percent: '35%',
+                  title: '기본 정보 설정',
+                  items: <String>['프로필 이미지', '한 줄 소개', '대표 서비스'],
+                ),
+                _CompletionCard(
+                  percent: '50%',
+                  title: '전문성 증명',
+                  items: <String>['경력/학력', '사진 및 영상', '포트폴리오'],
+                ),
+                _CompletionCard(
+                  percent: '30%',
+                  title: '신뢰도 높이기',
+                  items: <String>['본인인증', '결제수단', '리뷰 요청'],
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _CompletionCard extends StatelessWidget {
+  const _CompletionCard({
+    required this.percent,
+    required this.title,
+    required this.items,
+  });
+
+  final String percent;
+  final String title;
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _MiniChip(label: percent),
+          const SizedBox(height: 14),
+          Text(title, style: AppText.smallStrong.copyWith(fontSize: 16)),
+          const SizedBox(height: 12),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: <Widget>[
+                  Expanded(child: Text(item, style: AppText.cardSubtitle)),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: _muted,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IncomingRequestsPanel extends StatelessWidget {
+  const _IncomingRequestsPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            const Expanded(child: Text('받은 요청', style: AppText.portfolioTitle)),
+            Text('3건 대기 중', style: AppText.cardSubtitle.copyWith(color: _navy)),
+          ],
+        ),
+        const SizedBox(height: 14),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 960 ? 3 : 1;
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: columns,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: columns == 1 ? 3.2 : 1.34,
+              children: const <Widget>[
+                _RequestCard(
+                  area: '서울 강남',
+                  title: '상업시설 항공촬영',
+                  budget: '예상 42만원',
+                  due: '오늘 오후 촬영 희망',
+                ),
+                _RequestCard(
+                  area: '경기 수원 영통동',
+                  title: '옥상 점검 및 열화상 촬영',
+                  budget: '예상 36만원',
+                  due: '내일 오전 가능',
+                ),
+                _RequestCard(
+                  area: '전라 전주',
+                  title: '농지 방제 작업',
+                  budget: '예상 58만원',
+                  due: '이번 주 협의',
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _RequestCard extends StatelessWidget {
+  const _RequestCard({
+    required this.area,
+    required this.title,
+    required this.budget,
+    required this.due,
+  });
+
+  final String area;
+  final String title;
+  final String budget;
+  final String due;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              _MiniChip(label: area),
+              const Spacer(),
+              const Icon(Icons.circle, color: _mint, size: 10),
+              const SizedBox(width: 5),
+              Text('신규', style: AppText.metricLabel.copyWith(color: _navy)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(title, style: AppText.smallStrong.copyWith(fontSize: 16)),
+          const SizedBox(height: 8),
+          Text('$budget · $due', style: AppText.cardSubtitle),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () {},
+              style: FilledButton.styleFrom(
+                backgroundColor: _navy,
+                foregroundColor: Colors.white,
+                textStyle: AppText.button,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('응답하기'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PilotOnboardingSection extends StatelessWidget {
+  const _PilotOnboardingSection({required this.store});
+
+  final DrameStore store;
+
+  static const _steps = <String>[
+    '자격증 등록',
+    '사업자 정보',
+    '보험 등록',
+    '보유 기체',
+    '활동 지역·일정',
+    '포트폴리오',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 940;
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFEAF0F7),
+      child: _PageShell(
+        top: 40,
+        bottom: 96,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            TextButton.icon(
+              onPressed: store.closePilotOnboarding,
+              icon: const Icon(Icons.arrow_back_rounded),
+              label: const Text('운용자 메인으로'),
+              style: TextButton.styleFrom(
+                foregroundColor: _navy,
+                textStyle: AppText.button,
+              ),
+            ),
+            const SizedBox(height: 30),
+            if (compact)
+              Column(
+                children: <Widget>[
+                  _PilotStepCard(store: store, steps: _steps),
+                  const SizedBox(height: 18),
+                  _PilotFormCard(store: store, steps: _steps),
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(
+                    width: 280,
+                    child: _PilotStepCard(store: store, steps: _steps),
+                  ),
+                  const SizedBox(width: 28),
+                  Expanded(child: _PilotFormCard(store: store, steps: _steps)),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PilotStepCard extends StatelessWidget {
+  const _PilotStepCard({required this.store, required this.steps});
+
+  final DrameStore store;
+  final List<String> steps;
+
+  @override
+  Widget build(BuildContext context) {
+    final done =
+        store.pilotOnboarding.submitted
+            ? steps.length
+            : store.pilotOnboardingStep;
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text('운용자 인증', style: AppText.portfolioTitle),
+          const SizedBox(height: 20),
+          ...steps.asMap().entries.map((entry) {
+            final active = entry.key == store.pilotOnboardingStep;
+            final completed = entry.key < done;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: InkWell(
+                onTap: () => store.goToPilotOnboardingStep(entry.key),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        active ? const Color(0xFFEAF0F7) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor:
+                            active ? _navy : const Color(0xFFE8EEF5),
+                        child:
+                            completed
+                                ? const Icon(
+                                  Icons.check_rounded,
+                                  color: _navy,
+                                  size: 17,
+                                )
+                                : Text(
+                                  '${entry.key + 1}',
+                                  style: TextStyle(
+                                    color: active ? Colors.white : _muted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          entry.value,
+                          style: AppText.smallStrong.copyWith(
+                            color: active ? _navy : const Color(0xFFA3B0C2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+          const Divider(color: _line),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              const Text('진행률', style: AppText.metricLabel),
+              const Spacer(),
+              Text('$done/6 완료', style: AppText.metricLabel),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: (done / steps.length).clamp(0.08, 1),
+              minHeight: 7,
+              backgroundColor: const Color(0xFFE8EEF5),
+              color: _navy,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PilotFormCard extends StatelessWidget {
+  const _PilotFormCard({required this.store, required this.steps});
+
+  final DrameStore store;
+  final List<String> steps;
+
+  @override
+  Widget build(BuildContext context) {
+    final step = store.pilotOnboardingStep;
+    final bodies = <Widget>[
+      _LicenseStep(store: store),
+      _BusinessStep(store: store),
+      _InsuranceStep(store: store),
+      _DroneStep(store: store),
+      _AreaStep(store: store),
+      _PortfolioStep(store: store),
+    ];
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Step ${step + 1} / ${steps.length}',
+            style: AppText.cardSubtitle,
+          ),
+          const SizedBox(height: 6),
+          Text(steps[step], style: AppText.cardTitle),
+          const SizedBox(height: 24),
+          if (store.pilotOnboarding.submitted) ...<Widget>[
+            const _PilotNotice('인증 요청이 접수되었습니다. 입력 정보는 계속 수정할 수 있습니다.'),
+            const SizedBox(height: 18),
+          ],
+          bodies[step],
+          const SizedBox(height: 28),
+          const Divider(color: _line),
+          const SizedBox(height: 20),
+          Row(
+            children: <Widget>[
+              OutlinedButton(
+                onPressed:
+                    step == 0
+                        ? store.closePilotOnboarding
+                        : store.previousPilotOnboardingStep,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 26,
+                    vertical: 20,
+                  ),
+                  textStyle: AppText.button,
+                ),
+                child: Text(step == 0 ? '나가기' : '이전'),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: FilledButton(
+                  onPressed: store.nextPilotOnboardingStep,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _navy,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 21),
+                    textStyle: AppText.button,
+                  ),
+                  child: Text(step == steps.length - 1 ? '인증 제출' : '다음'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LicenseStep extends StatelessWidget {
+  const _LicenseStep({required this.store});
+  final DrameStore store;
+  @override
+  Widget build(BuildContext context) {
+    final data = store.pilotOnboarding;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _PilotSelectField(
+          label: '자격증 종류 *',
+          value: data.licenseType,
+          values: const <String>['초경량비행장치 조종자', '무인멀티콥터 지도조종자', '드론 실기평가 조종자'],
+          onChanged: (value) => store.updatePilotLicense(type: value),
+        ),
+        const SizedBox(height: 18),
+        _PilotTextField(
+          label: '자격증 번호 *',
+          initialValue: data.licenseNumber,
+          hint: '예: 2024-0001234',
+          onChanged: (value) => store.updatePilotLicense(number: value),
+        ),
+        const SizedBox(height: 18),
+        _PilotUploadBox(
+          title: '자격증 앞면 업로드',
+          uploaded: data.licenseFrontUploaded,
+          onTap:
+              () => store.updatePilotLicense(
+                frontUploaded: !data.licenseFrontUploaded,
+              ),
+        ),
+        const SizedBox(height: 12),
+        _PilotUploadBox(
+          title: '자격증 뒷면 업로드',
+          uploaded: data.licenseBackUploaded,
+          onTap:
+              () => store.updatePilotLicense(
+                backUploaded: !data.licenseBackUploaded,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BusinessStep extends StatelessWidget {
+  const _BusinessStep({required this.store});
+  final DrameStore store;
+  @override
+  Widget build(BuildContext context) {
+    final data = store.pilotOnboarding;
+    return Column(
+      children: <Widget>[
+        _PilotTextField(
+          label: '상호명 *',
+          initialValue: data.businessName,
+          hint: '드라메 항공촬영',
+          onChanged: (value) => store.updatePilotBusiness(name: value),
+        ),
+        const SizedBox(height: 18),
+        _PilotTextField(
+          label: '사업자등록번호 *',
+          initialValue: data.businessNumber,
+          hint: '000-00-00000',
+          onChanged: (value) => store.updatePilotBusiness(number: value),
+        ),
+        const SizedBox(height: 18),
+        _PilotTextField(
+          label: '대표자명 *',
+          initialValue: data.representativeName,
+          hint: '홍길동',
+          onChanged:
+              (value) => store.updatePilotBusiness(representative: value),
+        ),
+      ],
+    );
+  }
+}
+
+class _InsuranceStep extends StatelessWidget {
+  const _InsuranceStep({required this.store});
+  final DrameStore store;
+  @override
+  Widget build(BuildContext context) {
+    final data = store.pilotOnboarding;
+    return Column(
+      children: <Widget>[
+        _PilotSelectField(
+          label: '보험사 *',
+          value: data.insuranceCompany,
+          values: const <String>['DB손해보험', '삼성화재', '현대해상', 'KB손해보험'],
+          onChanged: (value) => store.updatePilotInsurance(company: value),
+        ),
+        const SizedBox(height: 18),
+        _PilotTextField(
+          label: '보험 증권번호 *',
+          initialValue: data.insuranceNumber,
+          hint: 'DB-DRONE-240001',
+          onChanged: (value) => store.updatePilotInsurance(number: value),
+        ),
+        const SizedBox(height: 18),
+        _PilotUploadBox(
+          title: '보험 증권 업로드',
+          uploaded: data.insuranceUploaded,
+          onTap:
+              () =>
+                  store.updatePilotInsurance(uploaded: !data.insuranceUploaded),
+        ),
+      ],
+    );
+  }
+}
+
+class _DroneStep extends StatelessWidget {
+  const _DroneStep({required this.store});
+  final DrameStore store;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        ...store.pilotOnboarding.drones.asMap().entries.map((entry) {
+          final index = entry.key;
+          final drone = entry.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              border: Border.all(color: _line),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Text('기체 ${index + 1}', style: AppText.smallStrong),
+                    const Spacer(),
+                    if (store.pilotOnboarding.drones.length > 1)
+                      IconButton(
+                        onPressed: () => store.removePilotDrone(index),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                  ],
+                ),
+                _PilotSelectField(
+                  label: '제조사',
+                  value: drone.maker,
+                  values: const <String>['DJI', 'Autel', 'Parrot', '기타'],
+                  onChanged:
+                      (value) => store.updatePilotDrone(index, maker: value),
+                ),
+                const SizedBox(height: 18),
+                _PilotTextField(
+                  label: '모델명',
+                  initialValue: drone.model,
+                  hint: 'Mavic 3 Pro',
+                  onChanged:
+                      (value) => store.updatePilotDrone(index, model: value),
+                ),
+                const SizedBox(height: 18),
+                _PilotChipGroup(
+                  values: const <String>['촬영용', '방제용', '측량용', '점검용', '다목적'],
+                  selected: drone.categories,
+                  onTap:
+                      (value) => store.togglePilotDroneCategory(index, value),
+                ),
+                const SizedBox(height: 14),
+                _PilotChipGroup(
+                  values: const <String>[
+                    '4K 카메라',
+                    '열화상',
+                    '다중분광',
+                    'RTK GPS',
+                    '약제 탱크',
+                  ],
+                  selected: drone.sensors,
+                  onTap: (value) => store.togglePilotDroneSensor(index, value),
+                ),
+                const SizedBox(height: 18),
+                _PilotTextField(
+                  label: '기체 신고번호',
+                  initialValue: drone.registrationNumber,
+                  hint: 'S1234567',
+                  onChanged:
+                      (value) => store.updatePilotDrone(
+                        index,
+                        registrationNumber: value,
+                      ),
+                ),
+                const SizedBox(height: 18),
+                _PilotUploadBox(
+                  title: '기체 사진 업로드',
+                  uploaded: drone.photoUploaded,
+                  onTap:
+                      () => store.updatePilotDrone(
+                        index,
+                        photoUploaded: !drone.photoUploaded,
+                      ),
+                ),
+              ],
+            ),
+          );
+        }),
+        OutlinedButton.icon(
+          onPressed: store.addPilotDrone,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('기체 추가'),
+        ),
+      ],
+    );
+  }
+}
+
+class _AreaStep extends StatelessWidget {
+  const _AreaStep({required this.store});
+  final DrameStore store;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const Text('주요 활동 지역', style: AppText.smallStrong),
+        const SizedBox(height: 10),
+        _PilotChipGroup(
+          values: const <String>[
+            '서울',
+            '경기',
+            '인천',
+            '강원',
+            '충청',
+            '전라',
+            '경상',
+            '제주',
+          ],
+          selected: store.pilotOnboarding.areas,
+          onTap: store.togglePilotArea,
+        ),
+        const SizedBox(height: 18),
+        const _PilotNotice('복수 지역을 선택할 수 있습니다. 선택 지역은 운용자 매칭 노출에 사용됩니다.'),
+      ],
+    );
+  }
+}
+
+class _PortfolioStep extends StatelessWidget {
+  const _PortfolioStep({required this.store});
+  final DrameStore store;
+  @override
+  Widget build(BuildContext context) {
+    final data = store.pilotOnboarding;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _PilotChipGroup(
+          values: const <String>['항공 촬영', '농업 방제', '건설 측량', '시설 점검', '행사 중계'],
+          selected: data.portfolioTypes,
+          onTap: store.togglePilotPortfolioType,
+        ),
+        const SizedBox(height: 18),
+        _PilotTextField(
+          label: '포트폴리오 URL',
+          initialValue: data.portfolioUrl,
+          hint: 'https://...',
+          onChanged: (value) => store.updatePilotPortfolio(url: value),
+        ),
+        const SizedBox(height: 18),
+        _PilotUploadBox(
+          title: '대표 작업 샘플 업로드',
+          uploaded: data.sampleUploaded,
+          onTap:
+              () => store.updatePilotPortfolio(
+                sampleUploaded: !data.sampleUploaded,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PilotTextField extends StatelessWidget {
+  const _PilotTextField({
+    required this.label,
+    required this.initialValue,
+    required this.hint,
+    required this.onChanged,
+  });
+  final String label;
+  final String initialValue;
+  final String hint;
+  final ValueChanged<String> onChanged;
+  @override
+  Widget build(BuildContext context) => TextFormField(
+    key: ValueKey<String>('$label-$initialValue'),
+    initialValue: initialValue,
+    onChanged: onChanged,
+    decoration: _pilotInputDecoration(label: label, hint: hint),
+  );
+}
+
+class _PilotSelectField extends StatelessWidget {
+  const _PilotSelectField({
+    required this.label,
+    required this.value,
+    required this.values,
+    required this.onChanged,
+  });
+  final String label;
+  final String value;
+  final List<String> values;
+  final ValueChanged<String> onChanged;
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      items:
+          values
+              .map(
+                (value) =>
+                    DropdownMenuItem<String>(value: value, child: Text(value)),
+              )
+              .toList(),
+      onChanged: (value) {
+        if (value != null) onChanged(value);
+      },
+      decoration: _pilotInputDecoration(label: label),
+    );
+  }
+}
+
+class _PilotUploadBox extends StatelessWidget {
+  const _PilotUploadBox({
+    required this.title,
+    required this.uploaded,
+    required this.onTap,
+  });
+  final String title;
+  final bool uploaded;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        height: 128,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: uploaded ? const Color(0xFFE9F8F2) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: uploaded ? _mint : const Color(0xFFBFD0E4),
+            width: 1.4,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              uploaded
+                  ? Icons.check_circle_rounded
+                  : Icons.cloud_upload_outlined,
+              color: uploaded ? _mint : const Color(0xFF8BA0B8),
+              size: 30,
+            ),
+            const SizedBox(height: 10),
+            Text(title, style: AppText.smallStrong.copyWith(color: _navy)),
+            const SizedBox(height: 4),
+            Text(
+              uploaded ? '첨부 완료' : 'JPG, PNG, PDF 지원',
+              style: AppText.metricLabel,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PilotChipGroup extends StatelessWidget {
+  const _PilotChipGroup({
+    required this.values,
+    required this.selected,
+    required this.onTap,
+  });
+  final List<String> values;
+  final Set<String> selected;
+  final ValueChanged<String> onTap;
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children:
+          values.map((value) {
+            final active = selected.contains(value);
+            return FilterChip(
+              label: Text(value),
+              selected: active,
+              onSelected: (_) => onTap(value),
+              selectedColor: const Color(0xFFEAF0F7),
+              checkmarkColor: _navy,
+              side: BorderSide(color: active ? _navy : _line),
+            );
+          }).toList(),
+    );
+  }
+}
+
+class _PilotNotice extends StatelessWidget {
+  const _PilotNotice(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF0F7),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(text, style: AppText.cardSubtitle),
+    );
+  }
+}
+
+InputDecoration _pilotInputDecoration({required String label, String? hint}) {
+  return InputDecoration(
+    labelText: label,
+    hintText: hint,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: _line),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: _navy, width: 1.4),
+    ),
+  );
+}
+
 class _PopularPortfolioSection extends StatelessWidget {
   const _PopularPortfolioSection({required this.store});
 
@@ -499,6 +2156,15 @@ class _PopularPortfolioSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final portfolioPilots =
+        store.selectedPortfolioCategory == '전체'
+            ? store.pilots
+            : store.pilots
+                .where(
+                  (pilot) => pilot.hasCategory(store.selectedPortfolioCategory),
+                )
+                .toList();
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -513,7 +2179,7 @@ class _PopularPortfolioSection extends StatelessWidget {
           children: <Widget>[
             const _SectionHeader(eyebrow: '이용자들이 만족한', title: '인기 운용자들의 포트폴리오'),
             const SizedBox(height: 22),
-            const _PortfolioCategoryChips(),
+            _PortfolioCategoryChips(store: store),
             const SizedBox(height: 24),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -526,7 +2192,7 @@ class _PopularPortfolioSection extends StatelessWidget {
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: store.pilots.length,
+                  itemCount: portfolioPilots.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
                     crossAxisSpacing: 18,
@@ -534,7 +2200,7 @@ class _PopularPortfolioSection extends StatelessWidget {
                     mainAxisExtent: 402,
                   ),
                   itemBuilder: (context, index) {
-                    final pilot = store.pilots[index];
+                    final pilot = portfolioPilots[index];
                     return _PilotPortfolioCard(
                       pilot: pilot,
                       onTap: () {
@@ -560,42 +2226,140 @@ class _AreaFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children:
-            mockServiceAreas.map((area) {
-              // 1. 여기서 area와 selected를 정의해줘야 합니다.
-              final selected = store.selectedArea == area;
+    final districts =
+        store.selectedRegion == '전체'
+            ? const <String>[]
+            : mockServiceDistricts[store.selectedRegion] ?? const <String>[];
+    final neighborhoods =
+        store.selectedDistrict == '전체'
+            ? const <String>[]
+            : mockServiceNeighborhoods[store.selectedDistrict] ??
+                const <String>[];
 
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _AreaChipWrap(
+          children:
+              mockServiceAreas.map((area) {
+                return _AreaChip(
                   key: ValueKey('area-$area'),
-                  onTap: () => store.selectArea(area),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: selected ? _navy : Colors.white,
-                      borderRadius: BorderRadius.circular(8), // 기존 디자인 유지
-                      border: Border.all(color: selected ? _ink : _line),
-                    ),
-                    child: Text(
-                      area,
-                      style: AppText.chip.copyWith(
-                        color: selected ? Colors.white : _ink,
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  label: area,
+                  selected: store.selectedRegion == area,
+                  onTap: () => store.selectRegion(area),
+                );
+              }).toList(),
+        ),
+        if (districts.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 16),
+          Text(
+            '${store.selectedRegion} 시·구 선택',
+            style: AppText.smallStrong.copyWith(color: _navy),
+          ),
+          const SizedBox(height: 10),
+          _AreaChipWrap(
+            children: <Widget>[
+              _AreaChip(
+                key: const ValueKey('district-전체'),
+                label: '전체',
+                selected: store.selectedDistrict == '전체',
+                onTap: () => store.selectDistrict('전체'),
+                compact: true,
+              ),
+              ...districts.map((district) {
+                return _AreaChip(
+                  key: ValueKey('district-$district'),
+                  label: district,
+                  selected: store.selectedDistrict == district,
+                  onTap: () => store.selectDistrict(district),
+                  compact: true,
+                );
+              }),
+            ],
+          ),
+        ],
+        if (neighborhoods.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 16),
+          Text(
+            '${store.selectedDistrict} 동 선택',
+            style: AppText.smallStrong.copyWith(color: _navy),
+          ),
+          const SizedBox(height: 10),
+          _AreaChipWrap(
+            children: <Widget>[
+              _AreaChip(
+                key: const ValueKey('neighborhood-전체'),
+                label: '전체',
+                selected: store.selectedArea == store.selectedDistrict,
+                onTap: () => store.selectNeighborhood('전체'),
+                compact: true,
+              ),
+              ...neighborhoods.map((neighborhood) {
+                return _AreaChip(
+                  key: ValueKey('neighborhood-$neighborhood'),
+                  label: neighborhood,
+                  selected: store.selectedArea == neighborhood,
+                  onTap: () => store.selectNeighborhood(neighborhood),
+                  compact: true,
+                );
+              }),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _AreaChipWrap extends StatelessWidget {
+  const _AreaChipWrap({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(spacing: 10, runSpacing: 10, children: children);
+  }
+}
+
+class _AreaChip extends StatelessWidget {
+  const _AreaChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 14 : 16,
+          vertical: compact ? 7 : 8,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? _navy : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: selected ? _ink : _line),
+        ),
+        child: Text(
+          label,
+          style: AppText.chip.copyWith(
+            color: selected ? Colors.white : _ink,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            fontSize: compact ? 14 : 15,
+          ),
+        ),
       ),
     );
   }
@@ -805,6 +2569,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _TopSearch extends StatelessWidget {
   const _TopSearch();
 
@@ -838,7 +2603,9 @@ class _TopSearch extends StatelessWidget {
 }
 
 class _PortfolioCategoryChips extends StatelessWidget {
-  const _PortfolioCategoryChips();
+  const _PortfolioCategoryChips({required this.store});
+
+  final DrameStore store;
 
   @override
   Widget build(BuildContext context) {
@@ -858,24 +2625,30 @@ class _PortfolioCategoryChips extends StatelessWidget {
       child: Row(
         children:
             categories.map((category) {
-              final selected = category == '전체';
+              final selected = category == store.selectedPortfolioCategory;
               return Padding(
                 padding: const EdgeInsets.only(right: 10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 11,
-                  ),
-                  decoration: BoxDecoration(
-                    color: selected ? _navy : Colors.white,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: selected ? _navy : _line),
-                  ),
-                  child: Text(
-                    category,
-                    style: AppText.chip.copyWith(
-                      color: selected ? Colors.white : _ink,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                child: InkWell(
+                  onTap: () => store.selectPortfolioCategory(category),
+                  borderRadius: BorderRadius.circular(999),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 11,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected ? _navy : Colors.white,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: selected ? _navy : _line),
+                    ),
+                    child: Text(
+                      category,
+                      style: AppText.chip.copyWith(
+                        color: selected ? Colors.white : _ink,
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
