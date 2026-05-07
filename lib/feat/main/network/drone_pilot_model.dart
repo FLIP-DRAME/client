@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 class DronePilot {
   const DronePilot({
     required this.id,
@@ -51,11 +52,11 @@ class DroneCategory {
     required this.id,
     required this.label,
     required this.description,
-    required this.iconCodePoint,
+    required this.icon,
   });
 
   final String id;
   final String label;
   final String description;
-  final int iconCodePoint;
+  final IconData icon;
 }
