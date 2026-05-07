@@ -16,7 +16,7 @@ class AppText {
     fontWeight: FontWeight.w800,
     height: 1.25,
     letterSpacing: -0.6,
-    color: _ink,
+    color: _navy,
   );
 
   static const TextStyle nav = TextStyle(
@@ -42,7 +42,7 @@ class AppText {
     fontWeight: FontWeight.w800,
     height: 1.25,
     letterSpacing: -0.45,
-    color: _ink,
+    color: _navy,
   );
 
   static const TextStyle cardSubtitle = TextStyle(
@@ -96,7 +96,7 @@ class AppText {
     fontWeight: FontWeight.w700,
     height: 1.3,
     letterSpacing: -0.25,
-    color: _ink,
+    color: _navy,
   );
 
   static const TextStyle smallStrong = TextStyle(
@@ -117,6 +117,381 @@ class AppText {
   );
 }
 
+class _CategorySelectionSection extends StatelessWidget {
+  const _CategorySelectionSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: _PageShell(
+        top: 52,
+        bottom: 50,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const _SectionHeader(
+              eyebrow: '먼저 필요한 작업을 선택하세요',
+              title: '카테고리별 드론 서비스',
+            ),
+            const SizedBox(height: 24),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns =
+                    constraints.maxWidth >= 1040
+                        ? 6
+                        : constraints.maxWidth >= 760
+                        ? 3
+                        : 2;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: mockDroneCategories.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    mainAxisExtent: 132,
+                  ),
+                  itemBuilder: (context, index) {
+                    final category = mockDroneCategories[index];
+                    return _ServiceCategoryCard(
+                      key: ValueKey('category-${category.id}'),
+                      category: category,
+                      selected: store.selectedCategory?.id == category.id,
+                      onTap: () => store.selectCategory(category),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AreaSelectionSection extends StatelessWidget {
+  const _AreaSelectionSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFF3F6FA),
+      child: _PageShell(
+        top: 42,
+        bottom: 42,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            _SectionHeader(
+              eyebrow: '${store.selectedCategory!.label} 운용자 매칭',
+              title: '촬영 지역을 선택하세요',
+            ),
+            const SizedBox(height: 20),
+            _AreaFilter(store: store),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OperatorListSection extends StatelessWidget {
+  const _OperatorListSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      child: _PageShell(
+        top: 52,
+        bottom: 60,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            _SectionHeader(
+              eyebrow: '${store.selectedArea} 허가 운용자 우선 표시',
+              title: '조건에 맞는 운용자',
+              action: '${store.pilots.length}명',
+            ),
+            const SizedBox(height: 24),
+            if (store.pilots.isEmpty)
+              const _EmptyOperatorState()
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns =
+                      constraints.maxWidth >= 1040
+                          ? 3
+                          : constraints.maxWidth >= 720
+                          ? 2
+                          : 1;
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: store.pilots.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: columns,
+                      crossAxisSpacing: 18,
+                      mainAxisSpacing: 18,
+                      mainAxisExtent: 430,
+                    ),
+                    itemBuilder: (context, index) {
+                      final pilot = store.pilots[index];
+                      return _OperatorMatchCard(
+                        key: ValueKey('pilot-${pilot.id}'),
+                        pilot: pilot,
+                        priority: pilot.hasPermitFor(store.selectedArea),
+                        onTap: () {
+                          store.selectPilot(pilot);
+                          _openPortfolio(context, pilot);
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceCategoryCard extends StatelessWidget {
+  const _ServiceCategoryCard({
+    super.key,
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final DroneCategory category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected ? _navy : _soft,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: selected ? _navy : _line),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color:
+                    selected
+                        ? Colors.white.withValues(alpha: 0.16)
+                        : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color:
+                      selected ? Colors.white.withValues(alpha: 0.20) : _line,
+                ),
+              ),
+              child: Icon(
+                IconData(category.iconCodePoint, fontFamily: 'MaterialIcons'),
+                color: selected ? Colors.white : _navy,
+                size: 22,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              category.label,
+              style: AppText.smallStrong.copyWith(
+                color: selected ? Colors.white : _navy,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              category.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.cardSubtitle.copyWith(
+                color: selected ? const Color(0xFFD5E4F3) : _muted,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OperatorMatchCard extends StatelessWidget {
+  const _OperatorMatchCard({
+    super.key,
+    required this.pilot,
+    required this.priority,
+    required this.onTap,
+  });
+
+  final DronePilot pilot;
+  final bool priority;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: priority ? _mint : _line),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: _navy.withValues(alpha: 0.06),
+              blurRadius: 22,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            SizedBox(
+              height: 190,
+              width: double.infinity,
+              child: _NetworkCover(imageUrl: pilot.portfolioImages.first),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      if (priority) const _PriorityBadge(),
+                      if (priority) const SizedBox(width: 8),
+                      Text(pilot.responseTime, style: AppText.cardSubtitle),
+                      const Spacer(),
+                      const Icon(
+                        Icons.star_rounded,
+                        color: Color(0xFFFFB020),
+                        size: 19,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        pilot.rating.toStringAsFixed(1),
+                        style: AppText.smallStrong,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(pilot.name, style: AppText.portfolioTitle),
+                  const SizedBox(height: 7),
+                  Text(
+                    pilot.intro,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.cardSubtitle,
+                  ),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children:
+                        pilot.categories.map((category) {
+                          return _MiniChip(label: category);
+                        }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: <Widget>[
+                      Text(pilot.priceLabel, style: AppText.smallStrong),
+                      const Spacer(),
+                      Text(
+                        '포트폴리오 보기',
+                        style: AppText.smallStrong.copyWith(color: _navy),
+                      ),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: _navy,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniChip extends StatelessWidget {
+  const _MiniChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: _soft,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: AppText.metricLabel.copyWith(
+          color: _navy,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyOperatorState extends StatelessWidget {
+  const _EmptyOperatorState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: _soft,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: const Text(
+        '선택한 조건에 맞는 운용자가 아직 없습니다. 다른 지역을 선택해보세요.',
+        style: AppText.cardSubtitle,
+      ),
+    );
+  }
+}
+
 class _PopularPortfolioSection extends StatelessWidget {
   const _PopularPortfolioSection({required this.store});
 
@@ -124,48 +499,55 @@ class _PopularPortfolioSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PageShell(
-      top: 12,
-      bottom: 48,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const _SectionHeader(eyebrow: '이용자들이 만족한', title: '인기 운용자들의 포트폴리오'),
-          const SizedBox(height: 22),
-          const _PortfolioCategoryChips(),
-          const SizedBox(height: 24),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final columns =
-                  constraints.maxWidth >= 980
-                      ? 3
-                      : constraints.maxWidth >= 680
-                      ? 2
-                      : 1;
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: store.pilots.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  crossAxisSpacing: 18,
-                  mainAxisSpacing: 20,
-                  mainAxisExtent: 402,
-                ),
-                itemBuilder: (context, index) {
-                  final pilot = store.pilots[index];
-                  return _PilotPortfolioCard(
-                    pilot: pilot,
-                    onTap: () {
-                      store.selectPilot(pilot);
-                      _openPortfolio(context, pilot);
-                    },
-                  );
-                },
-              );
-            },
-          ),
-        ],
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Color(0xFFF1F5FA),
+        border: Border(top: BorderSide(color: Color(0xFFE1E8F1))),
+      ),
+      child: _PageShell(
+        top: 58,
+        bottom: 72,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const _SectionHeader(eyebrow: '이용자들이 만족한', title: '인기 운용자들의 포트폴리오'),
+            const SizedBox(height: 22),
+            const _PortfolioCategoryChips(),
+            const SizedBox(height: 24),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns =
+                    constraints.maxWidth >= 980
+                        ? 3
+                        : constraints.maxWidth >= 680
+                        ? 2
+                        : 1;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: store.pilots.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 18,
+                    mainAxisSpacing: 20,
+                    mainAxisExtent: 402,
+                  ),
+                  itemBuilder: (context, index) {
+                    final pilot = store.pilots[index];
+                    return _PilotPortfolioCard(
+                      pilot: pilot,
+                      onTap: () {
+                        store.selectPilot(pilot);
+                        _openPortfolio(context, pilot);
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -189,6 +571,7 @@ class _AreaFilter extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: GestureDetector(
+                  key: ValueKey('area-$area'),
                   onTap: () => store.selectArea(area),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -197,7 +580,7 @@ class _AreaFilter extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: selected ? Colors.black : Colors.white,
+                      color: selected ? _navy : Colors.white,
                       borderRadius: BorderRadius.circular(8), // 기존 디자인 유지
                       border: Border.all(color: selected ? _ink : _line),
                     ),
@@ -288,7 +671,7 @@ class _PilotPanel extends StatelessWidget {
         border: Border.all(color: _line),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: _navy.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -441,24 +824,15 @@ class _TopSearch extends StatelessWidget {
           SizedBox(width: 10),
           Text(
             '어떤 서비스가 필요하세요?',
-            style: TextStyle(color: _muted, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              color: _muted,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _NavText extends StatelessWidget {
-  const _NavText(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 24),
-      child: Text(label, style: AppText.nav),
     );
   }
 }

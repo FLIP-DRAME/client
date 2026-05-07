@@ -22,15 +22,10 @@ class _FeedPageShell extends StatelessWidget {
 }
 
 class _FeedSectionHeader extends StatelessWidget {
-  const _FeedSectionHeader({
-    required this.eyebrow,
-    required this.title,
-    this.action,
-  });
+  const _FeedSectionHeader({required this.eyebrow, required this.title});
 
   final String eyebrow;
   final String title;
-  final String? action;
 
   @override
   Widget build(BuildContext context) {
@@ -47,13 +42,6 @@ class _FeedSectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (action != null)
-          TextButton.icon(
-            onPressed: () {},
-            label: Text(action!),
-            icon: const Icon(Icons.chevron_right_rounded),
-            iconAlignment: IconAlignment.end,
-          ),
       ],
     );
   }
