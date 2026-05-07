@@ -311,7 +311,7 @@ class _ServiceCategoryCard extends StatelessWidget {
                 ),
               ),
               child: Icon(
-                IconData(category.iconCodePoint, fontFamily: 'MaterialIcons'),
+                category.icon,
                 color: selected ? Colors.white : _navy,
                 size: 22,
               ),

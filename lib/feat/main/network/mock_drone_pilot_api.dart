@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'drone_pilot_model.dart';
 
 class MockDronePilotApi {
@@ -45,37 +46,37 @@ const List<DroneCategory> mockDroneCategories = <DroneCategory>[
     id: 'aerial',
     label: '항공촬영',
     description: '홍보 영상, 행사, 부동산 항공 컷',
-    iconCodePoint: 0xe412,
+    icon: Icons.camera_alt_rounded,
   ),
   DroneCategory(
     id: 'spray',
     label: '농약방제',
     description: '논밭 방제와 작업 기록',
-    iconCodePoint: 0xf06c9,
+    icon: Icons.grass_rounded,
   ),
   DroneCategory(
     id: 'estate',
     label: '부동산',
     description: '건물 외관과 입지 영상',
-    iconCodePoint: 0xe0af,
+    icon: Icons.home_work_rounded,
   ),
   DroneCategory(
     id: 'mapping',
     label: '측량·매핑',
     description: '부지 측량과 정사영상',
-    iconCodePoint: 0xe55b,
+    icon: Icons.map_rounded,
   ),
   DroneCategory(
     id: 'inspection',
     label: '시설점검',
     description: '태양광, 지붕, 교량 점검',
-    iconCodePoint: 0xf02cc,
+    icon: Icons.engineering_rounded,
   ),
   DroneCategory(
     id: 'event',
     label: '행사촬영',
     description: '축제, 스포츠, 이벤트 촬영',
-    iconCodePoint: 0xe87d,
+    icon: Icons.celebration_rounded,
   ),
 ];
 
