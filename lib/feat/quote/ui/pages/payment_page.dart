@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../network/mock_quote_api.dart';
 import '../../network/quote_model.dart';
 import '../component/quote_component.dart';
-import 'contact_access_page.dart';
 
 class PaymentPage extends StatelessWidget {
   const PaymentPage({
@@ -74,14 +74,12 @@ class PaymentPage extends StatelessWidget {
                         final contact = MockQuoteApi().createContactAccess(
                           estimate,
                         );
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder:
-                                (_) => ContactAccessPage(
-                                  estimate: estimate,
-                                  contactAccess: contact,
-                                ),
-                          ),
+                        context.push(
+                          '/quote/contact',
+                          extra: <String, Object?>{
+                            'estimate': estimate,
+                            'contactAccess': contact,
+                          },
                         );
                       },
                       style: FilledButton.styleFrom(

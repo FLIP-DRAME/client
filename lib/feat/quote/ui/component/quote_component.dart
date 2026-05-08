@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/drame_text_styles.dart';
+
 const quoteNavy = Color(0xFF1F3F68);
 const quoteInk = Color(0xFF172338);
 const quoteMuted = Color(0xFF718096);
@@ -8,53 +10,48 @@ const quoteLine = Color(0xFFE4EAF2);
 
 class QuoteText {
   static const TextStyle logo = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: quoteNavy,
     fontSize: 18,
-    fontWeight: FontWeight.w800,
+    fontWeight: DrameTextStyles.bold,
     height: 1.2,
   );
 
   static const TextStyle title = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: quoteInk,
-    fontSize: 28,
-    fontWeight: FontWeight.w800,
+    fontSize: DrameTextStyles.pageTitleSize,
+    fontWeight: DrameTextStyles.bold,
     height: 1.25,
-    letterSpacing: -0.6,
+    letterSpacing: -0.25,
   );
 
   static const TextStyle sectionTitle = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: quoteNavy,
-    fontSize: 20,
-    fontWeight: FontWeight.w800,
+    fontSize: DrameTextStyles.cardTitleSize,
+    fontWeight: DrameTextStyles.bold,
     height: 1.3,
-    letterSpacing: -0.35,
+    letterSpacing: -0.15,
   );
 
   static const TextStyle body = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: quoteMuted,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.regular,
     height: 1.55,
   );
 
   static const TextStyle label = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: quoteInk,
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
-    height: 1.3,
+    fontSize: DrameTextStyles.labelSize,
+    fontWeight: DrameTextStyles.semiBold,
+    height: 1.35,
   );
 
-  static const TextStyle button = TextStyle(
-    fontFamily: 'Pretendard',
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
-    height: 1.2,
-  );
+  static const TextStyle button = DrameTextStyles.button;
 }
 
 class QuoteScaffold extends StatelessWidget {
@@ -169,7 +166,7 @@ class ChoiceWrap extends StatelessWidget {
               side: BorderSide(color: active ? quoteNavy : quoteLine),
               labelStyle: QuoteText.body.copyWith(
                 color: active ? Colors.white : quoteInk,
-                fontWeight: FontWeight.w700,
+                fontWeight: DrameTextStyles.semiBold,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
@@ -233,7 +230,9 @@ class QuoteInfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: QuoteText.label.copyWith(fontWeight: FontWeight.w800),
+              style: QuoteText.label.copyWith(
+                fontWeight: DrameTextStyles.semiBold,
+              ),
             ),
           ),
         ],

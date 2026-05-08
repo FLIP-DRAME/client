@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'app_router.dart';
+import 'common/drame_text_styles.dart';
 import 'feat/main/ui/pages/main_page.dart';
 
 void main() {
@@ -17,11 +19,12 @@ class DrameApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'DRAME',
+      routerConfig: appRouter,
       theme: ThemeData(
-        fontFamily: 'Pretendard',
+        fontFamily: DrameTextStyles.fontFamily,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2563EB),
           primary: const Color(0xFF111827),
@@ -39,7 +42,6 @@ class DrameApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const DrameHomePage(),
     );
   }
 }
