@@ -62,13 +62,12 @@ class DrameTopNavigation extends StatelessWidget {
                 if (!compact) const SizedBox(width: 54),
                 const Spacer(),
                 const SizedBox(width: 22),
-                if (!compact) ...<Widget>[
-                  _DrameModeToggle(
-                    isPilotMode: isPilotMode,
-                    onChanged: onModeChanged,
-                  ),
-                  const SizedBox(width: 14),
-                ],
+
+                _DrameModeToggle(
+                  isPilotMode: isPilotMode,
+                  onChanged: onModeChanged,
+                ),
+                const SizedBox(width: 14),
                 TextButton(
                   onPressed: onLoginTap,
                   style: TextButton.styleFrom(

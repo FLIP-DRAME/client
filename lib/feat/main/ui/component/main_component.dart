@@ -1213,7 +1213,7 @@ class _IncomingRequestsPanel extends StatelessWidget {
               crossAxisCount: columns,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
-              childAspectRatio: columns == 1 ? 3.2 : 1.34,
+              childAspectRatio: columns == 1 ? 2.2 : 1.34,
               children:
                   previewRequests
                       .map((request) => _RequestCard(request: request))
