@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../common/drame_text_styles.dart';
 import '../../../main/network/drone_pilot_model.dart';
-import '../../../quote/ui/pages/quote_request_page.dart';
 
 part '../component/portfolio_component.dart';
 
@@ -13,138 +14,122 @@ const _line = Color(0xFFE4EAF2);
 
 class PortfolioText {
   static const TextStyle logo = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _navy,
     fontSize: 18,
-    fontWeight: FontWeight.w800,
+    fontWeight: DrameTextStyles.bold,
     height: 1.2,
-    letterSpacing: -0.4,
+    letterSpacing: -0.2,
   );
 
   static const TextStyle profileName = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _ink,
-    fontSize: 28,
-    fontWeight: FontWeight.w800,
+    fontSize: DrameTextStyles.pageTitleSize,
+    fontWeight: DrameTextStyles.bold,
     height: 1.25,
-    letterSpacing: -0.6,
+    letterSpacing: -0.25,
   );
 
   static const TextStyle profileMeta = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _muted,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.medium,
     height: 1.35,
-    letterSpacing: -0.1,
   );
 
   static const TextStyle profileDescription = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: Color(0xFF5F6B7B),
-    fontSize: 15,
-    fontWeight: FontWeight.w500,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.regular,
     height: 1.55,
-    letterSpacing: -0.15,
   );
 
   static const TextStyle sectionTitle = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _ink,
-    fontSize: 21,
-    fontWeight: FontWeight.w800,
+    fontSize: DrameTextStyles.cardTitleSize,
+    fontWeight: DrameTextStyles.bold,
     height: 1.3,
-    letterSpacing: -0.45,
+    letterSpacing: -0.15,
   );
 
   static const TextStyle body = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _muted,
-    fontSize: 15,
-    fontWeight: FontWeight.w400,
-    height: 1.75,
-    letterSpacing: -0.1,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.regular,
+    height: 1.65,
   );
 
   static const TextStyle infoText = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _muted,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.medium,
     height: 1.45,
-    letterSpacing: -0.1,
   );
 
   static const TextStyle rating = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _ink,
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.semiBold,
     height: 1.3,
-    letterSpacing: -0.1,
   );
 
   static const TextStyle quoteTitle = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _ink,
-    fontSize: 20,
-    fontWeight: FontWeight.w800,
+    fontSize: DrameTextStyles.cardTitleSize,
+    fontWeight: DrameTextStyles.bold,
     height: 1.3,
-    letterSpacing: -0.4,
+    letterSpacing: -0.15,
   );
 
   static const TextStyle quoteBody = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _muted,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.regular,
     height: 1.65,
-    letterSpacing: -0.1,
   );
 
   static const TextStyle quoteLabel = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _muted,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.medium,
     height: 1.4,
-    letterSpacing: -0.1,
   );
 
   static const TextStyle quoteValue = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _ink,
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.semiBold,
     height: 1.4,
-    letterSpacing: -0.1,
   );
 
   static const TextStyle reviewName = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _ink,
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.semiBold,
     height: 1.35,
-    letterSpacing: -0.1,
   );
 
   static const TextStyle reviewBody = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: _muted,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.regular,
     height: 1.55,
-    letterSpacing: -0.1,
   );
 
-  static const TextStyle button = TextStyle(
-    fontFamily: 'Pretendard',
-    fontSize: 14,
-    fontWeight: FontWeight.w700,
-    height: 1.2,
-    letterSpacing: -0.1,
-  );
+  static const TextStyle button = DrameTextStyles.button;
 }
 
 class PilotPortfolioPage extends StatelessWidget {
@@ -214,7 +199,5 @@ class PilotPortfolioPage extends StatelessWidget {
 }
 
 void _openQuoteRequest(BuildContext context, DronePilot pilot) {
-  Navigator.of(context).push(
-    MaterialPageRoute<void>(builder: (_) => QuoteRequestPage(pilot: pilot)),
-  );
+  context.push('/quote/request/${pilot.id}', extra: pilot);
 }

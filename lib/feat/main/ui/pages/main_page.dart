@@ -1,67 +1,56 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../common/drame_navigation.dart';
+import '../../../../common/drame_text_styles.dart';
 import '../../../feed/ui/pages/feed_page.dart';
-import '../../../portfolio/ui/pages/portfolio_page.dart';
 import '../../../quote/network/mock_quote_api.dart';
 import '../../../quote/network/quote_model.dart';
 import '../../network/drone_pilot_model.dart';
 import '../../network/mock_drone_pilot_api.dart';
 
 part '../component/main_component.dart';
+part '../component/operator_mypage_component.dart';
 
 class HomeText {
   static const TextStyle logo = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: Color(0xFF1F3F68),
-    fontSize: 24,
-    fontWeight: FontWeight.w700,
-    height: 1.1,
-    letterSpacing: -0.4,
-  );
-
-  static const TextStyle heroTitle = TextStyle(
-    fontFamily: 'Pretendard',
-    color: Colors.white,
-    fontSize: 44,
-    fontWeight: FontWeight.w700,
-    height: 1.18,
-    letterSpacing: -1.0,
-  );
-
-  static const TextStyle heroSubtitle = TextStyle(
-    fontFamily: 'Pretendard',
-    color: Color(0xFFB9C7D8),
-    fontSize: 17,
-    fontWeight: FontWeight.w500,
-    height: 1.55,
+    fontSize: DrameTextStyles.logoSize,
+    fontWeight: DrameTextStyles.bold,
+    height: 1.15,
     letterSpacing: -0.2,
   );
 
+  static const TextStyle heroTitle = TextStyle(
+    fontFamily: DrameTextStyles.fontFamily,
+    color: Colors.white,
+    fontSize: DrameTextStyles.heroTitleSize,
+    fontWeight: DrameTextStyles.bold,
+    height: 1.2,
+    letterSpacing: -0.4,
+  );
+
+  static const TextStyle heroSubtitle = TextStyle(
+    fontFamily: DrameTextStyles.fontFamily,
+    color: Color(0xFFB9C7D8),
+    fontSize: 16,
+    fontWeight: DrameTextStyles.regular,
+    height: 1.55,
+  );
+
   static const TextStyle heroSearch = TextStyle(
-    fontFamily: 'Pretendard',
+    fontFamily: DrameTextStyles.fontFamily,
     color: Color(0xFF8D9CB0),
-    fontSize: 15,
-    fontWeight: FontWeight.w500,
-    height: 1.3,
-    letterSpacing: -0.1,
+    fontSize: DrameTextStyles.bodySize,
+    fontWeight: DrameTextStyles.medium,
+    height: 1.45,
   );
 
-  static const TextStyle topButton = TextStyle(
-    fontFamily: 'Pretendard',
-    fontSize: 13,
-    fontWeight: FontWeight.w500,
-    height: 1.25,
-    letterSpacing: -0.1,
-  );
+  static const TextStyle topButton = DrameTextStyles.label;
 
-  static const TextStyle primaryButton = TextStyle(
-    fontFamily: 'Pretendard',
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    height: 1.25,
-    letterSpacing: -0.1,
-  );
+  static const TextStyle primaryButton = DrameTextStyles.labelStrong;
 }
 
 const _navy = Color(0xFF1F3A5F);
@@ -110,10 +99,187 @@ class PilotOnboardingData {
   bool submitted = false;
 }
 
+class PilotWorkRequest {
+  const PilotWorkRequest({
+    required this.id,
+    required this.category,
+    required this.status,
+    required this.location,
+    required this.distance,
+    required this.dateRange,
+    required this.budget,
+    required this.client,
+    required this.summary,
+    required this.progress,
+    required this.remaining,
+    required this.mapLabel,
+  });
+
+  final String id;
+  final String category;
+  final String status;
+  final String location;
+  final String distance;
+  final String dateRange;
+  final String budget;
+  final String client;
+  final String summary;
+  final String progress;
+  final String remaining;
+  final String mapLabel;
+}
+
+const List<PilotWorkRequest> mockPilotWorkRequests = <PilotWorkRequest>[
+  PilotWorkRequest(
+    id: 'request-001',
+    category: '농약 방제',
+    status: '신규',
+    location: '경기 화성시',
+    distance: '8km',
+    dateRange: '2026.04.20',
+    budget: '30~100만원',
+    client: 'K**',
+    summary: '논 3,000평 농약 방제 작업 요청입니다. 비행 승인 대행 포함 희망. 작업 후 GPS 로그 제공 요청드립니다.',
+    progress: '현재 2명이 견적 작성 중',
+    remaining: '23시간 남음',
+    mapLabel: '경기 화성시 지도',
+  ),
+  PilotWorkRequest(
+    id: 'request-002',
+    category: '부동산 영상',
+    status: '신규',
+    location: '서울 강남구',
+    distance: '15km',
+    dateRange: '2026.04.22',
+    budget: '30~100만원',
+    client: 'L**',
+    summary: '신축 아파트 단지 항공 촬영 요청. 4K 영상 + 편집본 납품. 일몰 전후 골든아워 촬영 희망.',
+    progress: '현재 1명이 견적 작성 중',
+    remaining: '47시간 남음',
+    mapLabel: '서울 강남구 지도',
+  ),
+  PilotWorkRequest(
+    id: 'request-003',
+    category: '시설 점검',
+    status: '마감 임박',
+    location: '인천 남동구',
+    distance: '22km',
+    dateRange: '2026.04.18 ~ 2026.04.19',
+    budget: '100~500만원',
+    client: 'P**',
+    summary: '태양광 패널 열화상 점검. 약 500kW 규모. 열화상 카메라 탑재 드론 필수. 점검 보고서 포함.',
+    progress: '현재 3명이 견적 작성 중',
+    remaining: '5시간 남음',
+    mapLabel: '인천 남동구 지도',
+  ),
+  PilotWorkRequest(
+    id: 'request-004',
+    category: '측량·매핑',
+    status: '검토 중',
+    location: '경기 용인시',
+    distance: '31km',
+    dateRange: '2026.04.25',
+    budget: '100~500만원',
+    client: 'J**',
+    summary: '건설 현장 토공량 산출을 위한 3D 매핑. RTK GPS 탑재 드론 필수. DXF 파일 납품.',
+    progress: '현재 1명이 견적 작성 중',
+    remaining: '71시간 남음',
+    mapLabel: '경기 용인시 지도',
+  ),
+  PilotWorkRequest(
+    id: 'request-005',
+    category: '행사촬영',
+    status: '신규',
+    location: '부산 해운대',
+    distance: '42km',
+    dateRange: '2026.04.27',
+    budget: '50~150만원',
+    client: 'M**',
+    summary: '해변 행사 항공 촬영과 하이라이트 영상 제작 요청. 안전요원 동선과 관람객 밀집 구간 고려 필요.',
+    progress: '현재 2명이 견적 작성 중',
+    remaining: '96시간 남음',
+    mapLabel: '부산 해운대 지도',
+  ),
+];
+
 void _openPortfolio(BuildContext context, DronePilot pilot) {
-  Navigator.of(context).push(
-    MaterialPageRoute<void>(builder: (_) => PilotPortfolioPage(pilot: pilot)),
-  );
+  context.push('/portfolio/${pilot.id}', extra: pilot);
+}
+
+void _openPilotRequestReviewPage(
+  BuildContext context, {
+  required PilotWorkRequest initialRequest,
+}) {
+  context.push('/pilot/requests', extra: initialRequest);
+}
+
+class PilotRequestReviewPage extends StatelessWidget {
+  const PilotRequestReviewPage({super.key, required this.initialRequest});
+
+  final PilotWorkRequest initialRequest;
+
+  @override
+  Widget build(BuildContext context) {
+    return _PilotRequestReviewPage(initialRequest: initialRequest);
+  }
+}
+
+class PilotRegistrationPage extends StatefulWidget {
+  const PilotRegistrationPage({super.key});
+
+  @override
+  State<PilotRegistrationPage> createState() => _PilotRegistrationPageState();
+}
+
+class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DrameStore>().openPilotOnboarding();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEAF0F7),
+      body: SafeArea(
+        child: Consumer<DrameStore>(
+          builder: (context, store, _) {
+            if (store.isPilotAuthOpen ||
+                !store.isLoggedIn ||
+                store.accountRole != '운용자') {
+              return _PilotAuthSection(store: store);
+            }
+            if (store.operatorRegistrationCompleted &&
+                !store.isPilotOnboarding) {
+              return _PilotRegistrationDoneSection(store: store);
+            }
+            return _PilotOnboardingSection(store: store);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class OperatorMyPage extends StatelessWidget {
+  const OperatorMyPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFEAF0F7),
+      body: SafeArea(
+        child: Consumer<DrameStore>(
+          builder:
+              (context, store, _) =>
+                  _OperatorProfileManagementPage(store: store),
+        ),
+      ),
+    );
+  }
 }
 
 class DrameStore extends ChangeNotifier {
@@ -144,7 +310,6 @@ class DrameStore extends ChangeNotifier {
   bool isLoggedIn = false;
   bool isPilotOnboarding = false;
   bool operatorRegistrationCompleted = false;
-  bool operatorPortfolioCompleted = false;
   int pilotOnboardingStep = 0;
   String accountRole = '운용자';
   String accountEmail = '';
@@ -291,14 +456,8 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void completeOperatorPortfolio() {
-    operatorPortfolioCompleted = true;
-    pilotOnboarding.sampleUploaded = true;
-    notifyListeners();
-  }
-
   void goToPilotOnboardingStep(int step) {
-    pilotOnboardingStep = step.clamp(0, 5);
+    pilotOnboardingStep = step.clamp(0, 4);
     notifyListeners();
   }
 
@@ -311,7 +470,7 @@ class DrameStore extends ChangeNotifier {
   }
 
   void nextPilotOnboardingStep() {
-    if (pilotOnboardingStep >= 5) {
+    if (pilotOnboardingStep >= 4) {
       pilotOnboarding.submitted = true;
       operatorRegistrationCompleted = true;
       isPilotOnboarding = false;
@@ -486,12 +645,30 @@ class _DrameHomePageState extends State<DrameHomePage> {
 
             return CustomScrollView(
               slivers: <Widget>[
-                SliverToBoxAdapter(child: _TopNavigation(store: store)),
                 SliverToBoxAdapter(
-                  child: _SecondaryNavigation(
+                  child: DrameTopNavigation(
+                    isPilotMode: store.isPilotMode,
+                    onModeChanged: store.setPilotMode,
+                    onLoginTap: () {
+                      store.setPilotMode(true);
+                      store.openAuth(loginMode: true, role: '운용자');
+                    },
+                    onRegisterTap: () => context.push('/pilot/register'),
+                    onLogoTap: () => context.go('/'),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: DrameSecondaryNavigation(
+                    isPilotMode: store.isPilotMode,
                     onFindPilotTap: () => _scrollToSection(_categorySectionKey),
                     onPortfolioTap:
                         () => _scrollToSection(_portfolioSectionKey),
+                    onRequestsTap:
+                        () => _openPilotRequestReviewPage(
+                          context,
+                          initialRequest: mockPilotWorkRequests.first,
+                        ),
+                    onMyPageTap: () => context.push('/pilot/mypage'),
                   ),
                 ),
                 if (store.isPilotMode) ...<Widget>[
@@ -548,6 +725,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
   }
 }
 
+// ignore: unused_element
 class _TopNavigation extends StatelessWidget {
   const _TopNavigation({required this.store});
 
@@ -596,7 +774,7 @@ class _TopNavigation extends StatelessWidget {
                   child: const Text('로그인 / 회원가입'),
                 ),
                 FilledButton(
-                  onPressed: store.openPilotOnboarding,
+                  onPressed: () => context.push('/pilot/register'),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF1F3F68),
                     foregroundColor: Colors.white,
@@ -620,6 +798,7 @@ class _TopNavigation extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _ModeToggle extends StatelessWidget {
   const _ModeToggle({required this.isPilotMode, required this.onChanged});
 
@@ -655,6 +834,7 @@ class _ModeToggle extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _ModeToggleItem extends StatelessWidget {
   const _ModeToggleItem({
     required this.label,
@@ -682,7 +862,7 @@ class _ModeToggleItem extends StatelessWidget {
           label,
           style: HomeText.topButton.copyWith(
             color: selected ? Colors.white : _muted,
-            fontWeight: FontWeight.w800,
+            fontWeight: DrameTextStyles.semiBold,
           ),
         ),
       ),
@@ -690,6 +870,7 @@ class _ModeToggleItem extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _SecondaryNavigation extends StatelessWidget {
   const _SecondaryNavigation({
     required this.onFindPilotTap,
@@ -749,6 +930,7 @@ class _SecondaryNavigation extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _SubNavTab extends StatelessWidget {
   const _SubNavTab({
     required this.icon,
@@ -766,12 +948,7 @@ class _SubNavTab extends StatelessWidget {
       onPressed: onTap,
       style: TextButton.styleFrom(
         foregroundColor: const Color(0xFF6E7F99),
-        textStyle: const TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          height: 1.2,
-        ),
+        textStyle: DrameTextStyles.button,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 15),
       ),
       icon: Icon(icon, size: 18),
@@ -845,10 +1022,10 @@ class _HeroStatusBadge extends StatelessWidget {
           Text(
             '자격증·보험 검증 완료 운용자 매칭',
             style: TextStyle(
-              fontFamily: 'Pretendard',
+              fontFamily: DrameTextStyles.fontFamily,
               color: Color(0xFFD5E4F3),
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+              fontSize: DrameTextStyles.labelSize,
+              fontWeight: DrameTextStyles.semiBold,
               height: 1.2,
             ),
           ),

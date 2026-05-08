@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../main/network/drone_pilot_model.dart';
 import '../../network/mock_quote_api.dart';
 import '../../network/quote_model.dart';
 import '../component/quote_component.dart';
-import 'quote_estimate_page.dart';
 
 class QuoteRequestPage extends StatefulWidget {
   const QuoteRequestPage({super.key, required this.pilot});
@@ -57,11 +57,7 @@ class _QuoteRequestPageState extends State<QuoteRequestPage> {
       return;
     }
     setState(() => _submitting = false);
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => QuoteEstimatePage(estimate: estimate),
-      ),
-    );
+    context.push('/quote/estimate', extra: estimate);
   }
 
   @override

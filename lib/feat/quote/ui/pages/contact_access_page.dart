@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../network/quote_model.dart';
 import '../component/quote_component.dart';
@@ -40,10 +41,7 @@ class ContactAccessPage extends StatelessWidget {
                   Text(contactAccess.note, style: QuoteText.body),
                   const SizedBox(height: 24),
                   OutlinedButton.icon(
-                    onPressed:
-                        () => Navigator.of(
-                          context,
-                        ).popUntil((route) => route.isFirst),
+                    onPressed: () => context.go('/'),
                     icon: const Icon(Icons.home_rounded),
                     label: const Text('메인으로 돌아가기'),
                     style: OutlinedButton.styleFrom(

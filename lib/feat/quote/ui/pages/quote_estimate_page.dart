@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../network/mock_quote_api.dart';
 import '../../network/quote_model.dart';
 import '../component/quote_component.dart';
-import 'payment_page.dart';
 
 class QuoteEstimatePage extends StatelessWidget {
   const QuoteEstimatePage({super.key, required this.estimate});
@@ -69,14 +69,12 @@ class QuoteEstimatePage extends StatelessWidget {
                         final payment = MockQuoteApi().createPaymentInstruction(
                           estimate,
                         );
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder:
-                                (_) => PaymentPage(
-                                  estimate: estimate,
-                                  paymentInstruction: payment,
-                                ),
-                          ),
+                        context.push(
+                          '/quote/payment',
+                          extra: <String, Object?>{
+                            'estimate': estimate,
+                            'paymentInstruction': payment,
+                          },
                         );
                       },
                       style: FilledButton.styleFrom(

@@ -576,10 +576,10 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                 child: Text(
                   widget.post.authorName.substring(0, 1),
                   style: const TextStyle(
-                    fontFamily: 'Pretendard',
+                    fontFamily: DrameTextStyles.fontFamily,
                     color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontSize: DrameTextStyles.bodySize,
+                    fontWeight: DrameTextStyles.semiBold,
                   ),
                 ),
               ),
@@ -715,10 +715,10 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                   decoration: const InputDecoration(
                     hintText: '댓글 달기...',
                     hintStyle: TextStyle(
-                      fontFamily: 'Pretendard',
+                      fontFamily: DrameTextStyles.fontFamily,
                       color: _muted,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
+                      fontSize: DrameTextStyles.bodySize,
+                      fontWeight: DrameTextStyles.regular,
                     ),
                     border: InputBorder.none,
                     isDense: true,
