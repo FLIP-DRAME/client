@@ -1616,34 +1616,7 @@ class _RequestReviewDetail extends StatelessWidget {
           const SizedBox(height: 18),
           const Divider(color: _line),
           const SizedBox(height: 18),
-          const Text('견적 작성', style: AppText.portfolioTitle),
-          const SizedBox(height: 16),
-          const _QuoteField(label: '견적 금액 *', hint: '30000', suffix: '원'),
-          const SizedBox(height: 14),
-          const _QuoteField(label: '작업 가능 일정 *', hint: '연도-월-일'),
-          const SizedBox(height: 14),
-          const _QuoteField(
-            label: '코멘트 * (50~500자)',
-            hint: '작업 방식과 포함 항목을 입력하세요',
-            maxLines: 4,
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () => context.go('/'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _navy,
-                foregroundColor: Colors.white,
-                textStyle: AppText.button,
-                padding: const EdgeInsets.symmetric(vertical: 17),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('견적 보내기'),
-            ),
-          ),
+          const _KakaoPaySection(),
         ],
       ),
     );
@@ -3873,6 +3846,185 @@ class _KoreaMapPainter extends CustomPainter {
     );
     canvas.drawOval(jejuRect, landPaint);
     canvas.drawOval(jejuRect, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+
+class _KakaoPaySection extends StatefulWidget {
+  const _KakaoPaySection();
+
+  @override
+  State<_KakaoPaySection> createState() => _KakaoPaySectionState();
+}
+
+class _KakaoPaySectionState extends State<_KakaoPaySection> {
+  bool _paymentDone = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const Text('카카오페이로 결제하기', style: AppText.portfolioTitle),
+        const SizedBox(height: 6),
+        const Text(
+          'QR코드를 카카오페이 앱으로 스캔하세요',
+          style: AppText.cardSubtitle,
+        ),
+        const SizedBox(height: 20),
+
+        // 카카오페이 배지
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFEE500),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Icons.qr_code_rounded, color: Color(0xFF3A1D1D), size: 20),
+              SizedBox(width: 8),
+              Text(
+                'KakaoPay',
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF3A1D1D),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // QR 코드
+        Center(
+          child: Container(
+            width: 180,
+            height: 180,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _line),
+            ),
+            child: CustomPaint(painter: _QrCodePainter()),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Center(
+          child: Text(
+            'QR코드 유효시간: 10분',
+            style: AppText.metricLabel,
+          ),
+        ),
+        const SizedBox(height: 20),
+        const Divider(color: _line),
+        const SizedBox(height: 18),
+
+        // 완료 버튼
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () => setState(() => _paymentDone = true),
+            style: FilledButton.styleFrom(
+              backgroundColor: _navy,
+              foregroundColor: _line,
+              textStyle: AppText.button,
+              padding: const EdgeInsets.symmetric(vertical: 17),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('완료'),
+          ),
+        ),
+
+        // 연락처 표시
+        if (_paymentDone) ...<Widget>[
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF0F7),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _line),
+            ),
+            child: const Row(
+              children: <Widget>[
+                Icon(Icons.phone_outlined, color: _navy, size: 20),
+                SizedBox(width: 10),
+                Text(
+                  '사용자 연락처: 010-1234-5678',
+                  style: AppText.smallStrong,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _QrCodePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..color = const Color(0xFF222222);
+    final w = size.width;
+    final h = size.height;
+
+    void block(double x, double y, double s) {
+      canvas.drawRect(Rect.fromLTWH(x * w, y * h, s * w, s * h), p);
+    }
+
+    // 좌상단 파인더
+    block(0, 0, 0.30);
+    canvas.drawRect(
+      Rect.fromLTWH(0.04 * w, 0.04 * h, 0.22 * w, 0.22 * h),
+      Paint()..color = Colors.white,
+    );
+    block(0.08, 0.08, 0.14);
+
+    // 우상단 파인더
+    block(0.70, 0, 0.30);
+    canvas.drawRect(
+      Rect.fromLTWH(0.74 * w, 0.04 * h, 0.22 * w, 0.22 * h),
+      Paint()..color = Colors.white,
+    );
+    block(0.78, 0.08, 0.14);
+
+    // 좌하단 파인더
+    block(0, 0.70, 0.30);
+    canvas.drawRect(
+      Rect.fromLTWH(0.04 * w, 0.74 * h, 0.22 * w, 0.22 * h),
+      Paint()..color = Colors.white,
+    );
+    block(0.08, 0.78, 0.14);
+
+    // 데이터 도트들
+    final dots = <List<double>>[
+      [0.40, 0.04], [0.50, 0.04], [0.60, 0.04],
+      [0.40, 0.12], [0.60, 0.12],
+      [0.40, 0.20], [0.50, 0.20],
+      [0.04, 0.40], [0.12, 0.40], [0.20, 0.40],
+      [0.40, 0.40], [0.50, 0.40], [0.60, 0.40], [0.70, 0.40], [0.80, 0.40], [0.90, 0.40],
+      [0.04, 0.50], [0.20, 0.50], [0.50, 0.50], [0.70, 0.50], [0.90, 0.50],
+      [0.04, 0.60], [0.12, 0.60], [0.40, 0.60], [0.60, 0.60], [0.80, 0.60],
+      [0.40, 0.70], [0.60, 0.70], [0.80, 0.70], [0.90, 0.70],
+      [0.40, 0.80], [0.50, 0.80], [0.70, 0.80],
+      [0.40, 0.90], [0.60, 0.90], [0.80, 0.90], [0.90, 0.90],
+    ];
+
+    for (final dot in dots) {
+      block(dot[0], dot[1], 0.08);
+    }
   }
 
   @override
