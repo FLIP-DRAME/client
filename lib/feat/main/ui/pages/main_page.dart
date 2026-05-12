@@ -9,6 +9,11 @@ import '../../../quote/network/mock_quote_api.dart';
 import '../../../quote/network/quote_model.dart';
 import '../../network/drone_pilot_model.dart';
 import '../../network/mock_drone_pilot_api.dart';
+import 'package:web/web.dart' as web;
+import 'dart:typed_data';         // Uint8List
+import 'dart:js_interop';         // JSArrayBuffer, .toDart 사용에 필요
+import 'dart:async';        // Completer
+
 
 part '../component/main_component.dart';
 part '../component/operator_mypage_component.dart';
@@ -97,6 +102,20 @@ class PilotOnboardingData {
   String portfolioUrl = '';
   bool sampleUploaded = false;
   bool submitted = false;
+}
+
+class OperatorFeedPost {
+  OperatorFeedPost({
+    required this.id,
+    required this.caption,
+    required this.createdAt,
+    this.imageBytes,
+  });
+
+  final String id;
+  final String caption;
+  final DateTime createdAt;
+  final List<int>? imageBytes; // 웹: Uint8List, 실제 앱에선 File 경로로 교체 가능
 }
 
 class PilotWorkRequest {
@@ -596,6 +615,26 @@ class DrameStore extends ChangeNotifier {
     }
     paymentConfirmed = true;
     contactAccess = _quoteApi.createContactAccess(estimate!);
+    notifyListeners();
+  }
+
+  List<OperatorFeedPost> myFeedPosts = <OperatorFeedPost>[];
+
+  void addFeedPost({required String caption, List<int>? imageBytes}) {
+    myFeedPosts = <OperatorFeedPost>[
+      OperatorFeedPost(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        caption: caption,
+        createdAt: DateTime.now(),
+        imageBytes: imageBytes,
+      ),
+      ...myFeedPosts,
+    ];
+    notifyListeners();
+  }
+
+  void deleteFeedPost(String id) {
+    myFeedPosts = myFeedPosts.where((p) => p.id != id).toList();
     notifyListeners();
   }
 }
