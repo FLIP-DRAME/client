@@ -747,9 +747,9 @@ class _PilotAuthSection extends StatelessWidget {
                         onTap: () => store.updateAuth(role: '운용자'),
                       ),
                       _AuthRoleChip(
-                        label: '사용자',
-                        selected: store.accountRole == '사용자',
-                        onTap: () => store.updateAuth(role: '사용자'),
+                        label: '이용자',
+                        selected: store.accountRole == '이용자',
+                        onTap: () => store.updateAuth(role: '이용자'),
                       ),
                     ],
                   ),
@@ -844,7 +844,7 @@ class _PilotAuthSection extends StatelessWidget {
                                 : '가입하고 운용자 등록 시작하기'
                             : store.isLoginMode
                             ? '로그인하기'
-                            : '사용자 계정 만들기',
+                            : '이용자 계정 만들기',
                       ),
                     ),
                   ),
@@ -3961,7 +3961,7 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
                 Icon(Icons.phone_outlined, color: _navy, size: 20),
                 SizedBox(width: 10),
                 Text(
-                  '사용자 연락처: 010-1234-5678',
+                  '이용자 연락처: 010-1234-5678',
                   style: AppText.smallStrong,
                 ),
               ],

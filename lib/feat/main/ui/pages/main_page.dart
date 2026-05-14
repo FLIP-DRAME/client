@@ -735,9 +735,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     SliverToBoxAdapter(
                       child: _AreaSelectionSection(store: store),
                     ),
-                    if (store.selectedArea != '전체')
-                      SliverToBoxAdapter(
-                        child: _OperatorListSection(store: store),
+                    // if (store.selectedArea != '전체')
+                    SliverToBoxAdapter(
+                      child: _OperatorListSection(store: store),
                       ),
                   ],
                   const SliverToBoxAdapter(

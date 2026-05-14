@@ -144,6 +144,9 @@ class _PortfolioMain extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
+        const _ReviewInput(),
+        
+
         ...reviews.map(
           (review) => _ReviewTile(
             name: review.name,
@@ -380,6 +383,97 @@ class _NetworkCover extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+
+class _ReviewInput extends StatefulWidget {
+  const _ReviewInput({super.key});
+
+  @override
+  State<_ReviewInput> createState() => _ReviewInputState();
+}
+
+class _ReviewInputState extends State<_ReviewInput> {
+  double _rating = 5.0;
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _soft.withValues(alpha: 0.5), // 배경색을 연하게 설정
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('별점 선택', style: PortfolioText.quoteLabel),
+              const SizedBox(width: 16),
+              // 단순 구현을 위해 Row와 GestureDetector를 사용하여 별점 선택 UI 구성
+              Row(
+                children: List.generate(5, (index) {
+                  return GestureDetector(
+                    onTap: () => setState(() => _rating = index + 1.0),
+                    child: Icon(
+                      Icons.star_rounded,
+                      color: _rating > index ? const Color(0xFFFFB020) : _muted.withValues(alpha: 0.3),
+                      size: 28,
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(width: 8),
+              Text('$_rating점', style: PortfolioText.rating),
+            ],
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: '촬영 경험은 어떠셨나요? 리뷰를 남겨주세요.',
+              hintStyle: PortfolioText.reviewBody.copyWith(color: _muted),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () {
+                // TODO: 리뷰 등록 로직 연결
+                print('리뷰 등록: $_rating점, 내용: ${_controller.text}');
+                _controller.clear();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('리뷰가 등록되었습니다.')),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _navy,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('리뷰 등록하기'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
