@@ -16,7 +16,7 @@ class AppText {
     fontWeight: FontWeight.w800,
     height: 1.25,
     letterSpacing: -0.6,
-    color: _navy,
+    color: _ink,
   );
 
   static const TextStyle nav = TextStyle(
@@ -42,7 +42,7 @@ class AppText {
     fontWeight: FontWeight.w800,
     height: 1.25,
     letterSpacing: -0.45,
-    color: _navy,
+    color: _ink,
   );
 
   static const TextStyle cardSubtitle = TextStyle(
@@ -96,7 +96,7 @@ class AppText {
     fontWeight: FontWeight.w700,
     height: 1.3,
     letterSpacing: -0.25,
-    color: _navy,
+    color: _ink,
   );
 
   static const TextStyle smallStrong = TextStyle(
@@ -183,7 +183,7 @@ class _AreaSelectionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF3F6FA),
+      color: Colors.white,
       child: _PageShell(
         top: 42,
         bottom: 42,
@@ -289,7 +289,7 @@ class _ServiceCategoryCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? _navy : _soft,
+          color: selected ? _navy : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: selected ? _navy : _line),
         ),
@@ -503,7 +503,7 @@ class _PilotLandingSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF3F6FA),
+      color: Colors.white,
       child: Column(
         children: <Widget>[
           SizedBox(
@@ -560,7 +560,7 @@ class _PilotLandingSection extends StatelessWidget {
                             icon: const Icon(Icons.verified_user_outlined),
                             label: const Text('운용자 등록하기'),
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF2B527F),
+                              backgroundColor: _navy,
                               foregroundColor: Colors.white,
                               side: BorderSide(
                                 color: Colors.white.withValues(alpha: 0.42),
@@ -641,7 +641,7 @@ class _PilotLandingMetric extends StatelessWidget {
       width: 250,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF0F7),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _line),
       ),
@@ -667,7 +667,7 @@ class _PilotAuthSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 46,
         bottom: 88,
@@ -878,7 +878,7 @@ class _AuthModeTab extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.transparent,
+          color: selected ? _toggle : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
@@ -976,7 +976,7 @@ class _PilotDashboardSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF6F8FB),
+      color: Colors.white,
       child: _PageShell(
         top: 52,
         bottom: 92,
@@ -1077,7 +1077,7 @@ class _OperatorProfileCard extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 38,
-                backgroundColor: const Color(0xFFEAF0F7),
+                backgroundColor: Colors.white,
                 child: Text(
                   nickname.characters.first,
                   style: AppText.cardTitle,
@@ -1313,7 +1313,7 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 980;
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF0F7),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: <Widget>[
@@ -1567,7 +1567,7 @@ class _RequestReviewDetail extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF0F7),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -1601,7 +1601,7 @@ class _RequestReviewDetail extends StatelessWidget {
             height: 160,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF0F7),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -1692,7 +1692,7 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 80,
         bottom: 96,
@@ -1781,7 +1781,7 @@ class _OperatorMyPageSection extends StatelessWidget {
     final drone = data.drones.first;
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 36,
         bottom: 86,
@@ -2024,7 +2024,7 @@ class _PilotOnboardingSection extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 940;
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 40,
         bottom: 96,
@@ -2107,7 +2107,7 @@ class _PilotStepCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color:
-                        active ? const Color(0xFFEAF0F7) : Colors.transparent,
+                        active ? const Color(0xFFEAF2FF) : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -2115,7 +2115,7 @@ class _PilotStepCard extends StatelessWidget {
                       CircleAvatar(
                         radius: 14,
                         backgroundColor:
-                            active ? _navy : const Color(0xFFE8EEF5),
+                            active ? _navy : const Color(0xFFF1F3F5),
                         child:
                             completed
                                 ? const Icon(
@@ -2614,7 +2614,7 @@ class _PilotChipGroup extends StatelessWidget {
               label: Text(value),
               selected: active,
               onSelected: (_) => onTap(value),
-              selectedColor: const Color(0xFFEAF0F7),
+              selectedColor: const Color(0xFFEAF2FF),
               checkmarkColor: _navy,
               side: BorderSide(color: active ? _navy : _line),
             );
@@ -2632,7 +2632,7 @@ class _PilotNotice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF0F7),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(text, style: AppText.cardSubtitle),
@@ -2675,8 +2675,8 @@ class _PopularPortfolioSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        color: Color(0xFFF1F5FA),
-        border: Border(top: BorderSide(color: Color(0xFFE1E8F1))),
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
       ),
       child: _PageShell(
         top: 58,
@@ -3353,7 +3353,7 @@ class _FooterSection extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 900;
 
     return Container(
-      color: _navy,
+      color: Colors.white,
       child: _PageShell(
         top: 58,
         bottom: 54,
@@ -3448,7 +3448,7 @@ class _FooterSection extends StatelessWidget {
                 ],
               ),
             const SizedBox(height: 42),
-            const Divider(color: Color(0xFF86A0BE)),
+            const Divider(color: _line),
             const SizedBox(height: 28),
             Row(
               children: <Widget>[
@@ -3486,7 +3486,7 @@ class _FooterSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 34),
-            const Divider(color: Color(0xFF86A0BE)),
+            const Divider(color: _line),
             const SizedBox(height: 24),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -3497,7 +3497,7 @@ class _FooterSection extends StatelessWidget {
                     '통신판매신고번호: 제2026-서울강남-0001호  |  개인정보 보호책임자: 이보호\n'
                     '주소: 서울특별시 강남구 테헤란로 123, 드라메빌딩 5층',
                     style: TextStyle(
-                      color: Color(0xFF9AB0C8),
+                      color: _muted,
                       fontWeight: FontWeight.w700,
                       height: 1.7,
                     ),
@@ -3506,7 +3506,7 @@ class _FooterSection extends StatelessWidget {
                 Text(
                   '© 2026 Drame. All rights reserved.',
                   style: TextStyle(
-                    color: Color(0xFF9AB0C8),
+                    color: _muted,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -3530,7 +3530,7 @@ class _FooterBrand extends StatelessWidget {
         Text(
           '•  Drame',
           style: TextStyle(
-            color: Colors.white,
+            color: _ink,
             fontSize: 18,
             fontWeight: FontWeight.w900,
           ),
@@ -3539,7 +3539,7 @@ class _FooterBrand extends StatelessWidget {
         Text(
           '30분 안에,\n검증된 드론 운용자와 만나세요.',
           style: TextStyle(
-            color: Color(0xFFB7C7D9),
+            color: _muted,
             fontWeight: FontWeight.w800,
             height: 1.7,
           ),
@@ -3563,7 +3563,7 @@ class _FooterColumn extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            color: Color(0xFFB7C7D9),
+            color: _ink,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -3574,7 +3574,7 @@ class _FooterColumn extends StatelessWidget {
             child: Text(
               item,
               style: const TextStyle(
-                color: Color(0xFFB7C7D9),
+                color: _muted,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -3593,7 +3593,7 @@ class _InsuranceNote extends StatelessWidget {
     return const Text(
       '드론 보험\n드론 운용에 필요한 보험을 Drame에서 비교하고 가입하세요.',
       style: TextStyle(
-        color: Color(0xFFB7C7D9),
+        color: _muted,
         fontWeight: FontWeight.w800,
         height: 1.7,
       ),
@@ -3619,8 +3619,8 @@ class _InsuranceCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFB7C7D9)),
-        color: Colors.white.withValues(alpha: 0.04),
+        border: Border.all(color: _line),
+        color: Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3628,7 +3628,7 @@ class _InsuranceCard extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFF58D09B),
+              color: _navy,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -3636,7 +3636,7 @@ class _InsuranceCard extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              color: Colors.white,
+              color: _ink,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -3644,7 +3644,7 @@ class _InsuranceCard extends StatelessWidget {
           Text(
             body,
             style: const TextStyle(
-              color: Color(0xFFB7C7D9),
+              color: _muted,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -3952,7 +3952,7 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF0F7),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _line),
             ),

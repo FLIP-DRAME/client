@@ -26,13 +26,13 @@ class DrameApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: DrameTextStyles.fontFamily,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2563EB),
-          primary: const Color(0xFF111827),
-          secondary: const Color(0xFFB7F36B),
+          seedColor: const Color(0xFF0052FF),
+          primary: const Color(0xFF0052FF),
+          secondary: const Color(0xFF293341),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF111827),
+            backgroundColor: const Color(0xFF0052FF),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
