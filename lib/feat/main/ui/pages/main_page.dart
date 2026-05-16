@@ -1007,163 +1007,32 @@ class _LandingHeroSection extends StatelessWidget {
       height: compact ? 420 : 520,
       child: DecoratedBox(
         decoration: const BoxDecoration(color: Color(0xFFEAF7FF)),
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            const _HeroWashBackground(),
-            _PageShell(
-              top: compact ? 54 : 86,
-              bottom: 0,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  const _HeroStatusBadge(),
-                  SizedBox(height: compact ? 28 : 38),
-                  Text(
-                    '필요한 드론 작업을 더 쉽고 빠르게,\n검증된 운용자와 더 넓은 현장으로.',
-                    textAlign: TextAlign.center,
-                    style: HomeText.heroTitle.copyWith(
-                      fontSize: compact ? 30 : 46,
-                      height: 1.35,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  Text(
-                    '항공 촬영부터 방제, 점검, 측량까지 Drame에서 한 번에 연결하세요.',
-                    textAlign: TextAlign.center,
-                    style: HomeText.heroSubtitle.copyWith(
-                      fontSize: compact ? 15 : 17,
-                    ),
-                  ),
-                ],
+        child: _PageShell(
+          top: compact ? 92 : 142,
+          bottom: 0,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                '필요한 드론 작업을 더 쉽고 빠르게,\n검증된 운용자와 더 넓은 현장으로.',
+                textAlign: TextAlign.center,
+                style: HomeText.heroTitle.copyWith(
+                  fontSize: compact ? 30 : 46,
+                  height: 1.35,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeroWashBackground extends StatelessWidget {
-  const _HeroWashBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: <Color>[
-            Color(0xFFEAFBFF),
-            Color(0xFFEFF9FF),
-            Color(0xFFDCEFFF),
-          ],
-        ),
-      ),
-      child: CustomPaint(painter: _HeroWashPainter()),
-    );
-  }
-}
-
-class _HeroWashPainter extends CustomPainter {
-  const _HeroWashPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final blue =
-        Paint()
-          ..shader = RadialGradient(
-            colors: <Color>[
-              const Color(0xFF0052FF).withValues(alpha: 0.30),
-              const Color(0xFF87C7FF).withValues(alpha: 0.18),
-              Colors.transparent,
+              const SizedBox(height: 22),
+              Text(
+                '항공 촬영부터 방제, 점검, 측량까지 Drame에서 한 번에 연결하세요.',
+                textAlign: TextAlign.center,
+                style: HomeText.heroSubtitle.copyWith(
+                  fontSize: compact ? 15 : 17,
+                ),
+              ),
             ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.72, size.height * 0.36),
-              radius: size.width * 0.34,
-            ),
-          );
-    canvas.drawCircle(
-      Offset(size.width * 0.72, size.height * 0.36),
-      size.width * 0.34,
-      blue,
-    );
-
-    final wave =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.58)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 56
-          ..strokeCap = StrokeCap.round;
-    final path =
-        Path()
-          ..moveTo(size.width * 0.50, size.height * 1.02)
-          ..cubicTo(
-            size.width * 0.62,
-            size.height * 0.76,
-            size.width * 0.80,
-            size.height * 0.70,
-            size.width * 0.97,
-            size.height * 0.46,
-          );
-    canvas.drawPath(path, wave);
-
-    final gloss =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.28)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 16
-          ..strokeCap = StrokeCap.round;
-    final glossPath =
-        Path()
-          ..moveTo(size.width * 0.62, size.height * 0.02)
-          ..cubicTo(
-            size.width * 0.72,
-            size.height * 0.22,
-            size.width * 0.88,
-            size.height * 0.28,
-            size.width,
-            size.height * 0.58,
-          );
-    canvas.drawPath(glossPath, gloss);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _HeroStatusBadge extends StatelessWidget {
-  const _HeroStatusBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.76),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.circle, color: _navy, size: 8),
-          SizedBox(width: 8),
-          Text(
-            '자격증·보험 검증 완료 운용자 매칭',
-            style: TextStyle(
-              fontFamily: DrameTextStyles.fontFamily,
-              color: _ink,
-              fontSize: DrameTextStyles.labelSize,
-              fontWeight: DrameTextStyles.semiBold,
-              height: 1.2,
-            ),
           ),
-        ],
+        ),
       ),
     );
   }
