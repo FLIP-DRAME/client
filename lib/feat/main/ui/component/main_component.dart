@@ -289,9 +289,9 @@ class _ServiceCategoryCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.white,
+          color: selected ? _focus : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? _navy : _line),
+          border: Border.all(color: selected ? _focus : _line),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,19 +300,13 @@ class _ServiceCategoryCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color:
-                    selected
-                        ? Colors.white.withValues(alpha: 0.16)
-                        : Colors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color:
-                      selected ? Colors.white.withValues(alpha: 0.20) : _line,
-                ),
+                border: Border.all(color: selected ? _focus : _line),
               ),
               child: Icon(
                 category.icon,
-                color: selected ? Colors.white : _navy,
+                color: _navy,
                 size: 22,
               ),
             ),
@@ -320,7 +314,7 @@ class _ServiceCategoryCard extends StatelessWidget {
             Text(
               category.label,
               style: AppText.smallStrong.copyWith(
-                color: selected ? Colors.white : _navy,
+                color: _ink,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -330,7 +324,7 @@ class _ServiceCategoryCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppText.cardSubtitle.copyWith(
-                color: selected ? const Color(0xFFD5E4F3) : _muted,
+                color: _muted,
                 fontSize: 12,
               ),
             ),
@@ -560,7 +554,7 @@ class _PilotLandingSection extends StatelessWidget {
                             icon: const Icon(Icons.verified_user_outlined),
                             label: const Text('운용자 등록하기'),
                             style: FilledButton.styleFrom(
-                              backgroundColor: _navy,
+                              backgroundColor: _primary,
                               foregroundColor: Colors.white,
                               side: BorderSide(
                                 color: Colors.white.withValues(alpha: 0.42),
@@ -884,7 +878,7 @@ class _AuthModeTab extends StatelessWidget {
         child: Text(
           label,
           style: AppText.smallStrong.copyWith(
-            color: selected ? Colors.white : _muted,
+            color: selected ? _ink : _muted,
           ),
         ),
       ),
@@ -909,10 +903,10 @@ class _AuthRoleChip extends StatelessWidget {
       label: Text(label),
       selected: selected,
       onSelected: (_) => onTap(),
-      selectedColor: _navy,
+      selectedColor: _focus,
       backgroundColor: Colors.white,
-      side: BorderSide(color: selected ? _navy : _line),
-      labelStyle: AppText.chip.copyWith(color: selected ? Colors.white : _navy),
+      side: BorderSide(color: selected ? _focus : _line),
+      labelStyle: AppText.chip.copyWith(color: _ink),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
     );
@@ -955,7 +949,7 @@ class _AuthField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _navy, width: 1.4),
+          borderSide: const BorderSide(color: _focus, width: 1.4),
         ),
       ),
     );
@@ -1497,7 +1491,7 @@ class _RequestReviewCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? _navy : _line, width: 1.1),
+          border: Border.all(color: selected ? _focus : _line, width: 1.1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1676,7 +1670,7 @@ class _QuoteField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _navy, width: 1.2),
+          borderSide: const BorderSide(color: _focus, width: 1.2),
         ),
       ),
     );
@@ -2107,7 +2101,7 @@ class _PilotStepCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color:
-                        active ? const Color(0xFFEAF2FF) : Colors.transparent,
+                        active ? _focus : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -2115,12 +2109,12 @@ class _PilotStepCard extends StatelessWidget {
                       CircleAvatar(
                         radius: 14,
                         backgroundColor:
-                            active ? _navy : const Color(0xFFF1F3F5),
+                            active ? _focus : const Color(0xFFF1F3F5),
                         child:
                             completed
                                 ? const Icon(
                                   Icons.check_rounded,
-                                  color: _navy,
+                                  color: _ink,
                                   size: 17,
                                 )
                                 : Text(
@@ -2137,7 +2131,7 @@ class _PilotStepCard extends StatelessWidget {
                         child: Text(
                           entry.value,
                           style: AppText.smallStrong.copyWith(
-                            color: active ? _navy : const Color(0xFFA3B0C2),
+                            color: active ? _ink : const Color(0xFFA3B0C2),
                           ),
                         ),
                       ),
@@ -2614,9 +2608,9 @@ class _PilotChipGroup extends StatelessWidget {
               label: Text(value),
               selected: active,
               onSelected: (_) => onTap(value),
-              selectedColor: const Color(0xFFEAF2FF),
+              selectedColor: _focus,
               checkmarkColor: _navy,
-              side: BorderSide(color: active ? _navy : _line),
+              side: BorderSide(color: active ? _focus : _line),
             );
           }).toList(),
     );
@@ -2651,7 +2645,7 @@ InputDecoration _pilotInputDecoration({required String label, String? hint}) {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: _navy, width: 1.4),
+      borderSide: const BorderSide(color: _focus, width: 1.4),
     ),
   );
 }
@@ -2855,14 +2849,14 @@ class _AreaChip extends StatelessWidget {
           vertical: compact ? 7 : 8,
         ),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.white,
+          color: selected ? _focus : Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: selected ? _ink : _line),
+          border: Border.all(color: selected ? _focus : _line),
         ),
         child: Text(
           label,
           style: AppText.chip.copyWith(
-            color: selected ? Colors.white : _ink,
+            color: _ink,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             fontSize: compact ? 14 : 15,
           ),
@@ -3145,14 +3139,14 @@ class _PortfolioCategoryChips extends StatelessWidget {
                       vertical: 11,
                     ),
                     decoration: BoxDecoration(
-                      color: selected ? _navy : Colors.white,
+                      color: selected ? _focus : Colors.white,
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: selected ? _navy : _line),
+                      border: Border.all(color: selected ? _focus : _line),
                     ),
                     child: Text(
                       category,
                       style: AppText.chip.copyWith(
-                        color: selected ? Colors.white : _ink,
+                        color: _ink,
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w600,
                       ),
@@ -3449,44 +3443,6 @@ class _FooterSection extends StatelessWidget {
               ),
             const SizedBox(height: 42),
             const Divider(color: _line),
-            const SizedBox(height: 28),
-            Row(
-              children: <Widget>[
-                const Expanded(child: _InsuranceNote()),
-                const SizedBox(width: 18),
-                Expanded(
-                  flex: 3,
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: const <Widget>[
-                      _InsuranceCard(
-                        label: '법적 의무',
-                        title: '드론 배상책임보험',
-                        body: '제3자 신체·재산 피해 보상',
-                      ),
-                      _InsuranceCard(
-                        label: '권장',
-                        title: '드론 기체보험',
-                        body: '기체 파손·분실·추락 보상',
-                      ),
-                      _InsuranceCard(
-                        label: '선택',
-                        title: '조종자 상해보험',
-                        body: '조종자 본인 신체 상해 보상',
-                      ),
-                      _InsuranceCard(
-                        label: '추천',
-                        title: '드론 종합보험',
-                        body: '배상책임 + 기체 + 상해 통합',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 34),
-            const Divider(color: _line),
             const SizedBox(height: 24),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -3581,75 +3537,6 @@ class _FooterColumn extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _InsuranceNote extends StatelessWidget {
-  const _InsuranceNote();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      '드론 보험\n드론 운용에 필요한 보험을 Drame에서 비교하고 가입하세요.',
-      style: TextStyle(
-        color: _muted,
-        fontWeight: FontWeight.w800,
-        height: 1.7,
-      ),
-    );
-  }
-}
-
-class _InsuranceCard extends StatelessWidget {
-  const _InsuranceCard({
-    required this.label,
-    required this.title,
-    required this.body,
-  });
-
-  final String label;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 210,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _line),
-        color: Colors.white,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            label,
-            style: const TextStyle(
-              color: _navy,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            title,
-            style: const TextStyle(
-              color: _ink,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            body,
-            style: const TextStyle(
-              color: _muted,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

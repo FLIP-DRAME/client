@@ -7,9 +7,9 @@ import '../../../main/network/mock_drone_pilot_api.dart';
 
 part '../component/feed_component.dart';
 
-const _navy = Color(0xFF0052FF);
-const _ink = Color(0xFF111111);
-const _muted = Color(0xFF718096);
+const _navy = Colors.black;
+const _ink = Colors.black;
+const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'drame_text_styles.dart';
 
 const _primary = Color(0xFF0052FF);
-const _toggle = Color(0xFF293341);
-const _ink = Color(0xFF111111);
-const _muted = Color(0xFF667085);
+const _toggle = Color(0xFFEAF7FF);
+const _ink = Colors.black;
+const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE5E7EB);
 
@@ -272,7 +272,7 @@ class _DrameModeToggleItem extends StatelessWidget {
         child: Text(
           label,
           style: DrameTextStyles.label.copyWith(
-            color: selected ? Colors.white : _muted,
+            color: selected ? _ink : _muted,
             fontWeight: DrameTextStyles.semiBold,
           ),
         ),
