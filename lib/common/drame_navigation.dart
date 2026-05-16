@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'drame_text_styles.dart';
 
-const _navy = Color(0xFF1F3A5F);
-const _ink = Color(0xFF172338);
-const _muted = Color(0xFF718096);
-const _soft = Color(0xFFF3F6FA);
-const _line = Color(0xFFE4EAF2);
+const _primary = Color(0xFF0052FF);
+const _toggle = Color(0xFF293341);
+const _ink = Color(0xFF111111);
+const _muted = Color(0xFF667085);
+const _soft = Color(0xFFF7F8FA);
+const _line = Color(0xFFE5E7EB);
 
 class DrameTopNavigation extends StatelessWidget {
   const DrameTopNavigation({
@@ -26,10 +27,10 @@ class DrameTopNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 900;
+    final compact = MediaQuery.sizeOf(context).width < 760;
 
     return Container(
-      height: 76,
+      height: compact ? 68 : 76,
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: _line)),
@@ -38,7 +39,7 @@ class DrameTopNavigation extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1280),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: EdgeInsets.symmetric(horizontal: compact ? 16 : 24),
             child: Row(
               children: <Widget>[
                 InkWell(
@@ -50,24 +51,22 @@ class DrameTopNavigation extends StatelessWidget {
                       'Drame',
                       style: TextStyle(
                         fontFamily: DrameTextStyles.fontFamily,
-                        color: _navy,
+                        color: _ink,
                         fontSize: DrameTextStyles.logoSize,
                         fontWeight: DrameTextStyles.bold,
                         height: 1.15,
-                        letterSpacing: -0.2,
                       ),
                     ),
                   ),
                 ),
-                if (!compact) const SizedBox(width: 54),
                 const Spacer(),
-                const SizedBox(width: 22),
-
-                _DrameModeToggle(
-                  isPilotMode: isPilotMode,
-                  onChanged: onModeChanged,
-                ),
-                const SizedBox(width: 14),
+                if (!compact) ...<Widget>[
+                  _DrameModeToggle(
+                    isPilotMode: isPilotMode,
+                    onChanged: onModeChanged,
+                  ),
+                  const SizedBox(width: 14),
+                ],
                 TextButton(
                   onPressed: onLoginTap,
                   style: TextButton.styleFrom(
@@ -76,14 +75,15 @@ class DrameTopNavigation extends StatelessWidget {
                   ),
                   child: const Text('로그인 / 회원가입'),
                 ),
+                const SizedBox(width: 8),
                 FilledButton(
                   onPressed: onRegisterTap,
                   style: FilledButton.styleFrom(
-                    backgroundColor: _navy,
+                    backgroundColor: _primary,
                     foregroundColor: Colors.white,
                     textStyle: DrameTextStyles.labelStrong,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
@@ -160,7 +160,7 @@ class DrameSecondaryNavigation extends StatelessWidget {
             width: double.infinity,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.symmetric(horizontal: compact ? 16 : 24),
               child: Row(
                 children:
                     tabs
@@ -201,7 +201,7 @@ class DrameSubNavTab extends StatelessWidget {
     return TextButton.icon(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        foregroundColor: const Color(0xFF6E7F99),
+        foregroundColor: _muted,
         textStyle: DrameTextStyles.button,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 15),
       ),
@@ -266,7 +266,7 @@ class _DrameModeToggleItem extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.transparent,
+          color: selected ? _toggle : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(

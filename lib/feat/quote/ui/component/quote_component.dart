@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../../common/drame_text_styles.dart';
 
-const quoteNavy = Color(0xFF1F3F68);
-const quoteInk = Color(0xFF172338);
+const quoteNavy = Color(0xFF0052FF);
+const quoteInk = Color(0xFF111111);
 const quoteMuted = Color(0xFF718096);
-const quoteSoft = Color(0xFFF3F6FA);
+const quoteSoft = Color(0xFFF7F8FA);
 const quoteLine = Color(0xFFE4EAF2);
 
 class QuoteText {

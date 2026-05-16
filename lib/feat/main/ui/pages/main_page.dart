@@ -21,7 +21,7 @@ part '../component/operator_mypage_component.dart';
 class HomeText {
   static const TextStyle logo = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFF1F3F68),
+    color: Color(0xFF111111),
     fontSize: DrameTextStyles.logoSize,
     fontWeight: DrameTextStyles.bold,
     height: 1.15,
@@ -30,7 +30,7 @@ class HomeText {
 
   static const TextStyle heroTitle = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Colors.white,
+    color: Color(0xFF111111),
     fontSize: DrameTextStyles.heroTitleSize,
     fontWeight: DrameTextStyles.bold,
     height: 1.2,
@@ -39,7 +39,7 @@ class HomeText {
 
   static const TextStyle heroSubtitle = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFFB9C7D8),
+    color: Color(0xFF4B5563),
     fontSize: 16,
     fontWeight: DrameTextStyles.regular,
     height: 1.55,
@@ -58,11 +58,11 @@ class HomeText {
   static const TextStyle primaryButton = DrameTextStyles.labelStrong;
 }
 
-const _navy = Color(0xFF1F3A5F);
-// 0xFF1F3F68
-const _ink = Color(0xFF172338);
+const _navy = Color(0xFF0052FF);
+const _toggle = Color(0xFF293341);
+const _ink = Color(0xFF111111);
 const _muted = Color(0xFF718096);
-const _soft = Color(0xFFF3F6FA);
+const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
 
@@ -262,7 +262,7 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF0F7),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder: (context, store, _) {
@@ -289,7 +289,7 @@ class OperatorMyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF0F7),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder:
@@ -674,7 +674,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5FA),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder: (context, store, _) {
@@ -815,7 +815,7 @@ class _TopNavigation extends StatelessWidget {
                 FilledButton(
                   onPressed: () => context.push('/pilot/register'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F3F68),
+                    backgroundColor: _navy,
                     foregroundColor: Colors.white,
                     textStyle: HomeText.primaryButton,
                     shape: RoundedRectangleBorder(
@@ -894,7 +894,7 @@ class _ModeToggleItem extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.transparent,
+          color: selected ? _toggle : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
@@ -1001,44 +1001,139 @@ class _LandingHeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+
     return SizedBox(
-      height: 380,
+      height: compact ? 420 : 520,
       child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: _navy,
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Color(0x331F3F68),
-              blurRadius: 32,
-              offset: Offset(0, 18),
+        decoration: const BoxDecoration(color: Color(0xFFEAF7FF)),
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            const _HeroWashBackground(),
+            _PageShell(
+              top: compact ? 54 : 86,
+              bottom: 0,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  const _HeroStatusBadge(),
+                  SizedBox(height: compact ? 28 : 38),
+                  Text(
+                    '필요한 드론 작업을 더 쉽고 빠르게,\n검증된 운용자와 더 넓은 현장으로.',
+                    textAlign: TextAlign.center,
+                    style: HomeText.heroTitle.copyWith(
+                      fontSize: compact ? 30 : 46,
+                      height: 1.35,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    '항공 촬영부터 방제, 점검, 측량까지 Drame에서 한 번에 연결하세요.',
+                    textAlign: TextAlign.center,
+                    style: HomeText.heroSubtitle.copyWith(
+                      fontSize: compact ? 15 : 17,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
-        ),
-        child: _PageShell(
-          top: 36,
-          bottom: 0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: const <Widget>[
-              _HeroStatusBadge(),
-              SizedBox(height: 36),
-              Text(
-                '필요한 드론 작업,\n검증된 조종사와 빠르게 연결하세요',
-                textAlign: TextAlign.center,
-                style: HomeText.heroTitle,
-              ),
-              SizedBox(height: 22),
-              Text(
-                '항공 촬영부터 방제, 점검, 측량까지 한번에',
-                textAlign: TextAlign.center,
-                style: HomeText.heroSubtitle,
-              ),
-            ],
-          ),
         ),
       ),
     );
   }
+}
+
+class _HeroWashBackground extends StatelessWidget {
+  const _HeroWashBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: <Color>[
+            Color(0xFFEAFBFF),
+            Color(0xFFEFF9FF),
+            Color(0xFFDCEFFF),
+          ],
+        ),
+      ),
+      child: CustomPaint(painter: _HeroWashPainter()),
+    );
+  }
+}
+
+class _HeroWashPainter extends CustomPainter {
+  const _HeroWashPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final blue =
+        Paint()
+          ..shader = RadialGradient(
+            colors: <Color>[
+              const Color(0xFF0052FF).withValues(alpha: 0.30),
+              const Color(0xFF87C7FF).withValues(alpha: 0.18),
+              Colors.transparent,
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.72, size.height * 0.36),
+              radius: size.width * 0.34,
+            ),
+          );
+    canvas.drawCircle(
+      Offset(size.width * 0.72, size.height * 0.36),
+      size.width * 0.34,
+      blue,
+    );
+
+    final wave =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.58)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 56
+          ..strokeCap = StrokeCap.round;
+    final path =
+        Path()
+          ..moveTo(size.width * 0.50, size.height * 1.02)
+          ..cubicTo(
+            size.width * 0.62,
+            size.height * 0.76,
+            size.width * 0.80,
+            size.height * 0.70,
+            size.width * 0.97,
+            size.height * 0.46,
+          );
+    canvas.drawPath(path, wave);
+
+    final gloss =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.28)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 16
+          ..strokeCap = StrokeCap.round;
+    final glossPath =
+        Path()
+          ..moveTo(size.width * 0.62, size.height * 0.02)
+          ..cubicTo(
+            size.width * 0.72,
+            size.height * 0.22,
+            size.width * 0.88,
+            size.height * 0.28,
+            size.width,
+            size.height * 0.58,
+          );
+    canvas.drawPath(glossPath, gloss);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _HeroStatusBadge extends StatelessWidget {
@@ -1049,20 +1144,20 @@ class _HeroStatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.10),
+        color: Colors.white.withValues(alpha: 0.76),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        border: Border.all(color: Colors.white),
       ),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Icons.circle, color: _mint, size: 8),
+          Icon(Icons.circle, color: _navy, size: 8),
           SizedBox(width: 8),
           Text(
             '자격증·보험 검증 완료 운용자 매칭',
             style: TextStyle(
               fontFamily: DrameTextStyles.fontFamily,
-              color: Color(0xFFD5E4F3),
+              color: _ink,
               fontSize: DrameTextStyles.labelSize,
               fontWeight: DrameTextStyles.semiBold,
               height: 1.2,

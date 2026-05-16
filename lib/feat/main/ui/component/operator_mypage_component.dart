@@ -299,7 +299,7 @@ class _OperatorMyPageProfile extends StatelessWidget {
               children: <Widget>[
                 CircleAvatar(
                   radius: 44,
-                  backgroundColor: const Color(0xFFEAF0F7),
+                  backgroundColor: Colors.white,
                   child: Text(
                     nickname.characters.first,
                     style: AppText.cardTitle.copyWith(color: _navy),
@@ -1032,7 +1032,7 @@ class _FeedPostCard extends StatelessWidget {
       children: <Widget>[
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFEAF0F7),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _line),
             image:

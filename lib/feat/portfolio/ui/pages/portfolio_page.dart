@@ -6,16 +6,16 @@ import '../../../main/network/drone_pilot_model.dart';
 
 part '../component/portfolio_component.dart';
 
-const _navy = Color(0xFF1F3F68);
-const _ink = Color(0xFF172338);
+const _navy = Color(0xFF0052FF);
+const _ink = Color(0xFF111111);
 const _muted = Color(0xFF718096);
-const _soft = Color(0xFFF3F6FA);
+const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 
 class PortfolioText {
   static const TextStyle logo = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: _navy,
+    color: _ink,
     fontSize: 18,
     fontWeight: DrameTextStyles.bold,
     height: 1.2,
