@@ -688,7 +688,7 @@ InputDecoration _inlineInputDecoration(String hint) {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: _navy, width: 1.2),
+      borderSide: const BorderSide(color: _focus, width: 1.2),
     ),
   );
 }
@@ -935,7 +935,7 @@ Future<void> _pickImage() async {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _navy, width: 1.2),
+                      borderSide: const BorderSide(color: _focus, width: 1.2),
                     ),
                   ),
                 ),

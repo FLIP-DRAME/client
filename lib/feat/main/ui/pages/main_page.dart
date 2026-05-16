@@ -21,7 +21,7 @@ part '../component/operator_mypage_component.dart';
 class HomeText {
   static const TextStyle logo = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFF111111),
+    color: Colors.black,
     fontSize: DrameTextStyles.logoSize,
     fontWeight: DrameTextStyles.bold,
     height: 1.15,
@@ -30,7 +30,7 @@ class HomeText {
 
   static const TextStyle heroTitle = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFF111111),
+    color: Colors.black,
     fontSize: DrameTextStyles.heroTitleSize,
     fontWeight: DrameTextStyles.bold,
     height: 1.2,
@@ -39,7 +39,7 @@ class HomeText {
 
   static const TextStyle heroSubtitle = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFF4B5563),
+    color: Colors.black,
     fontSize: 16,
     fontWeight: DrameTextStyles.regular,
     height: 1.55,
@@ -47,7 +47,7 @@ class HomeText {
 
   static const TextStyle heroSearch = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFF8D9CB0),
+    color: Colors.black,
     fontSize: DrameTextStyles.bodySize,
     fontWeight: DrameTextStyles.medium,
     height: 1.45,
@@ -58,10 +58,12 @@ class HomeText {
   static const TextStyle primaryButton = DrameTextStyles.labelStrong;
 }
 
-const _navy = Color(0xFF0052FF);
-const _toggle = Color(0xFF293341);
-const _ink = Color(0xFF111111);
-const _muted = Color(0xFF718096);
+const _primary = Color(0xFF0052FF);
+const _navy = Colors.black;
+const _toggle = Color(0xFFEAF7FF);
+const _focus = Color(0xFFEAF7FF);
+const _ink = Colors.black;
+const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
@@ -815,7 +817,7 @@ class _TopNavigation extends StatelessWidget {
                 FilledButton(
                   onPressed: () => context.push('/pilot/register'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: _navy,
+                    backgroundColor: _primary,
                     foregroundColor: Colors.white,
                     textStyle: HomeText.primaryButton,
                     shape: RoundedRectangleBorder(
@@ -900,7 +902,7 @@ class _ModeToggleItem extends StatelessWidget {
         child: Text(
           label,
           style: HomeText.topButton.copyWith(
-            color: selected ? Colors.white : _muted,
+            color: selected ? _ink : _muted,
             fontWeight: DrameTextStyles.semiBold,
           ),
         ),
@@ -1004,9 +1006,15 @@ class _LandingHeroSection extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 760;
 
     return SizedBox(
-      height: compact ? 420 : 520,
+      height: compact ? 420 : 450,
       child: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFFEAF7FF)),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[Colors.white, _focus],
+          ),
+        ),
         child: _PageShell(
           top: compact ? 92 : 142,
           bottom: 0,

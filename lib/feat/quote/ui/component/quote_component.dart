@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../../common/drame_text_styles.dart';
 
-const quoteNavy = Color(0xFF0052FF);
-const quoteInk = Color(0xFF111111);
-const quoteMuted = Color(0xFF718096);
+const quoteNavy = Colors.black;
+const quoteInk = Colors.black;
+const quoteMuted = Colors.black;
 const quoteSoft = Color(0xFFF7F8FA);
+const quoteFocus = Color(0xFFEAF7FF);
 const quoteLine = Color(0xFFE4EAF2);
 
 class QuoteText {
@@ -161,11 +162,11 @@ class ChoiceWrap extends StatelessWidget {
               selected: active,
               label: Text(value),
               onSelected: (_) => onSelected(value),
-              selectedColor: quoteNavy,
+              selectedColor: quoteFocus,
               backgroundColor: Colors.white,
-              side: BorderSide(color: active ? quoteNavy : quoteLine),
+              side: BorderSide(color: active ? quoteFocus : quoteLine),
               labelStyle: QuoteText.body.copyWith(
-                color: active ? Colors.white : quoteInk,
+                color: quoteInk,
                 fontWeight: DrameTextStyles.semiBold,
               ),
               shape: RoundedRectangleBorder(
@@ -206,7 +207,7 @@ class QuoteTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: quoteNavy),
+          borderSide: const BorderSide(color: quoteFocus),
         ),
       ),
     );
