@@ -18,7 +18,7 @@ class AppText {
     fontWeight: FontWeight.w800,
     height: 1.25,
     letterSpacing: -0.6,
-    color: _navy,
+    color: _ink,
   );
 
   static const TextStyle nav = TextStyle(
@@ -44,7 +44,7 @@ class AppText {
     fontWeight: FontWeight.w800,
     height: 1.25,
     letterSpacing: -0.45,
-    color: _navy,
+    color: _ink,
   );
 
   static const TextStyle cardSubtitle = TextStyle(
@@ -98,7 +98,7 @@ class AppText {
     fontWeight: FontWeight.w700,
     height: 1.3,
     letterSpacing: -0.25,
-    color: _navy,
+    color: _ink,
   );
 
   static const TextStyle smallStrong = TextStyle(
@@ -189,8 +189,7 @@ class _AreaSelectionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      // 카테고리 영역과 운용자 목록 사이를 구분하는 연한 회색 배경입니다.
-      color: const Color(0xFFF3F6FA),
+      color: Colors.white,
       child: _PageShell(
         top: 42,
         bottom: 42,
@@ -299,9 +298,9 @@ class _ServiceCategoryCard extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? _navy : _soft,
+          color: selected ? _focus : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? _navy : _line),
+          border: Border.all(color: selected ? _focus : _line),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,27 +309,17 @@ class _ServiceCategoryCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color:
-                    selected
-                        ? Colors.white.withValues(alpha: 0.16)
-                        : Colors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color:
-                      selected ? Colors.white.withValues(alpha: 0.20) : _line,
-                ),
+                border: Border.all(color: selected ? _focus : _line),
               ),
-              child: Icon(
-                category.icon,
-                color: selected ? Colors.white : _navy,
-                size: 22,
-              ),
+              child: Icon(category.icon, color: _navy, size: 22),
             ),
             const Spacer(),
             Text(
               category.label,
               style: AppText.smallStrong.copyWith(
-                color: selected ? Colors.white : _navy,
+                color: _ink,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -339,10 +328,7 @@ class _ServiceCategoryCard extends StatelessWidget {
               category.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: AppText.cardSubtitle.copyWith(
-                color: selected ? const Color(0xFFD5E4F3) : _muted,
-                fontSize: 12,
-              ),
+              style: AppText.cardSubtitle.copyWith(color: _muted, fontSize: 12),
             ),
           ],
         ),
@@ -516,7 +502,7 @@ class _PilotLandingSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF3F6FA),
+      color: Colors.white,
       child: Column(
         children: <Widget>[
           SizedBox(
@@ -573,7 +559,7 @@ class _PilotLandingSection extends StatelessWidget {
                             icon: const Icon(Icons.verified_user_outlined),
                             label: const Text('운용자 등록하기'),
                             style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF2B527F),
+                              backgroundColor: _primary,
                               foregroundColor: Colors.white,
                               side: BorderSide(
                                 color: Colors.white.withValues(alpha: 0.42),
@@ -654,7 +640,7 @@ class _PilotLandingMetric extends StatelessWidget {
       width: 250,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF0F7),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _line),
       ),
@@ -681,7 +667,7 @@ class _PilotAuthSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 46,
         bottom: 88,
@@ -892,14 +878,12 @@ class _AuthModeTab extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.transparent,
+          color: selected ? _toggle : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
-          style: AppText.smallStrong.copyWith(
-            color: selected ? Colors.white : _muted,
-          ),
+          style: AppText.smallStrong.copyWith(color: selected ? _ink : _muted),
         ),
       ),
     );
@@ -923,10 +907,10 @@ class _AuthRoleChip extends StatelessWidget {
       label: Text(label),
       selected: selected,
       onSelected: (_) => onTap(),
-      selectedColor: _navy,
+      selectedColor: _focus,
       backgroundColor: Colors.white,
-      side: BorderSide(color: selected ? _navy : _line),
-      labelStyle: AppText.chip.copyWith(color: selected ? Colors.white : _navy),
+      side: BorderSide(color: selected ? _focus : _line),
+      labelStyle: AppText.chip.copyWith(color: _ink),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
     );
@@ -969,7 +953,7 @@ class _AuthField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _navy, width: 1.4),
+          borderSide: const BorderSide(color: _focus, width: 1.4),
         ),
       ),
     );
@@ -991,7 +975,7 @@ class _PilotDashboardSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF6F8FB),
+      color: Colors.white,
       child: _PageShell(
         top: 52,
         bottom: 92,
@@ -1092,7 +1076,7 @@ class _OperatorProfileCard extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 radius: 38,
-                backgroundColor: const Color(0xFFEAF0F7),
+                backgroundColor: Colors.white,
                 child: Text(
                   nickname.characters.first,
                   style: AppText.cardTitle,
@@ -1329,7 +1313,7 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 980;
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF0F7),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: <Widget>[
@@ -1513,7 +1497,7 @@ class _RequestReviewCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? _navy : _line, width: 1.1),
+          border: Border.all(color: selected ? _focus : _line, width: 1.1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1583,7 +1567,7 @@ class _RequestReviewDetail extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF0F7),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -1617,7 +1601,7 @@ class _RequestReviewDetail extends StatelessWidget {
             height: 160,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF0F7),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -1692,7 +1676,7 @@ class _QuoteField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _navy, width: 1.2),
+          borderSide: const BorderSide(color: _focus, width: 1.2),
         ),
       ),
     );
@@ -1708,7 +1692,7 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 80,
         bottom: 96,
@@ -1797,7 +1781,7 @@ class _OperatorMyPageSection extends StatelessWidget {
     final drone = data.drones.first;
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 36,
         bottom: 86,
@@ -2041,7 +2025,7 @@ class _PilotOnboardingSection extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 940;
     return Container(
       width: double.infinity,
-      color: const Color(0xFFEAF0F7),
+      color: Colors.white,
       child: _PageShell(
         top: 40,
         bottom: 96,
@@ -2123,8 +2107,7 @@ class _PilotStepCard extends StatelessWidget {
                     vertical: 13,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        active ? const Color(0xFFEAF0F7) : Colors.transparent,
+                    color: active ? _focus : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -2132,12 +2115,12 @@ class _PilotStepCard extends StatelessWidget {
                       CircleAvatar(
                         radius: 14,
                         backgroundColor:
-                            active ? _navy : const Color(0xFFE8EEF5),
+                            active ? _focus : const Color(0xFFF1F3F5),
                         child:
                             completed
                                 ? const Icon(
                                   Icons.check_rounded,
-                                  color: _navy,
+                                  color: _ink,
                                   size: 17,
                                 )
                                 : Text(
@@ -2154,7 +2137,7 @@ class _PilotStepCard extends StatelessWidget {
                         child: Text(
                           entry.value,
                           style: AppText.smallStrong.copyWith(
-                            color: active ? _navy : const Color(0xFFA3B0C2),
+                            color: active ? _ink : const Color(0xFFA3B0C2),
                           ),
                         ),
                       ),
@@ -2628,12 +2611,18 @@ class _PilotChipGroup extends StatelessWidget {
           values.map((value) {
             final active = selected.contains(value);
             return FilterChip(
-              label: Text(value),
+              label: Text(
+                value,
+                style: TextStyle(
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                  color: active ? _navy : _ink,
+                ),
+              ),
               selected: active,
               onSelected: (_) => onTap(value),
-              selectedColor: const Color(0xFFEAF0F7),
-              checkmarkColor: _navy,
-              side: BorderSide(color: active ? _navy : _line),
+              selectedColor: _focus,
+              showCheckmark: false,
+              side: BorderSide(color: active ? _navy : _line, width: 1.4),
             );
           }).toList(),
     );
@@ -2649,7 +2638,7 @@ class _PilotNotice extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF0F7),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(text, style: AppText.cardSubtitle),
@@ -2668,7 +2657,7 @@ InputDecoration _pilotInputDecoration({required String label, String? hint}) {
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: _navy, width: 1.4),
+      borderSide: const BorderSide(color: _focus, width: 1.4),
     ),
   );
 }
@@ -2694,8 +2683,8 @@ class _PopularPortfolioSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        color: Color(0xFFF1F5FA),
-        border: Border(top: BorderSide(color: Color(0xFFE1E8F1))),
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
       ),
       child: _PageShell(
         top: 58,
@@ -2874,14 +2863,14 @@ class _AreaChip extends StatelessWidget {
           vertical: compact ? 7 : 8,
         ),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.white,
+          color: selected ? _focus : Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: selected ? _ink : _line),
+          border: Border.all(color: selected ? _focus : _line),
         ),
         child: Text(
           label,
           style: AppText.chip.copyWith(
-            color: selected ? Colors.white : _ink,
+            color: _ink,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             fontSize: compact ? 14 : 15,
           ),
@@ -3166,14 +3155,14 @@ class _PortfolioCategoryChips extends StatelessWidget {
                       vertical: 11,
                     ),
                     decoration: BoxDecoration(
-                      color: selected ? _navy : Colors.white,
+                      color: selected ? _focus : Colors.white,
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: selected ? _navy : _line),
+                      border: Border.all(color: selected ? _focus : _line),
                     ),
                     child: Text(
                       category,
                       style: AppText.chip.copyWith(
-                        color: selected ? Colors.white : _ink,
+                        color: _ink,
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w600,
                       ),
@@ -3375,7 +3364,7 @@ class _FooterSection extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 900;
 
     return Container(
-      color: _navy,
+      color: Colors.white,
       child: _PageShell(
         top: 58,
         bottom: 54,
@@ -3470,45 +3459,7 @@ class _FooterSection extends StatelessWidget {
                 ],
               ),
             const SizedBox(height: 42),
-            const Divider(color: Color(0xFF86A0BE)),
-            const SizedBox(height: 28),
-            Row(
-              children: <Widget>[
-                const Expanded(child: _InsuranceNote()),
-                const SizedBox(width: 18),
-                Expanded(
-                  flex: 3,
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: const <Widget>[
-                      _InsuranceCard(
-                        label: '법적 의무',
-                        title: '드론 배상책임보험',
-                        body: '제3자 신체·재산 피해 보상',
-                      ),
-                      _InsuranceCard(
-                        label: '권장',
-                        title: '드론 기체보험',
-                        body: '기체 파손·분실·추락 보상',
-                      ),
-                      _InsuranceCard(
-                        label: '선택',
-                        title: '조종자 상해보험',
-                        body: '조종자 본인 신체 상해 보상',
-                      ),
-                      _InsuranceCard(
-                        label: '추천',
-                        title: '드론 종합보험',
-                        body: '배상책임 + 기체 + 상해 통합',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 34),
-            const Divider(color: Color(0xFF86A0BE)),
+            const Divider(color: _line),
             const SizedBox(height: 24),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -3519,7 +3470,7 @@ class _FooterSection extends StatelessWidget {
                     '통신판매신고번호: 제2026-서울강남-0001호  |  개인정보 보호책임자: 이보호\n'
                     '주소: 서울특별시 강남구 테헤란로 123, 드라메빌딩 5층',
                     style: TextStyle(
-                      color: Color(0xFF9AB0C8),
+                      color: _muted,
                       fontWeight: FontWeight.w700,
                       height: 1.7,
                     ),
@@ -3527,10 +3478,7 @@ class _FooterSection extends StatelessWidget {
                 ),
                 Text(
                   '© 2026 Drame. All rights reserved.',
-                  style: TextStyle(
-                    color: Color(0xFF9AB0C8),
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(color: _muted, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -3552,7 +3500,7 @@ class _FooterBrand extends StatelessWidget {
         Text(
           '•  Drame',
           style: TextStyle(
-            color: Colors.white,
+            color: _ink,
             fontSize: 18,
             fontWeight: FontWeight.w900,
           ),
@@ -3561,7 +3509,7 @@ class _FooterBrand extends StatelessWidget {
         Text(
           '30분 안에,\n검증된 드론 운용자와 만나세요.',
           style: TextStyle(
-            color: Color(0xFFB7C7D9),
+            color: _muted,
             fontWeight: FontWeight.w800,
             height: 1.7,
           ),
@@ -3584,10 +3532,7 @@ class _FooterColumn extends StatelessWidget {
       children: <Widget>[
         Text(
           title,
-          style: const TextStyle(
-            color: Color(0xFFB7C7D9),
-            fontWeight: FontWeight.w900,
-          ),
+          style: const TextStyle(color: _ink, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 18),
         ...items.map(
@@ -3596,82 +3541,13 @@ class _FooterColumn extends StatelessWidget {
             child: Text(
               item,
               style: const TextStyle(
-                color: Color(0xFFB7C7D9),
+                color: _muted,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _InsuranceNote extends StatelessWidget {
-  const _InsuranceNote();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      '드론 보험\n드론 운용에 필요한 보험을 Drame에서 비교하고 가입하세요.',
-      style: TextStyle(
-        color: Color(0xFFB7C7D9),
-        fontWeight: FontWeight.w800,
-        height: 1.7,
-      ),
-    );
-  }
-}
-
-class _InsuranceCard extends StatelessWidget {
-  const _InsuranceCard({
-    required this.label,
-    required this.title,
-    required this.body,
-  });
-
-  final String label;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 210,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFB7C7D9)),
-        color: Colors.white.withValues(alpha: 0.04),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF58D09B),
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 7),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            body,
-            style: const TextStyle(
-              color: Color(0xFFB7C7D9),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -3965,7 +3841,7 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
             width: double.infinity,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF0F7),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _line),
             ),

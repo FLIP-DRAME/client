@@ -7,10 +7,10 @@ import '../../../main/network/mock_drone_pilot_api.dart';
 
 part '../component/feed_component.dart';
 
-const _navy = Color(0xFF1F3F68);
-const _ink = Color(0xFF172338);
-const _muted = Color(0xFF718096);
-const _soft = Color(0xFFF3F6FA);
+const _navy = Colors.black;
+const _ink = Colors.black;
+const _muted = Colors.black;
+const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 
 class FeedText {

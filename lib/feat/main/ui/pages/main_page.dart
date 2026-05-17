@@ -20,7 +20,7 @@ part '../component/operator_mypage_component.dart';
 class HomeText {
   static const TextStyle logo = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFF1F3F68),
+    color: Colors.black,
     fontSize: DrameTextStyles.logoSize,
     fontWeight: DrameTextStyles.bold,
     height: 1.15,
@@ -29,7 +29,7 @@ class HomeText {
 
   static const TextStyle heroTitle = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Colors.white,
+    color: Colors.black,
     fontSize: DrameTextStyles.heroTitleSize,
     fontWeight: DrameTextStyles.bold,
     height: 1.2,
@@ -38,7 +38,7 @@ class HomeText {
 
   static const TextStyle heroSubtitle = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFFB9C7D8),
+    color: Colors.black,
     fontSize: 16,
     fontWeight: DrameTextStyles.regular,
     height: 1.55,
@@ -46,7 +46,7 @@ class HomeText {
 
   static const TextStyle heroSearch = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
-    color: Color(0xFF8D9CB0),
+    color: Colors.black,
     fontSize: DrameTextStyles.bodySize,
     fontWeight: DrameTextStyles.medium,
     height: 1.45,
@@ -57,11 +57,13 @@ class HomeText {
   static const TextStyle primaryButton = DrameTextStyles.labelStrong;
 }
 
-const _navy = Color(0xFF1F3A5F);
-// 0xFF1F3F68
-const _ink = Color(0xFF172338);
-const _muted = Color(0xFF718096);
-const _soft = Color(0xFFF3F6FA);
+const _primary = Color(0xFF0052FF);
+const _navy = Colors.black;
+const _toggle = Color(0xFFEAF7FF);
+const _focus = Color(0xFFEAF7FF);
+const _ink = Colors.black;
+const _muted = Colors.black;
+const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
 
@@ -261,7 +263,7 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF0F7),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder: (context, store, _) {
@@ -288,7 +290,7 @@ class OperatorMyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF0F7),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder:
@@ -673,7 +675,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5FA),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder: (context, store, _) {
@@ -814,7 +816,7 @@ class _TopNavigation extends StatelessWidget {
                 FilledButton(
                   onPressed: () => context.push('/pilot/register'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F3F68),
+                    backgroundColor: _primary,
                     foregroundColor: Colors.white,
                     textStyle: HomeText.primaryButton,
                     shape: RoundedRectangleBorder(
@@ -893,13 +895,13 @@ class _ModeToggleItem extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? _navy : Colors.transparent,
+          color: selected ? _toggle : Colors.transparent,
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
           style: HomeText.topButton.copyWith(
-            color: selected ? Colors.white : _muted,
+            color: selected ? _ink : _muted,
             fontWeight: DrameTextStyles.semiBold,
           ),
         ),
@@ -1000,74 +1002,44 @@ class _LandingHeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+
     return SizedBox(
-      height: 380,
+      height: compact ? 420 : 450,
       child: DecoratedBox(
         decoration: const BoxDecoration(
-          color: _navy,
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: Color(0x331F3F68),
-              blurRadius: 32,
-              offset: Offset(0, 18),
-            ),
-          ],
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[Colors.white, _focus],
+          ),
         ),
         child: _PageShell(
-          top: 36,
+          top: compact ? 92 : 142,
           bottom: 0,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
-            children: const <Widget>[
-              _HeroStatusBadge(),
-              SizedBox(height: 36),
+            children: <Widget>[
               Text(
-                '필요한 드론 작업,\n검증된 조종사와 빠르게 연결하세요',
+                '필요한 드론 작업을 더 쉽고 빠르게,\n검증된 운용자와 더 넓은 현장으로.',
                 textAlign: TextAlign.center,
-                style: HomeText.heroTitle,
+                style: HomeText.heroTitle.copyWith(
+                  fontSize: compact ? 30 : 46,
+                  height: 1.35,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-              SizedBox(height: 22),
+              const SizedBox(height: 22),
               Text(
-                '항공 촬영부터 방제, 점검, 측량까지 한번에',
+                '항공 촬영부터 방제, 점검, 측량까지 Drame에서 한 번에 연결하세요.',
                 textAlign: TextAlign.center,
-                style: HomeText.heroSubtitle,
+                style: HomeText.heroSubtitle.copyWith(
+                  fontSize: compact ? 15 : 17,
+                ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _HeroStatusBadge extends StatelessWidget {
-  const _HeroStatusBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.circle, color: _mint, size: 8),
-          SizedBox(width: 8),
-          Text(
-            '자격증·보험 검증 완료 운용자 매칭',
-            style: TextStyle(
-              fontFamily: DrameTextStyles.fontFamily,
-              color: Color(0xFFD5E4F3),
-              fontSize: DrameTextStyles.labelSize,
-              fontWeight: DrameTextStyles.semiBold,
-              height: 1.2,
-            ),
-          ),
-        ],
       ),
     );
   }
