@@ -1,5 +1,7 @@
 part of '../pages/main_page.dart';
 
+// 운용자 마이페이지 전체 화면입니다.
+// 상단 내비게이션, 프로필/등록 정보, 피드 관리, 푸터를 하나의 스크롤 화면으로 묶습니다.
 class _OperatorProfileManagementPage extends StatelessWidget {
   const _OperatorProfileManagementPage({required this.store});
 
@@ -42,6 +44,8 @@ class _OperatorProfileManagementPage extends StatelessWidget {
   }
 }
 
+// 마이페이지 본문 영역입니다.
+// 화면 너비에 따라 프로필과 정보 카드를 1열 또는 2열로 배치합니다.
 class _OperatorMyPageBody extends StatelessWidget {
   const _OperatorMyPageBody({required this.store});
 
@@ -276,6 +280,7 @@ class _OperatorMyPageBody extends StatelessWidget {
   }
 }
 
+// 운용자 이름, 닉네임, 인증 상태를 보여주는 프로필 카드입니다.
 class _OperatorMyPageProfile extends StatelessWidget {
   const _OperatorMyPageProfile({
     required this.name,
@@ -441,6 +446,7 @@ class _OperatorMyPageSideCard extends StatelessWidget {
   }
 }
 
+// 등록 정보 묶음을 카드 형태로 보여주는 공통 컨테이너입니다.
 class _OperatorInfoCard extends StatelessWidget {
   const _OperatorInfoCard({required this.title, required this.children});
 
@@ -468,6 +474,7 @@ class _OperatorInfoCard extends StatelessWidget {
   }
 }
 
+// 운용자가 등록한 드론 목록과 기체별 작업 유형을 보여줍니다.
 class _OperatorDroneListCard extends StatelessWidget {
   const _OperatorDroneListCard({required this.store});
 
@@ -581,6 +588,7 @@ class _OperatorDroneListCard extends StatelessWidget {
   }
 }
 
+// 마이페이지에서 텍스트 값을 바로 수정하는 작은 입력 행입니다.
 class _InlineEditableText extends StatelessWidget {
   const _InlineEditableText({
     required this.label,
@@ -620,6 +628,7 @@ class _InlineEditableText extends StatelessWidget {
   }
 }
 
+// 마이페이지에서 선택형 값을 바로 수정하는 드롭다운 행입니다.
 class _InlineEditableSelect extends StatelessWidget {
   const _InlineEditableSelect({
     required this.label,
@@ -703,7 +712,7 @@ ButtonStyle _myPageOutlineButtonStyle() {
   );
 }
 
-
+// 운용자가 자신의 작업 피드를 작성하고 목록을 관리하는 섹션입니다.
 class _OperatorFeedSection extends StatefulWidget {
   const _OperatorFeedSection({required this.store});
 
@@ -725,51 +734,52 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     super.dispose();
   }
 
-Future<void> _pickImage() async {
-  final input = web.HTMLInputElement()
-    ..type = 'file'
-    ..accept = 'image/*';
-  input.click();
+  Future<void> _pickImage() async {
+    final input =
+        web.HTMLInputElement()
+          ..type = 'file'
+          ..accept = 'image/*';
+    input.click();
 
-  await input.onChange.first;
+    await input.onChange.first;
 
-  final files = input.files;
-  if (files == null || files.length == 0) return;
+    final files = input.files;
+    if (files == null || files.length == 0) return;
 
-  final file = files.item(0)!;
-  final reader = web.FileReader();
+    final file = files.item(0)!;
+    final reader = web.FileReader();
 
-  // Completer로 로드 완료를 기다림
-  final completer = Completer<Uint8List>();
+    // Completer로 로드 완료를 기다림
+    final completer = Completer<Uint8List>();
 
-  reader.addEventListener('loadend', (web.Event _) {
-    final result = reader.result;
-    if (result == null) {
-      completer.completeError('파일 읽기 실패');
-      return;
-    }
-    final bytes = Uint8List.view((result as JSArrayBuffer).toDart);
-    completer.complete(bytes);
-  }.toJS);
+    reader.addEventListener(
+      'loadend',
+      (web.Event _) {
+        final result = reader.result;
+        if (result == null) {
+          completer.completeError('파일 읽기 실패');
+          return;
+        }
+        final bytes = Uint8List.view((result as JSArrayBuffer).toDart);
+        completer.complete(bytes);
+      }.toJS,
+    );
 
-  reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(file);
 
-  final bytes = await completer.future;
+    final bytes = await completer.future;
 
-  setState(() {
-    _pendingImageBytes = bytes;
-    _pendingImageName = file.name;
-  });
-}
+    setState(() {
+      _pendingImageBytes = bytes;
+      _pendingImageName = file.name;
+    });
+  }
 
   void _submit() {
     final caption = _captionController.text.trim();
     if (caption.isEmpty && _pendingImageBytes == null) return;
 
-    widget.store.addFeedPost(
-      caption: caption,
-      imageBytes: _pendingImageBytes,
-    );
+    widget.store.addFeedPost(caption: caption, imageBytes: _pendingImageBytes);
 
     // 초기화
     _captionController.clear();
@@ -984,10 +994,7 @@ Future<void> _pickImage() async {
                 const SizedBox(height: 12),
                 Text('아직 올린 피드가 없어요', style: AppText.cardSubtitle),
                 const SizedBox(height: 4),
-                Text(
-                  '작업 사진을 올려 고객에게 어필해보세요!',
-                  style: AppText.metricLabel,
-                ),
+                Text('작업 사진을 올려 고객에게 어필해보세요!', style: AppText.metricLabel),
               ],
             ),
           )
@@ -1020,6 +1027,7 @@ Future<void> _pickImage() async {
   }
 }
 
+// 운용자 피드에 표시되는 게시글 카드입니다.
 class _FeedPostCard extends StatelessWidget {
   const _FeedPostCard({required this.post, required this.onDelete});
 
@@ -1038,9 +1046,7 @@ class _FeedPostCard extends StatelessWidget {
             image:
                 post.imageBytes != null
                     ? DecorationImage(
-                      image: MemoryImage(
-                        Uint8List.fromList(post.imageBytes!),
-                      ),
+                      image: MemoryImage(Uint8List.fromList(post.imageBytes!)),
                       fit: BoxFit.cover,
                     )
                     : null,
