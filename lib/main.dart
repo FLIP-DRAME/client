@@ -26,13 +26,18 @@ class DrameApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: DrameTextStyles.fontFamily,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2563EB),
-          primary: const Color(0xFF111827),
-          secondary: const Color(0xFFB7F36B),
+          seedColor: Colors.black,
+          primary: Colors.black,
+          secondary: Colors.black,
+        ),
+        focusColor: const Color(0xFFEAF7FF),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Color(0xFFEAF7FF),
+          selectionHandleColor: Color(0xFFEAF7FF),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF111827),
+            backgroundColor: Colors.black,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
