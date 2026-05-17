@@ -10,14 +10,15 @@ import '../../../quote/network/quote_model.dart';
 import '../../network/drone_pilot_model.dart';
 import '../../network/mock_drone_pilot_api.dart';
 import 'package:web/web.dart' as web;
-import 'dart:typed_data';         // Uint8List
-import 'dart:js_interop';         // JSArrayBuffer, .toDart 사용에 필요
-import 'dart:async';        // Completer
-
+import 'dart:typed_data'; // Uint8List
+import 'dart:js_interop'; // JSArrayBuffer, .toDart 사용에 필요
+import 'dart:async'; // Completer
 
 part '../component/main_component.dart';
 part '../component/operator_mypage_component.dart';
 
+// 홈 화면 전용 텍스트 스타일 모음입니다.
+// 공통 스타일은 common/drame_text_styles.dart에 있고, 여기서는 홈에서만 쓰는 크기와 색을 덮어씁니다.
 class HomeText {
   static const TextStyle logo = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
@@ -66,6 +67,7 @@ const _soft = Color(0xFFF3F6FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
 
+// 운용자 등록 과정에서 입력하는 드론 1대의 임시 폼 상태입니다.
 class PilotDroneForm {
   PilotDroneForm({
     this.maker = 'DJI',
@@ -85,6 +87,7 @@ class PilotDroneForm {
   bool photoUploaded;
 }
 
+// 운용자 온보딩 전체 입력값을 담는 화면 상태입니다.
 class PilotOnboardingData {
   String licenseType = '초경량비행장치 조종자';
   String licenseNumber = '';
@@ -104,6 +107,7 @@ class PilotOnboardingData {
   bool submitted = false;
 }
 
+// 운용자 마이페이지 피드에 올리는 게시글 화면 모델입니다.
 class OperatorFeedPost {
   OperatorFeedPost({
     required this.id,
@@ -118,6 +122,7 @@ class OperatorFeedPost {
   final List<int>? imageBytes; // 웹: Uint8List, 실제 앱에선 File 경로로 교체 가능
 }
 
+// 운용자가 받은 작업 요청을 화면에 보여주기 위한 샘플 모델입니다.
 class PilotWorkRequest {
   const PilotWorkRequest({
     required this.id,
@@ -639,6 +644,8 @@ class DrameStore extends ChangeNotifier {
   }
 }
 
+// '/' 라우트에서 처음 보이는 홈 페이지입니다.
+// 이용자 모드와 운용자 모드를 같은 화면 안에서 상태에 따라 바꿔 보여줍니다.
 class DrameHomePage extends StatefulWidget {
   const DrameHomePage({super.key});
 
@@ -647,17 +654,20 @@ class DrameHomePage extends StatefulWidget {
 }
 
 class _DrameHomePageState extends State<DrameHomePage> {
+  // 상단 보조 내비게이션에서 특정 섹션으로 스크롤하기 위한 위치 키입니다.
   final GlobalKey _categorySectionKey = GlobalKey();
   final GlobalKey _portfolioSectionKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
+    // 첫 프레임이 그려진 뒤 mock API 데이터를 불러와 카드 목록을 채웁니다.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DrameStore>().load(initial: true);
     });
   }
 
+  // 내비게이션 탭을 누르면 연결된 섹션이 화면 상단 근처로 오도록 이동합니다.
   void _scrollToSection(GlobalKey key) {
     final context = key.currentContext;
     if (context == null) {
@@ -674,6 +684,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // 홈 전체의 기본 배경색입니다. 각 섹션은 필요하면 자체 배경색을 다시 지정합니다.
       backgroundColor: const Color(0xFFF1F5FA),
       body: SafeArea(
         child: Consumer<DrameStore>(
@@ -684,6 +695,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
 
             return CustomScrollView(
               slivers: <Widget>[
+                // 최상단 로고, 모드 전환, 로그인/등록 버튼 영역입니다.
                 SliverToBoxAdapter(
                   child: DrameTopNavigation(
                     isPilotMode: store.isPilotMode,
@@ -696,6 +708,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     onLogoTap: () => context.go('/'),
                   ),
                 ),
+                // 홈 내부 주요 섹션으로 이동하는 두 번째 내비게이션입니다.
                 SliverToBoxAdapter(
                   child: DrameSecondaryNavigation(
                     isPilotMode: store.isPilotMode,
@@ -711,6 +724,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
                   ),
                 ),
                 if (store.isPilotMode) ...<Widget>[
+                  // 운용자 모드에서는 로그인, 온보딩, 대시보드, 랜딩 중 현재 상태에 맞는 화면 하나를 보여줍니다.
                   SliverToBoxAdapter(
                     child:
                         store.isPilotAuthOpen
@@ -724,6 +738,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
                   const SliverToBoxAdapter(child: _FooterSection()),
                   const SliverToBoxAdapter(child: SizedBox(height: 72)),
                 ] else ...<Widget>[
+                  // 이용자 모드의 첫 화면입니다. 히어로, 카테고리, 지역, 운용자 목록, 피드, 포트폴리오 순서로 내려갑니다.
                   const SliverToBoxAdapter(child: _LandingHeroSection()),
                   SliverToBoxAdapter(
                     child: KeyedSubtree(
@@ -732,13 +747,14 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     ),
                   ),
                   if (store.selectedCategory != null) ...<Widget>[
+                    // 카테고리를 선택한 뒤에만 지역 선택과 운용자 목록을 노출합니다.
                     SliverToBoxAdapter(
                       child: _AreaSelectionSection(store: store),
                     ),
                     // if (store.selectedArea != '전체')
                     SliverToBoxAdapter(
                       child: _OperatorListSection(store: store),
-                      ),
+                    ),
                   ],
                   const SliverToBoxAdapter(
                     child: ColoredBox(
@@ -937,7 +953,9 @@ class _SecondaryNavigation extends StatelessWidget {
       height: compact ? 58 : 54,
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: _line)),
+        border: Border(
+          bottom: BorderSide(color: Color.fromARGB(255, 204, 99, 14)),
+        ),
       ),
       child: Center(
         child: ConstrainedBox(
@@ -996,6 +1014,8 @@ class _SubNavTab extends StatelessWidget {
   }
 }
 
+// 홈페이지 최상단의 짙은 배경 히어로 영역입니다.
+// 서비스의 핵심 문구와 검증 완료 배지를 보여줍니다.
 class _LandingHeroSection extends StatelessWidget {
   const _LandingHeroSection();
 
@@ -1008,7 +1028,7 @@ class _LandingHeroSection extends StatelessWidget {
           color: _navy,
           boxShadow: <BoxShadow>[
             BoxShadow(
-              color: Color(0x331F3F68),
+              color: Color.fromARGB(51, 5, 227, 23),
               blurRadius: 32,
               offset: Offset(0, 18),
             ),
@@ -1041,6 +1061,7 @@ class _LandingHeroSection extends StatelessWidget {
   }
 }
 
+// 히어로 문구 위에 표시되는 작은 신뢰 배지입니다.
 class _HeroStatusBadge extends StatelessWidget {
   const _HeroStatusBadge();
 
@@ -1075,6 +1096,8 @@ class _HeroStatusBadge extends StatelessWidget {
 }
 
 // ignore: unused_element
+// 지도 기반 매칭 섹션입니다.
+// 현재 홈 흐름에서는 사용하지 않지만, 지역 필터와 지도 패널을 함께 보여줄 때 쓰도록 남겨져 있습니다.
 class _MapSection extends StatelessWidget {
   const _MapSection({required this.store});
 

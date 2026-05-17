@@ -1,5 +1,7 @@
-﻿part of '../pages/main_page.dart';
+part of '../pages/main_page.dart';
 
+// 홈과 운용자 화면에서 공유하는 텍스트 스타일입니다.
+// HomeText보다 더 작은 카드/섹션/버튼 단위 스타일을 담당합니다.
 class AppText {
   static const TextStyle eyebrow = TextStyle(
     fontFamily: 'Pretendard',
@@ -117,6 +119,8 @@ class AppText {
   );
 }
 
+// 이용자가 필요한 드론 작업 종류를 고르는 섹션입니다.
+// 선택된 카테고리는 DrameStore에 저장되고, 이후 지역 선택과 운용자 목록 노출 조건이 됩니다.
 class _CategorySelectionSection extends StatelessWidget {
   const _CategorySelectionSection({required this.store});
 
@@ -125,6 +129,7 @@ class _CategorySelectionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // 히어로 다음에 이어지는 첫 선택 영역이라 흰 배경으로 분리합니다.
       color: Colors.white,
       child: _PageShell(
         top: 52,
@@ -174,6 +179,7 @@ class _CategorySelectionSection extends StatelessWidget {
   }
 }
 
+// 카테고리를 선택한 뒤 촬영 지역을 고르는 섹션입니다.
 class _AreaSelectionSection extends StatelessWidget {
   const _AreaSelectionSection({required this.store});
 
@@ -183,6 +189,7 @@ class _AreaSelectionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      // 카테고리 영역과 운용자 목록 사이를 구분하는 연한 회색 배경입니다.
       color: const Color(0xFFF3F6FA),
       child: _PageShell(
         top: 42,
@@ -203,6 +210,7 @@ class _AreaSelectionSection extends StatelessWidget {
   }
 }
 
+// 선택된 조건에 맞는 운용자 카드를 그리드로 보여주는 섹션입니다.
 class _OperatorListSection extends StatelessWidget {
   const _OperatorListSection({required this.store});
 
@@ -268,6 +276,8 @@ class _OperatorListSection extends StatelessWidget {
   }
 }
 
+// 카테고리 하나를 나타내는 선택 카드입니다.
+// 선택 여부에 따라 배경과 글자 색을 바꿔 현재 선택 상태를 명확히 보여줍니다.
 class _ServiceCategoryCard extends StatelessWidget {
   const _ServiceCategoryCard({
     super.key,
@@ -341,6 +351,8 @@ class _ServiceCategoryCard extends StatelessWidget {
   }
 }
 
+// 검색 결과에 표시되는 운용자 카드입니다.
+// 클릭하면 해당 운용자의 포트폴리오 페이지로 이동합니다.
 class _OperatorMatchCard extends StatelessWidget {
   const _OperatorMatchCard({
     super.key,
@@ -492,6 +504,7 @@ class _EmptyOperatorState extends StatelessWidget {
   }
 }
 
+// 운용자 모드에서 로그인/등록 전 처음 보이는 소개 섹션입니다.
 class _PilotLandingSection extends StatelessWidget {
   const _PilotLandingSection({required this.store});
 
@@ -656,6 +669,7 @@ class _PilotLandingMetric extends StatelessWidget {
   }
 }
 
+// 운용자 로그인과 회원가입 입력 폼을 담당하는 섹션입니다.
 class _PilotAuthSection extends StatelessWidget {
   const _PilotAuthSection({required this.store});
 
@@ -962,6 +976,7 @@ class _AuthField extends StatelessWidget {
   }
 }
 
+// 운용자 등록이 끝난 뒤 보이는 대시보드 요약 섹션입니다.
 class _PilotDashboardSection extends StatelessWidget {
   const _PilotDashboardSection({required this.store});
 
@@ -1296,6 +1311,7 @@ class _RequestCard extends StatelessWidget {
   }
 }
 
+// 운용자가 들어온 작업 요청을 검토하고 견적을 입력하는 화면입니다.
 class _PilotRequestReviewPage extends StatefulWidget {
   const _PilotRequestReviewPage({required this.initialRequest});
 
@@ -2006,6 +2022,7 @@ class _MyPageGroup extends StatelessWidget {
   }
 }
 
+// 운용자 등록 절차 전체를 단계별 카드로 구성하는 섹션입니다.
 class _PilotOnboardingSection extends StatelessWidget {
   const _PilotOnboardingSection({required this.store});
 
@@ -2656,6 +2673,8 @@ InputDecoration _pilotInputDecoration({required String label, String? hint}) {
   );
 }
 
+// 홈페이지 하단의 인기 포트폴리오 섹션입니다.
+// 카테고리 칩을 선택하면 해당 작업 유형을 가진 운용자만 필터링합니다.
 class _PopularPortfolioSection extends StatelessWidget {
   const _PopularPortfolioSection({required this.store});
 
@@ -3017,6 +3036,7 @@ class _PilotPanel extends StatelessWidget {
   }
 }
 
+// 모든 주요 섹션의 최대 너비와 좌우 여백을 통일하는 레이아웃 래퍼입니다.
 class _PageShell extends StatelessWidget {
   const _PageShell({required this.child, this.top = 44, this.bottom = 44});
 
@@ -3038,6 +3058,7 @@ class _PageShell extends StatelessWidget {
   }
 }
 
+// 섹션 상단의 보조 문구, 제목, 우측 액션 텍스트를 공통으로 그립니다.
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.eyebrow,
@@ -3345,6 +3366,7 @@ class _PermitPill extends StatelessWidget {
   }
 }
 
+// 홈과 운용자 화면 맨 아래에 반복되는 푸터입니다.
 class _FooterSection extends StatelessWidget {
   const _FooterSection();
 
@@ -3852,7 +3874,6 @@ class _KoreaMapPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-
 class _KakaoPaySection extends StatefulWidget {
   const _KakaoPaySection();
 
@@ -3870,10 +3891,7 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
       children: <Widget>[
         const Text('카카오페이로 결제하기', style: AppText.portfolioTitle),
         const SizedBox(height: 6),
-        const Text(
-          'QR코드를 카카오페이 앱으로 스캔하세요',
-          style: AppText.cardSubtitle,
-        ),
+        const Text('QR코드를 카카오페이 앱으로 스캔하세요', style: AppText.cardSubtitle),
         const SizedBox(height: 20),
 
         // 카카오페이 배지
@@ -3917,12 +3935,7 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
           ),
         ),
         const SizedBox(height: 12),
-        const Center(
-          child: Text(
-            'QR코드 유효시간: 10분',
-            style: AppText.metricLabel,
-          ),
-        ),
+        const Center(child: Text('QR코드 유효시간: 10분', style: AppText.metricLabel)),
         const SizedBox(height: 20),
         const Divider(color: _line),
         const SizedBox(height: 18),
@@ -3960,10 +3973,7 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
               children: <Widget>[
                 Icon(Icons.phone_outlined, color: _navy, size: 20),
                 SizedBox(width: 10),
-                Text(
-                  '이용자 연락처: 010-1234-5678',
-                  style: AppText.smallStrong,
-                ),
+                Text('이용자 연락처: 010-1234-5678', style: AppText.smallStrong),
               ],
             ),
           ),
@@ -4010,16 +4020,43 @@ class _QrCodePainter extends CustomPainter {
 
     // 데이터 도트들
     final dots = <List<double>>[
-      [0.40, 0.04], [0.50, 0.04], [0.60, 0.04],
-      [0.40, 0.12], [0.60, 0.12],
-      [0.40, 0.20], [0.50, 0.20],
-      [0.04, 0.40], [0.12, 0.40], [0.20, 0.40],
-      [0.40, 0.40], [0.50, 0.40], [0.60, 0.40], [0.70, 0.40], [0.80, 0.40], [0.90, 0.40],
-      [0.04, 0.50], [0.20, 0.50], [0.50, 0.50], [0.70, 0.50], [0.90, 0.50],
-      [0.04, 0.60], [0.12, 0.60], [0.40, 0.60], [0.60, 0.60], [0.80, 0.60],
-      [0.40, 0.70], [0.60, 0.70], [0.80, 0.70], [0.90, 0.70],
-      [0.40, 0.80], [0.50, 0.80], [0.70, 0.80],
-      [0.40, 0.90], [0.60, 0.90], [0.80, 0.90], [0.90, 0.90],
+      [0.40, 0.04],
+      [0.50, 0.04],
+      [0.60, 0.04],
+      [0.40, 0.12],
+      [0.60, 0.12],
+      [0.40, 0.20],
+      [0.50, 0.20],
+      [0.04, 0.40],
+      [0.12, 0.40],
+      [0.20, 0.40],
+      [0.40, 0.40],
+      [0.50, 0.40],
+      [0.60, 0.40],
+      [0.70, 0.40],
+      [0.80, 0.40],
+      [0.90, 0.40],
+      [0.04, 0.50],
+      [0.20, 0.50],
+      [0.50, 0.50],
+      [0.70, 0.50],
+      [0.90, 0.50],
+      [0.04, 0.60],
+      [0.12, 0.60],
+      [0.40, 0.60],
+      [0.60, 0.60],
+      [0.80, 0.60],
+      [0.40, 0.70],
+      [0.60, 0.70],
+      [0.80, 0.70],
+      [0.90, 0.70],
+      [0.40, 0.80],
+      [0.50, 0.80],
+      [0.70, 0.80],
+      [0.40, 0.90],
+      [0.60, 0.90],
+      [0.80, 0.90],
+      [0.90, 0.90],
     ];
 
     for (final dot in dots) {
