@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -10,7 +11,6 @@ import '../../../quote/network/quote_model.dart';
 import '../../network/drone_pilot_model.dart';
 import '../../network/mock_drone_pilot_api.dart';
 import 'package:web/web.dart' as web;
-import 'dart:typed_data'; // Uint8List
 import 'dart:js_interop'; // JSArrayBuffer, .toDart 사용에 필요
 import 'dart:async'; // Completer
 
@@ -66,6 +66,34 @@ const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
+
+class BusinessNumberInputFormatter extends TextInputFormatter {
+  const BusinessNumberInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limited = digits.length > 10 ? digits.substring(0, 10) : digits;
+    final buffer = StringBuffer();
+
+    for (var i = 0; i < limited.length; i += 1) {
+      if (i == 3 || i == 5) {
+        buffer.write('-');
+      }
+      buffer.write(limited[i]);
+    }
+
+    final text = buffer.toString();
+
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
 
 class PilotDroneForm {
   PilotDroneForm({
@@ -694,7 +722,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
                       store.openAuth(loginMode: true, role: '운용자');
                     },
                     onRegisterTap: () => context.push('/pilot/register'),
-                    onLogoTap: () => context.go('/'),
+                    onLogoTap: () {
+                      store.setPilotMode(false);
+                      context.go('/');
+                    },
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -736,10 +767,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     SliverToBoxAdapter(
                       child: _AreaSelectionSection(store: store),
                     ),
-                    // if (store.selectedArea != '전체')
-                    SliverToBoxAdapter(
-                      child: _OperatorListSection(store: store),
-                    ),
+                    if (store.selectedArea != '전체')
+                      SliverToBoxAdapter(
+                        child: _OperatorListSection(store: store),
+                      ),
                   ],
                   const SliverToBoxAdapter(
                     child: ColoredBox(

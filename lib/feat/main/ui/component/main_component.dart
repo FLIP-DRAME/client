@@ -742,14 +742,14 @@ class _PilotAuthSection extends StatelessWidget {
                     runSpacing: 10,
                     children: <Widget>[
                       _AuthRoleChip(
-                        label: '운용자',
-                        selected: store.accountRole == '운용자',
-                        onTap: () => store.updateAuth(role: '운용자'),
-                      ),
-                      _AuthRoleChip(
                         label: '이용자',
                         selected: store.accountRole == '이용자',
                         onTap: () => store.updateAuth(role: '이용자'),
+                      ),
+                      _AuthRoleChip(
+                        label: '운용자',
+                        selected: store.accountRole == '운용자',
+                        onTap: () => store.updateAuth(role: '운용자'),
                       ),
                     ],
                   ),
@@ -906,10 +906,14 @@ class _AuthRoleChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
+      showCheckmark: false,
       onSelected: (_) => onTap(),
       selectedColor: _focus,
       backgroundColor: Colors.white,
-      side: BorderSide(color: selected ? _focus : _line),
+      side: BorderSide(
+        color: selected ? _navy : _line,
+        width: selected ? 1.8 : 1,
+      ),
       labelStyle: AppText.chip.copyWith(color: _ink),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1869,6 +1873,10 @@ class _OperatorMyPageSection extends StatelessWidget {
                         label: '사업자등록번호',
                         initialValue: data.businessNumber,
                         hint: '000-00-00000',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: const <TextInputFormatter>[
+                          BusinessNumberInputFormatter(),
+                        ],
                         onChanged:
                             (value) => store.updatePilotBusiness(number: value),
                       ),
@@ -2314,6 +2322,10 @@ class _BusinessStep extends StatelessWidget {
           label: '사업자등록번호 *',
           initialValue: data.businessNumber,
           hint: '000-00-00000',
+          keyboardType: TextInputType.number,
+          inputFormatters: const <TextInputFormatter>[
+            BusinessNumberInputFormatter(),
+          ],
           onChanged: (value) => store.updatePilotBusiness(number: value),
         ),
         const SizedBox(height: 18),
@@ -2500,15 +2512,21 @@ class _PilotTextField extends StatelessWidget {
     required this.initialValue,
     required this.hint,
     required this.onChanged,
+    this.keyboardType,
+    this.inputFormatters,
   });
   final String label;
   final String initialValue;
   final String hint;
   final ValueChanged<String> onChanged;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   @override
   Widget build(BuildContext context) => TextFormField(
     key: ValueKey<String>('$label-$initialValue'),
     initialValue: initialValue,
+    keyboardType: keyboardType,
+    inputFormatters: inputFormatters,
     onChanged: onChanged,
     decoration: _pilotInputDecoration(label: label, hint: hint),
   );
