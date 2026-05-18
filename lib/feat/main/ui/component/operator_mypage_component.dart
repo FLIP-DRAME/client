@@ -192,6 +192,10 @@ class _OperatorMyPageBody extends StatelessWidget {
                             label: '사업자등록번호',
                             value: store.pilotOnboarding.businessNumber,
                             hint: '000-00-00000',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: const <TextInputFormatter>[
+                              BusinessNumberInputFormatter(),
+                            ],
                             onChanged:
                                 (value) =>
                                     store.updatePilotBusiness(number: value),
@@ -595,12 +599,16 @@ class _InlineEditableText extends StatelessWidget {
     required this.value,
     required this.hint,
     required this.onChanged,
+    this.keyboardType,
+    this.inputFormatters,
   });
 
   final String label;
   final String value;
   final String hint;
   final ValueChanged<String> onChanged;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -615,11 +623,14 @@ class _InlineEditableText extends StatelessWidget {
           ),
           Expanded(
             child: TextFormField(
-              key: ValueKey<String>('mypage-$label-$value'),
+              key: ValueKey<String>('mypage-$label'),
               initialValue: value,
+              keyboardType: keyboardType,
+              inputFormatters: inputFormatters,
               onChanged: onChanged,
               style: AppText.smallStrong.copyWith(color: _ink),
               decoration: _inlineInputDecoration(hint),
+              cursorColor: _navy,
             ),
           ),
         ],
