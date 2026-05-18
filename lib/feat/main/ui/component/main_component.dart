@@ -1,7 +1,5 @@
 part of '../pages/main_page.dart';
 
-// 홈과 운용자 화면에서 공유하는 텍스트 스타일입니다.
-// HomeText보다 더 작은 카드/섹션/버튼 단위 스타일을 담당합니다.
 class AppText {
   static const TextStyle eyebrow = TextStyle(
     fontFamily: 'Pretendard',
@@ -119,8 +117,6 @@ class AppText {
   );
 }
 
-// 이용자가 필요한 드론 작업 종류를 고르는 섹션입니다.
-// 선택된 카테고리는 DrameStore에 저장되고, 이후 지역 선택과 운용자 목록 노출 조건이 됩니다.
 class _CategorySelectionSection extends StatelessWidget {
   const _CategorySelectionSection({required this.store});
 
@@ -129,7 +125,6 @@ class _CategorySelectionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // 히어로 다음에 이어지는 첫 선택 영역이라 흰 배경으로 분리합니다.
       color: Colors.white,
       child: _PageShell(
         top: 52,
@@ -179,7 +174,6 @@ class _CategorySelectionSection extends StatelessWidget {
   }
 }
 
-// 카테고리를 선택한 뒤 촬영 지역을 고르는 섹션입니다.
 class _AreaSelectionSection extends StatelessWidget {
   const _AreaSelectionSection({required this.store});
 
@@ -209,7 +203,6 @@ class _AreaSelectionSection extends StatelessWidget {
   }
 }
 
-// 선택된 조건에 맞는 운용자 카드를 그리드로 보여주는 섹션입니다.
 class _OperatorListSection extends StatelessWidget {
   const _OperatorListSection({required this.store});
 
@@ -275,8 +268,6 @@ class _OperatorListSection extends StatelessWidget {
   }
 }
 
-// 카테고리 하나를 나타내는 선택 카드입니다.
-// 선택 여부에 따라 배경과 글자 색을 바꿔 현재 선택 상태를 명확히 보여줍니다.
 class _ServiceCategoryCard extends StatelessWidget {
   const _ServiceCategoryCard({
     super.key,
@@ -337,8 +328,6 @@ class _ServiceCategoryCard extends StatelessWidget {
   }
 }
 
-// 검색 결과에 표시되는 운용자 카드입니다.
-// 클릭하면 해당 운용자의 포트폴리오 페이지로 이동합니다.
 class _OperatorMatchCard extends StatelessWidget {
   const _OperatorMatchCard({
     super.key,
@@ -490,7 +479,6 @@ class _EmptyOperatorState extends StatelessWidget {
   }
 }
 
-// 운용자 모드에서 로그인/등록 전 처음 보이는 소개 섹션입니다.
 class _PilotLandingSection extends StatelessWidget {
   const _PilotLandingSection({required this.store});
 
@@ -655,7 +643,6 @@ class _PilotLandingMetric extends StatelessWidget {
   }
 }
 
-// 운용자 로그인과 회원가입 입력 폼을 담당하는 섹션입니다.
 class _PilotAuthSection extends StatelessWidget {
   const _PilotAuthSection({required this.store});
 
@@ -1099,7 +1086,6 @@ class _AuthPasswordFieldState extends State<_AuthPasswordField> {
   }
 }
 
-// 운용자 등록이 끝난 뒤 보이는 대시보드 요약 섹션입니다.
 class _PilotDashboardSection extends StatelessWidget {
   const _PilotDashboardSection({required this.store});
 
@@ -1161,7 +1147,6 @@ class _PilotDashboardSection extends StatelessWidget {
                       store: store,
                     ),
                     const SizedBox(height: 18),
-                    // const _OperatorSideCard(),
                   ],
                 )
                 : Row(
@@ -1176,7 +1161,6 @@ class _PilotDashboardSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 22),
-                    // const Expanded(child: _OperatorSideCard()),
                   ],
                 ),
             const SizedBox(height: 32),
@@ -1434,7 +1418,6 @@ class _RequestCard extends StatelessWidget {
   }
 }
 
-// 운용자가 들어온 작업 요청을 검토하고 견적을 입력하는 화면입니다.
 class _PilotRequestReviewPage extends StatefulWidget {
   const _PilotRequestReviewPage({required this.initialRequest});
 
@@ -2149,7 +2132,6 @@ class _MyPageGroup extends StatelessWidget {
   }
 }
 
-// 운용자 등록 절차 전체를 단계별 카드로 구성하는 섹션입니다.
 class _PilotOnboardingSection extends StatelessWidget {
   const _PilotOnboardingSection({required this.store});
 
@@ -2815,8 +2797,6 @@ InputDecoration _pilotInputDecoration({required String label, String? hint}) {
   );
 }
 
-// 홈페이지 하단의 인기 포트폴리오 섹션입니다.
-// 카테고리 칩을 선택하면 해당 작업 유형을 가진 운용자만 필터링합니다.
 class _PopularPortfolioSection extends StatelessWidget {
   const _PopularPortfolioSection({required this.store});
 
@@ -3132,11 +3112,6 @@ class _PilotPanel extends StatelessWidget {
               label: '촬영 가능 위치',
               value: pilot.availableAreas.join(', '),
             ),
-            // _InfoRow(
-            //   icon: Icons.verified_user_outlined,
-            //   label: '허가 지역',
-            //   value: pilot.permittedAreas.join(', '),
-            // ),
             _InfoRow(
               icon: Icons.call_outlined,
               label: '연락처',
@@ -3178,7 +3153,6 @@ class _PilotPanel extends StatelessWidget {
   }
 }
 
-// 모든 주요 섹션의 최대 너비와 좌우 여백을 통일하는 레이아웃 래퍼입니다.
 class _PageShell extends StatelessWidget {
   const _PageShell({required this.child, this.top = 44, this.bottom = 44});
 
@@ -3200,7 +3174,6 @@ class _PageShell extends StatelessWidget {
   }
 }
 
-// 섹션 상단의 보조 문구, 제목, 우측 액션 텍스트를 공통으로 그립니다.
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.eyebrow,
@@ -3508,7 +3481,6 @@ class _PermitPill extends StatelessWidget {
   }
 }
 
-// 홈과 운용자 화면 맨 아래에 반복되는 푸터입니다.
 class _FooterSection extends StatelessWidget {
   const _FooterSection();
 
@@ -3922,8 +3894,6 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
         const SizedBox(height: 6),
         const Text('QR코드를 카카오페이 앱으로 스캔하세요', style: AppText.cardSubtitle),
         const SizedBox(height: 20),
-
-        // 카카오페이 배지
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
@@ -3948,8 +3918,6 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
           ),
         ),
         const SizedBox(height: 20),
-
-        // QR 코드
         Center(
           child: Container(
             width: 180,
@@ -3968,8 +3936,6 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
         const SizedBox(height: 20),
         const Divider(color: _line),
         const SizedBox(height: 18),
-
-        // 완료 버튼
         SizedBox(
           width: double.infinity,
           child: FilledButton(
@@ -3986,8 +3952,6 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
             child: const Text('완료'),
           ),
         ),
-
-        // 연락처 표시
         if (_paymentDone) ...<Widget>[
           const SizedBox(height: 16),
           Container(
@@ -4023,31 +3987,24 @@ class _QrCodePainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(x * w, y * h, s * w, s * h), p);
     }
 
-    // 좌상단 파인더
     block(0, 0, 0.30);
     canvas.drawRect(
       Rect.fromLTWH(0.04 * w, 0.04 * h, 0.22 * w, 0.22 * h),
       Paint()..color = Colors.white,
     );
     block(0.08, 0.08, 0.14);
-
-    // 우상단 파인더
     block(0.70, 0, 0.30);
     canvas.drawRect(
       Rect.fromLTWH(0.74 * w, 0.04 * h, 0.22 * w, 0.22 * h),
       Paint()..color = Colors.white,
     );
     block(0.78, 0.08, 0.14);
-
-    // 좌하단 파인더
     block(0, 0.70, 0.30);
     canvas.drawRect(
       Rect.fromLTWH(0.04 * w, 0.74 * h, 0.22 * w, 0.22 * h),
       Paint()..color = Colors.white,
     );
     block(0.08, 0.78, 0.14);
-
-    // 데이터 도트들
     final dots = <List<double>>[
       [0.40, 0.04],
       [0.50, 0.04],

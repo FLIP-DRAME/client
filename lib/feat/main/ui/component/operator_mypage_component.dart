@@ -1,7 +1,5 @@
 part of '../pages/main_page.dart';
 
-// 운용자 마이페이지 전체 화면입니다.
-// 상단 내비게이션, 프로필/등록 정보, 피드 관리, 푸터를 하나의 스크롤 화면으로 묶습니다.
 class _OperatorProfileManagementPage extends StatelessWidget {
   const _OperatorProfileManagementPage({required this.store});
 
@@ -44,8 +42,6 @@ class _OperatorProfileManagementPage extends StatelessWidget {
   }
 }
 
-// 마이페이지 본문 영역입니다.
-// 화면 너비에 따라 프로필과 정보 카드를 1열 또는 2열로 배치합니다.
 class _OperatorMyPageBody extends StatelessWidget {
   const _OperatorMyPageBody({required this.store});
 
@@ -75,7 +71,6 @@ class _OperatorMyPageBody extends StatelessWidget {
                       store: store,
                     ),
                     const SizedBox(height: 18),
-                    // const _OperatorMyPageSideCard(),
                   ],
                 )
                 : Row(
@@ -90,10 +85,6 @@ class _OperatorMyPageBody extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 44),
-                    // const SizedBox(
-                    //   width: 330,
-                    //   child: _OperatorMyPageSideCard(),
-                    // ),
                   ],
                 ),
             const SizedBox(height: 48),
@@ -284,7 +275,6 @@ class _OperatorMyPageBody extends StatelessWidget {
   }
 }
 
-// 운용자 이름, 닉네임, 인증 상태를 보여주는 프로필 카드입니다.
 class _OperatorMyPageProfile extends StatelessWidget {
   const _OperatorMyPageProfile({
     required this.name,
@@ -450,7 +440,6 @@ class _OperatorMyPageSideCard extends StatelessWidget {
   }
 }
 
-// 등록 정보 묶음을 카드 형태로 보여주는 공통 컨테이너입니다.
 class _OperatorInfoCard extends StatelessWidget {
   const _OperatorInfoCard({required this.title, required this.children});
 
@@ -478,7 +467,6 @@ class _OperatorInfoCard extends StatelessWidget {
   }
 }
 
-// 운용자가 등록한 드론 목록과 기체별 작업 유형을 보여줍니다.
 class _OperatorDroneListCard extends StatelessWidget {
   const _OperatorDroneListCard({required this.store});
 
@@ -592,7 +580,6 @@ class _OperatorDroneListCard extends StatelessWidget {
   }
 }
 
-// 마이페이지에서 텍스트 값을 바로 수정하는 작은 입력 행입니다.
 class _InlineEditableText extends StatelessWidget {
   const _InlineEditableText({
     required this.label,
@@ -639,7 +626,6 @@ class _InlineEditableText extends StatelessWidget {
   }
 }
 
-// 마이페이지에서 선택형 값을 바로 수정하는 드롭다운 행입니다.
 class _InlineEditableSelect extends StatelessWidget {
   const _InlineEditableSelect({
     required this.label,
@@ -723,7 +709,6 @@ ButtonStyle _myPageOutlineButtonStyle() {
   );
 }
 
-// 운용자가 자신의 작업 피드를 작성하고 목록을 관리하는 섹션입니다.
 class _OperatorFeedSection extends StatefulWidget {
   const _OperatorFeedSection({required this.store});
 
@@ -759,8 +744,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
 
     final file = files.item(0)!;
     final reader = web.FileReader();
-
-    // Completer로 로드 완료를 기다림
     final completer = Completer<Uint8List>();
 
     reader.addEventListener(
@@ -791,8 +774,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     if (caption.isEmpty && _pendingImageBytes == null) return;
 
     widget.store.addFeedPost(caption: caption, imageBytes: _pendingImageBytes);
-
-    // 초기화
     _captionController.clear();
     setState(() {
       _pendingImageBytes = null;
@@ -841,8 +822,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
           ],
         ),
         const SizedBox(height: 20),
-
-        // ── 업로드 폼 (펼쳐질 때만 표시) ──
         if (_isExpanded) ...<Widget>[
           Container(
             padding: const EdgeInsets.all(20),
@@ -854,7 +833,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                // 이미지 첨부 영역
                 GestureDetector(
                   onTap: _pickImage,
                   child: Container(
@@ -935,8 +913,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ),
                 ],
                 const SizedBox(height: 16),
-
-                // 캡션 입력
                 TextFormField(
                   controller: _captionController,
                   maxLines: 3,
@@ -961,8 +937,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ),
                 ),
                 const SizedBox(height: 14),
-
-                // 등록 버튼
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
@@ -984,8 +958,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
           ),
           const SizedBox(height: 24),
         ],
-
-        // ── 피드 그리드 ──
         if (widget.store.myFeedPosts.isEmpty)
           Container(
             width: double.infinity,
@@ -1038,7 +1010,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   }
 }
 
-// 운용자 피드에 표시되는 게시글 카드입니다.
 class _FeedPostCard extends StatelessWidget {
   const _FeedPostCard({required this.post, required this.onDelete});
 
@@ -1107,8 +1078,6 @@ class _FeedPostCard extends StatelessWidget {
                   )
                   : null,
         ),
-
-        // 삭제 버튼
         Positioned(
           top: 6,
           right: 6,
