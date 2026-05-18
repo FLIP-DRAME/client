@@ -758,22 +758,12 @@ class _PilotAuthSection extends StatelessWidget {
                     builder: (context, constraints) {
                       final twoColumns = constraints.maxWidth >= 720;
                       final fields = <Widget>[
-                        _AuthField(
-                          label: '이메일',
+                        _AuthEmailField(
                           value: store.accountEmail,
-                          keyboardType: TextInputType.emailAddress,
                           onChanged: (value) => store.updateAuth(email: value),
                         ),
-                        _AuthField(
-                          label: '아이디',
-                          value: store.accountId,
-                          onChanged:
-                              (value) => store.updateAuth(accountId: value),
-                        ),
-                        _AuthField(
-                          label: '비밀번호',
+                        _AuthPasswordField(
                           value: store.accountPassword,
-                          obscureText: true,
                           onChanged:
                               (value) => store.updateAuth(password: value),
                         ),
@@ -921,32 +911,177 @@ class _AuthRoleChip extends StatelessWidget {
   }
 }
 
+class _AuthEmailField extends StatelessWidget {
+  const _AuthEmailField({required this.value, required this.onChanged});
+
+  static const _domains = <String>[
+    'gmail.com',
+    'naver.com',
+    'kakao.com',
+    'daum.net',
+    'hanmail.net',
+  ];
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final atIndex = value.indexOf('@');
+    final localPart = atIndex < 0 ? value : value.substring(0, atIndex);
+    final domain = atIndex < 0 ? _domains.first : value.substring(atIndex + 1);
+    final selectedDomain = _domains.contains(domain) ? domain : _domains.first;
+
+    void updateEmail({String? local, String? nextDomain}) {
+      onChanged('${local ?? localPart}@${nextDomain ?? selectedDomain}');
+    }
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: TextFormField(
+            key: const ValueKey<String>('auth-email-local'),
+            initialValue: localPart,
+            keyboardType: TextInputType.emailAddress,
+            onChanged: (next) => updateEmail(local: next),
+            decoration: InputDecoration(
+              labelText: '이메일',
+              hintText: 'example',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _focus, width: 1.4),
+              ),
+            ),
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Text('@', style: AppText.smallStrong),
+        ),
+        SizedBox(
+          width: 172,
+          child: DropdownButtonFormField<String>(
+            initialValue: selectedDomain,
+            items:
+                _domains
+                    .map(
+                      (item) => DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      ),
+                    )
+                    .toList(),
+            onChanged: (next) {
+              if (next != null) {
+                updateEmail(nextDomain: next);
+              }
+            },
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _focus, width: 1.4),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _AuthField extends StatelessWidget {
   const _AuthField({
     required this.label,
     required this.value,
     required this.onChanged,
-    this.keyboardType,
-    this.obscureText = false,
   });
 
   final String label;
   final String value;
   final ValueChanged<String> onChanged;
-  final TextInputType? keyboardType;
-  final bool obscureText;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       initialValue: value,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
       onChanged: onChanged,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
         fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _line),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _line),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _focus, width: 1.4),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthPasswordField extends StatefulWidget {
+  const _AuthPasswordField({required this.value, required this.onChanged});
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_AuthPasswordField> createState() => _AuthPasswordFieldState();
+}
+
+class _AuthPasswordFieldState extends State<_AuthPasswordField> {
+  bool _obscureText = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      initialValue: widget.value,
+      obscureText: _obscureText,
+      onChanged: widget.onChanged,
+      decoration: InputDecoration(
+        labelText: '비밀번호',
+        filled: true,
+        fillColor: Colors.white,
+        suffixIcon: IconButton(
+          onPressed: () {
+            setState(() {
+              _obscureText = !_obscureText;
+            });
+          },
+          icon: Icon(
+            _obscureText
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+          ),
+          tooltip: _obscureText ? '비밀번호 보기' : '비밀번호 숨기기',
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: _line),
