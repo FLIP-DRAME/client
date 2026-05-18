@@ -361,7 +361,6 @@ class DrameStore extends ChangeNotifier {
   int pilotOnboardingStep = 0;
   String accountRole = '운용자';
   String accountEmail = '';
-  String accountId = '';
   String accountPassword = '';
   String accountName = '';
   String accountNickname = '';
@@ -476,7 +475,6 @@ class DrameStore extends ChangeNotifier {
     bool? loginMode,
     String? role,
     String? email,
-    String? accountId,
     String? password,
     String? name,
     String? nickname,
@@ -484,7 +482,6 @@ class DrameStore extends ChangeNotifier {
     isLoginMode = loginMode ?? isLoginMode;
     accountRole = role ?? accountRole;
     accountEmail = email ?? accountEmail;
-    this.accountId = accountId ?? this.accountId;
     accountPassword = password ?? accountPassword;
     accountName = name ?? accountName;
     accountNickname = nickname ?? accountNickname;
