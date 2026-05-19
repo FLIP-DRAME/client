@@ -958,7 +958,7 @@ class _AuthEmailField extends StatelessWidget {
         SizedBox(
           width: 172,
           child: DropdownButtonFormField<String>(
-            initialValue: selectedDomain,
+            value: selectedDomain,
             items:
                 _domains
                     .map(
@@ -2806,8 +2806,8 @@ class _PopularPortfolioSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final portfolioPilots =
         store.selectedPortfolioCategory == '전체'
-            ? store.pilots
-            : store.pilots
+            ? store.allPilots
+            : store.allPilots
                 .where(
                   (pilot) => pilot.hasCategory(store.selectedPortfolioCategory),
                 )
@@ -3162,6 +3162,13 @@ class _PageShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+    if (compact) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(16, top, 16, bottom),
+        child: child,
+      );
+    }
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1280),
@@ -3473,6 +3480,283 @@ class _PermitPill extends StatelessWidget {
               fontWeight: FontWeight.w600,
               height: 1.25,
               letterSpacing: -0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobileAppBar extends StatelessWidget {
+  const _MobileAppBar({
+    required this.store,
+    required this.onLoginTap,
+    required this.onLogoTap,
+    required this.onModeChanged,
+  });
+
+  final DrameStore store;
+  final VoidCallback onLoginTap;
+  final VoidCallback onLogoTap;
+  final ValueChanged<bool> onModeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: _line)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: <Widget>[
+          InkWell(
+            onTap: onLogoTap,
+            borderRadius: BorderRadius.circular(8),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text('Drame', style: HomeText.logo),
+            ),
+          ),
+          const Spacer(),
+          Container(
+            height: 34,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: _soft,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: _line),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                _MobileToggleItem(
+                  label: '이용자',
+                  selected: !store.isPilotMode,
+                  onTap: () => onModeChanged(false),
+                ),
+                _MobileToggleItem(
+                  label: '운용자',
+                  selected: store.isPilotMode,
+                  onTap: () => onModeChanged(true),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: onLoginTap,
+            style: TextButton.styleFrom(
+              textStyle: AppText.button,
+              foregroundColor: _ink,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('로그인'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobileToggleItem extends StatelessWidget {
+  const _MobileToggleItem({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: selected
+              ? <BoxShadow>[
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: _ink,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileUserHomePage extends StatelessWidget {
+  const _MobileUserHomePage({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return const SingleChildScrollView(
+      child: _LandingHeroSection(),
+    );
+  }
+}
+
+class _MobileSearchFlow extends StatelessWidget {
+  const _MobileSearchFlow({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCategory = store.selectedCategory != null;
+    return hasCategory
+        ? _SearchResultsPage(store: store)
+        : _SearchCategoryPage(store: store);
+  }
+}
+
+class _SearchCategoryPage extends StatelessWidget {
+  const _SearchCategoryPage({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: _PageShell(
+        top: 28,
+        bottom: 28,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const _SectionHeader(
+              eyebrow: '먼저 필요한 작업을 선택하세요',
+              title: '카테고리별 드론 서비스',
+            ),
+            const SizedBox(height: 24),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: mockDroneCategories.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+                mainAxisExtent: 132,
+              ),
+              itemBuilder: (context, index) {
+                final category = mockDroneCategories[index];
+                return _ServiceCategoryCard(
+                  key: ValueKey('category-${category.id}'),
+                  category: category,
+                  selected: store.selectedCategory?.id == category.id,
+                  onTap: () => store.selectCategory(category),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchResultsPage extends StatelessWidget {
+  const _SearchResultsPage({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Row(
+              children: <Widget>[
+                InkWell(
+                  onTap: store.clearCategory,
+                  borderRadius: BorderRadius.circular(8),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.arrow_back_rounded, color: _navy, size: 22),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  store.selectedCategory!.label,
+                  style: AppText.smallStrong.copyWith(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: _line),
+          _AreaSelectionSection(store: store),
+          _OperatorListSection(store: store),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobilePilotRequestsPage extends StatelessWidget {
+  const _MobilePilotRequestsPage({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text('받은 요청', style: AppText.portfolioTitle),
+              ),
+              Text(
+                '${mockPilotWorkRequests.length}건',
+                style: AppText.cardSubtitle.copyWith(color: _navy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...mockPilotWorkRequests.map(
+            (request) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _RequestReviewCard(
+                request: request,
+                selected: false,
+                onTap: () => _openPilotRequestReviewPage(
+                  context,
+                  initialRequest: request,
+                ),
+              ),
             ),
           ),
         ],

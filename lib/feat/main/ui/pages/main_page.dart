@@ -339,6 +339,7 @@ class DrameStore extends ChangeNotifier {
   final MockQuoteApi _quoteApi;
 
   List<DronePilot> pilots = const <DronePilot>[];
+  List<DronePilot> allPilots = const <DronePilot>[];
   DroneCategory? selectedCategory;
   DronePilot? selectedPilot;
   String selectedPortfolioCategory = '전체';
@@ -379,9 +380,22 @@ class DrameStore extends ChangeNotifier {
       category: selectedCategory?.label,
     );
     pilots = nextPilots;
+    if (initial) {
+      allPilots = nextPilots;
+    }
     selectedPilot = pilots.isEmpty ? null : pilots.first;
     isLoading = false;
     isRefreshing = false;
+    notifyListeners();
+  }
+
+  void clearCategory() {
+    selectedCategory = null;
+    selectedRegion = '전체';
+    selectedDistrict = '전체';
+    selectedArea = '전체';
+    pilots = allPilots;
+    selectedPilot = pilots.isEmpty ? null : pilots.first;
     notifyListeners();
   }
 
@@ -675,6 +689,7 @@ class DrameHomePage extends StatefulWidget {
 class _DrameHomePageState extends State<DrameHomePage> {
   final GlobalKey _categorySectionKey = GlobalKey();
   final GlobalKey _portfolioSectionKey = GlobalKey();
+  int _tabIndex = 0;
 
   @override
   void initState() {
@@ -699,95 +714,227 @@ class _DrameHomePageState extends State<DrameHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+    return Consumer<DrameStore>(
+      builder: (context, store, _) {
+        if (store.isLoading && store.pilots.isEmpty) {
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return compact
+            ? _buildMobileLayout(context, store)
+            : _buildWebLayout(context, store);
+      },
+    );
+  }
+
+  Widget _buildWebLayout(BuildContext context, DrameStore store) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Consumer<DrameStore>(
-          builder: (context, store, _) {
-            if (store.isLoading && store.pilots.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            return CustomScrollView(
-              slivers: <Widget>[
-                SliverToBoxAdapter(
-                  child: DrameTopNavigation(
-                    isPilotMode: store.isPilotMode,
-                    onModeChanged: store.setPilotMode,
-                    onLoginTap: () {
-                      store.setPilotMode(true);
-                      store.openAuth(loginMode: true, role: '운용자');
-                    },
-                    onRegisterTap: () => context.push('/pilot/register'),
-                    onLogoTap: () {
-                      store.setPilotMode(false);
-                      context.go('/');
-                    },
-                  ),
+        child: CustomScrollView(
+          slivers: <Widget>[
+            SliverToBoxAdapter(
+              child: DrameTopNavigation(
+                isPilotMode: store.isPilotMode,
+                onModeChanged: (value) {
+                  store.setPilotMode(value);
+                  setState(() => _tabIndex = 0);
+                },
+                onLoginTap: () {
+                  store.setPilotMode(true);
+                  store.openAuth(loginMode: true, role: '운용자');
+                },
+                onRegisterTap: () => context.push('/pilot/register'),
+                onLogoTap: () {
+                  store.setPilotMode(false);
+                  context.go('/');
+                },
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: DrameSecondaryNavigation(
+                isPilotMode: store.isPilotMode,
+                onFindPilotTap: () => _scrollToSection(_categorySectionKey),
+                onPortfolioTap: () => _scrollToSection(_portfolioSectionKey),
+                onRequestsTap: () => _openPilotRequestReviewPage(
+                  context,
+                  initialRequest: mockPilotWorkRequests.first,
                 ),
-                SliverToBoxAdapter(
-                  child: DrameSecondaryNavigation(
-                    isPilotMode: store.isPilotMode,
-                    onFindPilotTap: () => _scrollToSection(_categorySectionKey),
-                    onPortfolioTap:
-                        () => _scrollToSection(_portfolioSectionKey),
-                    onRequestsTap:
-                        () => _openPilotRequestReviewPage(
-                          context,
-                          initialRequest: mockPilotWorkRequests.first,
-                        ),
-                    onMyPageTap: () => context.push('/pilot/mypage'),
-                  ),
-                ),
-                if (store.isPilotMode) ...<Widget>[
-                  SliverToBoxAdapter(
-                    child:
-                        store.isPilotAuthOpen
-                            ? _PilotAuthSection(store: store)
-                            : store.isPilotOnboarding
-                            ? _PilotOnboardingSection(store: store)
-                            : store.operatorRegistrationCompleted
+                onMyPageTap: () => context.push('/pilot/mypage'),
+              ),
+            ),
+            if (store.isPilotMode) ...<Widget>[
+              SliverToBoxAdapter(
+                child: store.isPilotAuthOpen
+                    ? _PilotAuthSection(store: store)
+                    : store.isPilotOnboarding
+                        ? _PilotOnboardingSection(store: store)
+                        : store.operatorRegistrationCompleted
                             ? _PilotDashboardSection(store: store)
                             : _PilotLandingSection(store: store),
+              ),
+              const SliverToBoxAdapter(child: _FooterSection()),
+              const SliverToBoxAdapter(child: SizedBox(height: 72)),
+            ] else ...<Widget>[
+              const SliverToBoxAdapter(child: _LandingHeroSection()),
+              SliverToBoxAdapter(
+                child: KeyedSubtree(
+                  key: _categorySectionKey,
+                  child: _CategorySelectionSection(store: store),
+                ),
+              ),
+              if (store.selectedCategory != null) ...<Widget>[
+                SliverToBoxAdapter(
+                  child: _AreaSelectionSection(store: store),
+                ),
+                //if (store.selectedArea != '전체')
+                SliverToBoxAdapter(
+                  child: _OperatorListSection(store: store),
+                ),
+              ],
+              const SliverToBoxAdapter(
+                child: ColoredBox(
+                  color: Colors.white,
+                  child: DroneFeedSection(),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: KeyedSubtree(
+                  key: _portfolioSectionKey,
+                  child: _PopularPortfolioSection(store: store),
+                ),
+              ),
+              const SliverToBoxAdapter(child: _FooterSection()),
+              const SliverToBoxAdapter(child: SizedBox(height: 72)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context, DrameStore store) {
+    // 운용자 모드이고 아직 등록 미완료 → 전체화면, 네비게이션 없음
+    if (store.isPilotMode && !store.operatorRegistrationCompleted) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: store.isPilotAuthOpen
+                ? _PilotAuthSection(store: store)
+                : store.isPilotOnboarding
+                    ? _PilotOnboardingSection(store: store)
+                    : _PilotLandingSection(store: store),
+          ),
+        ),
+      );
+    }
+
+    final navItems = store.isPilotMode
+        ? const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_rounded),
+              label: '홈',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.description_outlined),
+              activeIcon: Icon(Icons.description_rounded),
+              label: '요청 확인',
+            ),
+          ]
+        : const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_rounded),
+              label: '촬영자 찾기',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dynamic_feed_outlined),
+              activeIcon: Icon(Icons.dynamic_feed_rounded),
+              label: '피드',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.grid_view_outlined),
+              activeIcon: Icon(Icons.grid_view_rounded),
+              label: '포트폴리오',
+            ),
+          ];
+
+    final safeIndex = _tabIndex.clamp(0, navItems.length - 1);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: _MobileAppBar(
+          store: store,
+          onLoginTap: () {
+            store.setPilotMode(true);
+            store.openAuth(loginMode: true, role: '운용자');
+            setState(() => _tabIndex = 0);
+          },
+          onLogoTap: () {
+            store.setPilotMode(false);
+            setState(() => _tabIndex = 0);
+          },
+          onModeChanged: (value) {
+            store.setPilotMode(value);
+            setState(() => _tabIndex = 0);
+          },
+        ),
+      ),
+      body: SafeArea(
+        child: IndexedStack(
+          index: safeIndex,
+          children: store.isPilotMode
+              ? <Widget>[
+                  SingleChildScrollView(
+                    child: store.isPilotAuthOpen
+                        ? _PilotAuthSection(store: store)
+                        : store.isPilotOnboarding
+                            ? _PilotOnboardingSection(store: store)
+                            : store.operatorRegistrationCompleted
+                                ? _PilotDashboardSection(store: store)
+                                : _PilotLandingSection(store: store),
                   ),
-                  const SliverToBoxAdapter(child: _FooterSection()),
-                  const SliverToBoxAdapter(child: SizedBox(height: 72)),
-                ] else ...<Widget>[
-                  const SliverToBoxAdapter(child: _LandingHeroSection()),
-                  SliverToBoxAdapter(
-                    child: KeyedSubtree(
-                      key: _categorySectionKey,
-                      child: _CategorySelectionSection(store: store),
-                    ),
-                  ),
-                  if (store.selectedCategory != null) ...<Widget>[
-                    SliverToBoxAdapter(
-                      child: _AreaSelectionSection(store: store),
-                    ),
-                    //if (store.selectedArea != '전체')
-                      SliverToBoxAdapter(
-                        child: _OperatorListSection(store: store),
-                      ),
-                  ],
-                  const SliverToBoxAdapter(
+                  _MobilePilotRequestsPage(store: store),
+                ]
+              : <Widget>[
+                  _MobileSearchFlow(store: store),
+                  const SingleChildScrollView(
                     child: ColoredBox(
                       color: Colors.white,
                       child: DroneFeedSection(),
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: KeyedSubtree(
-                      key: _portfolioSectionKey,
-                      child: _PopularPortfolioSection(store: store),
-                    ),
+                  SingleChildScrollView(
+                    child: _PopularPortfolioSection(store: store),
                   ),
-                  const SliverToBoxAdapter(child: _FooterSection()),
-                  const SliverToBoxAdapter(child: SizedBox(height: 72)),
                 ],
-              ],
-            );
-          },
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: safeIndex,
+        onTap: (index) => setState(() => _tabIndex = index),
+        selectedItemColor: _primary,
+        unselectedItemColor: const Color(0xFF8BA0B8),
+        backgroundColor: Colors.white,
+        elevation: 8,
+        type: BottomNavigationBarType.fixed,
+        selectedLabelStyle: const TextStyle(
+          fontFamily: 'Pretendard',
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontFamily: 'Pretendard',
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        ),
+        items: navItems,
       ),
     );
   }
