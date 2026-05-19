@@ -709,14 +709,14 @@ class _PilotAuthSection extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         _AuthModeTab(
-                          label: '회원가입',
-                          selected: !store.isLoginMode,
-                          onTap: () => store.updateAuth(loginMode: false),
-                        ),
-                        _AuthModeTab(
                           label: '로그인',
                           selected: store.isLoginMode,
                           onTap: () => store.updateAuth(loginMode: true),
+                        ),
+                        _AuthModeTab(
+                          label: '회원가입',
+                          selected: !store.isLoginMode,
+                          onTap: () => store.updateAuth(loginMode: false),
                         ),
                       ],
                     ),
