@@ -3887,6 +3887,25 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
 
   @override
   Widget build(BuildContext context) {
+    if (_paymentDone) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _line),
+        ),
+        child: const Row(
+          children: <Widget>[
+            Icon(Icons.phone_outlined, color: _navy, size: 20),
+            SizedBox(width: 10),
+            Text('이용자 연락처: 010-1234-5678', style: AppText.smallStrong),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -3952,25 +3971,6 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
             child: const Text('완료'),
           ),
         ),
-        if (_paymentDone) ...<Widget>[
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _line),
-            ),
-            child: const Row(
-              children: <Widget>[
-                Icon(Icons.phone_outlined, color: _navy, size: 20),
-                SizedBox(width: 10),
-                Text('이용자 연락처: 010-1234-5678', style: AppText.smallStrong),
-              ],
-            ),
-          ),
-        ],
       ],
     );
   }
