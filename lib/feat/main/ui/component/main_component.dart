@@ -809,6 +809,7 @@ class _PilotAuthSection extends StatelessWidget {
                           showDialog<void>(
                             context: context,
                             builder: (ctx) => AlertDialog(
+                              backgroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
