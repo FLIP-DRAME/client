@@ -804,7 +804,43 @@ class _PilotAuthSection extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: store.submitAuth,
+                      onPressed: () {
+                        if (!store.isLoginMode) {
+                          showDialog<void>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              title: const Text(
+                                '회원가입이 완료 되었습니다!',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                textAlign: TextAlign.center,
+                              ),
+                              actionsAlignment: MainAxisAlignment.center,
+                              actions: [
+                                FilledButton(
+                                  onPressed: () {
+                                    Navigator.of(ctx).pop();
+                                    store.updateAuth(loginMode: true);
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _navy,
+                                    foregroundColor: Colors.white,
+                                    minimumSize: const Size(120, 44),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text('확인'),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else {
+                          store.submitAuth();
+                        }
+                      },
                       style: FilledButton.styleFrom(
                         backgroundColor: _navy,
                         foregroundColor: Colors.white,
