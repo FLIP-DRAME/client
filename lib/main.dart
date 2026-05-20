@@ -30,10 +30,10 @@ class DrameApp extends StatelessWidget {
           primary: Colors.black,
           secondary: Colors.black,
         ),
-        focusColor: const Color(0xFFEAF7FF),
+        focusColor: const Color(0xFFE5E7EB),
         textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Color(0xFFEAF7FF),
-          selectionHandleColor: Color(0xFFEAF7FF),
+          cursorColor: Color(0xFFE5E7EB),
+          selectionHandleColor: Color(0xFFE5E7EB),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
