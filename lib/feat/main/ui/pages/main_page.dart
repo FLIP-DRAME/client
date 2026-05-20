@@ -59,8 +59,8 @@ class HomeText {
 
 const _primary = Color(0xFF0052FF);
 const _navy = Colors.black;
-const _toggle = Color(0xFFEAF7FF);
-const _focus = Color(0xFFEAF7FF);
+const _toggle = Color(0xFFE5E7EB);
+const _focus = Color(0xFFE5E7EB);
 const _ink = Colors.black;
 const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
@@ -1186,7 +1186,7 @@ class _LandingHeroSection extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: <Color>[Colors.white, _focus],
+            colors: <Color>[Colors.white, Color(0xFFEAF7FF)],
           ),
         ),
         child: _PageShell(

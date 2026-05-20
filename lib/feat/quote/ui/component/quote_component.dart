@@ -6,7 +6,7 @@ const quoteNavy = Colors.black;
 const quoteInk = Colors.black;
 const quoteMuted = Colors.black;
 const quoteSoft = Color(0xFFF7F8FA);
-const quoteFocus = Color(0xFFEAF7FF);
+const quoteFocus = Color(0xFFE5E7EB);
 const quoteLine = Color(0xFFE4EAF2);
 
 class QuoteText {

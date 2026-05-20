@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'drame_text_styles.dart';
 
 const _primary = Color(0xFF0052FF);
-const _toggle = Color(0xFFEAF7FF);
+const _toggle = Color(0xFFE5E7EB);
 const _ink = Colors.black;
 const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
