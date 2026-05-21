@@ -17,18 +17,19 @@ class FeedText {
   static const TextStyle eyebrow = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
     color: _muted,
-    fontSize: DrameTextStyles.labelSize,
+    fontSize: 14,
     fontWeight: DrameTextStyles.semiBold,
-    height: 1.35,
+    height: 1.4,
+    letterSpacing: -0.1,
   );
 
   static const TextStyle sectionTitle = TextStyle(
     fontFamily: DrameTextStyles.fontFamily,
     color: _navy,
-    fontSize: DrameTextStyles.sectionTitleSize,
-    fontWeight: DrameTextStyles.bold,
-    height: 1.28,
-    letterSpacing: -0.2,
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+    height: 1.25,
+    letterSpacing: -0.6,
   );
 
   static const TextStyle feedLocation = TextStyle(

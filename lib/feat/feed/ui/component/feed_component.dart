@@ -358,7 +358,7 @@ class _DroneFeedSectionState extends State<DroneFeedSection> {
   }
 }
 
-class _FeedCard extends StatelessWidget {
+class _FeedCard extends StatefulWidget {
   const _FeedCard({
     required this.image,
     required this.location,
@@ -372,57 +372,55 @@ class _FeedCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_FeedCard> createState() => _FeedCardState();
+}
+
+class _FeedCardState extends State<_FeedCard> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            _FeedNetworkCover(imageUrl: image),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: <Color>[
-                    Colors.black.withValues(alpha: 0.02),
-                    Colors.black.withValues(alpha: 0.58),
-                  ],
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: InkWell(
+        onTap: widget.onTap,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              _FeedNetworkCover(imageUrl: widget.image),
+              AnimatedOpacity(
+                opacity: _hovered ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 220),
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: <Color>[Colors.transparent, Color(0xB3000000)],
+                    ),
+                  ),
                 ),
               ),
-            ),
-
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    location,
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: AnimatedOpacity(
+                  opacity: _hovered ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 220),
+                  child: Text(
+                    widget.location,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: FeedText.feedLocation,
                   ),
-                  const SizedBox(height: 5),
-                  // Text(
-                  //   category,
-                  //   maxLines: 1,
-                  //   overflow: TextOverflow.ellipsis,
-                  //   style: const TextStyle(
-                  //     color: Colors.white,
-                  //     fontSize: 15,
-                  //     fontWeight: FontWeight.w800,
-                  //   ),
-                  // ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -682,16 +680,6 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                   color: _liked ? const Color(0xFFE54866) : _ink,
                 ),
               ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.mode_comment_outlined),
-              ),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.send_outlined),
-              ),
-              const Spacer(),
-              const Icon(Icons.bookmark_border_rounded),
             ],
           ),
         ),
@@ -706,8 +694,6 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
           child: Row(
             children: <Widget>[
-              const Icon(Icons.sentiment_satisfied_alt_rounded, color: _muted),
-              const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: _commentController,
@@ -845,7 +831,6 @@ class _CommentTile extends StatelessWidget {
               ),
             ),
           ),
-          const Icon(Icons.favorite_border_rounded, size: 18, color: _muted),
         ],
       ),
     );

@@ -7,37 +7,56 @@ class _OperatorProfileManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: <Widget>[
-        SliverToBoxAdapter(
-          child: DrameTopNavigation(
-            isPilotMode: store.isPilotMode,
-            onModeChanged: store.setPilotMode,
-            onLoginTap: () {
-              store.setPilotMode(true);
-              store.openAuth(loginMode: true, role: '운용자');
-            },
-            onRegisterTap: () => context.push('/pilot/register'),
-            onLogoTap: () => context.go('/'),
-          ),
+    return Scaffold(
+      backgroundColor: DC.canvas,
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            DrameTopNavigation(
+              isLoggedIn: store.isLoggedIn,
+              isOperator: store.isPilotMode && store.isLoggedIn,
+              nickname: store.accountNickname.isNotEmpty
+                  ? store.accountNickname
+                  : store.accountName,
+              onLoginTap: () => store.openAuth(loginMode: true),
+              onRegisterPilotTap: () => context.push('/pilot/register'),
+              onLogoTap: () => context.go('/'),
+              onFindPilotTap: () => context.go('/'),
+              onRequestsTap: () => _openPilotRequestReviewPage(
+                context,
+                initialRequest: mockPilotWorkRequests.first,
+              ),
+              onMyPageTap: () {},
+            ),
+            DrameTabNav(
+              isOperator: true,
+              selectedId: 'profile',
+              onTabChanged: (id) {
+                switch (id) {
+                  case 'dashboard':
+                    context.go('/');
+                  case 'requests':
+                    _openPilotRequestReviewPage(
+                      context,
+                      initialRequest: mockPilotWorkRequests.first,
+                    );
+                  default:
+                    break;
+                }
+              },
+            ),
+            Expanded(
+              child: CustomScrollView(
+                slivers: <Widget>[
+                  SliverToBoxAdapter(child: _OperatorMyPageBody(store: store)),
+                  const SliverToBoxAdapter(child: _FooterSection()),
+                  const SliverToBoxAdapter(child: SizedBox(height: 72)),
+                ],
+              ),
+            ),
+          ],
         ),
-        SliverToBoxAdapter(
-          child: DrameSecondaryNavigation(
-            isPilotMode: true,
-            onFindPilotTap: () => context.go('/'),
-            onPortfolioTap: () => context.go('/'),
-            onRequestsTap:
-                () => _openPilotRequestReviewPage(
-                  context,
-                  initialRequest: mockPilotWorkRequests.first,
-                ),
-            onMyPageTap: () {},
-          ),
-        ),
-        SliverToBoxAdapter(child: _OperatorMyPageBody(store: store)),
-        const SliverToBoxAdapter(child: _FooterSection()),
-        const SliverToBoxAdapter(child: SizedBox(height: 72)),
-      ],
+      ),
     );
   }
 }
