@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../feed/ui/pages/feed_page.dart';
@@ -304,7 +305,9 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
                 !store.isPilotOnboarding) {
               return _PilotRegistrationDoneSection(store: store);
             }
-            return _PilotOnboardingSection(store: store);
+            return SingleChildScrollView(
+                child: _PilotOnboardingSection(store: store),
+              );
           },
         ),
       ),
@@ -317,15 +320,9 @@ class OperatorMyPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Consumer<DrameStore>(
-          builder:
-              (context, store, _) =>
-                  _OperatorProfileManagementPage(store: store),
-        ),
-      ),
+    return Consumer<DrameStore>(
+      builder: (context, store, _) =>
+          _OperatorProfileManagementPage(store: store),
     );
   }
 }
@@ -688,7 +685,14 @@ class DrameHomePage extends StatefulWidget {
 
 class _DrameHomePageState extends State<DrameHomePage> {
   final GlobalKey _categorySectionKey = GlobalKey();
+  final GlobalKey _areaSectionKey = GlobalKey();
+  final GlobalKey _operatorSectionKey = GlobalKey();
   final GlobalKey _portfolioSectionKey = GlobalKey();
+  final ScrollController _scrollController = ScrollController();
+
+  // Tab state: 'all' | category id (user), or 'dashboard'|'requests'|'feed'|'profile' (operator)
+  String _selectedTabId = 'all';
+  // Mobile tab index
   int _tabIndex = 0;
 
   @override
@@ -699,17 +703,58 @@ class _DrameHomePageState extends State<DrameHomePage> {
     });
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _scrollToSection(GlobalKey key) {
-    final context = key.currentContext;
-    if (context == null) {
-      return;
-    }
+    final ctx = key.currentContext;
+    if (ctx == null) return;
     Scrollable.ensureVisible(
-      context,
+      ctx,
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeOutCubic,
       alignment: 0.04,
     );
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _handleUserTabChanged(String id, DrameStore store) {
+    setState(() => _selectedTabId = id);
+    if (id == 'all') {
+      store.clearCategory();
+      _scrollToTop();
+    } else {
+      final cat = mockDroneCategories.firstWhere(
+        (c) => c.id == id,
+        orElse: () => mockDroneCategories.first,
+      );
+      store.selectCategory(cat);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSection(_areaSectionKey);
+      });
+    }
+  }
+
+  void _handleOperatorTabChanged(String id, BuildContext ctx, DrameStore store) {
+    setState(() => _selectedTabId = id);
+    switch (id) {
+      case 'requests':
+        _openPilotRequestReviewPage(ctx, initialRequest: mockPilotWorkRequests.first);
+      case 'profile':
+        ctx.push('/pilot/mypage');
+      default:
+        break;
+    }
   }
 
   @override
@@ -719,8 +764,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
       builder: (context, store, _) {
         if (store.isLoading && store.pilots.isEmpty) {
           return const Scaffold(
-            backgroundColor: Colors.white,
-            body: Center(child: CircularProgressIndicator()),
+            backgroundColor: DC.canvas,
+            body: Center(
+              child: CircularProgressIndicator(color: DC.primary),
+            ),
           );
         }
         return compact
@@ -731,87 +778,186 @@ class _DrameHomePageState extends State<DrameHomePage> {
   }
 
   Widget _buildWebLayout(BuildContext context, DrameStore store) {
+    // Operator mode: logged in as operator
+    final isOperatorDashboard =
+        store.isLoggedIn && store.isPilotMode;
+
+    // Sync selected tab with store category when user navigates
+    final tabId = store.selectedCategory != null
+        ? store.selectedCategory!.id
+        : (_selectedTabId == 'all' ? 'all' : _selectedTabId);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: <Widget>[
-            SliverToBoxAdapter(
-              child: DrameTopNavigation(
-                isPilotMode: store.isPilotMode,
-                onModeChanged: (value) {
-                  store.setPilotMode(value);
-                  setState(() => _tabIndex = 0);
-                },
-                onLoginTap: () {
-                  store.setPilotMode(true);
-                  store.openAuth(loginMode: true, role: '운용자');
-                },
-                onRegisterTap: () => context.push('/pilot/register'),
-                onLogoTap: () {
-                  store.setPilotMode(false);
-                  context.go('/');
-                },
-              ),
+      backgroundColor: DC.canvas,
+      body: Column(
+        children: <Widget>[
+          // ── Sticky top nav ──────────────────────────────────────────────────
+          DrameTopNavigation(
+            isLoggedIn: store.isLoggedIn,
+            isOperator: isOperatorDashboard,
+            nickname: store.isLoggedIn
+                ? (store.accountNickname.isNotEmpty
+                    ? store.accountNickname
+                    : store.accountName)
+                : null,
+            onLoginTap: () => store.openAuth(loginMode: true),
+            onRegisterPilotTap: () => context.push('/pilot/register'),
+            onLogoTap: () {
+              store.clearCategory();
+              store.setPilotMode(false);
+              setState(() => _selectedTabId = 'all');
+              _scrollToTop();
+            },
+            onFindPilotTap: () {
+              store.setPilotMode(false);
+              setState(() => _selectedTabId = 'all');
+              _scrollToSection(_categorySectionKey);
+            },
+            onRequestsTap: () => _openPilotRequestReviewPage(
+              context,
+              initialRequest: mockPilotWorkRequests.first,
             ),
-            SliverToBoxAdapter(
-              child: DrameSecondaryNavigation(
-                isPilotMode: store.isPilotMode,
-                onFindPilotTap: () => _scrollToSection(_categorySectionKey),
-                onPortfolioTap: () => _scrollToSection(_portfolioSectionKey),
-                onRequestsTap: () => _openPilotRequestReviewPage(
-                  context,
-                  initialRequest: mockPilotWorkRequests.first,
-                ),
-                onMyPageTap: () => context.push('/pilot/mypage'),
-              ),
-            ),
-            if (store.isPilotMode) ...<Widget>[
-              SliverToBoxAdapter(
-                child: store.isPilotAuthOpen
-                    ? _PilotAuthSection(store: store)
-                    : store.isPilotOnboarding
-                        ? _PilotOnboardingSection(store: store)
-                        : store.operatorRegistrationCompleted
-                            ? _PilotDashboardSection(store: store)
-                            : _PilotLandingSection(store: store),
-              ),
-              const SliverToBoxAdapter(child: _FooterSection()),
-              const SliverToBoxAdapter(child: SizedBox(height: 72)),
-            ] else ...<Widget>[
-              const SliverToBoxAdapter(child: _LandingHeroSection()),
-              SliverToBoxAdapter(
-                child: KeyedSubtree(
-                  key: _categorySectionKey,
-                  child: _CategorySelectionSection(store: store),
-                ),
-              ),
-              if (store.selectedCategory != null) ...<Widget>[
-                SliverToBoxAdapter(
-                  child: _AreaSelectionSection(store: store),
-                ),
-                //if (store.selectedArea != '전체')
-                SliverToBoxAdapter(
-                  child: _OperatorListSection(store: store),
-                ),
+            onMyPageTap: () => context.push('/pilot/mypage'),
+          ),
+
+          // ── Sticky secondary tab bar ────────────────────────────────────────
+          DrameTabNav(
+            isOperator: isOperatorDashboard && store.operatorRegistrationCompleted,
+            selectedId: isOperatorDashboard ? _selectedTabId : tabId,
+            onTabChanged: (id) {
+              if (isOperatorDashboard) {
+                _handleOperatorTabChanged(id, context, store);
+              } else {
+                _handleUserTabChanged(id, store);
+              }
+            },
+          ),
+
+          // ── Scrollable content ──────────────────────────────────────────────
+          Expanded(
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: <Widget>[
+                if (isOperatorDashboard) ...<Widget>[
+                  SliverToBoxAdapter(
+                    child: store.isPilotAuthOpen
+                        ? _PilotAuthSection(store: store)
+                        : store.isPilotOnboarding
+                            ? _PilotOnboardingSection(store: store)
+                            : store.operatorRegistrationCompleted
+                                ? (_selectedTabId == 'feed'
+                                    ? _OperatorFeedTabPage(store: store)
+                                    : _PilotDashboardSection(store: store))
+                                : _PilotLandingSection(store: store),
+                  ),
+                  const SliverToBoxAdapter(child: _FooterSection()),
+                  const SliverToBoxAdapter(child: SizedBox(height: 72)),
+                ] else ...<Widget>[
+                  // ── Auth overlay (inline for now) ──────────────────────────
+                  if (store.isPilotAuthOpen)
+                    SliverToBoxAdapter(
+                      child: _PilotAuthSection(store: store),
+                    ),
+
+                  // ── Dark hero ──────────────────────────────────────────────
+                  if (!store.isPilotAuthOpen)
+                    SliverToBoxAdapter(
+                      child: _HeroBandDark(
+                        onGetQuoteTap: () {
+                          _scrollToSection(_categorySectionKey);
+                        },
+                        onRegisterPilotTap: () =>
+                            context.push('/pilot/register'),
+                      ),
+                    ),
+
+                  // ── Category cards ─────────────────────────────────────────
+                  if (!store.isPilotAuthOpen)
+                    SliverToBoxAdapter(
+                      child: KeyedSubtree(
+                        key: _categorySectionKey,
+                        child: _RevealOnScroll(
+                          scrollController: _scrollController,
+                          child: _CategorySelectionSection(
+                            store: store,
+                            onCategorySelected: () =>
+                                WidgetsBinding.instance.addPostFrameCallback(
+                                  (_) => _scrollToSection(_areaSectionKey),
+                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // ── Area + operator list (after category selected) ──────────
+                  if (!store.isPilotAuthOpen &&
+                      store.selectedCategory != null) ...<Widget>[
+                    SliverToBoxAdapter(
+                      child: KeyedSubtree(
+                        key: _areaSectionKey,
+                        child: _AreaSelectionSection(
+                          store: store,
+                          onAreaSelected: () =>
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                (_) => _scrollToSection(_operatorSectionKey),
+                              ),
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: KeyedSubtree(
+                        key: _operatorSectionKey,
+                        child: _OperatorListSection(store: store),
+                      ),
+                    ),
+                  ],
+
+                  // ── How it works ───────────────────────────────────────────
+                  if (!store.isPilotAuthOpen)
+                    SliverToBoxAdapter(
+                      child: _RevealOnScroll(
+                        scrollController: _scrollController,
+                        child: const _HowItWorksSection(),
+                      ),
+                    ),
+
+                  // ── Feed ───────────────────────────────────────────────────
+                  if (!store.isPilotAuthOpen)
+                    SliverToBoxAdapter(
+                      child: _RevealOnScroll(
+                        scrollController: _scrollController,
+                        child: const ColoredBox(
+                          color: Colors.white,
+                          child: DroneFeedSection(),
+                        ),
+                      ),
+                    ),
+
+                  // ── Popular portfolio ──────────────────────────────────────
+                  if (!store.isPilotAuthOpen)
+                    SliverToBoxAdapter(
+                      child: KeyedSubtree(
+                        key: _portfolioSectionKey,
+                        child: _PopularPortfolioSection(store: store),
+                      ),
+                    ),
+
+                  // ── Operator CTA band ──────────────────────────────────────
+                  if (!store.isPilotAuthOpen)
+                    SliverToBoxAdapter(
+                      child: _OperatorCtaBand(
+                        onTap: () => context.push('/pilot/register'),
+                      ),
+                    ),
+
+                  // ── Footer ─────────────────────────────────────────────────
+                  const SliverToBoxAdapter(child: _FooterSection()),
+                  const SliverToBoxAdapter(child: SizedBox(height: 72)),
+                ],
               ],
-              const SliverToBoxAdapter(
-                child: ColoredBox(
-                  color: Colors.white,
-                  child: DroneFeedSection(),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: KeyedSubtree(
-                  key: _portfolioSectionKey,
-                  child: _PopularPortfolioSection(store: store),
-                ),
-              ),
-              const SliverToBoxAdapter(child: _FooterSection()),
-              const SliverToBoxAdapter(child: SizedBox(height: 72)),
-            ],
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -839,6 +985,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
               icon: Icon(Icons.home_outlined),
               activeIcon: Icon(Icons.home_rounded),
               label: '홈',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dynamic_feed_outlined),
+              activeIcon: Icon(Icons.dynamic_feed_rounded),
+              label: '피드',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.description_outlined),
@@ -899,6 +1050,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
                             : store.operatorRegistrationCompleted
                                 ? _PilotDashboardSection(store: store)
                                 : _PilotLandingSection(store: store),
+                  ),
+                  SingleChildScrollView(
+                    child: _OperatorFeedSection(store: store),
                   ),
                   _MobilePilotRequestsPage(store: store),
                 ]

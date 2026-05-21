@@ -21,7 +21,7 @@ class DrameApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'DRAME',
+      title: '모두의 드론',
       routerConfig: appRouter,
       theme: ThemeData(
         fontFamily: DrameTextStyles.fontFamily,

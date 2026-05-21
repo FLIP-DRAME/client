@@ -162,9 +162,17 @@ class ChoiceWrap extends StatelessWidget {
               selected: active,
               label: Text(value),
               onSelected: (_) => onSelected(value),
-              selectedColor: quoteFocus,
-              backgroundColor: Colors.white,
-              side: BorderSide(color: active ? quoteFocus : quoteLine),
+              color: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Color(0xFFEEF0F3);
+                }
+                return Colors.white;
+              }),
+              showCheckmark: false,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              side: BorderSide(
+                color: active ? const Color(0xFFB0B8C8) : quoteLine,
+              ),
               labelStyle: QuoteText.body.copyWith(
                 color: quoteInk,
                 fontWeight: DrameTextStyles.semiBold,
