@@ -41,7 +41,7 @@ class ContactAccessPage extends StatelessWidget {
                   Text(contactAccess.note, style: QuoteText.body),
                   const SizedBox(height: 24),
                   OutlinedButton.icon(
-                    onPressed: () => context.go('/'),
+                    onPressed: () => context.go('/home'),
                     icon: const Icon(Icons.home_rounded),
                     label: const Text('메인으로 돌아가기'),
                     style: OutlinedButton.styleFrom(

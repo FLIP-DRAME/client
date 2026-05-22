@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'd_tokens.dart';
 
 // ── DrameTopNavigation ────────────────────────────────────────────────────────
 //
 // 64 px top bar (Coinbase-style).
-//   • Left   : DRANE wordmark (brand blue)
+//   • Left   : 모드 wordmark (brand blue)
 //   • Center : nav links — only on desktop
 //   • Right  : context CTAs
 //               - guest  : [로그인] [시작하기 →]
@@ -17,28 +18,39 @@ class DrameTopNavigation extends StatelessWidget {
     super.key,
     required this.isLoggedIn,
     required this.isOperator,
+    this.isOperatorRegistered = true,
     this.nickname,
-    this.quoteCount = 0,
+    this.activePage,
     required this.onLoginTap,
     required this.onRegisterPilotTap,
     required this.onLogoTap,
     required this.onFindPilotTap,
-    this.onQuoteTap,
+    this.onFeedTap,
+    this.onPortfolioTap,
     this.onRequestsTap,
     this.onMyPageTap,
+    this.onMyQuotesTap,
+    this.onSwitchToUser,
+    this.onSwitchToOperator,
   });
 
   final bool isLoggedIn;
   final bool isOperator;
+  final bool isOperatorRegistered;
   final String? nickname;
-  final int quoteCount;
+  /// 'find' | 'feed' | 'portfolio' | 'quotes' — highlights active link in user nav
+  final String? activePage;
   final VoidCallback onLoginTap;
   final VoidCallback onRegisterPilotTap;
   final VoidCallback onLogoTap;
   final VoidCallback onFindPilotTap;
-  final VoidCallback? onQuoteTap;
+  final VoidCallback? onFeedTap;
+  final VoidCallback? onPortfolioTap;
   final VoidCallback? onRequestsTap;
   final VoidCallback? onMyPageTap;
+  final VoidCallback? onMyQuotesTap;
+  final VoidCallback? onSwitchToUser;
+  final VoidCallback? onSwitchToOperator;
 
   @override
   Widget build(BuildContext context) {
@@ -64,11 +76,31 @@ class DrameTopNavigation extends StatelessWidget {
                 // ── Center nav links (desktop only) ─────────────────────────
                 if (!compact) ...<Widget>[
                   const SizedBox(width: 40),
-                  _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),
-                  const SizedBox(width: 24),
-                  _NavLink(label: '서비스 소개', onTap: onFindPilotTap),
-                  const SizedBox(width: 24),
-                  _NavLink(label: '기사 등록', onTap: onRegisterPilotTap),
+                  if (isLoggedIn && !isOperator) ...<Widget>[
+                    _NavLink(
+                      label: '운용자 찾기',
+                      onTap: onFindPilotTap,
+                      active: activePage == 'find',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '피드',
+                      onTap: onFeedTap ?? () {},
+                      active: activePage == 'feed',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '포트폴리오',
+                      onTap: onPortfolioTap ?? () {},
+                      active: activePage == 'portfolio',
+                    ),
+                  ] else ...<Widget>[
+                    _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),
+                    const SizedBox(width: 24),
+                    _NavLink(label: '서비스 소개', onTap: onFindPilotTap),
+                    const SizedBox(width: 24),
+                    _NavLink(label: '기사 등록', onTap: onRegisterPilotTap),
+                  ],
                 ],
 
                 const Spacer(),
@@ -107,21 +139,47 @@ class DrameTopNavigation extends StatelessWidget {
                       ),
                       child: const Text('요청 관리'),
                     ),
+                  if (!isOperatorRegistered) ...<Widget>[
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: onRegisterPilotTap,
+                      icon: const Icon(Icons.verified_outlined, size: 16),
+                      label: const Text('운용자 등록하기'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF6B2B),
+                        foregroundColor: Colors.white,
+                        textStyle: DT.navLink.copyWith(fontWeight: FontWeight.w700),
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                        elevation: 0,
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: 8),
-                  _AccountChip(
-                    nickname: nickname ?? '기사님',
-                    onTap: onMyPageTap ?? () {},
+                  _ModeToggle(
+                    isOperator: true,
+                    onUserTap: onSwitchToUser ?? () {},
+                    onOperatorTap: onSwitchToOperator ?? () {},
                   ),
                 ] else ...<Widget>[
-                  if (!compact && quoteCount > 0)
-                    _QuoteBadgeButton(
-                      count: quoteCount,
-                      onTap: onQuoteTap ?? () {},
+                  if (!compact)
+                    TextButton(
+                      onPressed: onMyQuotesTap,
+                      style: TextButton.styleFrom(
+                        foregroundColor: activePage == 'quotes' ? DC.primary : DC.ink,
+                        textStyle: DT.navLink,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: const Text('내 견적'),
                     ),
-                  if (!compact && quoteCount > 0) const SizedBox(width: 8),
-                  _AccountChip(
-                    nickname: nickname ?? '이용자',
-                    onTap: onMyPageTap ?? () {},
+                  if (!compact) const SizedBox(width: 8),
+                  _ModeToggle(
+                    isOperator: false,
+                    onUserTap: onSwitchToUser ?? () {},
+                    onOperatorTap: onSwitchToOperator ?? () {},
                   ),
                 ],
               ],
@@ -129,6 +187,51 @@ class DrameTopNavigation extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Reusable wordmark. [size] sets icon height; text scales from it.
+/// [onDark] flips colors for dark-background panels.
+/// [showText] controls whether "모드" label is shown (default true).
+class DrameLogo extends StatelessWidget {
+  const DrameLogo({super.key, this.size = 28, this.onDark = false, this.showText = true});
+
+  final double size;
+  final bool onDark;
+  final bool showText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        SvgPicture.asset(
+          'assets/logo_not_text.svg',
+          height: size,
+          width: size * 1.45,
+          fit: BoxFit.contain,
+          colorFilter: ColorFilter.mode(
+            onDark ? Colors.white : DC.primary,
+            BlendMode.srcIn,
+          ),
+        ),
+        if (showText) ...<Widget>[
+          SizedBox(width: size * 0.25),
+          Text(
+            '모드',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: size * 0.65,
+              fontWeight: FontWeight.w800,
+              color: onDark ? Colors.white : DC.ink,
+              letterSpacing: -0.5,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -142,26 +245,17 @@ class _Logo extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: const Text(
-        'Mode Drone',
-        style: TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 17,
-          fontWeight: FontWeight.w700,
-          color: DC.primary,
-          letterSpacing: -0.4,
-          height: 1,
-        ),
-      ),
+      child: const DrameLogo(size: 40, showText: false),
     );
   }
 }
 
 class _NavLink extends StatefulWidget {
-  const _NavLink({required this.label, required this.onTap});
+  const _NavLink({required this.label, required this.onTap, this.active = false});
 
   final String label;
   final VoidCallback onTap;
+  final bool active;
 
   @override
   State<_NavLink> createState() => _NavLinkState();
@@ -172,94 +266,110 @@ class _NavLinkState extends State<_NavLink> {
 
   @override
   Widget build(BuildContext context) {
+    final active = widget.active || _hovered;
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedDefaultTextStyle(
-          duration: const Duration(milliseconds: 120),
-          style: DT.navLink.copyWith(color: _hovered ? DC.ink : DC.body),
-          child: Text(widget.label),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: widget.active ? DC.primary : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 120),
+            style: DT.titleSm.copyWith(
+              color: active ? DC.ink : DC.body,
+              fontWeight: widget.active ? FontWeight.w700 : FontWeight.w500,
+            ),
+            child: Text(widget.label),
+          ),
         ),
       ),
     );
   }
 }
 
-class _AccountChip extends StatelessWidget {
-  const _AccountChip({required this.nickname, required this.onTap});
+class _ModeToggle extends StatelessWidget {
+  const _ModeToggle({
+    required this.isOperator,
+    required this.onUserTap,
+    required this.onOperatorTap,
+  });
 
-  final String nickname;
+  final bool isOperator;
+  final VoidCallback onUserTap;
+  final VoidCallback onOperatorTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: DC.surfaceStrong,
+        borderRadius: BorderRadius.circular(DC.rxPill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _ToggleTab(label: '이용자', active: !isOperator, onTap: onUserTap),
+          _ToggleTab(label: '운용자', active: isOperator, onTap: onOperatorTap),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToggleTab extends StatelessWidget {
+  const _ToggleTab({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: DC.surfaceStrong,
+          color: active ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(DC.rxPill),
+          boxShadow: active
+              ? <BoxShadow>[
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(nickname, style: DT.navLink.copyWith(color: DC.ink)),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 16,
-              color: DC.muted,
-            ),
-          ],
+        child: Text(
+          label,
+          style: DT.navLink.copyWith(
+            color: active ? DC.ink : DC.muted,
+            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+          ),
         ),
       ),
     );
   }
 }
 
-class _QuoteBadgeButton extends StatelessWidget {
-  const _QuoteBadgeButton({required this.count, required this.onTap});
-
-  final int count;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          border: Border.all(color: DC.hairline),
-          borderRadius: BorderRadius.circular(DC.rxPill),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text('내 견적', style: DT.navLink.copyWith(color: DC.ink)),
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: DC.primary,
-                borderRadius: BorderRadius.circular(DC.rxPill),
-              ),
-              child: Text(
-                '$count',
-                style: DT.captionStrong.copyWith(color: DC.onPrimary),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ── DrameTabNav ──────────────────────────────────────────────────────────────
 //
@@ -383,8 +493,8 @@ class _TabItemState extends State<_TabItem> {
           child: Center(
             child: AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 120),
-              style: DT.navLink.copyWith(
-                fontWeight: widget.selected ? FontWeight.w600 : FontWeight.w500,
+              style: DT.titleSm.copyWith(
+                fontWeight: widget.selected ? FontWeight.w700 : FontWeight.w500,
                 color: widget.selected ? DC.ink : (_hovered ? DC.ink : DC.body),
               ),
               child: Text(widget.tab.label),

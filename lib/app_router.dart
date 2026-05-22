@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'feat/auth/ui/pages/login_page.dart';
+import 'feat/auth/ui/pages/signup_page.dart';
+import 'feat/landing/ui/pages/landing_page.dart';
 import 'feat/main/network/drone_pilot_model.dart';
 import 'feat/main/network/mock_drone_pilot_api.dart';
 import 'feat/main/ui/pages/main_page.dart';
@@ -17,8 +20,33 @@ final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
     GoRoute(
       path: '/',
+      name: 'landing',
+      builder: (context, state) => const LandingPage(),
+    ),
+    GoRoute(
+      path: '/home',
       name: 'home',
       builder: (context, state) => const DrameHomePage(),
+    ),
+    GoRoute(
+      path: '/login',
+      name: 'login',
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/signup',
+      name: 'signup',
+      builder: (context, state) => const SignupPage(),
+    ),
+    GoRoute(
+      path: '/feed',
+      name: 'feed',
+      builder: (context, state) => const FeedStandalonePage(),
+    ),
+    GoRoute(
+      path: '/portfolio',
+      name: 'portfolio-home',
+      builder: (context, state) => const PortfolioStandalonePage(),
     ),
     GoRoute(
       path: '/portfolio/:pilotId',
@@ -86,6 +114,11 @@ final GoRouter appRouter = GoRouter(
           contactAccess: contactAccess,
         );
       },
+    ),
+    GoRoute(
+      path: '/my/quotes',
+      name: 'my-quotes',
+      builder: (context, state) => const MyQuotesPage(),
     ),
     GoRoute(
       path: '/pilot/register',

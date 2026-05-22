@@ -18,15 +18,16 @@ class _OperatorProfileManagementPage extends StatelessWidget {
               nickname: store.accountNickname.isNotEmpty
                   ? store.accountNickname
                   : store.accountName,
-              onLoginTap: () => store.openAuth(loginMode: true),
+              onLoginTap: () => context.go('/login'),
               onRegisterPilotTap: () => context.push('/pilot/register'),
-              onLogoTap: () => context.go('/'),
-              onFindPilotTap: () => context.go('/'),
+              onLogoTap: () => context.go('/home'),
+              onFindPilotTap: () => context.go('/home'),
               onRequestsTap: () => _openPilotRequestReviewPage(
                 context,
                 initialRequest: mockPilotWorkRequests.first,
               ),
-              onMyPageTap: () {},
+              onSwitchToUser: () { store.setPilotMode(false); context.go('/home'); },
+              onSwitchToOperator: () { store.setPilotMode(true); context.go('/home'); },
             ),
             DrameTabNav(
               isOperator: true,
@@ -34,7 +35,7 @@ class _OperatorProfileManagementPage extends StatelessWidget {
               onTabChanged: (id) {
                 switch (id) {
                   case 'dashboard':
-                    context.go('/');
+                    context.go('/home');
                   case 'requests':
                     _openPilotRequestReviewPage(
                       context,
@@ -271,7 +272,7 @@ class _OperatorMyPageBody extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton(
-                onPressed: () => context.go('/'),
+                onPressed: () => context.go('/home'),
                 style: FilledButton.styleFrom(
                   backgroundColor: _navy,
                   foregroundColor: Colors.white,

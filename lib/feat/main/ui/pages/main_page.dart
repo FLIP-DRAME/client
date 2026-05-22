@@ -17,6 +17,9 @@ import 'dart:async'; // Completer
 
 part '../component/main_component.dart';
 part '../component/operator_mypage_component.dart';
+part '../component/feed_standalone_component.dart';
+part '../component/portfolio_standalone_component.dart';
+part '../component/my_quotes_component.dart';
 
 class HomeText {
   static const TextStyle logo = TextStyle(
@@ -285,7 +288,12 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DrameStore>().openPilotOnboarding();
+      final store = context.read<DrameStore>();
+      if (!store.isLoggedIn) {
+        context.go('/login');
+        return;
+      }
+      store.openPilotOnboarding();
     });
   }
 
@@ -296,18 +304,16 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
       body: SafeArea(
         child: Consumer<DrameStore>(
           builder: (context, store, _) {
-            if (store.isPilotAuthOpen ||
-                !store.isLoggedIn ||
-                store.accountRole != '운용자') {
-              return _PilotAuthSection(store: store);
+            if (!store.isLoggedIn) {
+              return const SizedBox.shrink();
             }
             if (store.operatorRegistrationCompleted &&
                 !store.isPilotOnboarding) {
               return _PilotRegistrationDoneSection(store: store);
             }
             return SingleChildScrollView(
-                child: _PilotOnboardingSection(store: store),
-              );
+              child: _PilotOnboardingSection(store: store),
+            );
           },
         ),
       ),
@@ -694,7 +700,6 @@ class _DrameHomePageState extends State<DrameHomePage> {
   final GlobalKey _categorySectionKey = GlobalKey();
   final GlobalKey _areaSectionKey = GlobalKey();
   final GlobalKey _operatorSectionKey = GlobalKey();
-  final GlobalKey _portfolioSectionKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
 
   // Tab state: 'all' | category id (user), or 'dashboard'|'requests'|'feed'|'profile' (operator)
@@ -706,7 +711,12 @@ class _DrameHomePageState extends State<DrameHomePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DrameStore>().load(initial: true);
+      final store = context.read<DrameStore>();
+      if (!store.isLoggedIn) {
+        context.go('/login');
+        return;
+      }
+      store.load(initial: true);
     });
   }
 
@@ -802,12 +812,14 @@ class _DrameHomePageState extends State<DrameHomePage> {
           DrameTopNavigation(
             isLoggedIn: store.isLoggedIn,
             isOperator: isOperatorDashboard,
+            isOperatorRegistered: store.operatorRegistrationCompleted,
             nickname: store.isLoggedIn
                 ? (store.accountNickname.isNotEmpty
                     ? store.accountNickname
                     : store.accountName)
                 : null,
-            onLoginTap: () => store.openAuth(loginMode: true),
+            activePage: 'find',
+            onLoginTap: () => context.go('/login'),
             onRegisterPilotTap: () => context.push('/pilot/register'),
             onLogoTap: () {
               store.clearCategory();
@@ -820,6 +832,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
               setState(() => _selectedTabId = 'all');
               _scrollToSection(_categorySectionKey);
             },
+            onFeedTap: () => context.go('/feed'),
+            onPortfolioTap: () => context.go('/portfolio'),
+            onMyQuotesTap: () => context.go('/my/quotes'),
+            onSwitchToUser: () { store.setPilotMode(false); context.go('/home'); },
+            onSwitchToOperator: () { store.setPilotMode(true); context.go('/home'); },
             onRequestsTap: () => _openPilotRequestReviewPage(
               context,
               initialRequest: mockPilotWorkRequests.first,
@@ -862,45 +879,41 @@ class _DrameHomePageState extends State<DrameHomePage> {
                   const SliverToBoxAdapter(child: _FooterSection()),
                   const SliverToBoxAdapter(child: SizedBox(height: 72)),
                 ] else ...<Widget>[
-                  // ── Auth overlay (inline for now) ──────────────────────────
-                  if (store.isPilotAuthOpen)
-                    SliverToBoxAdapter(
-                      child: _PilotAuthSection(store: store),
+                  // ── How it works ───────────────────────────────────────────
+                  SliverToBoxAdapter(
+                    child: _RevealOnScroll(
+                      scrollController: _scrollController,
+                      child: const _HowItWorksSection(),
                     ),
+                  ),
 
-                  // ── Dark hero ──────────────────────────────────────────────
-                  if (!store.isPilotAuthOpen)
-                    SliverToBoxAdapter(
-                      child: _HeroBandDark(
-                        onGetQuoteTap: () {
-                          _scrollToSection(_categorySectionKey);
-                        },
-                        onRegisterPilotTap: () =>
-                            context.push('/pilot/register'),
-                      ),
+                  // ── Live operators banner ──────────────────────────────────
+                  SliverToBoxAdapter(
+                    child: _RevealOnScroll(
+                      scrollController: _scrollController,
+                      child: _LiveOperatorsBannerSection(store: store),
                     ),
+                  ),
 
                   // ── Category cards ─────────────────────────────────────────
-                  if (!store.isPilotAuthOpen)
-                    SliverToBoxAdapter(
-                      child: KeyedSubtree(
-                        key: _categorySectionKey,
-                        child: _RevealOnScroll(
-                          scrollController: _scrollController,
-                          child: _CategorySelectionSection(
-                            store: store,
-                            onCategorySelected: () =>
-                                WidgetsBinding.instance.addPostFrameCallback(
-                                  (_) => _scrollToSection(_areaSectionKey),
-                                ),
-                          ),
+                  SliverToBoxAdapter(
+                    child: KeyedSubtree(
+                      key: _categorySectionKey,
+                      child: _RevealOnScroll(
+                        scrollController: _scrollController,
+                        child: _CategorySelectionSection(
+                          store: store,
+                          onCategorySelected: () =>
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                (_) => _scrollToSection(_areaSectionKey),
+                              ),
                         ),
                       ),
                     ),
+                  ),
 
                   // ── Area + operator list (after category selected) ──────────
-                  if (!store.isPilotAuthOpen &&
-                      store.selectedCategory != null) ...<Widget>[
+                  if (store.selectedCategory != null) ...<Widget>[
                     SliverToBoxAdapter(
                       child: KeyedSubtree(
                         key: _areaSectionKey,
@@ -921,43 +934,12 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     ),
                   ],
 
-                  // ── How it works ───────────────────────────────────────────
-                  if (!store.isPilotAuthOpen)
-                    SliverToBoxAdapter(
-                      child: _RevealOnScroll(
-                        scrollController: _scrollController,
-                        child: const _HowItWorksSection(),
-                      ),
-                    ),
-
-                  // ── Feed ───────────────────────────────────────────────────
-                  if (!store.isPilotAuthOpen)
-                    SliverToBoxAdapter(
-                      child: _RevealOnScroll(
-                        scrollController: _scrollController,
-                        child: const ColoredBox(
-                          color: Colors.white,
-                          child: DroneFeedSection(),
-                        ),
-                      ),
-                    ),
-
-                  // ── Popular portfolio ──────────────────────────────────────
-                  if (!store.isPilotAuthOpen)
-                    SliverToBoxAdapter(
-                      child: KeyedSubtree(
-                        key: _portfolioSectionKey,
-                        child: _PopularPortfolioSection(store: store),
-                      ),
-                    ),
-
                   // ── Operator CTA band ──────────────────────────────────────
-                  if (!store.isPilotAuthOpen)
-                    SliverToBoxAdapter(
-                      child: _OperatorCtaBand(
-                        onTap: () => context.push('/pilot/register'),
-                      ),
+                  SliverToBoxAdapter(
+                    child: _OperatorCtaBand(
+                      onTap: () => context.push('/pilot/register'),
                     ),
+                  ),
 
                   // ── Footer ─────────────────────────────────────────────────
                   const SliverToBoxAdapter(child: _FooterSection()),
@@ -1035,11 +1017,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
         preferredSize: const Size.fromHeight(56),
         child: _MobileAppBar(
           store: store,
-          onLoginTap: () {
-            store.setPilotMode(true);
-            store.openAuth(loginMode: true, role: '운용자');
-            setState(() => _tabIndex = 0);
-          },
+          onLoginTap: () => context.go('/login'),
           onLogoTap: () {
             store.setPilotMode(false);
             setState(() => _tabIndex = 0);
@@ -1056,13 +1034,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
           children: store.isPilotMode
               ? <Widget>[
                   SingleChildScrollView(
-                    child: store.isPilotAuthOpen
-                        ? _PilotAuthSection(store: store)
-                        : store.isPilotOnboarding
-                            ? _PilotOnboardingSection(store: store)
-                            : store.operatorRegistrationCompleted
-                                ? _PilotDashboardSection(store: store)
-                                : _PilotLandingSection(store: store),
+                    child: store.isPilotOnboarding
+                        ? _PilotOnboardingSection(store: store)
+                        : _PilotDashboardSection(store: store),
                   ),
                   SingleChildScrollView(
                     child: _OperatorFeedSection(store: store),
@@ -1339,53 +1313,6 @@ class _SubNavTab extends StatelessWidget {
   }
 }
 
-class _LandingHeroSection extends StatelessWidget {
-  const _LandingHeroSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 760;
-
-    return SizedBox(
-      height: compact ? 420 : 450,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[Colors.white, Color(0xFFEAF7FF)],
-          ),
-        ),
-        child: _PageShell(
-          top: compact ? 92 : 142,
-          bottom: 0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                '필요한 드론 작업을 더 쉽고 빠르게,\n검증된 운용자와 더 넓은 현장으로.',
-                textAlign: TextAlign.center,
-                style: HomeText.heroTitle.copyWith(
-                  fontSize: compact ? 30 : 46,
-                  height: 1.35,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 22),
-              Text(
-                '항공 촬영부터 방제, 점검, 측량까지 Drame에서 한 번에 연결하세요.',
-                textAlign: TextAlign.center,
-                style: HomeText.heroSubtitle.copyWith(
-                  fontSize: compact ? 15 : 17,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ignore: unused_element
 class _MapSection extends StatelessWidget {
