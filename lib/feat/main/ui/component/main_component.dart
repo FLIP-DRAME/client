@@ -675,6 +675,168 @@ class _EmptyOperatorState extends StatelessWidget {
   }
 }
 
+class _PilotLandingSection extends StatelessWidget {
+  const _PilotLandingSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      child: Column(
+        children: <Widget>[
+          SizedBox(
+            height: compact ? 500 : 560,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                Image.network(
+                  'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1800&q=85',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: _navy,
+                    child: const Icon(
+                      Icons.flight_takeoff_rounded,
+                      color: Colors.white,
+                      size: 64,
+                    ),
+                  ),
+                ),
+                Container(color: Colors.black.withValues(alpha: 0.48)),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const Text(
+                          '드론 비즈니스의 시작\n모두의 드론과 함께',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Pretendard',
+                            color: Colors.white,
+                            fontSize: 42,
+                            fontWeight: FontWeight.w900,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 34),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: <BoxShadow>[
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.28),
+                                blurRadius: 24,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: FilledButton.icon(
+                            onPressed: store.openPilotOnboarding,
+                            icon: const Icon(Icons.verified_user_outlined),
+                            label: const Text('운용자 등록하기'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _primary,
+                              foregroundColor: Colors.white,
+                              side: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.42),
+                                width: 1.2,
+                              ),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 68,
+                                vertical: 24,
+                              ),
+                              textStyle: AppText.button,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _PageShell(
+            top: 56,
+            bottom: 70,
+            child: compact
+                ? const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        '모두의 드론 운용자가 된다는 건\n검증된 요청을 꾸준히 만난다는 것',
+                        style: AppText.sectionTitle,
+                      ),
+                      SizedBox(height: 24),
+                      _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
+                      SizedBox(height: 12),
+                      _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
+                      SizedBox(height: 12),
+                      _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
+                    ],
+                  )
+                : const Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          '모두의 드론 운용자가 된다는 건\n검증된 요청을 꾸준히 만난다는 것',
+                          style: AppText.sectionTitle,
+                        ),
+                      ),
+                      SizedBox(width: 28),
+                      _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
+                      SizedBox(width: 14),
+                      _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
+                      SizedBox(width: 14),
+                      _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PilotLandingMetric extends StatelessWidget {
+  const _PilotLandingMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 250,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        children: <Widget>[
+          Text(label, style: AppText.cardSubtitle, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          Text(value, style: AppText.metricValue, textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
 class _PilotAuthSection extends StatelessWidget {
   const _PilotAuthSection({required this.store});
 
