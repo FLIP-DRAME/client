@@ -27,6 +27,9 @@ class QuoteEstimate {
     required this.estimatedTime,
     required this.includedItems,
     required this.message,
+    this.jobRequestId,
+    this.quoteId,
+    this.paymentId,
   });
 
   final QuoteRequest request;
@@ -34,8 +37,28 @@ class QuoteEstimate {
   final String estimatedTime;
   final List<String> includedItems;
   final String message;
+  final String? jobRequestId;
+  final String? quoteId;
+  final String? paymentId;
 
   String get priceLabel => '${(proposedPrice / 10000).round()}만원';
+
+  QuoteEstimate copyWith({
+    String? jobRequestId,
+    String? quoteId,
+    String? paymentId,
+  }) {
+    return QuoteEstimate(
+      request: request,
+      proposedPrice: proposedPrice,
+      estimatedTime: estimatedTime,
+      includedItems: includedItems,
+      message: message,
+      jobRequestId: jobRequestId ?? this.jobRequestId,
+      quoteId: quoteId ?? this.quoteId,
+      paymentId: paymentId ?? this.paymentId,
+    );
+  }
 }
 
 class PaymentInstruction {
@@ -45,6 +68,7 @@ class PaymentInstruction {
     required this.accountNumber,
     required this.amount,
     required this.depositorName,
+    this.paymentId,
   });
 
   final String bankName;
@@ -52,6 +76,7 @@ class PaymentInstruction {
   final String accountNumber;
   final int amount;
   final String depositorName;
+  final String? paymentId;
 
   String get amountLabel => '${(amount / 10000).round()}만원';
 }

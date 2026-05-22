@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../network/mock_quote_api.dart';
+import '../../../../app_providers.dart';
 import '../../network/quote_model.dart';
 import '../component/quote_component.dart';
 
-class PaymentPage extends StatelessWidget {
+class PaymentPage extends ConsumerWidget {
   const PaymentPage({
     super.key,
     required this.estimate,
@@ -16,7 +17,7 @@ class PaymentPage extends StatelessWidget {
   final PaymentInstruction paymentInstruction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return QuoteScaffold(
       title: '계좌이체 결제',
       child: QuoteShell(
@@ -70,10 +71,11 @@ class PaymentPage extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () {
-                        final contact = MockQuoteApi().createContactAccess(
-                          estimate,
-                        );
+                      onPressed: () async {
+                        final contact = await ref
+                            .read(quoteApiProvider)
+                            .createContactAccess(estimate.copyWith(paymentId: paymentInstruction.paymentId));
+                        if (!context.mounted) return;
                         context.push(
                           '/quote/contact',
                           extra: <String, Object?>{

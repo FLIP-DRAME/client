@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../network/mock_quote_api.dart';
+import '../../../../app_providers.dart';
 import '../../network/quote_model.dart';
 import '../component/quote_component.dart';
 
-class QuoteEstimatePage extends StatelessWidget {
+class QuoteEstimatePage extends ConsumerWidget {
   const QuoteEstimatePage({super.key, required this.estimate});
 
   final QuoteEstimate estimate;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return QuoteScaffold(
       title: '견적 확인',
       child: QuoteShell(
@@ -65,14 +66,15 @@ class QuoteEstimatePage extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () {
-                        final payment = MockQuoteApi().createPaymentInstruction(
-                          estimate,
-                        );
+                      onPressed: () async {
+                        final payment = await ref
+                            .read(quoteApiProvider)
+                            .createPaymentInstruction(estimate);
+                        if (!context.mounted) return;
                         context.push(
                           '/quote/payment',
                           extra: <String, Object?>{
-                            'estimate': estimate,
+                            'estimate': estimate.copyWith(paymentId: payment.paymentId),
                             'paymentInstruction': payment,
                           },
                         );

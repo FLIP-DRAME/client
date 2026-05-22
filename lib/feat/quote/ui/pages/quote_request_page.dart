@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app_providers.dart';
 import '../../../main/network/drone_pilot_model.dart';
-import '../../network/mock_quote_api.dart';
 import '../../network/quote_model.dart';
 import '../component/quote_component.dart';
 
-class QuoteRequestPage extends StatefulWidget {
+class QuoteRequestPage extends ConsumerStatefulWidget {
   const QuoteRequestPage({super.key, required this.pilot});
 
   final DronePilot pilot;
 
   @override
-  State<QuoteRequestPage> createState() => _QuoteRequestPageState();
+  ConsumerState<QuoteRequestPage> createState() => _QuoteRequestPageState();
 }
 
-class _QuoteRequestPageState extends State<QuoteRequestPage> {
+class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
   final _dateController = TextEditingController(text: '2026.05.20');
   final _detailController = TextEditingController(
     text: '현장 분위기를 보여주는 항공 촬영과 기본 보정본이 필요합니다.',
@@ -52,7 +53,7 @@ class _QuoteRequestPageState extends State<QuoteRequestPage> {
       budgetRange: _budget,
       contactWindow: _contactController.text,
     );
-    final estimate = await MockQuoteApi().createEstimate(request);
+    final estimate = await ref.read(drameStoreProvider).submitQuoteRequest(request);
     if (!mounted) {
       return;
     }

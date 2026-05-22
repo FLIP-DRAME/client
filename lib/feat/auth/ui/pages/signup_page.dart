@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
+import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
-import '../../../../feat/main/ui/pages/main_page.dart';
+import '../../../../feat/main/ui/pages/main_page.dart' hide Consumer;
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -119,32 +120,33 @@ class _SignupPageState extends State<SignupPage> {
 
     setState(() => _isLoading = true);
 
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-
-    store.updateAuth(
-      loginMode: false,
-      role: _selectedRole,
-      email: email,
-      password: password,
-      name: name,
-      nickname: nickname,
-    );
-    store.submitAuth();
-
-    if (mounted) {
+    try {
+      await store.signUp(
+        role: _selectedRole,
+        email: email,
+        password: password,
+        name: name,
+        nickname: nickname,
+      );
+      if (!mounted) return;
       setState(() => _isLoading = false);
       if (_selectedRole == '운용자') {
         context.go('/pilot/register');
       } else {
         context.go('/home');
       }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showSnack('회원가입에 실패했습니다: $error');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DrameStore>(
-      builder: (context, store, _) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final store = ref.watch(drameStoreProvider);
         final width = MediaQuery.sizeOf(context).width;
         final isDesktop = width >= 768;
 

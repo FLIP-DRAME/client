@@ -238,7 +238,7 @@ class _CategorySelectionSection extends StatelessWidget {
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: mockDroneCategories.length,
+                  itemCount: store.categories.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
                     crossAxisSpacing: 16,
@@ -246,7 +246,7 @@ class _CategorySelectionSection extends StatelessWidget {
                     mainAxisExtent: compact ? 116 : 164,
                   ),
                   itemBuilder: (context, index) {
-                    final category = mockDroneCategories[index];
+                    final category = store.categories[index];
                     return _ServiceCategoryCard(
                       key: ValueKey('category-${category.id}'),
                       category: category,
@@ -3333,7 +3333,7 @@ class _AreaFilterState extends State<_AreaFilter> {
       children: <Widget>[
         _AreaChipWrap(
           children:
-              mockServiceAreas.map((area) {
+              store.serviceAreas.map((area) {
                 return _AreaChip(
                   key: ValueKey('area-$area'),
                   label: area,
@@ -4145,7 +4145,7 @@ class _SearchCategoryPage extends StatelessWidget {
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: mockDroneCategories.length,
+              itemCount: store.categories.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 14,
@@ -4153,7 +4153,7 @@ class _SearchCategoryPage extends StatelessWidget {
                 mainAxisExtent: 148,
               ),
               itemBuilder: (context, index) {
-                final category = mockDroneCategories[index];
+                final category = store.categories[index];
                 return _ServiceCategoryCard(
                   key: ValueKey('category-${category.id}'),
                   category: category,

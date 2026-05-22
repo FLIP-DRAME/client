@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
+import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
-import '../../../../feat/main/ui/pages/main_page.dart';
+import '../../../../feat/main/ui/pages/main_page.dart' hide Consumer;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -83,27 +84,37 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isLoading = true);
 
-    // Simulate network delay
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-
-    store.updateAuth(
-      loginMode: true,
-      role: _selectedRole,
-      email: email,
-      password: password,
-    );
-    store.submitAuth();
-
-    if (mounted) {
+    try {
+      await store.signIn(
+        role: _selectedRole,
+        email: email,
+        password: password,
+      );
+      if (!mounted) return;
       setState(() => _isLoading = false);
       context.go('/home');
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '로그인에 실패했습니다: $error',
+            style: const TextStyle(fontFamily: 'Pretendard'),
+          ),
+          backgroundColor: DC.ink,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DrameStore>(
-      builder: (context, store, _) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final store = ref.watch(drameStoreProvider);
         final width = MediaQuery.sizeOf(context).width;
         final isDesktop = width >= 768;
 

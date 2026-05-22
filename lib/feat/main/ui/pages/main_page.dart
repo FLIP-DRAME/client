@@ -1,14 +1,17 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../feed/ui/pages/feed_page.dart';
-import '../../../quote/network/mock_quote_api.dart';
+import '../../../quote/network/quote_api.dart';
 import '../../../quote/network/quote_model.dart';
+import '../../network/drone_pilot_api.dart';
 import '../../network/drone_pilot_model.dart';
 import '../../network/mock_drone_pilot_api.dart';
 import 'package:web/web.dart' as web;
@@ -70,6 +73,33 @@ const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
+
+typedef StoreBuilder = Widget Function(
+  BuildContext context,
+  DrameStore store,
+  Widget? child,
+);
+
+class Consumer<T> extends ConsumerWidget {
+  const Consumer({super.key, required this.builder});
+
+  final StoreBuilder builder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return builder(context, ref.watch(drameStoreProvider), null);
+  }
+}
+
+extension DrameStoreContext on BuildContext {
+  T read<T>() {
+    if (T == DrameStore) {
+      return ProviderScope.containerOf(this, listen: false)
+          .read(drameStoreProvider) as T;
+    }
+    throw UnsupportedError('No Riverpod bridge registered for $T.');
+  }
+}
 
 class BusinessNumberInputFormatter extends TextInputFormatter {
   const BusinessNumberInputFormatter();
@@ -289,11 +319,14 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      if (!store.isLoggedIn) {
-        context.go('/login');
-        return;
-      }
-      store.openPilotOnboarding();
+      store.restoreSession().then((_) {
+        if (!mounted) return;
+        if (!store.isLoggedIn) {
+          context.go('/login');
+          return;
+        }
+        store.openPilotOnboarding();
+      });
     });
   }
 
@@ -334,15 +367,17 @@ class OperatorMyPage extends StatelessWidget {
 }
 
 class DrameStore extends ChangeNotifier {
-  DrameStore({MockDronePilotApi? api, MockQuoteApi? quoteApi})
-    : _api = api ?? MockDronePilotApi(),
-      _quoteApi = quoteApi ?? MockQuoteApi();
+  DrameStore({required DronePilotApi api, required QuoteApi quoteApi})
+    : _api = api,
+      _quoteApi = quoteApi;
 
-  final MockDronePilotApi _api;
-  final MockQuoteApi _quoteApi;
+  final DronePilotApi _api;
+  final QuoteApi _quoteApi;
 
   List<DronePilot> pilots = const <DronePilot>[];
   List<DronePilot> allPilots = const <DronePilot>[];
+  List<DroneCategory> categories = mockDroneCategories;
+  List<String> serviceAreas = mockServiceAreas;
   DroneCategory? selectedCategory;
   DronePilot? selectedPilot;
   String selectedPortfolioCategory = '전체';
@@ -356,6 +391,7 @@ class DrameStore extends ChangeNotifier {
   bool paymentConfirmed = false;
   bool isLoading = true;
   bool isRefreshing = false;
+  String? lastError;
   bool isPilotMode = false;
   bool isPilotAuthOpen = false;
   bool isLoginMode = false;
@@ -379,15 +415,27 @@ class DrameStore extends ChangeNotifier {
     }
     notifyListeners();
 
-    final nextPilots = await _api.fetchPilots(
-      priorityArea: selectedArea,
-      category: selectedCategory?.label,
-    );
-    pilots = nextPilots;
-    if (initial) {
-      allPilots = nextPilots;
+    try {
+      categories = await _api.fetchCategories();
+      serviceAreas = await _api.fetchRegions();
+      final nextPilots = await _api.fetchPilots(
+        priorityArea: selectedArea,
+        category: selectedCategory?.label,
+      );
+      pilots = nextPilots;
+      if (initial) {
+        allPilots = nextPilots;
+      }
+      selectedPilot = pilots.isEmpty ? null : pilots.first;
+      lastError = null;
+    } catch (error) {
+      lastError = error.toString();
+      pilots = const <DronePilot>[];
+      if (initial) {
+        allPilots = const <DronePilot>[];
+      }
+      selectedPilot = null;
     }
-    selectedPilot = pilots.isEmpty ? null : pilots.first;
     isLoading = false;
     isRefreshing = false;
     notifyListeners();
@@ -519,6 +567,61 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> signIn({
+    required String role,
+    required String email,
+    required String password,
+  }) async {
+    await Supabase.instance.client.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    updateAuth(loginMode: true, role: role, email: email, password: password);
+    submitAuth();
+  }
+
+  Future<void> signUp({
+    required String role,
+    required String email,
+    required String password,
+    required String name,
+    required String nickname,
+  }) async {
+    await Supabase.instance.client.auth.signUp(
+      email: email,
+      password: password,
+      data: <String, Object?>{
+        'role': role == '운용자' ? 'operator' : 'client',
+        'name': name,
+        'nickname': nickname,
+      },
+    );
+    updateAuth(
+      loginMode: false,
+      role: role,
+      email: email,
+      password: password,
+      name: name,
+      nickname: nickname,
+    );
+    submitAuth();
+  }
+
+  Future<void> restoreSession() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    final metadata = user.userMetadata ?? const <String, dynamic>{};
+    final role = metadata['role'] == 'operator' ? '운용자' : '이용자';
+    updateAuth(
+      loginMode: true,
+      role: role,
+      email: user.email ?? '',
+      name: (metadata['name'] ?? '').toString(),
+      nickname: (metadata['nickname'] ?? '').toString(),
+    );
+    submitAuth();
+  }
+
   void goToPilotOnboardingStep(int step) {
     pilotOnboardingStep = step.clamp(0, 4);
     notifyListeners();
@@ -532,8 +635,20 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void nextPilotOnboardingStep() {
+  Future<void> nextPilotOnboardingStep() async {
     if (pilotOnboardingStep >= 4) {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        await _api.submitOperatorRegistration(
+          PilotRegistrationPayload(
+            userId: user.id,
+            email: accountEmail.isNotEmpty ? accountEmail : (user.email ?? ''),
+            name: accountName,
+            nickname: accountNickname,
+            data: pilotOnboarding,
+          ),
+        );
+      }
       pilotOnboarding.submitted = true;
       operatorRegistrationCompleted = true;
       registrationJustCompleted = true;
@@ -652,19 +767,20 @@ class DrameStore extends ChangeNotifier {
   Future<QuoteEstimate> submitQuoteRequest(QuoteRequest request) async {
     quoteRequest = request;
     estimate = await _quoteApi.createEstimate(request);
-    paymentInstruction = _quoteApi.createPaymentInstruction(estimate!);
+    paymentInstruction = await _quoteApi.createPaymentInstruction(estimate!);
+    estimate = estimate!.copyWith(paymentId: paymentInstruction?.paymentId);
     contactAccess = null;
     paymentConfirmed = false;
     notifyListeners();
     return estimate!;
   }
 
-  void confirmPayment() {
+  Future<void> confirmPayment() async {
     if (estimate == null) {
       return;
     }
     paymentConfirmed = true;
-    contactAccess = _quoteApi.createContactAccess(estimate!);
+    contactAccess = await _quoteApi.createContactAccess(estimate!);
     notifyListeners();
   }
 
@@ -712,11 +828,18 @@ class _DrameHomePageState extends State<DrameHomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      if (!store.isLoggedIn) {
+      store.restoreSession().then((_) {
+        if (!mounted) return;
+        if (!store.isLoggedIn) {
+          context.go('/login');
+          return;
+        }
+        store.load(initial: true);
+      });
+      if (!store.isLoggedIn && Supabase.instance.client.auth.currentUser == null) {
         context.go('/login');
         return;
       }
-      store.load(initial: true);
     });
   }
 
@@ -751,9 +874,12 @@ class _DrameHomePageState extends State<DrameHomePage> {
       store.clearCategory();
       _scrollToTop();
     } else {
-      final cat = mockDroneCategories.firstWhere(
+      if (store.categories.isEmpty) {
+        return;
+      }
+      final cat = store.categories.firstWhere(
         (c) => c.id == id,
-        orElse: () => mockDroneCategories.first,
+        orElse: () => store.categories.first,
       );
       store.selectCategory(cat);
       WidgetsBinding.instance.addPostFrameCallback((_) {

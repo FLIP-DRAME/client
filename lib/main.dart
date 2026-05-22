@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_router.dart';
 import 'common/drame_text_styles.dart';
-import 'feat/main/ui/pages/main_page.dart';
 
-void main() {
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => DrameStore(),
-      child: const DrameApp(),
-    ),
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_PUBLISHABLE_KEY']!,
   );
+  runApp(const ProviderScope(child: DrameApp()));
 }
 
 class DrameApp extends StatelessWidget {
