@@ -356,6 +356,7 @@ class DrameStore extends ChangeNotifier {
   bool isLoggedIn = false;
   bool isPilotOnboarding = false;
   bool operatorRegistrationCompleted = false;
+  bool registrationJustCompleted = false;
   int pilotOnboardingStep = 0;
   String accountRole = '운용자';
   String accountEmail = '';
@@ -529,11 +530,17 @@ class DrameStore extends ChangeNotifier {
     if (pilotOnboardingStep >= 4) {
       pilotOnboarding.submitted = true;
       operatorRegistrationCompleted = true;
+      registrationJustCompleted = true;
       isPilotOnboarding = false;
       notifyListeners();
       return;
     }
     pilotOnboardingStep += 1;
+    notifyListeners();
+  }
+
+  void acknowledgeRegistrationDone() {
+    registrationJustCompleted = false;
     notifyListeners();
   }
 
@@ -844,11 +851,13 @@ class _DrameHomePageState extends State<DrameHomePage> {
                         ? _PilotAuthSection(store: store)
                         : store.isPilotOnboarding
                             ? _PilotOnboardingSection(store: store)
-                            : store.operatorRegistrationCompleted
-                                ? (_selectedTabId == 'feed'
-                                    ? _OperatorFeedTabPage(store: store)
-                                    : _PilotDashboardSection(store: store))
-                                : _PilotLandingSection(store: store),
+                            : store.registrationJustCompleted
+                                ? _PilotRegistrationDoneSection(store: store)
+                                : store.operatorRegistrationCompleted
+                                    ? (_selectedTabId == 'feed'
+                                        ? _OperatorFeedTabPage(store: store)
+                                        : _PilotDashboardSection(store: store))
+                                    : _PilotLandingSection(store: store),
                   ),
                   const SliverToBoxAdapter(child: _FooterSection()),
                   const SliverToBoxAdapter(child: SizedBox(height: 72)),
@@ -963,8 +972,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
   }
 
   Widget _buildMobileLayout(BuildContext context, DrameStore store) {
-    // 운용자 모드이고 아직 등록 미완료 → 전체화면, 네비게이션 없음
-    if (store.isPilotMode && !store.operatorRegistrationCompleted) {
+    // 운용자 모드이고 아직 등록 미완료 또는 방금 완료 → 전체화면, 네비게이션 없음
+    if (store.isPilotMode &&
+        (!store.operatorRegistrationCompleted ||
+            store.registrationJustCompleted)) {
       return Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
@@ -973,7 +984,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
                 ? _PilotAuthSection(store: store)
                 : store.isPilotOnboarding
                     ? _PilotOnboardingSection(store: store)
-                    : _PilotLandingSection(store: store),
+                    : store.registrationJustCompleted
+                        ? _PilotRegistrationDoneSection(store: store)
+                        : _PilotLandingSection(store: store),
           ),
         ),
       );

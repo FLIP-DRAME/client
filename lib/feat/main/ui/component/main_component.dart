@@ -1764,6 +1764,7 @@ class _PilotRequestReviewPage extends StatefulWidget {
 
 class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
   late PilotWorkRequest selectedRequest = widget.initialRequest;
+  final Set<String> _completedRequestIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -1832,7 +1833,11 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                     ),
                               ),
                               const SizedBox(height: 18),
-                              _RequestReviewDetail(request: selectedRequest),
+                              _RequestReviewDetail(
+                                request: selectedRequest,
+                                isCompleted: _completedRequestIds.contains(selectedRequest.id),
+                                onComplete: () => setState(() => _completedRequestIds.add(selectedRequest.id)),
+                              ),
                             ],
                           ),
                         )
@@ -1855,6 +1860,8 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                               child: SingleChildScrollView(
                                 child: _RequestReviewDetail(
                                   request: selectedRequest,
+                                  isCompleted: _completedRequestIds.contains(selectedRequest.id),
+                                  onComplete: () => setState(() => _completedRequestIds.add(selectedRequest.id)),
                                 ),
                               ),
                             ),
@@ -2066,9 +2073,15 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
 }
 
 class _RequestReviewDetail extends StatelessWidget {
-  const _RequestReviewDetail({required this.request});
+  const _RequestReviewDetail({
+    required this.request,
+    required this.isCompleted,
+    required this.onComplete,
+  });
 
   final PilotWorkRequest request;
+  final bool isCompleted;
+  final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -2135,7 +2148,7 @@ class _RequestReviewDetail extends StatelessWidget {
           const SizedBox(height: 18),
           const Divider(color: _line),
           const SizedBox(height: 18),
-          const _KakaoPaySection(),
+          _KakaoPaySection(isCompleted: isCompleted, onComplete: onComplete),
         ],
       ),
     );
@@ -2254,7 +2267,10 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
                     children: <Widget>[
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => context.push('/pilot/mypage'),
+                          onPressed: () {
+                            store.acknowledgeRegistrationDone();
+                            context.push('/pilot/mypage');
+                          },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: _navy,
                             textStyle: AppText.button,
@@ -2266,7 +2282,10 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton(
-                          onPressed: () => context.go('/'),
+                          onPressed: () {
+                            store.acknowledgeRegistrationDone();
+                            context.go('/');
+                          },
                           style: FilledButton.styleFrom(
                             backgroundColor: _navy,
                             foregroundColor: Colors.white,
@@ -5132,19 +5151,15 @@ class _KoreaMapPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _KakaoPaySection extends StatefulWidget {
-  const _KakaoPaySection();
+class _KakaoPaySection extends StatelessWidget {
+  const _KakaoPaySection({required this.isCompleted, required this.onComplete});
 
-  @override
-  State<_KakaoPaySection> createState() => _KakaoPaySectionState();
-}
-
-class _KakaoPaySectionState extends State<_KakaoPaySection> {
-  bool _paymentDone = false;
+  final bool isCompleted;
+  final VoidCallback onComplete;
 
   @override
   Widget build(BuildContext context) {
-    if (_paymentDone) {
+    if (isCompleted) {
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(18),
@@ -5215,7 +5230,7 @@ class _KakaoPaySectionState extends State<_KakaoPaySection> {
         SizedBox(
           width: double.infinity,
           child: FilledButton(
-            onPressed: () => setState(() => _paymentDone = true),
+            onPressed: onComplete,
             style: FilledButton.styleFrom(
               backgroundColor: _navy,
               foregroundColor: _line,
