@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'app_providers.dart';
 import 'feat/auth/ui/pages/login_page.dart';
 import 'feat/auth/ui/pages/signup_page.dart';
 import 'feat/landing/ui/pages/landing_page.dart';
 import 'feat/main/network/drone_pilot_model.dart';
-import 'feat/main/network/mock_drone_pilot_api.dart';
 import 'feat/main/ui/pages/main_page.dart';
 import 'feat/portfolio/ui/pages/portfolio_page.dart';
-import 'feat/quote/network/mock_quote_api.dart';
 import 'feat/quote/network/quote_model.dart';
 import 'feat/quote/ui/pages/contact_access_page.dart';
 import 'feat/quote/ui/pages/payment_page.dart';
@@ -52,16 +52,22 @@ final GoRouter appRouter = GoRouter(
       path: '/portfolio/:pilotId',
       name: 'portfolio',
       builder: (context, state) {
-        final pilot = _resolvePilot(state);
-        return PilotPortfolioPage(pilot: pilot);
+        return _PilotResolverPage(
+          pilotId: state.pathParameters['pilotId'],
+          extra: state.extra,
+          builder: (pilot) => PilotPortfolioPage(pilot: pilot),
+        );
       },
     ),
     GoRoute(
       path: '/quote/request/:pilotId',
       name: 'quote-request',
       builder: (context, state) {
-        final pilot = _resolvePilot(state);
-        return QuoteRequestPage(pilot: pilot);
+        return _PilotResolverPage(
+          pilotId: state.pathParameters['pilotId'],
+          extra: state.extra,
+          builder: (pilot) => QuoteRequestPage(pilot: pilot),
+        );
       },
     ),
     GoRoute(
@@ -69,10 +75,10 @@ final GoRouter appRouter = GoRouter(
       name: 'quote-estimate',
       builder: (context, state) {
         final estimate =
-            state.extra is QuoteEstimate
-                ? state.extra! as QuoteEstimate
-                : _fallbackEstimate();
-        return QuoteEstimatePage(estimate: estimate);
+            state.extra is QuoteEstimate ? state.extra! as QuoteEstimate : null;
+        return estimate == null
+            ? const _MissingRouteDataPage(message: '견적 정보가 없습니다.')
+            : QuoteEstimatePage(estimate: estimate);
       },
     ),
     GoRoute(
@@ -83,16 +89,18 @@ final GoRouter appRouter = GoRouter(
         final estimate =
             extra is Map<String, Object?> && extra['estimate'] is QuoteEstimate
                 ? extra['estimate']! as QuoteEstimate
-                : _fallbackEstimate();
+                : null;
         final paymentInstruction =
             extra is Map<String, Object?> &&
                     extra['paymentInstruction'] is PaymentInstruction
                 ? extra['paymentInstruction']! as PaymentInstruction
-                : MockQuoteApi().createPaymentInstruction(estimate);
-        return PaymentPage(
-          estimate: estimate,
-          paymentInstruction: paymentInstruction,
-        );
+                : null;
+        return estimate == null || paymentInstruction == null
+            ? const _MissingRouteDataPage(message: '결제 정보가 없습니다.')
+            : PaymentPage(
+              estimate: estimate,
+              paymentInstruction: paymentInstruction,
+            );
       },
     ),
     GoRoute(
@@ -103,16 +111,18 @@ final GoRouter appRouter = GoRouter(
         final estimate =
             extra is Map<String, Object?> && extra['estimate'] is QuoteEstimate
                 ? extra['estimate']! as QuoteEstimate
-                : _fallbackEstimate();
+                : null;
         final contactAccess =
             extra is Map<String, Object?> &&
                     extra['contactAccess'] is ContactAccess
                 ? extra['contactAccess']! as ContactAccess
-                : MockQuoteApi().createContactAccess(estimate);
-        return ContactAccessPage(
-          estimate: estimate,
-          contactAccess: contactAccess,
-        );
+                : null;
+        return estimate == null || contactAccess == null
+            ? const _MissingRouteDataPage(message: '연락처 정보가 없습니다.')
+            : ContactAccessPage(
+              estimate: estimate,
+              contactAccess: contactAccess,
+            );
       },
     ),
     GoRoute(
@@ -137,7 +147,7 @@ final GoRouter appRouter = GoRouter(
         final initialRequest =
             state.extra is PilotWorkRequest
                 ? state.extra! as PilotWorkRequest
-                : mockPilotWorkRequests.first;
+                : null;
         return PilotRequestReviewPage(initialRequest: initialRequest);
       },
     ),
@@ -153,33 +163,57 @@ final GoRouter appRouter = GoRouter(
       ),
 );
 
-DronePilot _resolvePilot(GoRouterState state) {
-  if (state.extra is DronePilot) {
-    return state.extra! as DronePilot;
+class _PilotResolverPage extends ConsumerWidget {
+  const _PilotResolverPage({
+    required this.pilotId,
+    required this.extra,
+    required this.builder,
+  });
+
+  final String? pilotId;
+  final Object? extra;
+  final Widget Function(DronePilot pilot) builder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (extra is DronePilot) {
+      return builder(extra! as DronePilot);
+    }
+    if (pilotId == null) {
+      return const _MissingRouteDataPage(message: '운용자 정보가 없습니다.');
+    }
+    return FutureBuilder<DronePilot?>(
+      future: ref.read(dronePilotApiProvider).fetchPilotById(pilotId!),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final pilot = snapshot.data;
+        if (pilot == null) {
+          return const _MissingRouteDataPage(message: '운용자를 찾을 수 없습니다.');
+        }
+        return builder(pilot);
+      },
+    );
   }
-  final pilotId = state.pathParameters['pilotId'];
-  return mockPilots.firstWhere(
-    (pilot) => pilot.id == pilotId,
-    orElse: () => mockPilots.first,
-  );
 }
 
-QuoteEstimate _fallbackEstimate() {
-  final pilot = mockPilots.first;
-  final request = QuoteRequest(
-    pilot: pilot,
-    category: pilot.categories.first,
-    area: pilot.availableAreas.first,
-    preferredDate: '2026.05.20',
-    detail: pilot.intro,
-    budgetRange: '50~100만원',
-    contactWindow: '평일 오후',
-  );
-  return QuoteEstimate(
-    request: request,
-    proposedPrice: pilot.basePrice + 120000,
-    estimatedTime: '촬영 2시간 + 편집 1일',
-    includedItems: const <String>['비행 가능 여부 확인', '현장 촬영', '원본 파일 납품'],
-    message: '${pilot.name}의 기본 견적입니다.',
-  );
+class _MissingRouteDataPage extends StatelessWidget {
+  const _MissingRouteDataPage({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: TextButton(
+          onPressed: () => context.go('/home'),
+          child: Text(message),
+        ),
+      ),
+    );
+  }
 }

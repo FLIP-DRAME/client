@@ -176,15 +176,16 @@ abstract final class DT {
 
 // ── Reusable button styles ──────────────────────────────────────────────────
 
-ButtonStyle dPrimaryButtonStyle({double height = 44}) => ElevatedButton.styleFrom(
-  backgroundColor: DC.primary,
-  foregroundColor: DC.onPrimary,
-  textStyle: DT.button,
-  shape: const StadiumBorder(),
-  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-  minimumSize: Size(0, height),
-  elevation: 0,
-);
+ButtonStyle dPrimaryButtonStyle({double height = 44}) =>
+    ElevatedButton.styleFrom(
+      backgroundColor: DC.primary,
+      foregroundColor: DC.onPrimary,
+      textStyle: DT.button,
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      minimumSize: Size(0, height),
+      elevation: 0,
+    );
 
 ButtonStyle dPrimaryButtonStyleLg() => ElevatedButton.styleFrom(
   backgroundColor: DC.primary,
@@ -196,24 +197,26 @@ ButtonStyle dPrimaryButtonStyleLg() => ElevatedButton.styleFrom(
   elevation: 0,
 );
 
-ButtonStyle dSecondaryButtonStyle({double height = 44}) => ElevatedButton.styleFrom(
-  backgroundColor: DC.surfaceStrong,
-  foregroundColor: DC.ink,
-  textStyle: DT.button,
-  shape: const StadiumBorder(),
-  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-  minimumSize: Size(0, height),
-  elevation: 0,
-);
+ButtonStyle dSecondaryButtonStyle({double height = 44}) =>
+    ElevatedButton.styleFrom(
+      backgroundColor: DC.surfaceStrong,
+      foregroundColor: DC.ink,
+      textStyle: DT.button,
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      minimumSize: Size(0, height),
+      elevation: 0,
+    );
 
-ButtonStyle dOutlineOnDarkButtonStyle({double height = 44}) => OutlinedButton.styleFrom(
-  foregroundColor: DC.onDark,
-  textStyle: DT.button,
-  shape: const StadiumBorder(),
-  side: const BorderSide(color: DC.onDark),
-  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-  minimumSize: Size(0, height),
-);
+ButtonStyle dOutlineOnDarkButtonStyle({double height = 44}) =>
+    OutlinedButton.styleFrom(
+      foregroundColor: DC.onDark,
+      textStyle: DT.button,
+      shape: const StadiumBorder(),
+      side: const BorderSide(color: DC.onDark),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+      minimumSize: Size(0, height),
+    );
 
 ButtonStyle dOutlineOnDarkButtonStyleLg() => OutlinedButton.styleFrom(
   foregroundColor: DC.onDark,

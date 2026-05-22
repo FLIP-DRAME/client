@@ -53,7 +53,9 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
       budgetRange: _budget,
       contactWindow: _contactController.text,
     );
-    final estimate = await ref.read(drameStoreProvider).submitQuoteRequest(request);
+    final estimate = await ref
+        .read(drameStoreProvider)
+        .submitQuoteRequest(request);
     if (!mounted) {
       return;
     }

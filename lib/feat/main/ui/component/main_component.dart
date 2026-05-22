@@ -698,14 +698,15 @@ class _PilotLandingSection extends StatelessWidget {
                 Image.network(
                   'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1800&q=85',
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: _navy,
-                    child: const Icon(
-                      Icons.flight_takeoff_rounded,
-                      color: Colors.white,
-                      size: 64,
-                    ),
-                  ),
+                  errorBuilder:
+                      (context, error, stackTrace) => Container(
+                        color: _navy,
+                        child: const Icon(
+                          Icons.flight_takeoff_rounded,
+                          color: Colors.white,
+                          size: 64,
+                        ),
+                      ),
                 ),
                 Container(color: Colors.black.withValues(alpha: 0.48)),
                 Center(
@@ -770,39 +771,40 @@ class _PilotLandingSection extends StatelessWidget {
           _PageShell(
             top: 56,
             bottom: 70,
-            child: compact
-                ? const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        '모두의 드론 운용자가 된다는 건\n검증된 요청을 꾸준히 만난다는 것',
-                        style: AppText.sectionTitle,
-                      ),
-                      SizedBox(height: 24),
-                      _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
-                      SizedBox(height: 12),
-                      _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
-                      SizedBox(height: 12),
-                      _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
-                    ],
-                  )
-                : const Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
+            child:
+                compact
+                    ? const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
                           '모두의 드론 운용자가 된다는 건\n검증된 요청을 꾸준히 만난다는 것',
                           style: AppText.sectionTitle,
                         ),
-                      ),
-                      SizedBox(width: 28),
-                      _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
-                      SizedBox(width: 14),
-                      _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
-                      SizedBox(width: 14),
-                      _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
-                    ],
-                  ),
+                        SizedBox(height: 24),
+                        _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
+                        SizedBox(height: 12),
+                        _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
+                        SizedBox(height: 12),
+                        _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
+                      ],
+                    )
+                    : const Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            '모두의 드론 운용자가 된다는 건\n검증된 요청을 꾸준히 만난다는 것',
+                            style: AppText.sectionTitle,
+                          ),
+                        ),
+                        SizedBox(width: 28),
+                        _PilotLandingMetric(label: '등록 운용자', value: '1,400+'),
+                        SizedBox(width: 14),
+                        _PilotLandingMetric(label: '월 작업 요청', value: '9,600+'),
+                        SizedBox(width: 14),
+                        _PilotLandingMetric(label: '평균 응답 시간', value: '30분 내'),
+                      ],
+                    ),
           ),
         ],
       ),
@@ -1423,7 +1425,7 @@ class _PilotDashboardSection extends StatelessWidget {
                   ],
                 ),
             const SizedBox(height: 32),
-            const _IncomingRequestsPanel(),
+            _IncomingRequestsPanel(store: store),
           ],
         ),
       ),
@@ -1555,11 +1557,16 @@ class _OperatorSideCard extends StatelessWidget {
 }
 
 class _IncomingRequestsPanel extends StatelessWidget {
-  const _IncomingRequestsPanel();
+  const _IncomingRequestsPanel({required this.store});
+
+  final DrameStore store;
 
   @override
   Widget build(BuildContext context) {
-    final previewRequests = mockPilotWorkRequests.take(3).toList();
+    final previewRequests = store.pilotWorkRequests.take(3).toList();
+    if (previewRequests.isEmpty) {
+      return const _EmptyRequestPanel();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -1603,6 +1610,24 @@ class _IncomingRequestsPanel extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+class _EmptyRequestPanel extends StatelessWidget {
+  const _EmptyRequestPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: const Text('아직 받은 요청이 없습니다.', style: AppText.cardSubtitle),
     );
   }
 }
@@ -1751,9 +1776,9 @@ class _RequestCardState extends State<_RequestCard> {
 }
 
 class _PilotRequestReviewPage extends StatefulWidget {
-  const _PilotRequestReviewPage({required this.initialRequest});
+  const _PilotRequestReviewPage({this.initialRequest});
 
-  final PilotWorkRequest initialRequest;
+  final PilotWorkRequest? initialRequest;
 
   @override
   State<_PilotRequestReviewPage> createState() =>
@@ -1761,122 +1786,165 @@ class _PilotRequestReviewPage extends StatefulWidget {
 }
 
 class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
-  late PilotWorkRequest selectedRequest = widget.initialRequest;
+  PilotWorkRequest? selectedRequest;
   final Set<String> _completedRequestIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    selectedRequest = widget.initialRequest;
+  }
 
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 980;
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            Container(
-              height: 76,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(bottom: BorderSide(color: _line)),
-              ),
+    return Consumer<DrameStore>(
+      builder: (context, store, _) {
+        final requests = store.pilotWorkRequests;
+        selectedRequest ??= requests.isEmpty ? null : requests.first;
+        final current = selectedRequest;
+        if (current == null) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
               child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1280),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: <Widget>[
-                        IconButton(
-                          onPressed:
-                              () =>
-                                  context.canPop()
-                                      ? context.pop()
-                                      : context.go('/home'),
-                          icon: const Icon(Icons.arrow_back_rounded),
-                          color: _navy,
-                          tooltip: '뒤로가기',
+                child: Text('받은 견적 요청이 없습니다.', style: AppText.portfolioTitle),
+              ),
+            ),
+          );
+        }
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  height: 76,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(bottom: BorderSide(color: _line)),
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1280),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          children: <Widget>[
+                            IconButton(
+                              onPressed:
+                                  () =>
+                                      context.canPop()
+                                          ? context.pop()
+                                          : context.go('/home'),
+                              icon: const Icon(Icons.arrow_back_rounded),
+                              color: _navy,
+                              tooltip: '뒤로가기',
+                            ),
+                            const SizedBox(width: 10),
+                            InkWell(
+                              onTap: () => context.go('/home'),
+                              borderRadius: BorderRadius.circular(8),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Text('모두의 드론', style: HomeText.logo),
+                              ),
+                            ),
+                            const SizedBox(width: 18),
+                            Container(width: 1, height: 22, color: _line),
+                            const SizedBox(width: 18),
+                            const Text('받은 요청', style: AppText.cardTitle),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        InkWell(
-                          onTap: () => context.go('/home'),
-                          borderRadius: BorderRadius.circular(8),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8),
-                            child: Text('모두의 드론', style: HomeText.logo),
-                          ),
-                        ),
-                        const SizedBox(width: 18),
-                        Container(width: 1, height: 22, color: _line),
-                        const SizedBox(width: 18),
-                        const Text('받은 요청', style: AppText.cardTitle),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Expanded(
-              child: _PageShell(
-                top: 30,
-                bottom: 54,
-                child:
-                    compact
-                        ? SingleChildScrollView(
-                          child: Column(
-                            children: <Widget>[
-                              _RequestReviewList(
-                                selected: selectedRequest,
-                                onSelected:
-                                    (request) => setState(
-                                      () => selectedRequest = request,
+                Expanded(
+                  child: _PageShell(
+                    top: 30,
+                    bottom: 54,
+                    child:
+                        compact
+                            ? SingleChildScrollView(
+                              child: Column(
+                                children: <Widget>[
+                                  _RequestReviewList(
+                                    requests: requests,
+                                    selected: current,
+                                    onSelected:
+                                        (request) => setState(
+                                          () => selectedRequest = request,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  _RequestReviewDetail(
+                                    request: current,
+                                    isCompleted: _completedRequestIds.contains(
+                                      current.id,
                                     ),
+                                    onComplete:
+                                        () => setState(
+                                          () => _completedRequestIds.add(
+                                            current.id,
+                                          ),
+                                        ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 18),
-                              _RequestReviewDetail(
-                                request: selectedRequest,
-                                isCompleted: _completedRequestIds.contains(selectedRequest.id),
-                                onComplete: () => setState(() => _completedRequestIds.add(selectedRequest.id)),
-                              ),
-                            ],
-                          ),
-                        )
-                        : Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: _RequestReviewList(
-                                  selected: selectedRequest,
-                                  onSelected:
-                                      (request) => setState(
-                                        () => selectedRequest = request,
-                                      ),
+                            )
+                            : Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: _RequestReviewList(
+                                      requests: requests,
+                                      selected: current,
+                                      onSelected:
+                                          (request) => setState(
+                                            () => selectedRequest = request,
+                                          ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 24),
-                            Expanded(
-                              child: SingleChildScrollView(
-                                child: _RequestReviewDetail(
-                                  request: selectedRequest,
-                                  isCompleted: _completedRequestIds.contains(selectedRequest.id),
-                                  onComplete: () => setState(() => _completedRequestIds.add(selectedRequest.id)),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: _RequestReviewDetail(
+                                      request: current,
+                                      isCompleted: _completedRequestIds
+                                          .contains(current.id),
+                                      onComplete:
+                                          () => setState(
+                                            () => _completedRequestIds.add(
+                                              current.id,
+                                            ),
+                                          ),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _RequestReviewList extends StatelessWidget {
-  const _RequestReviewList({required this.selected, required this.onSelected});
+  const _RequestReviewList({
+    required this.requests,
+    required this.selected,
+    required this.onSelected,
+  });
 
+  final List<PilotWorkRequest> requests;
   final PilotWorkRequest selected;
   final ValueChanged<PilotWorkRequest> onSelected;
 
@@ -1887,16 +1955,13 @@ class _RequestReviewList extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            Text(
-              '견적 요청 ${mockPilotWorkRequests.length}건',
-              style: AppText.portfolioTitle,
-            ),
+            Text('견적 요청 ${requests.length}건', style: AppText.portfolioTitle),
             const Spacer(),
             _RequestFilterButton(label: '최신순'),
           ],
         ),
         const SizedBox(height: 16),
-        ...mockPilotWorkRequests.map(
+        ...requests.map(
           (request) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _RequestReviewCard(
@@ -3321,11 +3386,11 @@ class _AreaFilterState extends State<_AreaFilter> {
     final districts =
         store.selectedRegion == '전체'
             ? const <String>[]
-            : mockServiceDistricts[store.selectedRegion] ?? const <String>[];
+            : defaultServiceDistricts[store.selectedRegion] ?? const <String>[];
     final neighborhoods =
         store.selectedDistrict == '전체'
             ? const <String>[]
-            : mockServiceNeighborhoods[store.selectedDistrict] ??
+            : defaultServiceNeighborhoods[store.selectedDistrict] ??
                 const <String>[];
 
     return Column(
@@ -4101,10 +4166,7 @@ class _MobileUserHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: _CategorySelectionSection(
-        store: store,
-        onCategorySelected: () {},
-      ),
+      child: _CategorySelectionSection(store: store, onCategorySelected: () {}),
     );
   }
 }
@@ -4230,13 +4292,13 @@ class _MobilePilotRequestsPage extends StatelessWidget {
             children: <Widget>[
               Expanded(child: Text('받은 요청', style: AppText.portfolioTitle)),
               Text(
-                '${mockPilotWorkRequests.length}건',
+                '${store.pilotWorkRequests.length}건',
                 style: AppText.cardSubtitle.copyWith(color: _navy),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ...mockPilotWorkRequests.map(
+          ...store.pilotWorkRequests.map(
             (request) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _RequestReviewCard(
@@ -5331,8 +5393,7 @@ class _LiveOperatorsBannerSection extends StatelessWidget {
                           color: Color(0xFF0A0B0D),
                         ),
                       ),
-                      const TextSpan(
-                          text: '의 검증된 운용자가 내 요청을 기다리고 있습니다.'),
+                      const TextSpan(text: '의 검증된 운용자가 내 요청을 기다리고 있습니다.'),
                     ],
                     style: TextStyle(
                       fontFamily: 'Pretendard',
@@ -5363,28 +5424,29 @@ class _LiveOperatorsBannerSection extends StatelessWidget {
             // ── Horizontal pilot cards ─────────────────────────────────────
             SizedBox(
               height: 128,
-              child: pilots.isNotEmpty
-                  ? ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: pilots.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) {
-                        final pilot = pilots[index];
-                        return _LiveOperatorCard(
-                          pilot: pilot,
-                          onTap: () {
-                            store.selectPilot(pilot);
-                            _openPortfolio(context, pilot);
-                          },
-                        );
-                      },
-                    )
-                  : ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 6,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (_, __) => const _LiveOperatorSkeleton(),
-                    ),
+              child:
+                  pilots.isNotEmpty
+                      ? ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: pilots.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final pilot = pilots[index];
+                          return _LiveOperatorCard(
+                            pilot: pilot,
+                            onTap: () {
+                              store.selectPilot(pilot);
+                              _openPortfolio(context, pilot);
+                            },
+                          );
+                        },
+                      )
+                      : ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 6,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (_, __) => const _LiveOperatorSkeleton(),
+                      ),
             ),
           ],
         ),
@@ -5419,27 +5481,28 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
           duration: const Duration(milliseconds: 150),
           width: 190,
           height: 128,
-          transform: _hovered
-              ? (Matrix4.identity()..translate(0.0, -3.0))
-              : Matrix4.identity(),
+          transform:
+              _hovered
+                  ? (Matrix4.identity()..translate(0.0, -3.0))
+                  : Matrix4.identity(),
           decoration: BoxDecoration(
             color: _hovered ? const Color(0xFFF9FAFB) : Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: _hovered
-                  ? const Color(0xFF0052FF)
-                  : const Color(0xFFDEE1E6),
+              color:
+                  _hovered ? const Color(0xFF0052FF) : const Color(0xFFDEE1E6),
               width: _hovered ? 1.5 : 1,
             ),
-            boxShadow: _hovered
-                ? <BoxShadow>[
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : null,
+            boxShadow:
+                _hovered
+                    ? <BoxShadow>[
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ]
+                    : null,
           ),
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -5478,8 +5541,11 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
                         ),
                         Row(
                           children: <Widget>[
-                            const Icon(Icons.star_rounded,
-                                color: Color(0xFFFFB020), size: 11),
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Color(0xFFFFB020),
+                              size: 11,
+                            ),
                             const SizedBox(width: 2),
                             Text(
                               pilot.rating.toStringAsFixed(1),
@@ -5508,30 +5574,34 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
               Wrap(
                 spacing: 4,
                 runSpacing: 4,
-                children: pilot.categories
-                    .take(2)
-                    .map(
-                      (cat) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF7F8FA),
-                          borderRadius: BorderRadius.circular(100),
-                          border:
-                              Border.all(color: const Color(0xFFE4EAF2)),
-                        ),
-                        child: Text(
-                          cat,
-                          style: const TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF5B616E),
+                children:
+                    pilot.categories
+                        .take(2)
+                        .map(
+                          (cat) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7F8FA),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                color: const Color(0xFFE4EAF2),
+                              ),
+                            ),
+                            child: Text(
+                              cat,
+                              style: const TextStyle(
+                                fontFamily: 'Pretendard',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF5B616E),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    )
-                    .toList(),
+                        )
+                        .toList(),
               ),
               const Spacer(),
               Text(

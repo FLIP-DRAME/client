@@ -808,11 +808,11 @@ class _QuoteRequestVisual extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          const _MockField(label: '작업 유형', value: '항공촬영'),
+          const _PreviewField(label: '작업 유형', value: '항공촬영'),
           const SizedBox(height: 12),
-          const _MockField(label: '작업 지역', value: '서울 강남구'),
+          const _PreviewField(label: '작업 지역', value: '서울 강남구'),
           const SizedBox(height: 12),
-          const _MockField(label: '작업 일정', value: '2026년 6월 15일'),
+          const _PreviewField(label: '작업 일정', value: '2026년 6월 15일'),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -842,8 +842,8 @@ class _QuoteRequestVisual extends StatelessWidget {
   }
 }
 
-class _MockField extends StatelessWidget {
-  const _MockField({required this.label, required this.value});
+class _PreviewField extends StatelessWidget {
+  const _PreviewField({required this.label, required this.value});
   final String label;
   final String value;
 

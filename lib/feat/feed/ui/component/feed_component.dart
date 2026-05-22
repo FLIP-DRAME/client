@@ -99,187 +99,57 @@ class _FeedPost {
   final int likes;
 }
 
-class DroneFeedSection extends StatefulWidget {
+class DroneFeedSection extends ConsumerStatefulWidget {
   const DroneFeedSection({super.key});
 
   @override
-  State<DroneFeedSection> createState() => _DroneFeedSectionState();
+  ConsumerState<DroneFeedSection> createState() => _DroneFeedSectionState();
 }
 
-class _DroneFeedSectionState extends State<DroneFeedSection> {
+class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
   int _visibleCount = 9;
+  List<_FeedPost>? _remoteFeed;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>(() async {
+      final posts = await ref.read(feedApiProvider).fetchPosts();
+      if (!mounted) return;
+      setState(() {
+        _remoteFeed =
+            posts
+                .map(
+                  (post) => _FeedPost(
+                    location: post.location,
+                    category: post.category,
+                    images: post.images,
+                    authorName: post.authorName,
+                    authorRole: post.authorRole,
+                    date: post.date,
+                    likes: post.likes,
+                  ),
+                )
+                .toList();
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final feed = <_FeedPost>[
-      _FeedPost(
-        location: '서울 강남구',
-        category: '항공촬영',
-        images: mockPilots[0].portfolioImages,
-        authorName: '이서연 운용자',
-        authorRole: '도심 홍보 영상 전문가',
-        date: '2026.05.02',
-        likes: 634,
-      ),
-      _FeedPost(
-        location: '경기 이천',
-        category: '농약방제',
-        images: <String>[
-          mockPilots[0].portfolioImages[1],
-          mockPilots[0].portfolioImages[1],
-        ],
-        authorName: '김하늘 운용자',
-        authorRole: '정밀 방제 운용자',
-        date: '2026.04.30',
-        likes: 412,
-      ),
-      _FeedPost(
-        location: '인천 서구',
-        category: '측량·매핑',
-        images: <String>[
-          mockPilots[2].portfolioImages[0],
-          mockPilots[2].portfolioImages[0],
-        ],
-        authorName: '박지훈 운용자',
-        authorRole: 'RTK 측량 전문가',
-        date: '2026.04.27',
-        likes: 295,
-      ),
-      _FeedPost(
-        location: '충남 태안',
-        category: '시설점검',
-        images: <String>[
-          mockPilots[3].portfolioImages[0],
-          mockPilots[3].portfolioImages[0],
-        ],
-        authorName: '서해 드론웍스',
-        authorRole: '태양광 패널 점검',
-        date: '2026.04.25',
-        likes: 188,
-      ),
-      _FeedPost(
-        location: '부산 해운대',
-        category: '행사촬영',
-        images: mockPilots[4].portfolioImages,
-        authorName: '남해 시네마틱',
-        authorRole: '이벤트 항공 촬영',
-        date: '2026.04.21',
-        likes: 712,
-      ),
-      _FeedPost(
-        location: '제주 애월',
-        category: '항공촬영',
-        images: mockPilots[5].portfolioImages,
-        authorName: '오름 드론웍스',
-        authorRole: '관광지 콘텐츠 촬영',
-        date: '2026.04.19',
-        likes: 538,
-      ),
-      _FeedPost(
-        location: '강원 강릉',
-        category: '항공촬영',
-        images: <String>[
-          mockPilots[2].portfolioImages[1],
-          mockPilots[2].portfolioImages[3],
-        ],
-        authorName: '백두대간 픽처스',
-        authorRole: '산악 지형 촬영',
-        date: '2026.04.16',
-        likes: 221,
-      ),
-      _FeedPost(
-        location: '전남 여수',
-        category: '해양·산림',
-        images: <String>[
-          mockPilots[5].portfolioImages[2],
-          mockPilots[5].portfolioImages[3],
-        ],
-        authorName: '호남 에어샷',
-        authorRole: '해양 관광 콘텐츠',
-        date: '2026.04.12',
-        likes: 176,
-      ),
-      _FeedPost(
-        location: '서울 마포',
-        category: '부동산',
-        images: mockPilots[1].portfolioImages,
-        authorName: '김민준 운용자',
-        authorRole: '부동산 영상 전문가',
-        date: '2026.04.10',
-        likes: 329,
-      ),
-      _FeedPost(
-        location: '경기 성남',
-        category: '부동산',
-        images: <String>[
-          mockPilots[1].portfolioImages[1],
-          mockPilots[1].portfolioImages[2],
-        ],
-        authorName: '김민준 운용자',
-        authorRole: '항공 파노라마 촬영',
-        date: '2026.04.08',
-        likes: 204,
-      ),
-      _FeedPost(
-        location: '충북 청주',
-        category: '농약방제',
-        images: <String>[
-          mockPilots[0].portfolioImages[1],
-          mockPilots[0].portfolioImages[0],
-        ],
-        authorName: '한강 에어필름',
-        authorRole: '농경지 방제',
-        date: '2026.04.06',
-        likes: 151,
-      ),
-      _FeedPost(
-        location: '경북 포항',
-        category: '시설점검',
-        images: mockPilots[3].portfolioImages,
-        authorName: '서해 드론웍스',
-        authorRole: '시설 안전 점검',
-        date: '2026.04.03',
-        likes: 267,
-      ),
-      _FeedPost(
-        location: '인천 송도',
-        category: '건설현장',
-        images: <String>[
-          mockPilots[2].portfolioImages[2],
-          mockPilots[2].portfolioImages[0],
-        ],
-        authorName: '박지훈 운용자',
-        authorRole: '건설 현장 기록',
-        date: '2026.03.31',
-        likes: 318,
-      ),
-      _FeedPost(
-        location: '대전 유성',
-        category: '측량·매핑',
-        images: <String>[
-          mockPilots[2].portfolioImages[0],
-          mockPilots[1].portfolioImages[1],
-        ],
-        authorName: '백두대간 픽처스',
-        authorRole: '정사영상 제작',
-        date: '2026.03.29',
-        likes: 143,
-      ),
-      _FeedPost(
-        location: '제주 서귀포',
-        category: '항공촬영',
-        images: <String>[
-          mockPilots[5].portfolioImages[1],
-          mockPilots[5].portfolioImages[0],
-        ],
-        authorName: '오름 드론웍스',
-        authorRole: '리조트 홍보 촬영',
-        date: '2026.03.25',
-        likes: 482,
-      ),
-    ];
-    final visibleItems = feed.take(_visibleCount).toList();
-    final hasMore = _visibleCount < feed.length;
+    if (_remoteFeed == null) {
+      return const _FeedPageShell(
+        child: Center(child: CircularProgressIndicator(color: _navy)),
+      );
+    }
+    final actualFeed = _remoteFeed!;
+    if (actualFeed.isEmpty) {
+      return const _FeedPageShell(
+        child: Text('아직 공개된 피드가 없습니다.', style: FeedText.body),
+      );
+    }
+    final visibleItems = actualFeed.take(_visibleCount).toList();
+    final hasMore = _visibleCount < actualFeed.length;
 
     return _FeedPageShell(
       top: 22,
@@ -327,7 +197,9 @@ class _DroneFeedSectionState extends State<DroneFeedSection> {
                   setState(() {
                     final nextCount = _visibleCount + 9;
                     _visibleCount =
-                        nextCount > feed.length ? feed.length : nextCount;
+                        nextCount > actualFeed.length
+                            ? actualFeed.length
+                            : nextCount;
                   });
                 },
                 icon: const Icon(Icons.add_rounded),
@@ -621,12 +493,7 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                         ),
                       ),
                       onPressed: () {
-                        final pilot = mockPilots.firstWhere(
-                          (candidate) => widget.post.authorName.startsWith(
-                            candidate.name.split(' ').first,
-                          ),
-                          orElse: () => mockPilots.first,
-                        );
+                        final pilot = null;
                         Navigator.of(context).pop();
                         _openPortfolio(context, pilot);
                       },

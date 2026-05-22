@@ -15,12 +15,12 @@ class MyQuotesPage extends StatelessWidget {
         }
 
         final compact = MediaQuery.sizeOf(context).width < 760;
-        final nickname = store.accountNickname.isNotEmpty
-            ? store.accountNickname
-            : store.accountName;
+        final nickname =
+            store.accountNickname.isNotEmpty
+                ? store.accountNickname
+                : store.accountName;
 
-        // Mock quote data for display
-        final quotes = _mockMyQuotes();
+        final quotes = store.myQuotes;
 
         return Scaffold(
           backgroundColor: DC.canvas,
@@ -38,12 +38,19 @@ class MyQuotesPage extends StatelessWidget {
                 onFeedTap: () => context.go('/feed'),
                 onPortfolioTap: () => context.go('/portfolio'),
                 onMyQuotesTap: () {},
-                onSwitchToUser: () { store.setPilotMode(false); context.go('/home'); },
-                onSwitchToOperator: () { store.setPilotMode(true); context.go('/home'); },
-                onRequestsTap: () => _openPilotRequestReviewPage(
-                  context,
-                  initialRequest: mockPilotWorkRequests.first,
-                ),
+                onSwitchToUser: () {
+                  store.setPilotMode(false);
+                  context.go('/home');
+                },
+                onSwitchToOperator: () {
+                  store.setPilotMode(true);
+                  context.go('/home');
+                },
+                onRequestsTap:
+                    () => _openPilotRequestReviewPage(
+                      context,
+                      initialRequest: store.firstPilotWorkRequest,
+                    ),
               ),
               Expanded(
                 child: CustomScrollView(
@@ -64,7 +71,9 @@ class MyQuotesPage extends StatelessWidget {
                             if (quotes.isEmpty)
                               _EmptyQuotes(onFind: () => context.go('/home'))
                             else
-                              ...quotes.map((q) => _QuoteCard(quote: q, compact: compact)),
+                              ...quotes.map(
+                                (q) => _QuoteCard(quote: q, compact: compact),
+                              ),
                             const SizedBox(height: 72),
                           ],
                         ),
@@ -82,57 +91,11 @@ class MyQuotesPage extends StatelessWidget {
   }
 }
 
-// ── Mock data ────────────────────────────────────────────────────────────────
-
-class _MockQuote {
-  const _MockQuote({
-    required this.pilotName,
-    required this.category,
-    required this.area,
-    required this.date,
-    required this.status,
-    required this.price,
-  });
-  final String pilotName;
-  final String category;
-  final String area;
-  final String date;
-  final String status; // '견적 검토중' | '견적 도착' | '결제 완료' | '작업 완료'
-  final String price;
-}
-
-List<_MockQuote> _mockMyQuotes() => const <_MockQuote>[
-  _MockQuote(
-    pilotName: '김드론',
-    category: '항공촬영',
-    area: '서울',
-    date: '2026.05.20',
-    status: '견적 도착',
-    price: '35만원',
-  ),
-  _MockQuote(
-    pilotName: '이하늘',
-    category: '농약방제',
-    area: '경기',
-    date: '2026.05.18',
-    status: '결제 완료',
-    price: '80만원',
-  ),
-  _MockQuote(
-    pilotName: '박촬영',
-    category: '측량·매핑',
-    area: '부산',
-    date: '2026.05.10',
-    status: '작업 완료',
-    price: '120만원',
-  ),
-];
-
 // ── Widgets ──────────────────────────────────────────────────────────────────
 
 class _QuoteCard extends StatelessWidget {
   const _QuoteCard({required this.quote, required this.compact});
-  final _MockQuote quote;
+  final UserQuoteSummary quote;
   final bool compact;
 
   @override
@@ -146,50 +109,55 @@ class _QuoteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(DC.rxLg),
         border: Border.all(color: DC.hairline),
       ),
-      child: compact
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Text(quote.pilotName, style: DT.titleSm),
-                    ),
-                    _StatusChip(label: quote.status, color: statusColor),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${quote.category} · ${quote.area}',
-                  style: DT.bodyMd.copyWith(color: DC.body),
-                ),
-                const SizedBox(height: 4),
-                Text(quote.date, style: DT.caption.copyWith(color: DC.muted)),
-                const SizedBox(height: 8),
-                Text(quote.price, style: DT.titleSm.copyWith(color: DC.primary)),
-              ],
-            )
-          : Row(
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      child:
+          compact
+              ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
                     children: <Widget>[
-                      Text(quote.pilotName, style: DT.titleSm),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${quote.category} · ${quote.area} · ${quote.date}',
-                        style: DT.bodyMd.copyWith(color: DC.body),
-                      ),
+                      Expanded(child: Text(quote.pilotName, style: DT.titleSm)),
+                      _StatusChip(label: quote.status, color: statusColor),
                     ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                Text(quote.price, style: DT.titleSm.copyWith(color: DC.primary)),
-                const SizedBox(width: 20),
-                _StatusChip(label: quote.status, color: statusColor),
-              ],
-            ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${quote.category} · ${quote.area}',
+                    style: DT.bodyMd.copyWith(color: DC.body),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(quote.date, style: DT.caption.copyWith(color: DC.muted)),
+                  const SizedBox(height: 8),
+                  Text(
+                    quote.price,
+                    style: DT.titleSm.copyWith(color: DC.primary),
+                  ),
+                ],
+              )
+              : Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(quote.pilotName, style: DT.titleSm),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${quote.category} · ${quote.area} · ${quote.date}',
+                          style: DT.bodyMd.copyWith(color: DC.body),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    quote.price,
+                    style: DT.titleSm.copyWith(color: DC.primary),
+                  ),
+                  const SizedBox(width: 20),
+                  _StatusChip(label: quote.status, color: statusColor),
+                ],
+              ),
     );
   }
 

@@ -1,35 +1,59 @@
-import 'package:drane/feat/main/network/mock_drone_pilot_api.dart';
-import 'package:drane/feat/quote/network/mock_quote_api.dart';
+import 'package:drane/core/app_defaults.dart';
+import 'package:drane/feat/main/network/drone_pilot_model.dart';
 import 'package:drane/feat/quote/network/quote_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('prioritizes permitted pilots for selected area', () async {
-    final pilots = await MockDronePilotApi().fetchPilots(priorityArea: '서울');
-
-    expect(pilots.first.hasPermitFor('서울'), isTrue);
-    expect(pilots.first.name, '이서연 운용자');
+  test('default category data remains available before remote load', () {
+    expect(defaultDroneCategories, isNotEmpty);
+    expect(defaultDroneCategories.first.label, '항공촬영');
+    expect(defaultServiceAreas.first, '전체');
   });
 
-  test('creates a complete local quote flow model', () async {
-    final pilot = mockPilots.first;
+  test('quote estimate preserves Supabase identifiers through copyWith', () {
+    final pilot = DronePilot(
+      id: 'operator-id',
+      name: '운용자',
+      location: '서울',
+      categories: const <String>['항공촬영'],
+      availableAreas: const <String>['서울'],
+      permittedAreas: const <String>['서울'],
+      basePrice: 300000,
+      contact: '010-0000-0000',
+      rating: 5,
+      completedJobs: 1,
+      mapX: 0.5,
+      mapY: 0.5,
+      portfolioImages: defaultPortfolioImages,
+      specialty: '항공촬영',
+      intro: '소개',
+      description: '설명',
+      responseTime: '즉시',
+      quoteOptions: const <String>['항공촬영'],
+    );
     final request = QuoteRequest(
       pilot: pilot,
-      category: pilot.categories.first,
-      area: pilot.availableAreas.first,
+      category: '항공촬영',
+      area: '서울',
       preferredDate: '2026.05.20',
-      detail: '현장 분위기를 보여주는 항공 촬영과 기본 보정본이 필요합니다.',
+      detail: '요청',
       budgetRange: '50~100만원',
-      contactWindow: '평일 오후 2시 이후',
+      contactWindow: '오후',
+    );
+    final estimate = QuoteEstimate(
+      request: request,
+      proposedPrice: 420000,
+      estimatedTime: '촬영 2시간',
+      includedItems: const <String>['촬영'],
+      message: '견적',
+    ).copyWith(
+      jobRequestId: 'job-id',
+      quoteId: 'quote-id',
+      paymentId: 'payment-id',
     );
 
-    final api = MockQuoteApi();
-    final estimate = await api.createEstimate(request);
-    final payment = api.createPaymentInstruction(estimate);
-    final contact = api.createContactAccess(estimate);
-
-    expect(estimate.proposedPrice, greaterThan(pilot.basePrice));
-    expect(payment.amount, estimate.proposedPrice);
-    expect(contact.phone, pilot.contact);
+    expect(estimate.jobRequestId, 'job-id');
+    expect(estimate.quoteId, 'quote-id');
+    expect(estimate.paymentId, 'payment-id');
   });
 }

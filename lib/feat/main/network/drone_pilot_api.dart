@@ -1,15 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/app_defaults.dart';
 import 'drone_pilot_model.dart';
-import 'mock_drone_pilot_api.dart';
 
 abstract class DronePilotApi {
-  Future<List<DronePilot>> fetchPilots({String? priorityArea, String? category});
+  Future<List<DronePilot>> fetchPilots({
+    String? priorityArea,
+    String? category,
+  });
   Future<List<DroneCategory>> fetchCategories();
   Future<List<String>> fetchRegions();
   Future<DronePilot?> fetchPilotById(String id);
+  Future<List<PilotWorkRequestData>> fetchOperatorRequests();
+  Future<List<UserQuoteSummary>> fetchMyQuotes();
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
+}
+
+class PilotWorkRequestData {
+  const PilotWorkRequestData({
+    required this.id,
+    required this.category,
+    required this.status,
+    required this.location,
+    required this.dateRange,
+    required this.budget,
+    required this.client,
+    required this.summary,
+    required this.remaining,
+  });
+
+  final String id;
+  final String category;
+  final String status;
+  final String location;
+  final String dateRange;
+  final String budget;
+  final String client;
+  final String summary;
+  final String remaining;
+}
+
+class UserQuoteSummary {
+  const UserQuoteSummary({
+    required this.pilotName,
+    required this.category,
+    required this.area,
+    required this.date,
+    required this.status,
+    required this.price,
+  });
+
+  final String pilotName;
+  final String category;
+  final String area;
+  final String date;
+  final String status;
+  final String price;
 }
 
 class PilotRegistrationPayload {
@@ -90,23 +137,30 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .eq('status', 'approved')
         .order('rating_avg', ascending: false);
 
-    final pilots = rows
-        .map<DronePilot>((row) => _pilotFromRow(Map<String, dynamic>.from(row as Map)))
-        .where((pilot) {
-          final categoryMatch =
-              category == null || category == '전체' || pilot.hasCategory(category);
-          final areaMatch = priorityArea == null ||
-              priorityArea == '전체' ||
-              pilot.availableAreas.contains(priorityArea) ||
-              pilot.permittedAreas.contains(priorityArea);
-          return categoryMatch && areaMatch;
-        })
-        .toList();
+    final pilots =
+        rows
+            .map<DronePilot>(
+              (row) => _pilotFromRow(Map<String, dynamic>.from(row as Map)),
+            )
+            .where((pilot) {
+              final categoryMatch =
+                  category == null ||
+                  category == '전체' ||
+                  pilot.hasCategory(category);
+              final areaMatch =
+                  priorityArea == null ||
+                  priorityArea == '전체' ||
+                  pilot.availableAreas.contains(priorityArea) ||
+                  pilot.permittedAreas.contains(priorityArea);
+              return categoryMatch && areaMatch;
+            })
+            .toList();
 
     pilots.sort((a, b) {
       if (priorityArea != null && priorityArea != '전체') {
-        final areaCompare =
-            (a.hasPermitFor(priorityArea) ? 0 : 1).compareTo(b.hasPermitFor(priorityArea) ? 0 : 1);
+        final areaCompare = (a.hasPermitFor(priorityArea) ? 0 : 1).compareTo(
+          b.hasPermitFor(priorityArea) ? 0 : 1,
+        );
         if (areaCompare != 0) return areaCompare;
       }
       return b.rating.compareTo(a.rating);
@@ -144,30 +198,35 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   @override
-  Future<void> submitOperatorRegistration(PilotRegistrationPayload payload) async {
+  Future<void> submitOperatorRegistration(
+    PilotRegistrationPayload payload,
+  ) async {
     final data = payload.data;
-    final displayName = payload.nickname.isNotEmpty ? payload.nickname : payload.name;
-    final operator = await _client
-        .from('operator_profiles')
-        .upsert(
-          <String, Object?>{
-            'user_id': payload.userId,
-            'status': 'pending_review',
-            'business_name': data.businessName,
-            'business_number': data.businessNumber,
-            'representative_name': data.representativeName,
-            'display_name': displayName,
-            'location_label': data.areas.isEmpty ? null : data.areas.join(', '),
-            'specialty': data.portfolioTypes.isEmpty ? null : data.portfolioTypes.join(', '),
-            'intro': 'Drame 운용자 심사 대기 프로필입니다.',
-            'description': data.portfolioUrl,
-            'phone': null,
-            'email': payload.email,
-          },
-          onConflict: 'user_id',
-        )
-        .select('id')
-        .single();
+    final displayName =
+        payload.nickname.isNotEmpty ? payload.nickname : payload.name;
+    final operator =
+        await _client
+            .from('operator_profiles')
+            .upsert(<String, Object?>{
+              'user_id': payload.userId,
+              'status': 'pending_review',
+              'business_name': data.businessName,
+              'business_number': data.businessNumber,
+              'representative_name': data.representativeName,
+              'display_name': displayName,
+              'location_label':
+                  data.areas.isEmpty ? null : data.areas.join(', '),
+              'specialty':
+                  data.portfolioTypes.isEmpty
+                      ? null
+                      : data.portfolioTypes.join(', '),
+              'intro': 'Drame 운용자 심사 대기 프로필입니다.',
+              'description': data.portfolioUrl,
+              'phone': null,
+              'email': payload.email,
+            }, onConflict: 'user_id')
+            .select('id')
+            .single();
 
     final operatorId = operator['id'].toString();
     if (data.licenseNumber.toString().isNotEmpty) {
@@ -196,16 +255,21 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   DronePilot _pilotFromRow(Map<String, dynamic> row) {
-    final categoryRows = List<Object?>.from(row['operator_categories'] as List? ?? const []);
-    final categories = categoryRows
-        .map((item) => (item as Map)['service_categories'])
-        .whereType<Map>()
-        .map((item) => (item['label'] ?? '').toString())
-        .where((label) => label.isNotEmpty)
-        .toSet()
-        .toList();
+    final categoryRows = List<Object?>.from(
+      row['operator_categories'] as List? ?? const [],
+    );
+    final categories =
+        categoryRows
+            .map((item) => (item as Map)['service_categories'])
+            .whereType<Map>()
+            .map((item) => (item['label'] ?? '').toString())
+            .where((label) => label.isNotEmpty)
+            .toSet()
+            .toList();
 
-    final areaRows = List<Object?>.from(row['operator_service_areas'] as List? ?? const []);
+    final areaRows = List<Object?>.from(
+      row['operator_service_areas'] as List? ?? const [],
+    );
     final availableAreas = <String>{};
     final permittedAreas = <String>{};
     for (final item in areaRows.whereType<Map>()) {
@@ -217,19 +281,25 @@ class SupabaseDronePilotApi implements DronePilotApi {
       }
     }
 
-    final assetRows = List<Object?>.from(row['portfolio_assets'] as List? ?? const []);
-    final images = assetRows
-        .whereType<Map>()
-        .map((item) => (item['url'] ?? '').toString())
-        .where((url) => url.isNotEmpty)
-        .toList();
+    final assetRows = List<Object?>.from(
+      row['portfolio_assets'] as List? ?? const [],
+    );
+    final images =
+        assetRows
+            .whereType<Map>()
+            .map((item) => (item['url'] ?? '').toString())
+            .where((url) => url.isNotEmpty)
+            .toList();
 
     return DronePilot(
       id: row['id'].toString(),
       name: (row['display_name'] ?? row['business_name'] ?? '운용자').toString(),
       location: (row['location_label'] ?? '지역 협의').toString(),
       categories: categories.isEmpty ? const <String>['항공촬영'] : categories,
-      availableAreas: availableAreas.isEmpty ? const <String>['전체'] : availableAreas.toList(),
+      availableAreas:
+          availableAreas.isEmpty
+              ? const <String>['전체']
+              : availableAreas.toList(),
       permittedAreas: permittedAreas.toList(),
       basePrice: (row['base_price'] as num?)?.toInt() ?? 0,
       contact: (row['phone'] ?? '').toString(),
@@ -237,7 +307,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
       completedJobs: (row['completed_jobs_count'] as num?)?.toInt() ?? 0,
       mapX: 0.5,
       mapY: 0.5,
-      portfolioImages: images.isEmpty ? mockPilots.first.portfolioImages : images,
+      portfolioImages: images.isEmpty ? defaultPortfolioImages : images,
       specialty: (row['specialty'] ?? '').toString(),
       intro: (row['intro'] ?? '').toString(),
       description: (row['description'] ?? '').toString(),
@@ -255,5 +325,139 @@ class SupabaseDronePilotApi implements DronePilotApi {
       'celebration_rounded' => Icons.celebration_rounded,
       _ => Icons.camera_alt_rounded,
     };
+  }
+
+  @override
+  Future<List<PilotWorkRequestData>> fetchOperatorRequests() async {
+    final rows = await _client
+        .from('job_requests')
+        .select('''
+          id,
+          status,
+          title,
+          detail,
+          location_label,
+          preferred_start_at,
+          preferred_end_at,
+          budget_min,
+          budget_max,
+          contact_window,
+          client_display_name,
+          created_at,
+          service_categories(label)
+        ''')
+        .order('created_at', ascending: false);
+
+    return rows.map<PilotWorkRequestData>((row) {
+      final map = Map<String, dynamic>.from(row as Map);
+      return PilotWorkRequestData(
+        id: map['id'].toString(),
+        category:
+            ((map['service_categories'] as Map?)?['label'] ?? '작업 요청')
+                .toString(),
+        status: _jobStatusLabel((map['status'] ?? '').toString()),
+        location: (map['location_label'] ?? '지역 미정').toString(),
+        dateRange: _dateRange(
+          map['preferred_start_at'],
+          map['preferred_end_at'],
+        ),
+        budget: _budgetLabel(map['budget_min'], map['budget_max']),
+        client: (map['client_display_name'] ?? '고객').toString(),
+        summary: (map['detail'] ?? map['title'] ?? '').toString(),
+        remaining: '확인 필요',
+      );
+    }).toList();
+  }
+
+  @override
+  Future<List<UserQuoteSummary>> fetchMyQuotes() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const <UserQuoteSummary>[];
+
+    final rows = await _client
+        .from('job_requests')
+        .select('''
+          id,
+          status,
+          location_label,
+          preferred_start_at,
+          created_at,
+          service_categories(label),
+          quotes(status, proposed_price, operator_profiles(display_name, business_name))
+        ''')
+        .eq('client_id', userId)
+        .order('created_at', ascending: false);
+
+    return rows.map<UserQuoteSummary>((row) {
+      final map = Map<String, dynamic>.from(row as Map);
+      final quoteRows = List<Object?>.from(map['quotes'] as List? ?? const []);
+      final quote =
+          quoteRows.whereType<Map>().isEmpty
+              ? const <String, Object?>{}
+              : Map<String, dynamic>.from(quoteRows.whereType<Map>().first);
+      final operator = quote['operator_profiles'] as Map?;
+      final price = (quote['proposed_price'] as num?)?.toInt();
+      return UserQuoteSummary(
+        pilotName:
+            (operator?['display_name'] ??
+                    operator?['business_name'] ??
+                    '견적 대기중')
+                .toString(),
+        category:
+            ((map['service_categories'] as Map?)?['label'] ?? '작업 요청')
+                .toString(),
+        area: (map['location_label'] ?? '지역 미정').toString(),
+        date: _dateOnly(map['preferred_start_at'] ?? map['created_at']),
+        status: _quoteStatusLabel(
+          (quote['status'] ?? map['status'] ?? '').toString(),
+        ),
+        price: price == null ? '-' : '${(price / 10000).round()}만원',
+      );
+    }).toList();
+  }
+
+  String _jobStatusLabel(String status) => switch (status) {
+    'open' => '신규',
+    'quoted' => '견적 도착',
+    'accepted' || 'paid' || 'contact_opened' || 'in_progress' => '진행 중',
+    'completed' => '완료',
+    'cancelled' => '취소',
+    _ => '신규',
+  };
+
+  String _quoteStatusLabel(String status) => switch (status) {
+    'submitted' => '견적 도착',
+    'accepted' => '수락 완료',
+    'rejected' => '거절',
+    'expired' => '만료',
+    'paid' || 'confirmed' => '결제 완료',
+    'completed' => '작업 완료',
+    _ => '견적 검토중',
+  };
+
+  String _budgetLabel(Object? min, Object? max) {
+    final minValue = (min as num?)?.toInt();
+    final maxValue = (max as num?)?.toInt();
+    if (minValue == null && maxValue == null) return '예산 협의';
+    if (minValue == null) return '${(maxValue! / 10000).round()}만원 이하';
+    if (maxValue == null) return '${(minValue / 10000).round()}만원 이상';
+    return '${(minValue / 10000).round()}~${(maxValue / 10000).round()}만원';
+  }
+
+  String _dateRange(Object? start, Object? end) {
+    final startLabel = _dateOnly(start);
+    final endLabel = _dateOnly(end);
+    if (startLabel == '-') return '일정 협의';
+    if (endLabel == '-' || endLabel == startLabel) return startLabel;
+    return '$startLabel ~ $endLabel';
+  }
+
+  String _dateOnly(Object? value) {
+    if (value == null) return '-';
+    final parsed = DateTime.tryParse(value.toString());
+    if (parsed == null) return value.toString();
+    final month = parsed.month.toString().padLeft(2, '0');
+    final day = parsed.day.toString().padLeft(2, '0');
+    return '${parsed.year}.$month.$day';
   }
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app_providers.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../main/network/drone_pilot_model.dart';
-import '../../../main/network/mock_drone_pilot_api.dart';
 
 part '../component/feed_component.dart';
 

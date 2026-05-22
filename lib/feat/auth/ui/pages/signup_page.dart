@@ -42,41 +42,38 @@ class _SignupPageState extends State<SignupPage> {
     IconData? prefixIcon,
     Widget? suffix,
     String? hint,
-  }) =>
-      InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: DC.muted, size: 20)
-            : null,
-        suffix: suffix,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: DC.hairline),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: DC.hairline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: DC.primary, width: 1.5),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        labelStyle: const TextStyle(
-          fontFamily: 'Pretendard',
-          color: DC.muted,
-          fontSize: 14,
-        ),
-        hintStyle: const TextStyle(
-          fontFamily: 'Pretendard',
-          color: DC.mutedSoft,
-          fontSize: 14,
-        ),
-      );
+  }) => InputDecoration(
+    labelText: label,
+    hintText: hint,
+    prefixIcon:
+        prefixIcon != null ? Icon(prefixIcon, color: DC.muted, size: 20) : null,
+    suffix: suffix,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: DC.hairline),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: DC.hairline),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: DC.primary, width: 1.5),
+    ),
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    labelStyle: const TextStyle(
+      fontFamily: 'Pretendard',
+      color: DC.muted,
+      fontSize: 14,
+    ),
+    hintStyle: const TextStyle(
+      fontFamily: 'Pretendard',
+      color: DC.mutedSoft,
+      fontSize: 14,
+    ),
+  );
 
   void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -152,9 +149,10 @@ class _SignupPageState extends State<SignupPage> {
 
         return Scaffold(
           backgroundColor: const Color(0xFFE5E7EB),
-          body: isDesktop
-              ? _buildDesktopLayout(context, store)
-              : _buildMobileLayout(context, store),
+          body:
+              isDesktop
+                  ? _buildDesktopLayout(context, store)
+                  : _buildMobileLayout(context, store),
         );
       },
     );
@@ -166,9 +164,7 @@ class _SignupPageState extends State<SignupPage> {
       children: <Widget>[
         Flexible(
           flex: 40,
-          child: _SignupLeftPanel(
-            onLoginTap: () => context.go('/login'),
-          ),
+          child: _SignupLeftPanel(onLoginTap: () => context.go('/login')),
         ),
         Flexible(
           flex: 60,
@@ -225,211 +221,217 @@ class _SignupPageState extends State<SignupPage> {
                       _buildTopBar(context, isDesktop: isDesktop),
                       const SizedBox(height: 32),
 
-                    // Title
-                    const Text(
-                      '회원가입',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: DC.ink,
-                        letterSpacing: -0.5,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Drame 계정을 만들어 드론 서비스를 시작하세요',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 14,
-                        color: DC.body,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Role toggle
-                    _buildRoleToggle(),
-                    const SizedBox(height: 20),
-
-                    // Name field
-                    TextField(
-                      controller: _nameCtrl,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 15,
-                        color: DC.ink,
-                      ),
-                      decoration: _inputDec(
-                        '이름',
-                        prefixIcon: Icons.person_rounded,
-                        hint: '실명을 입력해 주세요',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Nickname field
-                    TextField(
-                      controller: _nicknameCtrl,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 15,
-                        color: DC.ink,
-                      ),
-                      decoration: _inputDec(
-                        '닉네임',
-                        prefixIcon: Icons.person_outline_rounded,
-                        hint: '서비스에서 사용할 이름',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Email field
-                    TextField(
-                      controller: _emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 15,
-                        color: DC.ink,
-                      ),
-                      decoration: _inputDec(
-                        '이메일',
-                        prefixIcon: Icons.email_outlined,
-                        hint: 'name@email.com',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Password field
-                    TextField(
-                      controller: _passwordCtrl,
-                      obscureText: _obscurePassword,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 15,
-                        color: DC.ink,
-                      ),
-                      decoration: _inputDec(
-                        '비밀번호',
-                        prefixIcon: Icons.lock_outline_rounded,
-                        suffix: GestureDetector(
-                          onTap: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                          child: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: DC.muted,
-                            size: 20,
-                          ),
+                      // Title
+                      const Text(
+                        '회원가입',
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: DC.ink,
+                          letterSpacing: -0.5,
+                          height: 1.2,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Confirm password field
-                    TextField(
-                      controller: _confirmCtrl,
-                      obscureText: _obscureConfirm,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 15,
-                        color: DC.ink,
-                      ),
-                      decoration: _inputDec(
-                        '비밀번호 확인',
-                        prefixIcon: Icons.lock_outline_rounded,
-                        suffix: GestureDetector(
-                          onTap: () =>
-                              setState(() => _obscureConfirm = !_obscureConfirm),
-                          child: Icon(
-                            _obscureConfirm
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: DC.muted,
-                            size: 20,
-                          ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Drame 계정을 만들어 드론 서비스를 시작하세요',
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 14,
+                          color: DC.body,
+                          height: 1.5,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 18),
+                      const SizedBox(height: 28),
 
-                    // Terms checkbox
-                    _buildTermsRow(),
-                    const SizedBox(height: 22),
+                      // Role toggle
+                      _buildRoleToggle(),
+                      const SizedBox(height: 20),
 
-                    // Signup button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton(
-                        onPressed:
-                            _isLoading ? null : () => _handleSignup(store),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: DC.primary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor:
-                              DC.primary.withValues(alpha: 0.55),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          textStyle: const TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          elevation: 0,
+                      // Name field
+                      TextField(
+                        controller: _nameCtrl,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 15,
+                          color: DC.ink,
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
+                        decoration: _inputDec(
+                          '이름',
+                          prefixIcon: Icons.person_rounded,
+                          hint: '실명을 입력해 주세요',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Nickname field
+                      TextField(
+                        controller: _nicknameCtrl,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 15,
+                          color: DC.ink,
+                        ),
+                        decoration: _inputDec(
+                          '닉네임',
+                          prefixIcon: Icons.person_outline_rounded,
+                          hint: '서비스에서 사용할 이름',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Email field
+                      TextField(
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 15,
+                          color: DC.ink,
+                        ),
+                        decoration: _inputDec(
+                          '이메일',
+                          prefixIcon: Icons.email_outlined,
+                          hint: 'name@email.com',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Password field
+                      TextField(
+                        controller: _passwordCtrl,
+                        obscureText: _obscurePassword,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 15,
+                          color: DC.ink,
+                        ),
+                        decoration: _inputDec(
+                          '비밀번호',
+                          prefixIcon: Icons.lock_outline_rounded,
+                          suffix: GestureDetector(
+                            onTap:
+                                () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
                                 ),
-                              )
-                            : const Text('회원가입'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Login link
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          const Text(
-                            '이미 회원이신가요?',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 14,
-                              color: DC.body,
+                            child: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: DC.muted,
+                              size: 20,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          GestureDetector(
-                            onTap: () => context.go('/login'),
-                            child: const Text(
-                              '로그인',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Confirm password field
+                      TextField(
+                        controller: _confirmCtrl,
+                        obscureText: _obscureConfirm,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 15,
+                          color: DC.ink,
+                        ),
+                        decoration: _inputDec(
+                          '비밀번호 확인',
+                          prefixIcon: Icons.lock_outline_rounded,
+                          suffix: GestureDetector(
+                            onTap:
+                                () => setState(
+                                  () => _obscureConfirm = !_obscureConfirm,
+                                ),
+                            child: Icon(
+                              _obscureConfirm
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: DC.muted,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // Terms checkbox
+                      _buildTermsRow(),
+                      const SizedBox(height: 22),
+
+                      // Signup button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: FilledButton(
+                          onPressed:
+                              _isLoading ? null : () => _handleSignup(store),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: DC.primary,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: DC.primary.withValues(
+                              alpha: 0.55,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontFamily: 'Pretendard',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            elevation: 0,
+                          ),
+                          child:
+                              _isLoading
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Text('회원가입'),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Login link
+                      Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            const Text(
+                              '이미 회원이신가요?',
                               style: TextStyle(
                                 fontFamily: 'Pretendard',
                                 fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: DC.primary,
+                                color: DC.body,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () => context.go('/login'),
+                              child: const Text(
+                                '로그인',
+                                style: TextStyle(
+                                  fontFamily: 'Pretendard',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: DC.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
           ),
         ),
@@ -512,9 +514,14 @@ class _SignupPageState extends State<SignupPage> {
                 width: 1.5,
               ),
             ),
-            child: _agreedToTerms
-                ? const Icon(Icons.check_rounded, color: Colors.white, size: 13)
-                : null,
+            child:
+                _agreedToTerms
+                    ? const Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 13,
+                    )
+                    : null,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -676,9 +683,7 @@ class _SignupLeftPanel extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -754,15 +759,16 @@ class _RoleToggleItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? DC.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
-            boxShadow: selected
-                ? <BoxShadow>[
-                    BoxShadow(
-                      color: DC.primary.withValues(alpha: 0.22),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
+            boxShadow:
+                selected
+                    ? <BoxShadow>[
+                      BoxShadow(
+                        color: DC.primary.withValues(alpha: 0.22),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : null,
           ),
           child: Center(
             child: Text(

@@ -15,19 +15,27 @@ class _OperatorProfileManagementPage extends StatelessWidget {
             DrameTopNavigation(
               isLoggedIn: store.isLoggedIn,
               isOperator: store.isPilotMode && store.isLoggedIn,
-              nickname: store.accountNickname.isNotEmpty
-                  ? store.accountNickname
-                  : store.accountName,
+              nickname:
+                  store.accountNickname.isNotEmpty
+                      ? store.accountNickname
+                      : store.accountName,
               onLoginTap: () => context.go('/login'),
               onRegisterPilotTap: () => context.push('/pilot/register'),
               onLogoTap: () => context.go('/home'),
               onFindPilotTap: () => context.go('/home'),
-              onRequestsTap: () => _openPilotRequestReviewPage(
-                context,
-                initialRequest: mockPilotWorkRequests.first,
-              ),
-              onSwitchToUser: () { store.setPilotMode(false); context.go('/home'); },
-              onSwitchToOperator: () { store.setPilotMode(true); context.go('/home'); },
+              onRequestsTap:
+                  () => _openPilotRequestReviewPage(
+                    context,
+                    initialRequest: store.firstPilotWorkRequest,
+                  ),
+              onSwitchToUser: () {
+                store.setPilotMode(false);
+                context.go('/home');
+              },
+              onSwitchToOperator: () {
+                store.setPilotMode(true);
+                context.go('/home');
+              },
             ),
             DrameTabNav(
               isOperator: true,
@@ -39,7 +47,7 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                   case 'requests':
                     _openPilotRequestReviewPage(
                       context,
-                      initialRequest: mockPilotWorkRequests.first,
+                      initialRequest: store.firstPilotWorkRequest,
                     );
                   default:
                     break;
@@ -365,7 +373,7 @@ class _OperatorMyPageProfile extends StatelessWidget {
                       Text('리뷰 평점 0', style: AppText.cardSubtitle),
                       Text('리뷰수 0', style: AppText.cardSubtitle),
                       Text(
-                        '요청수 ${mockPilotWorkRequests.length}',
+                        '요청수 ${store.pilotWorkRequests.length}',
                         style: AppText.cardSubtitle,
                       ),
                       Text(
@@ -395,9 +403,8 @@ class _OperatorMyPageProfile extends StatelessWidget {
                 onPressed: () {
                   final pilot =
                       store.selectedPilot ??
-                      (store.pilots.isNotEmpty
-                          ? store.pilots.first
-                          : mockPilots.first);
+                      (store.pilots.isNotEmpty ? store.pilots.first : null);
+                  if (pilot == null) return;
                   context.push('/portfolio/${pilot.id}', extra: pilot);
                 },
                 style: _myPageOutlineButtonStyle(),

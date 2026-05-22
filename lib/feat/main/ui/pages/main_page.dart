@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
@@ -8,12 +8,12 @@ import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
 import '../../../../common/drame_text_styles.dart';
+import '../../../../core/app_defaults.dart';
 import '../../../feed/ui/pages/feed_page.dart';
 import '../../../quote/network/quote_api.dart';
 import '../../../quote/network/quote_model.dart';
 import '../../network/drone_pilot_api.dart';
 import '../../network/drone_pilot_model.dart';
-import '../../network/mock_drone_pilot_api.dart';
 import 'package:web/web.dart' as web;
 import 'dart:js_interop'; // JSArrayBuffer, .toDart 사용에 필요
 import 'dart:async'; // Completer
@@ -74,11 +74,8 @@ const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
 
-typedef StoreBuilder = Widget Function(
-  BuildContext context,
-  DrameStore store,
-  Widget? child,
-);
+typedef StoreBuilder =
+    Widget Function(BuildContext context, DrameStore store, Widget? child);
 
 class Consumer<T> extends ConsumerWidget {
   const Consumer({super.key, required this.builder});
@@ -94,8 +91,11 @@ class Consumer<T> extends ConsumerWidget {
 extension DrameStoreContext on BuildContext {
   T read<T>() {
     if (T == DrameStore) {
-      return ProviderScope.containerOf(this, listen: false)
-          .read(drameStoreProvider) as T;
+      return ProviderScope.containerOf(
+            this,
+            listen: false,
+          ).read(drameStoreProvider)
+          as T;
     }
     throw UnsupportedError('No Riverpod bridge registered for $T.');
   }
@@ -211,94 +211,21 @@ class PilotWorkRequest {
   final String mapLabel;
 }
 
-const List<PilotWorkRequest> mockPilotWorkRequests = <PilotWorkRequest>[
-  PilotWorkRequest(
-    id: 'request-001',
-    category: '농약 방제',
-    status: '신규',
-    location: '경기 화성시',
-    distance: '8km',
-    dateRange: '2026.04.20',
-    budget: '30~100만원',
-    client: 'K**',
-    summary: '논 3,000평 농약 방제 작업 요청입니다. 비행 승인 대행 포함 희망. 작업 후 GPS 로그 제공 요청드립니다.',
-    progress: '현재 2명이 견적 작성 중',
-    remaining: '23시간 남음',
-    mapLabel: '경기 화성시 지도',
-  ),
-  PilotWorkRequest(
-    id: 'request-002',
-    category: '부동산 영상',
-    status: '신규',
-    location: '서울 강남구',
-    distance: '15km',
-    dateRange: '2026.04.22',
-    budget: '30~100만원',
-    client: 'L**',
-    summary: '신축 아파트 단지 항공 촬영 요청. 4K 영상 + 편집본 납품. 일몰 전후 골든아워 촬영 희망.',
-    progress: '현재 1명이 견적 작성 중',
-    remaining: '47시간 남음',
-    mapLabel: '서울 강남구 지도',
-  ),
-  PilotWorkRequest(
-    id: 'request-003',
-    category: '시설 점검',
-    status: '마감 임박',
-    location: '인천 남동구',
-    distance: '22km',
-    dateRange: '2026.04.18 ~ 2026.04.19',
-    budget: '100~500만원',
-    client: 'P**',
-    summary: '태양광 패널 열화상 점검. 약 500kW 규모. 열화상 카메라 탑재 드론 필수. 점검 보고서 포함.',
-    progress: '현재 3명이 견적 작성 중',
-    remaining: '5시간 남음',
-    mapLabel: '인천 남동구 지도',
-  ),
-  PilotWorkRequest(
-    id: 'request-004',
-    category: '측량·매핑',
-    status: '검토 중',
-    location: '경기 용인시',
-    distance: '31km',
-    dateRange: '2026.04.25',
-    budget: '100~500만원',
-    client: 'J**',
-    summary: '건설 현장 토공량 산출을 위한 3D 매핑. RTK GPS 탑재 드론 필수. DXF 파일 납품.',
-    progress: '현재 1명이 견적 작성 중',
-    remaining: '71시간 남음',
-    mapLabel: '경기 용인시 지도',
-  ),
-  PilotWorkRequest(
-    id: 'request-005',
-    category: '행사촬영',
-    status: '신규',
-    location: '부산 해운대',
-    distance: '42km',
-    dateRange: '2026.04.27',
-    budget: '50~150만원',
-    client: 'M**',
-    summary: '해변 행사 항공 촬영과 하이라이트 영상 제작 요청. 안전요원 동선과 관람객 밀집 구간 고려 필요.',
-    progress: '현재 2명이 견적 작성 중',
-    remaining: '96시간 남음',
-    mapLabel: '부산 해운대 지도',
-  ),
-];
-
 void _openPortfolio(BuildContext context, DronePilot pilot) {
   context.push('/portfolio/${pilot.id}', extra: pilot);
 }
 
 void _openPilotRequestReviewPage(
   BuildContext context, {
-  required PilotWorkRequest initialRequest,
+  PilotWorkRequest? initialRequest,
 }) {
   context.push('/pilot/requests', extra: initialRequest);
 }
 
 class PilotRequestReviewPage extends StatelessWidget {
-  const PilotRequestReviewPage({super.key, required this.initialRequest});
+  const PilotRequestReviewPage({super.key, this.initialRequest});
 
-  final PilotWorkRequest initialRequest;
+  final PilotWorkRequest? initialRequest;
 
   @override
   Widget build(BuildContext context) {
@@ -360,8 +287,8 @@ class OperatorMyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
-      builder: (context, store, _) =>
-          _OperatorProfileManagementPage(store: store),
+      builder:
+          (context, store, _) => _OperatorProfileManagementPage(store: store),
     );
   }
 }
@@ -376,8 +303,10 @@ class DrameStore extends ChangeNotifier {
 
   List<DronePilot> pilots = const <DronePilot>[];
   List<DronePilot> allPilots = const <DronePilot>[];
-  List<DroneCategory> categories = mockDroneCategories;
-  List<String> serviceAreas = mockServiceAreas;
+  List<DroneCategory> categories = defaultDroneCategories;
+  List<String> serviceAreas = defaultServiceAreas;
+  List<PilotWorkRequest> pilotWorkRequests = const <PilotWorkRequest>[];
+  List<UserQuoteSummary> myQuotes = const <UserQuoteSummary>[];
   DroneCategory? selectedCategory;
   DronePilot? selectedPilot;
   String selectedPortfolioCategory = '전체';
@@ -422,6 +351,11 @@ class DrameStore extends ChangeNotifier {
         priorityArea: selectedArea,
         category: selectedCategory?.label,
       );
+      pilotWorkRequests =
+          (await _api.fetchOperatorRequests())
+              .map(_workRequestFromData)
+              .toList();
+      myQuotes = await _api.fetchMyQuotes();
       pilots = nextPilots;
       if (initial) {
         allPilots = nextPilots;
@@ -803,6 +737,26 @@ class DrameStore extends ChangeNotifier {
     myFeedPosts = myFeedPosts.where((p) => p.id != id).toList();
     notifyListeners();
   }
+
+  PilotWorkRequest? get firstPilotWorkRequest =>
+      pilotWorkRequests.isEmpty ? null : pilotWorkRequests.first;
+
+  PilotWorkRequest _workRequestFromData(PilotWorkRequestData data) {
+    return PilotWorkRequest(
+      id: data.id,
+      category: data.category,
+      status: data.status,
+      location: data.location,
+      distance: '거리 확인 필요',
+      dateRange: data.dateRange,
+      budget: data.budget,
+      client: data.client,
+      summary: data.summary,
+      progress: '견적 응답 대기',
+      remaining: data.remaining,
+      mapLabel: '${data.location} 지도',
+    );
+  }
 }
 
 class DrameHomePage extends StatefulWidget {
@@ -836,7 +790,8 @@ class _DrameHomePageState extends State<DrameHomePage> {
         }
         store.load(initial: true);
       });
-      if (!store.isLoggedIn && Supabase.instance.client.auth.currentUser == null) {
+      if (!store.isLoggedIn &&
+          Supabase.instance.client.auth.currentUser == null) {
         context.go('/login');
         return;
       }
@@ -888,11 +843,18 @@ class _DrameHomePageState extends State<DrameHomePage> {
     }
   }
 
-  void _handleOperatorTabChanged(String id, BuildContext ctx, DrameStore store) {
+  void _handleOperatorTabChanged(
+    String id,
+    BuildContext ctx,
+    DrameStore store,
+  ) {
     setState(() => _selectedTabId = id);
     switch (id) {
       case 'requests':
-        _openPilotRequestReviewPage(ctx, initialRequest: mockPilotWorkRequests.first);
+        _openPilotRequestReviewPage(
+          ctx,
+          initialRequest: store.firstPilotWorkRequest,
+        );
       case 'profile':
         ctx.push('/pilot/mypage');
       default:
@@ -908,9 +870,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
         if (store.isLoading && store.pilots.isEmpty) {
           return const Scaffold(
             backgroundColor: DC.canvas,
-            body: Center(
-              child: CircularProgressIndicator(color: DC.primary),
-            ),
+            body: Center(child: CircularProgressIndicator(color: DC.primary)),
           );
         }
         return compact
@@ -922,13 +882,13 @@ class _DrameHomePageState extends State<DrameHomePage> {
 
   Widget _buildWebLayout(BuildContext context, DrameStore store) {
     // Operator mode: logged in as operator
-    final isOperatorDashboard =
-        store.isLoggedIn && store.isPilotMode;
+    final isOperatorDashboard = store.isLoggedIn && store.isPilotMode;
 
     // Sync selected tab with store category when user navigates
-    final tabId = store.selectedCategory != null
-        ? store.selectedCategory!.id
-        : (_selectedTabId == 'all' ? 'all' : _selectedTabId);
+    final tabId =
+        store.selectedCategory != null
+            ? store.selectedCategory!.id
+            : (_selectedTabId == 'all' ? 'all' : _selectedTabId);
 
     return Scaffold(
       backgroundColor: DC.canvas,
@@ -939,11 +899,12 @@ class _DrameHomePageState extends State<DrameHomePage> {
             isLoggedIn: store.isLoggedIn,
             isOperator: isOperatorDashboard,
             isOperatorRegistered: store.operatorRegistrationCompleted,
-            nickname: store.isLoggedIn
-                ? (store.accountNickname.isNotEmpty
-                    ? store.accountNickname
-                    : store.accountName)
-                : null,
+            nickname:
+                store.isLoggedIn
+                    ? (store.accountNickname.isNotEmpty
+                        ? store.accountNickname
+                        : store.accountName)
+                    : null,
             activePage: 'find',
             onLoginTap: () => context.go('/login'),
             onRegisterPilotTap: () => context.push('/pilot/register'),
@@ -961,18 +922,26 @@ class _DrameHomePageState extends State<DrameHomePage> {
             onFeedTap: () => context.go('/feed'),
             onPortfolioTap: () => context.go('/portfolio'),
             onMyQuotesTap: () => context.go('/my/quotes'),
-            onSwitchToUser: () { store.setPilotMode(false); context.go('/home'); },
-            onSwitchToOperator: () { store.setPilotMode(true); context.go('/home'); },
-            onRequestsTap: () => _openPilotRequestReviewPage(
-              context,
-              initialRequest: mockPilotWorkRequests.first,
-            ),
+            onSwitchToUser: () {
+              store.setPilotMode(false);
+              context.go('/home');
+            },
+            onSwitchToOperator: () {
+              store.setPilotMode(true);
+              context.go('/home');
+            },
+            onRequestsTap:
+                () => _openPilotRequestReviewPage(
+                  context,
+                  initialRequest: store.firstPilotWorkRequest,
+                ),
             onMyPageTap: () => context.push('/pilot/mypage'),
           ),
 
           // ── Sticky secondary tab bar ────────────────────────────────────────
           DrameTabNav(
-            isOperator: isOperatorDashboard && store.operatorRegistrationCompleted,
+            isOperator:
+                isOperatorDashboard && store.operatorRegistrationCompleted,
             selectedId: isOperatorDashboard ? _selectedTabId : tabId,
             onTabChanged: (id) {
               if (isOperatorDashboard) {
@@ -990,17 +959,18 @@ class _DrameHomePageState extends State<DrameHomePage> {
               slivers: <Widget>[
                 if (isOperatorDashboard) ...<Widget>[
                   SliverToBoxAdapter(
-                    child: store.isPilotAuthOpen
-                        ? _PilotAuthSection(store: store)
-                        : store.isPilotOnboarding
+                    child:
+                        store.isPilotAuthOpen
+                            ? _PilotAuthSection(store: store)
+                            : store.isPilotOnboarding
                             ? _PilotOnboardingSection(store: store)
                             : store.registrationJustCompleted
-                                ? _PilotRegistrationDoneSection(store: store)
-                                : store.operatorRegistrationCompleted
-                                    ? (_selectedTabId == 'feed'
-                                        ? _OperatorFeedTabPage(store: store)
-                                        : _PilotDashboardSection(store: store))
-                                    : _PilotLandingSection(store: store),
+                            ? _PilotRegistrationDoneSection(store: store)
+                            : store.operatorRegistrationCompleted
+                            ? (_selectedTabId == 'feed'
+                                ? _OperatorFeedTabPage(store: store)
+                                : _PilotDashboardSection(store: store))
+                            : _PilotLandingSection(store: store),
                   ),
                   const SliverToBoxAdapter(child: _FooterSection()),
                   const SliverToBoxAdapter(child: SizedBox(height: 72)),
@@ -1029,10 +999,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
                         scrollController: _scrollController,
                         child: _CategorySelectionSection(
                           store: store,
-                          onCategorySelected: () =>
-                              WidgetsBinding.instance.addPostFrameCallback(
-                                (_) => _scrollToSection(_areaSectionKey),
-                              ),
+                          onCategorySelected:
+                              () =>
+                                  WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) => _scrollToSection(_areaSectionKey),
+                                  ),
                         ),
                       ),
                     ),
@@ -1045,10 +1016,12 @@ class _DrameHomePageState extends State<DrameHomePage> {
                         key: _areaSectionKey,
                         child: _AreaSelectionSection(
                           store: store,
-                          onAreaSelected: () =>
-                              WidgetsBinding.instance.addPostFrameCallback(
-                                (_) => _scrollToSection(_operatorSectionKey),
-                              ),
+                          onAreaSelected:
+                              () =>
+                                  WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) =>
+                                        _scrollToSection(_operatorSectionKey),
+                                  ),
                         ),
                       ),
                     ),
@@ -1088,52 +1061,54 @@ class _DrameHomePageState extends State<DrameHomePage> {
         backgroundColor: Colors.white,
         body: SafeArea(
           child: SingleChildScrollView(
-            child: store.isPilotAuthOpen
-                ? _PilotAuthSection(store: store)
-                : store.isPilotOnboarding
+            child:
+                store.isPilotAuthOpen
+                    ? _PilotAuthSection(store: store)
+                    : store.isPilotOnboarding
                     ? _PilotOnboardingSection(store: store)
                     : store.registrationJustCompleted
-                        ? _PilotRegistrationDoneSection(store: store)
-                        : _PilotLandingSection(store: store),
+                    ? _PilotRegistrationDoneSection(store: store)
+                    : _PilotLandingSection(store: store),
           ),
         ),
       );
     }
 
-    final navItems = store.isPilotMode
-        ? const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_rounded),
-              label: '홈',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dynamic_feed_outlined),
-              activeIcon: Icon(Icons.dynamic_feed_rounded),
-              label: '피드',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.description_outlined),
-              activeIcon: Icon(Icons.description_rounded),
-              label: '요청 확인',
-            ),
-          ]
-        : const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search_rounded),
-              label: '촬영자 찾기',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dynamic_feed_outlined),
-              activeIcon: Icon(Icons.dynamic_feed_rounded),
-              label: '피드',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.grid_view_outlined),
-              activeIcon: Icon(Icons.grid_view_rounded),
-              label: '포트폴리오',
-            ),
-          ];
+    final navItems =
+        store.isPilotMode
+            ? const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home_rounded),
+                label: '홈',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dynamic_feed_outlined),
+                activeIcon: Icon(Icons.dynamic_feed_rounded),
+                label: '피드',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.description_outlined),
+                activeIcon: Icon(Icons.description_rounded),
+                label: '요청 확인',
+              ),
+            ]
+            : const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search_rounded),
+                label: '촬영자 찾기',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dynamic_feed_outlined),
+                activeIcon: Icon(Icons.dynamic_feed_rounded),
+                label: '피드',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.grid_view_outlined),
+                activeIcon: Icon(Icons.grid_view_rounded),
+                label: '포트폴리오',
+              ),
+            ];
 
     final safeIndex = _tabIndex.clamp(0, navItems.length - 1);
 
@@ -1157,30 +1132,32 @@ class _DrameHomePageState extends State<DrameHomePage> {
       body: SafeArea(
         child: IndexedStack(
           index: safeIndex,
-          children: store.isPilotMode
-              ? <Widget>[
-                  SingleChildScrollView(
-                    child: store.isPilotOnboarding
-                        ? _PilotOnboardingSection(store: store)
-                        : _PilotDashboardSection(store: store),
-                  ),
-                  SingleChildScrollView(
-                    child: _OperatorFeedSection(store: store),
-                  ),
-                  _MobilePilotRequestsPage(store: store),
-                ]
-              : <Widget>[
-                  _MobileSearchFlow(store: store),
-                  const SingleChildScrollView(
-                    child: ColoredBox(
-                      color: Colors.white,
-                      child: DroneFeedSection(),
+          children:
+              store.isPilotMode
+                  ? <Widget>[
+                    SingleChildScrollView(
+                      child:
+                          store.isPilotOnboarding
+                              ? _PilotOnboardingSection(store: store)
+                              : _PilotDashboardSection(store: store),
                     ),
-                  ),
-                  SingleChildScrollView(
-                    child: _PopularPortfolioSection(store: store),
-                  ),
-                ],
+                    SingleChildScrollView(
+                      child: _OperatorFeedSection(store: store),
+                    ),
+                    _MobilePilotRequestsPage(store: store),
+                  ]
+                  : <Widget>[
+                    _MobileSearchFlow(store: store),
+                    const SingleChildScrollView(
+                      child: ColoredBox(
+                        color: Colors.white,
+                        child: DroneFeedSection(),
+                      ),
+                    ),
+                    SingleChildScrollView(
+                      child: _PopularPortfolioSection(store: store),
+                    ),
+                  ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -1438,7 +1415,6 @@ class _SubNavTab extends StatelessWidget {
     );
   }
 }
-
 
 // ignore: unused_element
 class _MapSection extends StatelessWidget {

@@ -21,42 +21,46 @@ class SupabaseQuoteApi implements QuoteApi {
     final regionId = await _findRegionId(request.area);
     final budget = _parseBudget(request.budgetRange);
 
-    final job = await _client
-        .from('job_requests')
-        .insert(<String, Object?>{
-          'client_id': userId,
-          'category_id': categoryId,
-          'preferred_operator_id': request.pilot.id,
-          'region_id': regionId,
-          'status': 'open',
-          'title': '${request.area} ${request.category} 요청',
-          'detail': request.detail,
-          'location_label': request.area,
-          'budget_min': budget.$1,
-          'budget_max': budget.$2,
-          'contact_window': request.contactWindow,
-          'client_display_name': _client.auth.currentUser?.email,
-        })
-        .select('id')
-        .single();
+    final job =
+        await _client
+            .from('job_requests')
+            .insert(<String, Object?>{
+              'client_id': userId,
+              'category_id': categoryId,
+              'preferred_operator_id': request.pilot.id,
+              'region_id': regionId,
+              'status': 'open',
+              'title': '${request.area} ${request.category} 요청',
+              'detail': request.detail,
+              'location_label': request.area,
+              'budget_min': budget.$1,
+              'budget_max': budget.$2,
+              'contact_window': request.contactWindow,
+              'client_display_name': _client.auth.currentUser?.email,
+            })
+            .select('id')
+            .single();
 
     final proposedPrice = _proposedPrice(request.pilot, request.category);
     String? quoteId;
     try {
-      final quote = await _client
-          .from('quotes')
-          .insert(<String, Object?>{
-            'job_request_id': job['id'],
-            'operator_id': request.pilot.id,
-            'status': 'submitted',
-            'proposed_price': proposedPrice,
-            'estimated_time_label': _estimatedTime(request.category),
-            'message': _message(request),
-          })
-          .select('id')
-          .single();
+      final quote =
+          await _client
+              .from('quotes')
+              .insert(<String, Object?>{
+                'job_request_id': job['id'],
+                'operator_id': request.pilot.id,
+                'status': 'submitted',
+                'proposed_price': proposedPrice,
+                'estimated_time_label': _estimatedTime(request.category),
+                'message': _message(request),
+              })
+              .select('id')
+              .single();
       quoteId = quote['id'].toString();
-      await _client.from('quote_included_items').insert(
+      await _client
+          .from('quote_included_items')
+          .insert(
             _includedItems(request.category)
                 .asMap()
                 .entries
@@ -87,24 +91,27 @@ class SupabaseQuoteApi implements QuoteApi {
   }
 
   @override
-  Future<PaymentInstruction> createPaymentInstruction(QuoteEstimate estimate) async {
+  Future<PaymentInstruction> createPaymentInstruction(
+    QuoteEstimate estimate,
+  ) async {
     String? paymentId;
     if (estimate.quoteId != null) {
-      final payment = await _client
-          .from('payments')
-          .insert(<String, Object?>{
-            'quote_id': estimate.quoteId,
-            'client_id': _client.auth.currentUser?.id,
-            'status': 'pending',
-            'method': 'bank_transfer',
-            'amount': estimate.proposedPrice,
-            'bank_name': 'DRAME 안심계좌',
-            'account_holder': '주식회사 드라메',
-            'account_number': '110-482-903184',
-            'depositor_name': '의뢰자명 + ${estimate.request.pilot.name}',
-          })
-          .select('id')
-          .single();
+      final payment =
+          await _client
+              .from('payments')
+              .insert(<String, Object?>{
+                'quote_id': estimate.quoteId,
+                'client_id': _client.auth.currentUser?.id,
+                'status': 'pending',
+                'method': 'bank_transfer',
+                'amount': estimate.proposedPrice,
+                'bank_name': 'DRAME 안심계좌',
+                'account_holder': '주식회사 드라메',
+                'account_number': '110-482-903184',
+                'depositor_name': '의뢰자명 + ${estimate.request.pilot.name}',
+              })
+              .select('id')
+              .single();
       paymentId = payment['id'].toString();
     }
     return PaymentInstruction(
@@ -148,7 +155,11 @@ class SupabaseQuoteApi implements QuoteApi {
   }
 
   Future<String?> _findRegionId(String name) async {
-    final rows = await _client.from('regions').select('id').eq('name', name).limit(1);
+    final rows = await _client
+        .from('regions')
+        .select('id')
+        .eq('name', name)
+        .limit(1);
     return rows.isEmpty ? null : rows.first['id'].toString();
   }
 
@@ -170,14 +181,15 @@ class SupabaseQuoteApi implements QuoteApi {
     return pilot.basePrice + premium;
   }
 
-  String _estimatedTime(String category) => category == '농약방제' ? '반나절 작업' : '촬영 2시간 + 편집 1일';
+  String _estimatedTime(String category) =>
+      category == '농약방제' ? '반나절 작업' : '촬영 2시간 + 편집 1일';
 
   List<String> _includedItems(String category) => <String>[
-        '비행 가능 여부 사전 확인',
-        '현장 촬영 및 기본 안전 동선 설계',
-        '원본 파일 납품',
-        if (category != '농약방제') '핵심 컷 보정본 10장',
-      ];
+    '비행 가능 여부 사전 확인',
+    '현장 촬영 및 기본 안전 동선 설계',
+    '원본 파일 납품',
+    if (category != '농약방제') '핵심 컷 보정본 10장',
+  ];
 
   String _message(QuoteRequest request) {
     return '${request.pilot.name}이 ${request.area} ${request.category} 요청을 확인했습니다. '

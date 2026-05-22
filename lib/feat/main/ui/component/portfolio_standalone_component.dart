@@ -26,10 +26,12 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
-        if (!store.isLoggedIn) return const Scaffold(backgroundColor: DC.canvas);
-        final nickname = store.accountNickname.isNotEmpty
-            ? store.accountNickname
-            : store.accountName;
+        if (!store.isLoggedIn)
+          return const Scaffold(backgroundColor: DC.canvas);
+        final nickname =
+            store.accountNickname.isNotEmpty
+                ? store.accountNickname
+                : store.accountName;
 
         if (store.isLoading && store.allPilots.isEmpty) {
           return const Scaffold(
@@ -54,12 +56,19 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
                 onFeedTap: () => context.go('/feed'),
                 onPortfolioTap: () => context.go('/portfolio'),
                 onMyQuotesTap: () => context.go('/my/quotes'),
-                onSwitchToUser: () { store.setPilotMode(false); context.go('/home'); },
-                onSwitchToOperator: () { store.setPilotMode(true); context.go('/home'); },
-                onRequestsTap: () => _openPilotRequestReviewPage(
-                  context,
-                  initialRequest: mockPilotWorkRequests.first,
-                ),
+                onSwitchToUser: () {
+                  store.setPilotMode(false);
+                  context.go('/home');
+                },
+                onSwitchToOperator: () {
+                  store.setPilotMode(true);
+                  context.go('/home');
+                },
+                onRequestsTap:
+                    () => _openPilotRequestReviewPage(
+                      context,
+                      initialRequest: store.firstPilotWorkRequest,
+                    ),
               ),
               Expanded(
                 child: CustomScrollView(

@@ -74,7 +74,11 @@ class PaymentPage extends ConsumerWidget {
                       onPressed: () async {
                         final contact = await ref
                             .read(quoteApiProvider)
-                            .createContactAccess(estimate.copyWith(paymentId: paymentInstruction.paymentId));
+                            .createContactAccess(
+                              estimate.copyWith(
+                                paymentId: paymentInstruction.paymentId,
+                              ),
+                            );
                         if (!context.mounted) return;
                         context.push(
                           '/quote/contact',

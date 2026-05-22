@@ -74,7 +74,9 @@ class QuoteEstimatePage extends ConsumerWidget {
                         context.push(
                           '/quote/payment',
                           extra: <String, Object?>{
-                            'estimate': estimate.copyWith(paymentId: payment.paymentId),
+                            'estimate': estimate.copyWith(
+                              paymentId: payment.paymentId,
+                            ),
                             'paymentInstruction': payment,
                           },
                         );

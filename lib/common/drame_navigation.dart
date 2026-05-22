@@ -38,6 +38,7 @@ class DrameTopNavigation extends StatelessWidget {
   final bool isOperator;
   final bool isOperatorRegistered;
   final String? nickname;
+
   /// 'find' | 'feed' | 'portfolio' | 'quotes' — highlights active link in user nav
   final String? activePage;
   final VoidCallback onLoginTap;
@@ -148,9 +149,14 @@ class DrameTopNavigation extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF6B2B),
                         foregroundColor: Colors.white,
-                        textStyle: DT.navLink.copyWith(fontWeight: FontWeight.w700),
+                        textStyle: DT.navLink.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                         shape: const StadiumBorder(),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 9,
+                        ),
                         elevation: 0,
                       ),
                     ),
@@ -166,7 +172,8 @@ class DrameTopNavigation extends StatelessWidget {
                     TextButton(
                       onPressed: onMyQuotesTap,
                       style: TextButton.styleFrom(
-                        foregroundColor: activePage == 'quotes' ? DC.primary : DC.ink,
+                        foregroundColor:
+                            activePage == 'quotes' ? DC.primary : DC.ink,
                         textStyle: DT.navLink,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -195,7 +202,12 @@ class DrameTopNavigation extends StatelessWidget {
 /// [onDark] flips colors for dark-background panels.
 /// [showText] controls whether "모드" label is shown (default true).
 class DrameLogo extends StatelessWidget {
-  const DrameLogo({super.key, this.size = 28, this.onDark = false, this.showText = true});
+  const DrameLogo({
+    super.key,
+    this.size = 28,
+    this.onDark = false,
+    this.showText = true,
+  });
 
   final double size;
   final bool onDark;
@@ -251,7 +263,11 @@ class _Logo extends StatelessWidget {
 }
 
 class _NavLink extends StatefulWidget {
-  const _NavLink({required this.label, required this.onTap, this.active = false});
+  const _NavLink({
+    required this.label,
+    required this.onTap,
+    this.active = false,
+  });
 
   final String label;
   final VoidCallback onTap;
@@ -348,15 +364,16 @@ class _ToggleTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: active ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(DC.rxPill),
-          boxShadow: active
-              ? <BoxShadow>[
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
+          boxShadow:
+              active
+                  ? <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ]
+                  : null,
         ),
         child: Text(
           label,
@@ -369,7 +386,6 @@ class _ToggleTab extends StatelessWidget {
     );
   }
 }
-
 
 // ── DrameTabNav ──────────────────────────────────────────────────────────────
 //
