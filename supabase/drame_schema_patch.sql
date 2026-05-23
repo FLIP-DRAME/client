@@ -61,6 +61,34 @@ for insert with check (
   )
 );
 
+drop policy if exists "operators manage own categories" on public.operator_categories;
+create policy "operators manage own categories" on public.operator_categories
+for all using (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+) with check (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "operators manage own service areas" on public.operator_service_areas;
+create policy "operators manage own service areas" on public.operator_service_areas
+for all using (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+) with check (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+);
+
 drop policy if exists "operators read own private licenses" on public.operator_licenses;
 create policy "operators read own private licenses" on public.operator_licenses
 for select using (
@@ -95,3 +123,33 @@ for select using (
     select op.id from public.operator_profiles op where op.user_id = auth.uid()
   )
 );
+
+-- Existing MVP registrations should become searchable immediately.
+update public.operator_profiles
+set status = 'approved'
+where status = 'pending_review';
+
+insert into public.operator_categories (operator_id, category_id)
+select op.id, sc.id
+from public.operator_profiles op
+cross join public.service_categories sc
+where op.status = 'approved'
+  and not exists (
+    select 1
+    from public.operator_categories oc
+    where oc.operator_id = op.id
+  )
+on conflict do nothing;
+
+insert into public.operator_service_areas (operator_id, region_id, permission_type)
+select op.id, r.id, 'available'::public.area_permission_type
+from public.operator_profiles op
+cross join public.regions r
+where op.status = 'approved'
+  and r.level = 1
+  and not exists (
+    select 1
+    from public.operator_service_areas osa
+    where osa.operator_id = op.id
+  )
+on conflict do nothing;

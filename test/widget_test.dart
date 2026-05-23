@@ -1,6 +1,6 @@
 import 'package:drane/core/app_defaults.dart';
-import 'package:drane/feat/main/network/drone_pilot_model.dart';
-import 'package:drane/feat/quote/network/quote_model.dart';
+import 'package:drane/feat/main/model/drone_pilot_model.dart';
+import 'package:drane/feat/quote/model/quote_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -20,15 +20,12 @@ void main() {
       permittedAreas: const <String>['서울'],
       basePrice: 300000,
       contact: '010-0000-0000',
-      rating: 5,
-      completedJobs: 1,
       mapX: 0.5,
       mapY: 0.5,
       portfolioImages: defaultPortfolioImages,
       specialty: '항공촬영',
       intro: '소개',
       description: '설명',
-      responseTime: '즉시',
       quoteOptions: const <String>['항공촬영'],
     );
     final request = QuoteRequest(

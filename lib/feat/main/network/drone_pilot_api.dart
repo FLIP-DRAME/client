@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_defaults.dart';
-import 'drone_pilot_model.dart';
+import '../model/drone_pilot_model.dart';
 
 abstract class DronePilotApi {
   Future<List<DronePilot>> fetchPilots({
@@ -128,14 +128,12 @@ class SupabaseDronePilotApi implements DronePilotApi {
           phone,
           email,
           kakao_channel,
-          rating_avg,
-          completed_jobs_count,
           operator_categories(service_categories(slug,label)),
           operator_service_areas(permission_type, regions(name)),
           portfolio_assets(url, sort_order)
         ''')
         .eq('status', 'approved')
-        .order('rating_avg', ascending: false);
+        .order('created_at', ascending: false);
 
     final pilots =
         rows
@@ -163,7 +161,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
         );
         if (areaCompare != 0) return areaCompare;
       }
-      return b.rating.compareTo(a.rating);
+      return a.name.compareTo(b.name);
     });
     return pilots;
   }
@@ -185,8 +183,6 @@ class SupabaseDronePilotApi implements DronePilotApi {
           phone,
           email,
           kakao_channel,
-          rating_avg,
-          completed_jobs_count,
           operator_categories(service_categories(slug,label)),
           operator_service_areas(permission_type, regions(name)),
           portfolio_assets(url, sort_order)
@@ -209,7 +205,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
             .from('operator_profiles')
             .upsert(<String, Object?>{
               'user_id': payload.userId,
-              'status': 'pending_review',
+              'status': 'approved',
               'business_name': data.businessName,
               'business_number': data.businessNumber,
               'representative_name': data.representativeName,
@@ -220,7 +216,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
                   data.portfolioTypes.isEmpty
                       ? null
                       : data.portfolioTypes.join(', '),
-              'intro': 'Drame 운용자 심사 대기 프로필입니다.',
+              'intro': 'Drame 등록 운용자입니다.',
               'description': data.portfolioUrl,
               'phone': null,
               'email': payload.email,
@@ -229,6 +225,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
             .single();
 
     final operatorId = operator['id'].toString();
+    await _syncOperatorCategories(operatorId, data);
+    await _syncOperatorAreas(operatorId, data);
     if (data.licenseNumber.toString().isNotEmpty) {
       await _client.from('operator_licenses').insert(<String, Object?>{
         'operator_id': operatorId,
@@ -252,6 +250,79 @@ class SupabaseDronePilotApi implements DronePilotApi {
         'registration_number': drone.registrationNumber,
       });
     }
+  }
+
+  Future<void> _syncOperatorCategories(String operatorId, dynamic data) async {
+    final labels = <String>{
+      for (final drone in data.drones)
+        ..._serviceLabelsForDroneCategories(
+          Set<String>.from(drone.categories as Set),
+        ),
+    };
+    if (labels.isEmpty) {
+      labels.addAll(defaultDroneCategories.map((category) => category.label));
+    }
+    final rows = await _client
+        .from('service_categories')
+        .select('id,label')
+        .inFilter('label', labels.toList());
+    await _client
+        .from('operator_categories')
+        .delete()
+        .eq('operator_id', operatorId);
+    if (rows.isEmpty) return;
+    await _client
+        .from('operator_categories')
+        .insert(
+          rows
+              .map<Map<String, Object?>>(
+                (row) => <String, Object?>{
+                  'operator_id': operatorId,
+                  'category_id': row['id'],
+                },
+              )
+              .toList(),
+        );
+  }
+
+  Future<void> _syncOperatorAreas(String operatorId, dynamic data) async {
+    final labels = Set<String>.from(data.areas as Set);
+    if (labels.isEmpty) {
+      labels.add('서울');
+    }
+    final rows = await _client
+        .from('regions')
+        .select('id,name')
+        .inFilter('name', labels.toList());
+    await _client
+        .from('operator_service_areas')
+        .delete()
+        .eq('operator_id', operatorId);
+    if (rows.isEmpty) return;
+    await _client
+        .from('operator_service_areas')
+        .insert(
+          rows
+              .map<Map<String, Object?>>(
+                (row) => <String, Object?>{
+                  'operator_id': operatorId,
+                  'region_id': row['id'],
+                  'permission_type': 'available',
+                },
+              )
+              .toList(),
+        );
+  }
+
+  Set<String> _serviceLabelsForDroneCategories(Set<String> categories) {
+    final labels = <String>{};
+    if (categories.contains('촬영용') || categories.contains('다목적')) {
+      labels.addAll(<String>['항공촬영', '부동산', '행사촬영']);
+    }
+    if (categories.contains('방제용')) labels.add('농약방제');
+    if (categories.contains('측량용')) labels.add('측량·매핑');
+    if (categories.contains('점검용')) labels.add('시설점검');
+    return labels;
   }
 
   DronePilot _pilotFromRow(Map<String, dynamic> row) {
@@ -303,15 +374,12 @@ class SupabaseDronePilotApi implements DronePilotApi {
       permittedAreas: permittedAreas.toList(),
       basePrice: (row['base_price'] as num?)?.toInt() ?? 0,
       contact: (row['phone'] ?? '').toString(),
-      rating: (row['rating_avg'] as num?)?.toDouble() ?? 0,
-      completedJobs: (row['completed_jobs_count'] as num?)?.toInt() ?? 0,
       mapX: 0.5,
       mapY: 0.5,
-      portfolioImages: images.isEmpty ? defaultPortfolioImages : images,
+      portfolioImages: images,
       specialty: (row['specialty'] ?? '').toString(),
       intro: (row['intro'] ?? '').toString(),
       description: (row['description'] ?? '').toString(),
-      responseTime: (row['response_time_label'] ?? '문의 후 안내').toString(),
       quoteOptions: categories.isEmpty ? const <String>['상담 견적'] : categories,
     );
   }

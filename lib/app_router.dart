@@ -3,17 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'app_providers.dart';
-import 'feat/auth/ui/pages/login_page.dart';
-import 'feat/auth/ui/pages/signup_page.dart';
-import 'feat/landing/ui/pages/landing_page.dart';
-import 'feat/main/network/drone_pilot_model.dart';
-import 'feat/main/ui/pages/main_page.dart';
-import 'feat/portfolio/ui/pages/portfolio_page.dart';
-import 'feat/quote/network/quote_model.dart';
-import 'feat/quote/ui/pages/contact_access_page.dart';
-import 'feat/quote/ui/pages/payment_page.dart';
-import 'feat/quote/ui/pages/quote_estimate_page.dart';
-import 'feat/quote/ui/pages/quote_request_page.dart';
+import 'feat/auth/view/pages/login_page.dart';
+import 'feat/auth/view/pages/signup_page.dart';
+import 'feat/landing/view/pages/landing_page.dart';
+import 'feat/main/model/main_models.dart';
+import 'feat/main/model/drone_pilot_model.dart';
+import 'feat/main/view/pages/main_page.dart';
+import 'feat/portfolio/view/pages/portfolio_page.dart';
+import 'feat/quote/model/quote_model.dart';
+import 'feat/quote/view/pages/contact_access_page.dart';
+import 'feat/quote/view/pages/payment_page.dart';
+import 'feat/quote/view/pages/quote_estimate_page.dart';
+import 'feat/quote/view/pages/quote_request_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',

@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../main/network/drone_pilot_model.dart';
-import 'quote_model.dart';
+import '../../main/model/drone_pilot_model.dart';
+import '../model/quote_model.dart';
 
 abstract class QuoteApi {
   Future<QuoteEstimate> createEstimate(QuoteRequest request);

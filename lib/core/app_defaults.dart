@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../feat/main/network/drone_pilot_model.dart';
+import '../feat/main/model/drone_pilot_model.dart';
 
 const List<String> defaultPortfolioImages = <String>[
   'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=1200&q=85',
