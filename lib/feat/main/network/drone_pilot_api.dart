@@ -19,7 +19,8 @@ abstract class DronePilotApi {
   Future<void> updateOperatorProfile({
     required String intro,
     required String description,
-    required String specialty,
+    required List<String> categoryLabels,
+    required List<String> areaNames,
     required List<String> portfolioImageUrls,
   });
 }
@@ -302,7 +303,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
   Future<void> updateOperatorProfile({
     required String intro,
     required String description,
-    required String specialty,
+    required List<String> categoryLabels,
+    required List<String> areaNames,
     required List<String> portfolioImageUrls,
   }) async {
     final userId = _client.auth.currentUser?.id;
@@ -317,11 +319,22 @@ class SupabaseDronePilotApi implements DronePilotApi {
     if (existing == null) return;
     final operatorId = existing['id'].toString();
 
+    final specialtyLabel = categoryLabels.join(', ');
+    final locationLabel = areaNames.join(', ');
+
     await _client.from('operator_profiles').update(<String, Object?>{
       'intro': intro,
       'description': description,
-      'specialty': specialty.isEmpty ? null : specialty,
+      'specialty': specialtyLabel.isEmpty ? null : specialtyLabel,
+      'location_label': locationLabel.isEmpty ? null : locationLabel,
     }).eq('user_id', userId);
+
+    await _tryOptionalWrite(
+      () => _syncCategoriesByLabels(operatorId, categoryLabels),
+    );
+    await _tryOptionalWrite(
+      () => _syncAreasByNames(operatorId, areaNames),
+    );
 
     await _client
         .from('portfolio_items')
@@ -353,6 +366,59 @@ class SupabaseDronePilotApi implements DronePilotApi {
         );
       }
     }
+  }
+
+  Future<void> _syncCategoriesByLabels(
+    String operatorId,
+    List<String> labels,
+  ) async {
+    await _client
+        .from('operator_categories')
+        .delete()
+        .eq('operator_id', operatorId);
+    if (labels.isEmpty) return;
+    final rows = await _client
+        .from('service_categories')
+        .select('id,label')
+        .inFilter('label', labels);
+    if (rows.isEmpty) return;
+    await _client.from('operator_categories').insert(
+      rows
+          .map<Map<String, Object?>>(
+            (row) => <String, Object?>{
+              'operator_id': operatorId,
+              'category_id': row['id'],
+            },
+          )
+          .toList(),
+    );
+  }
+
+  Future<void> _syncAreasByNames(
+    String operatorId,
+    List<String> names,
+  ) async {
+    await _client
+        .from('operator_service_areas')
+        .delete()
+        .eq('operator_id', operatorId);
+    if (names.isEmpty) return;
+    final rows = await _client
+        .from('regions')
+        .select('id,name')
+        .inFilter('name', names);
+    if (rows.isEmpty) return;
+    await _client.from('operator_service_areas').insert(
+      rows
+          .map<Map<String, Object?>>(
+            (row) => <String, Object?>{
+              'operator_id': operatorId,
+              'region_id': row['id'],
+              'permission_type': 'available',
+            },
+          )
+          .toList(),
+    );
   }
 
   Future<void> _ensureProfile(PilotRegistrationPayload payload) async {

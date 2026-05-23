@@ -495,13 +495,15 @@ class DrameStore extends ChangeNotifier {
   Future<void> updateOperatorProfile({
     required String intro,
     required String description,
-    required String specialty,
+    required List<String> categoryLabels,
+    required List<String> areaNames,
     required List<String> portfolioImageUrls,
   }) async {
     await _api.updateOperatorProfile(
       intro: intro,
       description: description,
-      specialty: specialty,
+      categoryLabels: categoryLabels,
+      areaNames: areaNames,
       portfolioImageUrls: portfolioImageUrls,
     );
     await load();

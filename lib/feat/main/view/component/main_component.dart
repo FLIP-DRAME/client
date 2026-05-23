@@ -697,31 +697,35 @@ class _OperatorPortfolioBuilderSectionState
   bool _editing = false;
   bool _saving = false;
 
-  late final TextEditingController _introCtrl;
-  late final TextEditingController _descCtrl;
-  late final TextEditingController _specialtyCtrl;
+  late TextEditingController _introCtrl;
+  late TextEditingController _descCtrl;
   late List<TextEditingController> _imageUrlCtrls;
+  late Set<String> _selectedCategories;
+  late Set<String> _selectedAreas;
 
   @override
   void initState() {
     super.initState();
-    final p = widget.store.selectedPilot;
+    _resetFromPilot(widget.store.selectedPilot);
+  }
+
+  void _resetFromPilot(DronePilot? p) {
     _introCtrl = TextEditingController(text: p?.intro ?? '');
     _descCtrl = TextEditingController(text: p?.description ?? '');
-    _specialtyCtrl = TextEditingController(text: p?.specialty ?? '');
     _imageUrlCtrls =
         (p?.portfolioImages.isNotEmpty == true)
             ? p!.portfolioImages
                 .map((u) => TextEditingController(text: u))
                 .toList()
             : <TextEditingController>[TextEditingController()];
+    _selectedCategories = Set<String>.from(p?.categories ?? <String>[]);
+    _selectedAreas = Set<String>.from(p?.availableAreas ?? <String>[]);
   }
 
   @override
   void dispose() {
     _introCtrl.dispose();
     _descCtrl.dispose();
-    _specialtyCtrl.dispose();
     for (final c in _imageUrlCtrls) {
       c.dispose();
     }
@@ -734,9 +738,9 @@ class _OperatorPortfolioBuilderSectionState
       await widget.store.updateOperatorProfile(
         intro: _introCtrl.text.trim(),
         description: _descCtrl.text.trim(),
-        specialty: _specialtyCtrl.text.trim(),
-        portfolioImageUrls:
-            _imageUrlCtrls.map((c) => c.text.trim()).toList(),
+        categoryLabels: _selectedCategories.toList(),
+        areaNames: _selectedAreas.toList(),
+        portfolioImageUrls: _imageUrlCtrls.map((c) => c.text.trim()).toList(),
       );
       if (mounted) setState(() => _editing = false);
     } catch (e) {
@@ -758,7 +762,6 @@ class _OperatorPortfolioBuilderSectionState
     final p = widget.store.selectedPilot;
     _introCtrl.text = p?.intro ?? '';
     _descCtrl.text = p?.description ?? '';
-    _specialtyCtrl.text = p?.specialty ?? '';
     for (final c in _imageUrlCtrls) {
       c.dispose();
     }
@@ -768,6 +771,8 @@ class _OperatorPortfolioBuilderSectionState
                 .map((u) => TextEditingController(text: u))
                 .toList()
             : <TextEditingController>[TextEditingController()];
+    _selectedCategories = Set<String>.from(p?.categories ?? <String>[]);
+    _selectedAreas = Set<String>.from(p?.availableAreas ?? <String>[]);
     setState(() => _editing = false);
   }
 
@@ -1012,11 +1017,77 @@ class _OperatorPortfolioBuilderSectionState
           controller: _introCtrl,
           maxLines: 2,
         ),
-        const SizedBox(height: 20),
-        _EditField(
-          label: '전문 분야',
-          hint: '예: 항공촬영, 농약방제',
-          controller: _specialtyCtrl,
+        const SizedBox(height: 24),
+        const Text('전문 분야', style: AppText.smallStrong),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.store.categories.map((cat) {
+            final selected = _selectedCategories.contains(cat.label);
+            return FilterChip(
+              label: Text(cat.label),
+              selected: selected,
+              showCheckmark: false,
+              onSelected: (_) => setState(() {
+                if (selected) {
+                  _selectedCategories.remove(cat.label);
+                } else {
+                  _selectedCategories.add(cat.label);
+                }
+              }),
+              selectedColor: _navy,
+              backgroundColor: Colors.white,
+              side: BorderSide(
+                color: selected ? _navy : _line,
+                width: selected ? 1.5 : 1,
+              ),
+              labelStyle: AppText.chip.copyWith(
+                color: selected ? Colors.white : _ink,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+        const Text('서비스 지역', style: AppText.smallStrong),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: widget.store.serviceAreas.map((area) {
+            final selected = _selectedAreas.contains(area);
+            return FilterChip(
+              label: Text(area),
+              selected: selected,
+              showCheckmark: false,
+              onSelected: (_) => setState(() {
+                if (selected) {
+                  _selectedAreas.remove(area);
+                } else {
+                  _selectedAreas.add(area);
+                }
+              }),
+              selectedColor: _navy,
+              backgroundColor: Colors.white,
+              side: BorderSide(
+                color: selected ? _navy : _line,
+                width: selected ? 1.5 : 1,
+              ),
+              labelStyle: AppText.chip.copyWith(
+                color: selected ? Colors.white : _ink,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 20),
         _EditField(
