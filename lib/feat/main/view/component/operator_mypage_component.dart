@@ -21,34 +21,25 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                       : store.accountName,
               onLoginTap: () => context.go('/login'),
               onRegisterPilotTap: () => context.push('/pilot/register'),
-              onLogoTap: () => context.go('/home'),
+              onLogoTap: () => context.go('/operator'),
               onFindPilotTap: () => context.go('/home'),
               onRequestsTap:
                   () => _openPilotRequestReviewPage(
                     context,
                     initialRequest: store.firstPilotWorkRequest,
                   ),
-              onSwitchToUser: () {
-                store.setPilotMode(false);
-                context.go('/home');
-              },
-              onSwitchToOperator: () {
-                store.setPilotMode(true);
-                context.go('/home');
-              },
-            ),
-            DrameTabNav(
-              isOperator: true,
-              selectedId: 'profile',
-              onTabChanged: (id) {
+              onMyPageTap: () {},
+              onSwitchToUser: () => context.go('/home'),
+              onSwitchToOperator: () => context.go('/operator'),
+              operatorActiveTab: 'profile',
+              onOperatorTabTap: (id) {
                 switch (id) {
                   case 'dashboard':
-                    context.go('/home');
-                  case 'requests':
-                    _openPilotRequestReviewPage(
-                      context,
-                      initialRequest: store.firstPilotWorkRequest,
-                    );
+                    context.go('/operator');
+                  case 'feed':
+                    context.go('/operator');
+                  case 'portfolio':
+                    context.go('/operator');
                   default:
                     break;
                 }
@@ -767,9 +758,9 @@ class _OperatorFeedSection extends StatefulWidget {
 
 class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   final TextEditingController _captionController = TextEditingController();
+  bool _isExpanded = false;
   List<int>? _pendingImageBytes;
   String? _pendingImageName;
-  bool _isExpanded = false; // 업로드 폼 펼침 여부
 
   @override
   void dispose() {
@@ -778,38 +769,37 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   }
 
   Future<void> _pickImage() async {
-    final input =
-        web.HTMLInputElement()
-          ..type = 'file'
-          ..accept = 'image/*';
+    final input = web.HTMLInputElement()
+      ..type = 'file'
+      ..accept = 'image/*';
     input.click();
-
-    await input.onChange.first;
-
-    final files = input.files;
-    if (files == null || files.length == 0) return;
-
-    final file = files.item(0)!;
+    await Future.any(<Future<void>>[
+      input.onChange.first.then((_) {}),
+      Future<void>.delayed(const Duration(minutes: 2)),
+    ]);
+    final file = input.files?.item(0);
+    if (file == null) return;
     final reader = web.FileReader();
     final completer = Completer<Uint8List>();
-
     reader.addEventListener(
-      'loadend',
-      (web.Event _) {
+      'load',
+      (web.Event e) {
         final result = reader.result;
         if (result == null) {
-          completer.completeError('파일 읽기 실패');
+          completer.completeError('');
           return;
         }
         final bytes = Uint8List.view((result as JSArrayBuffer).toDart);
         completer.complete(bytes);
       }.toJS,
     );
-
+    reader.addEventListener(
+      'error',
+      ((web.Event e) => completer.completeError('')).toJS,
+    );
     reader.readAsArrayBuffer(file);
-
     final bytes = await completer.future;
-
+    if (!mounted) return;
     setState(() {
       _pendingImageBytes = bytes;
       _pendingImageName = file.name;
@@ -820,16 +810,20 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     final caption = _captionController.text.trim();
     if (caption.isEmpty && _pendingImageBytes == null) return;
 
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
-      await widget.store.addFeedPost(
-        caption: caption,
-        imageBytes: _pendingImageBytes,
-      );
+      await widget.store.addFeedPost(caption: caption, imageBytes: _pendingImageBytes);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(error.toString().replaceFirst('Bad state: ', '')),
+          content: Text(
+            error
+                .toString()
+                .replaceFirst('Bad state: ', '')
+                .replaceFirst('Exception: ', ''),
+          ),
           backgroundColor: _ink,
           behavior: SnackBarBehavior.floating,
         ),
@@ -839,9 +833,9 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     if (!mounted) return;
     _captionController.clear();
     setState(() {
+      _isExpanded = false;
       _pendingImageBytes = null;
       _pendingImageName = null;
-      _isExpanded = false;
     });
   }
 
@@ -896,86 +890,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    height: 160,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color:
-                            _pendingImageBytes != null
-                                ? _navy
-                                : const Color(0xFFCDD5E0),
-                        style: BorderStyle.solid,
-                      ),
-                    ),
-                    child:
-                        _pendingImageBytes != null
-                            ? ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.memory(
-                                Uint8List.fromList(_pendingImageBytes!),
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                            : Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  size: 36,
-                                  color: _muted,
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '사진을 클릭해서 업로드',
-                                  style: AppText.cardSubtitle,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'JPG, PNG, WEBP 지원',
-                                  style: AppText.metricLabel,
-                                ),
-                              ],
-                            ),
-                  ),
-                ),
-                if (_pendingImageName != null) ...<Widget>[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: <Widget>[
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        color: _mint,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          _pendingImageName!,
-                          style: AppText.metricLabel,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap:
-                            () => setState(() {
-                              _pendingImageBytes = null;
-                              _pendingImageName = null;
-                            }),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          size: 16,
-                          color: _muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 16),
                 TextFormField(
                   controller: _captionController,
                   maxLines: 3,
@@ -999,6 +913,62 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _line),
+                    ),
+                    child: _pendingImageBytes != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.memory(
+                              Uint8List.fromList(_pendingImageBytes!),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(
+                                Icons.add_photo_alternate_outlined,
+                                color: DC.muted,
+                                size: 26,
+                              ),
+                              const SizedBox(height: 6),
+                              Text('사진 추가 (선택)', style: AppText.metricLabel),
+                            ],
+                          ),
+                  ),
+                ),
+                if (_pendingImageName != null) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.image_rounded, size: 13, color: _mint),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _pendingImageName!,
+                          style: AppText.metricLabel,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          _pendingImageBytes = null;
+                          _pendingImageName = null;
+                        }),
+                        child: Icon(Icons.close_rounded, size: 14, color: DC.muted),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,

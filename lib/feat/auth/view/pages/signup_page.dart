@@ -128,9 +128,9 @@ class _SignupPageState extends State<SignupPage> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       if (_selectedRole == '운용자') {
-        context.go('/pilot/register');
+        context.replace('/pilot/register');
       } else {
-        context.go('/home');
+        context.replace('/home');
       }
     } catch (error) {
       if (!mounted) return;

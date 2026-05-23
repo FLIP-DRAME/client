@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
       await store.signIn(role: _selectedRole, email: email, password: password);
       if (!mounted) return;
       setState(() => _isLoading = false);
-      context.go('/home');
+      context.replace(_selectedRole == '운용자' ? '/operator' : '/home');
     } catch (error) {
       if (!mounted) return;
       setState(() => _isLoading = false);

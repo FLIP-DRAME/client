@@ -211,7 +211,9 @@ class OperatorMyPage extends StatelessWidget {
 }
 
 class DrameHomePage extends StatefulWidget {
-  const DrameHomePage({super.key});
+  const DrameHomePage({super.key, this.operatorMode = false});
+
+  final bool operatorMode;
 
   @override
   State<DrameHomePage> createState() => _DrameHomePageState();
@@ -239,6 +241,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
           context.go('/login');
           return;
         }
+        store.setPilotMode(widget.operatorMode);
         store.load(initial: true);
       });
     });
@@ -294,17 +297,14 @@ class _DrameHomePageState extends State<DrameHomePage> {
     BuildContext ctx,
     DrameStore store,
   ) {
-    setState(() => _selectedTabId = id);
     switch (id) {
       case 'requests':
         _openPilotRequestReviewPage(
           ctx,
           initialRequest: store.firstPilotWorkRequest,
         );
-      case 'profile':
-        ctx.push('/pilot/mypage');
       default:
-        break;
+        setState(() => _selectedTabId = id);
     }
   }
 
@@ -368,34 +368,28 @@ class _DrameHomePageState extends State<DrameHomePage> {
             onFeedTap: () => context.go('/feed'),
             onPortfolioTap: () => context.go('/portfolio'),
             onMyQuotesTap: () => context.go('/my/quotes'),
-            onSwitchToUser: () {
-              store.setPilotMode(false);
-              context.go('/home');
-            },
-            onSwitchToOperator: () {
-              store.setPilotMode(true);
-              context.go('/home');
-            },
+            onSwitchToUser: () => context.go('/home'),
+            onSwitchToOperator: () => context.go('/operator'),
             onRequestsTap:
                 () => _openPilotRequestReviewPage(
                   context,
                   initialRequest: store.firstPilotWorkRequest,
                 ),
             onMyPageTap: () => context.push('/pilot/mypage'),
+            operatorActiveTab: isOperatorDashboard ? _selectedTabId : null,
+            onOperatorTabTap:
+                isOperatorDashboard
+                    ? (id) => _handleOperatorTabChanged(id, context, store)
+                    : null,
           ),
 
-          // ── Sticky secondary tab bar ────────────────────────────────────────
-          DrameTabNav(
-            isOperator: isOperatorDashboard,
-            selectedId: isOperatorDashboard ? _selectedTabId : tabId,
-            onTabChanged: (id) {
-              if (isOperatorDashboard) {
-                _handleOperatorTabChanged(id, context, store);
-              } else {
-                _handleUserTabChanged(id, store);
-              }
-            },
-          ),
+          // ── Sticky secondary tab bar (user only) ────────────────────────────
+          if (!isOperatorDashboard)
+            DrameTabNav(
+              isOperator: false,
+              selectedId: tabId,
+              onTabChanged: (id) => _handleUserTabChanged(id, store),
+            ),
 
           // ── Scrollable content ──────────────────────────────────────────────
           Expanded(
@@ -405,14 +399,14 @@ class _DrameHomePageState extends State<DrameHomePage> {
                 if (isOperatorDashboard) ...<Widget>[
                   SliverToBoxAdapter(
                     child:
-                        store.isPilotAuthOpen
-                            ? _PilotAuthSection(store: store)
-                            : store.isPilotOnboarding
+                        store.isPilotOnboarding
                             ? _PilotOnboardingSection(store: store)
                             : store.registrationJustCompleted
                             ? _PilotRegistrationDoneSection(store: store)
                             : _selectedTabId == 'feed'
                             ? _OperatorFeedTabPage(store: store)
+                            : _selectedTabId == 'portfolio'
+                            ? _OperatorPortfolioBuilderSection(store: store)
                             : _PilotDashboardSection(store: store),
                   ),
                   const SliverToBoxAdapter(child: _FooterSection()),
@@ -497,17 +491,13 @@ class _DrameHomePageState extends State<DrameHomePage> {
 
   Widget _buildMobileLayout(BuildContext context, DrameStore store) {
     if (store.isPilotMode &&
-        (store.isPilotAuthOpen ||
-            store.isPilotOnboarding ||
-            store.registrationJustCompleted)) {
+        (store.isPilotOnboarding || store.registrationJustCompleted)) {
       return Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
           child: SingleChildScrollView(
             child:
-                store.isPilotAuthOpen
-                    ? _PilotAuthSection(store: store)
-                    : store.isPilotOnboarding
+                store.isPilotOnboarding
                     ? _PilotOnboardingSection(store: store)
                     : store.registrationJustCompleted
                     ? _PilotRegistrationDoneSection(store: store)
@@ -567,8 +557,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
             setState(() => _tabIndex = 0);
           },
           onModeChanged: (value) {
-            store.setPilotMode(value);
-            setState(() => _tabIndex = 0);
+            if (value) {
+              context.go('/operator');
+            } else {
+              context.go('/home');
+            }
           },
         ),
       ),
@@ -665,10 +658,7 @@ class _TopNavigation extends StatelessWidget {
                   const SizedBox(width: 14),
                 ],
                 TextButton(
-                  onPressed: () {
-                    store.setPilotMode(true);
-                    store.openAuth(loginMode: true, role: '운용자');
-                  },
+                  onPressed: () => context.go('/login'),
                   style: TextButton.styleFrom(
                     textStyle: HomeText.topButton,
                     foregroundColor: _ink,

@@ -433,10 +433,16 @@ class _ServiceTicker extends StatefulWidget {
 class _ServiceTickerState extends State<_ServiceTicker>
     with SingleTickerProviderStateMixin {
   final ScrollController _sc = ScrollController();
-  late final AnimationController _ctrl =
-      AnimationController(vsync: this, duration: const Duration(seconds: 1))
-        ..addListener(_onFrame)
-        ..repeat();
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl =
+        AnimationController(vsync: this, duration: const Duration(seconds: 1))
+          ..addListener(_onFrame)
+          ..repeat();
+  }
 
   void _onFrame() {
     if (!_sc.hasClients) return;
@@ -445,7 +451,7 @@ class _ServiceTickerState extends State<_ServiceTicker>
       _sc.jumpTo(0);
       return;
     }
-    _sc.jumpTo(_sc.offset + 1.2);
+    _sc.jumpTo(_sc.offset + 0.4);
   }
 
   @override

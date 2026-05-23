@@ -44,6 +44,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
 
   Future<void> _submit() async {
     setState(() => _submitting = true);
+    final messenger = ScaffoldMessenger.of(context);
     final request = QuoteRequest(
       pilot: widget.pilot,
       category: _category!,
@@ -53,14 +54,23 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
       budgetRange: _budget,
       contactWindow: _contactController.text,
     );
-    final estimate = await ref
-        .read(drameStoreProvider)
-        .submitQuoteRequest(request);
-    if (!mounted) {
-      return;
+    try {
+      final estimate = await ref
+          .read(drameStoreProvider)
+          .submitQuoteRequest(request);
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      context.push('/quote/estimate', extra: estimate);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
-    setState(() => _submitting = false);
-    context.push('/quote/estimate', extra: estimate);
   }
 
   @override

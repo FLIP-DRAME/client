@@ -661,521 +661,6 @@ class _EmptyOperatorState extends StatelessWidget {
   }
 }
 
-class _PilotAuthSection extends StatelessWidget {
-  const _PilotAuthSection({required this.store});
-
-  final DrameStore store;
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 840;
-
-    return Container(
-      width: double.infinity,
-      color: Colors.white,
-      child: _PageShell(
-        top: 46,
-        bottom: 88,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 960),
-            child: Container(
-              padding: EdgeInsets.all(compact ? 22 : 32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _line),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: _navy.withValues(alpha: 0.07),
-                    blurRadius: 28,
-                    offset: const Offset(0, 16),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  TextButton.icon(
-                    onPressed: () => store.setPilotMode(false),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                    label: const Text('메인으로'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: _navy,
-                      textStyle: AppText.button,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    store.isLoginMode ? '로그인' : '회원가입',
-                    style: AppText.cardTitle,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '운용자 등록 전 계정 유형과 기본 정보를 먼저 확인합니다.',
-                    style: AppText.cardSubtitle,
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: _soft,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: _line),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        _AuthModeTab(
-                          label: '로그인',
-                          selected: store.isLoginMode,
-                          onTap: () => store.updateAuth(loginMode: true),
-                        ),
-                        _AuthModeTab(
-                          label: '회원가입',
-                          selected: !store.isLoginMode,
-                          onTap: () => store.updateAuth(loginMode: false),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 26),
-                  const Text('계정 유형', style: AppText.smallStrong),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: <Widget>[
-                      _AuthRoleChip(
-                        label: '이용자',
-                        selected: store.accountRole == '이용자',
-                        onTap: () => store.updateAuth(role: '이용자'),
-                      ),
-                      _AuthRoleChip(
-                        label: '운용자',
-                        selected: store.accountRole == '운용자',
-                        onTap: () => store.updateAuth(role: '운용자'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 22),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final twoColumns = constraints.maxWidth >= 720;
-                      final fields = <Widget>[
-                        _AuthEmailField(
-                          value: store.accountEmail,
-                          onChanged: (value) => store.updateAuth(email: value),
-                        ),
-                        _AuthPasswordField(
-                          value: store.accountPassword,
-                          onChanged:
-                              (value) => store.updateAuth(password: value),
-                        ),
-                        if (!store.isLoginMode)
-                          _AuthField(
-                            label: '이름',
-                            value: store.accountName,
-                            onChanged: (value) => store.updateAuth(name: value),
-                          ),
-                        if (!store.isLoginMode)
-                          _AuthField(
-                            label: '닉네임',
-                            value: store.accountNickname,
-                            onChanged:
-                                (value) => store.updateAuth(nickname: value),
-                          ),
-                      ];
-
-                      if (!twoColumns) {
-                        return Column(
-                          children:
-                              fields
-                                  .map(
-                                    (field) => Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 12,
-                                      ),
-                                      child: field,
-                                    ),
-                                  )
-                                  .toList(),
-                        );
-                      }
-
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children:
-                            fields
-                                .map(
-                                  (field) => SizedBox(
-                                    width: (constraints.maxWidth - 12) / 2,
-                                    child: field,
-                                  ),
-                                )
-                                .toList(),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 28),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () async {
-                        try {
-                          if (store.isLoginMode) {
-                            await store.signIn(
-                              role: store.accountRole,
-                              email: store.accountEmail.trim(),
-                              password: store.accountPassword,
-                            );
-                            return;
-                          }
-
-                          await store.signUp(
-                            role: store.accountRole,
-                            email: store.accountEmail.trim(),
-                            password: store.accountPassword,
-                            name: store.accountName.trim(),
-                            nickname: store.accountNickname.trim(),
-                          );
-                          if (!context.mounted) return;
-                          showDialog<void>(
-                            context: context,
-                            builder:
-                                (ctx) => AlertDialog(
-                                  backgroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  title: const Text(
-                                    '회원가입이 완료 되었습니다!',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  actionsAlignment: MainAxisAlignment.center,
-                                  actions: [
-                                    FilledButton(
-                                      onPressed: () {
-                                        Navigator.of(ctx).pop();
-                                        store.updateAuth(loginMode: true);
-                                      },
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: _navy,
-                                        foregroundColor: Colors.white,
-                                        minimumSize: const Size(120, 44),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      child: const Text('확인'),
-                                    ),
-                                  ],
-                                ),
-                          );
-                        } catch (error) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                error.toString().replaceFirst(
-                                  'Exception: ',
-                                  '',
-                                ),
-                              ),
-                              backgroundColor: _ink,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _navy,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 19),
-                        textStyle: AppText.button,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        store.accountRole == '운용자'
-                            ? store.isLoginMode
-                                ? '로그인하고 운용자 등록 계속하기'
-                                : '가입하고 운용자 등록 시작하기'
-                            : store.isLoginMode
-                            ? '로그인하기'
-                            : '이용자 계정 만들기',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthModeTab extends StatelessWidget {
-  const _AuthModeTab({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? _toggle : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: AppText.smallStrong.copyWith(color: selected ? _ink : _muted),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthRoleChip extends StatelessWidget {
-  const _AuthRoleChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      showCheckmark: false,
-      onSelected: (_) => onTap(),
-      selectedColor: _focus,
-      backgroundColor: Colors.white,
-      side: BorderSide(
-        color: selected ? _navy : _line,
-        width: selected ? 1.8 : 1,
-      ),
-      labelStyle: AppText.chip.copyWith(color: _ink),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    );
-  }
-}
-
-class _AuthEmailField extends StatelessWidget {
-  const _AuthEmailField({required this.value, required this.onChanged});
-
-  static const _domains = <String>[
-    'gmail.com',
-    'naver.com',
-    'kakao.com',
-    'daum.net',
-    'hanmail.net',
-  ];
-
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final atIndex = value.indexOf('@');
-    final localPart = atIndex < 0 ? value : value.substring(0, atIndex);
-    final domain = atIndex < 0 ? _domains.first : value.substring(atIndex + 1);
-    final selectedDomain = _domains.contains(domain) ? domain : _domains.first;
-
-    void updateEmail({String? local, String? nextDomain}) {
-      onChanged('${local ?? localPart}@${nextDomain ?? selectedDomain}');
-    }
-
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: TextFormField(
-            key: const ValueKey<String>('auth-email-local'),
-            initialValue: localPart,
-            keyboardType: TextInputType.emailAddress,
-            onChanged: (next) => updateEmail(local: next),
-            decoration: InputDecoration(
-              labelText: '이메일',
-              hintText: 'example',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _line),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _line),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _focus, width: 1.4),
-              ),
-            ),
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text('@', style: AppText.smallStrong),
-        ),
-        SizedBox(
-          width: 172,
-          child: DropdownButtonFormField<String>(
-            value: selectedDomain,
-            items:
-                _domains
-                    .map(
-                      (item) => DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(item),
-                      ),
-                    )
-                    .toList(),
-            onChanged: (next) {
-              if (next != null) {
-                updateEmail(nextDomain: next);
-              }
-            },
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _line),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _line),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _focus, width: 1.4),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AuthField extends StatelessWidget {
-  const _AuthField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      initialValue: value,
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _line),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _line),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _focus, width: 1.4),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthPasswordField extends StatefulWidget {
-  const _AuthPasswordField({required this.value, required this.onChanged});
-
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  State<_AuthPasswordField> createState() => _AuthPasswordFieldState();
-}
-
-class _AuthPasswordFieldState extends State<_AuthPasswordField> {
-  bool _obscureText = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      initialValue: widget.value,
-      obscureText: _obscureText,
-      onChanged: widget.onChanged,
-      decoration: InputDecoration(
-        labelText: '비밀번호',
-        filled: true,
-        fillColor: Colors.white,
-        suffixIcon: IconButton(
-          onPressed: () {
-            setState(() {
-              _obscureText = !_obscureText;
-            });
-          },
-          icon: Icon(
-            _obscureText
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
-          ),
-          tooltip: _obscureText ? '비밀번호 보기' : '비밀번호 숨기기',
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _line),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _line),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: _focus, width: 1.4),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Operator Feed Tab Page ────────────────────────────────────────────────────
 
 class _OperatorFeedTabPage extends StatelessWidget {
@@ -1192,6 +677,482 @@ class _OperatorFeedTabPage extends StatelessWidget {
         bottom: 80,
         child: _OperatorFeedSection(store: store),
       ),
+    );
+  }
+}
+
+// ── Operator Portfolio Builder Section ───────────────────────────────────────
+
+class _OperatorPortfolioBuilderSection extends StatefulWidget {
+  const _OperatorPortfolioBuilderSection({required this.store});
+  final DrameStore store;
+
+  @override
+  State<_OperatorPortfolioBuilderSection> createState() =>
+      _OperatorPortfolioBuilderSectionState();
+}
+
+class _OperatorPortfolioBuilderSectionState
+    extends State<_OperatorPortfolioBuilderSection> {
+  bool _editing = false;
+  bool _saving = false;
+
+  late final TextEditingController _introCtrl;
+  late final TextEditingController _descCtrl;
+  late final TextEditingController _specialtyCtrl;
+  late List<TextEditingController> _imageUrlCtrls;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.store.selectedPilot;
+    _introCtrl = TextEditingController(text: p?.intro ?? '');
+    _descCtrl = TextEditingController(text: p?.description ?? '');
+    _specialtyCtrl = TextEditingController(text: p?.specialty ?? '');
+    _imageUrlCtrls =
+        (p?.portfolioImages.isNotEmpty == true)
+            ? p!.portfolioImages
+                .map((u) => TextEditingController(text: u))
+                .toList()
+            : <TextEditingController>[TextEditingController()];
+  }
+
+  @override
+  void dispose() {
+    _introCtrl.dispose();
+    _descCtrl.dispose();
+    _specialtyCtrl.dispose();
+    for (final c in _imageUrlCtrls) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await widget.store.updateOperatorProfile(
+        intro: _introCtrl.text.trim(),
+        description: _descCtrl.text.trim(),
+        specialty: _specialtyCtrl.text.trim(),
+        portfolioImageUrls:
+            _imageUrlCtrls.map((c) => c.text.trim()).toList(),
+      );
+      if (mounted) setState(() => _editing = false);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: _navy,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _cancelEdit() {
+    final p = widget.store.selectedPilot;
+    _introCtrl.text = p?.intro ?? '';
+    _descCtrl.text = p?.description ?? '';
+    _specialtyCtrl.text = p?.specialty ?? '';
+    for (final c in _imageUrlCtrls) {
+      c.dispose();
+    }
+    _imageUrlCtrls =
+        (p?.portfolioImages.isNotEmpty == true)
+            ? p!.portfolioImages
+                .map((u) => TextEditingController(text: u))
+                .toList()
+            : <TextEditingController>[TextEditingController()];
+    setState(() => _editing = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      child: _PageShell(
+        top: 48,
+        bottom: 80,
+        child: _editing ? _buildEditView() : _buildPreviewView(),
+      ),
+    );
+  }
+
+  Widget _buildPreviewView() {
+    final pilot = widget.store.selectedPilot;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('포트폴리오 미리보기', style: AppText.cardTitle),
+                  SizedBox(height: 6),
+                  Text(
+                    '고객에게 보여지는 내 프로필 페이지입니다.',
+                    style: AppText.cardSubtitle,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            FilledButton.icon(
+              onPressed: () => setState(() => _editing = true),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('편집하기'),
+              style: FilledButton.styleFrom(
+                backgroundColor: _navy,
+                foregroundColor: Colors.white,
+                textStyle: AppText.button,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        const Divider(color: _line),
+        const SizedBox(height: 32),
+        if (pilot == null)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Text('프로필 정보를 불러오는 중입니다.', style: AppText.cardSubtitle),
+            ),
+          )
+        else ...<Widget>[
+          // Profile header
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: _soft,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _line),
+                ),
+                child:
+                    pilot.portfolioImages.isNotEmpty
+                        ? ClipOval(
+                          child: Image.network(
+                            pilot.portfolioImages.first,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (_, __, ___) => const Icon(
+                                  Icons.flight_takeoff_rounded,
+                                  color: _muted,
+                                  size: 32,
+                                ),
+                          ),
+                        )
+                        : const Center(
+                          child: Icon(
+                            Icons.flight_takeoff_rounded,
+                            color: _muted,
+                            size: 32,
+                          ),
+                        ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(pilot.name, style: AppText.cardTitle),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      children: <Widget>[
+                        _PortfolioMeta(
+                          icon: Icons.place_outlined,
+                          text: pilot.location,
+                        ),
+                        _PortfolioMeta(
+                          icon: Icons.sell_outlined,
+                          text: pilot.specialty,
+                        ),
+                        _PortfolioMeta(
+                          icon: Icons.map_outlined,
+                          text: pilot.availableAreas.join(', '),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(pilot.intro, style: AppText.cardSubtitle),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          const Divider(color: _line),
+          const SizedBox(height: 28),
+          const Text('서비스 상세설명', style: AppText.smallStrong),
+          const SizedBox(height: 12),
+          Text(
+            pilot.description.isEmpty ? '(설명 없음)' : pilot.description,
+            style: AppText.cardSubtitle,
+          ),
+          if (pilot.portfolioImages.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 36),
+            const Text('사진 포트폴리오', style: AppText.smallStrong),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: pilot.portfolioImages.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                mainAxisExtent: 200,
+              ),
+              itemBuilder: (context, index) {
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    pilot.portfolioImages[index],
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ___) => Container(
+                          color: _soft,
+                          child: const Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: _muted,
+                            ),
+                          ),
+                        ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildEditView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('포트폴리오 편집', style: AppText.cardTitle),
+                  SizedBox(height: 6),
+                  Text('변경 후 저장하면 고객 페이지에 바로 반영됩니다.', style: AppText.cardSubtitle),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: _saving ? null : _cancelEdit,
+              style: TextButton.styleFrom(foregroundColor: _muted),
+              child: const Text('취소'),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(
+              onPressed: _saving ? null : _save,
+              style: FilledButton.styleFrom(
+                backgroundColor: _navy,
+                foregroundColor: Colors.white,
+                textStyle: AppText.button,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child:
+                  _saving
+                      ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                      : const Text('저장하기'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        const Divider(color: _line),
+        const SizedBox(height: 28),
+        _EditField(
+          label: '한줄 소개',
+          hint: '예: 전국 드론 촬영 전문 운용자입니다.',
+          controller: _introCtrl,
+          maxLines: 2,
+        ),
+        const SizedBox(height: 20),
+        _EditField(
+          label: '전문 분야',
+          hint: '예: 항공촬영, 농약방제',
+          controller: _specialtyCtrl,
+        ),
+        const SizedBox(height: 20),
+        _EditField(
+          label: '서비스 상세설명',
+          hint: '제공하는 서비스, 장비, 경력 등을 자세히 작성해주세요.',
+          controller: _descCtrl,
+          maxLines: 6,
+        ),
+        const SizedBox(height: 28),
+        const Text('포트폴리오 이미지 URL', style: AppText.smallStrong),
+        const SizedBox(height: 6),
+        const Text(
+          '이미지 주소(URL)를 한 줄씩 입력하세요.',
+          style: AppText.cardSubtitle,
+        ),
+        const SizedBox(height: 14),
+        ..._imageUrlCtrls.asMap().entries.map((entry) {
+          final i = entry.key;
+          final ctrl = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextFormField(
+                    controller: ctrl,
+                    keyboardType: TextInputType.url,
+                    decoration: InputDecoration(
+                      hintText: 'https://example.com/image.jpg',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _focus, width: 1.4),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_imageUrlCtrls.length > 1) ...<Widget>[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      ctrl.dispose();
+                      setState(() => _imageUrlCtrls.removeAt(i));
+                    },
+                    icon: const Icon(Icons.remove_circle_outline),
+                    color: _muted,
+                  ),
+                ],
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 6),
+        TextButton.icon(
+          onPressed: () {
+            setState(() => _imageUrlCtrls.add(TextEditingController()));
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('URL 추가'),
+          style: TextButton.styleFrom(foregroundColor: _navy),
+        ),
+      ],
+    );
+  }
+}
+
+class _PortfolioMeta extends StatelessWidget {
+  const _PortfolioMeta({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Icon(icon, color: _muted, size: 16),
+        const SizedBox(width: 4),
+        Text(text, style: AppText.cardSubtitle),
+      ],
+    );
+  }
+}
+
+class _EditField extends StatelessWidget {
+  const _EditField({
+    required this.label,
+    required this.controller,
+    this.hint = '',
+    this.maxLines = 1,
+  });
+
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(label, style: AppText.smallStrong),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _line),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _line),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _focus, width: 1.4),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -2207,7 +2168,7 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
                         child: FilledButton(
                           onPressed: () {
                             store.acknowledgeRegistrationDone();
-                            context.go('/home');
+                            context.replace('/operator');
                           },
                           style: FilledButton.styleFrom(
                             backgroundColor: _navy,
@@ -2697,11 +2658,12 @@ class _PilotFormCard extends StatelessWidget {
               Expanded(
                 child: FilledButton(
                   onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     try {
                       await store.nextPilotOnboardingStep();
                     } catch (error) {
                       if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         SnackBar(
                           content: Text(
                             error.toString().replaceFirst('Exception: ', ''),
@@ -2750,24 +2712,6 @@ class _LicenseStep extends StatelessWidget {
           initialValue: data.licenseNumber,
           hint: '예: 2024-0001234',
           onChanged: (value) => store.updatePilotLicense(number: value),
-        ),
-        const SizedBox(height: 18),
-        _PilotUploadBox(
-          title: '자격증 앞면 업로드',
-          uploaded: data.licenseFrontUploaded,
-          onTap:
-              () => store.updatePilotLicense(
-                frontUploaded: !data.licenseFrontUploaded,
-              ),
-        ),
-        const SizedBox(height: 12),
-        _PilotUploadBox(
-          title: '자격증 뒷면 업로드',
-          uploaded: data.licenseBackUploaded,
-          onTap:
-              () => store.updatePilotLicense(
-                backUploaded: !data.licenseBackUploaded,
-              ),
         ),
       ],
     );
@@ -2832,14 +2776,6 @@ class _InsuranceStep extends StatelessWidget {
           initialValue: data.insuranceNumber,
           hint: 'DB-DRONE-240001',
           onChanged: (value) => store.updatePilotInsurance(number: value),
-        ),
-        const SizedBox(height: 18),
-        _PilotUploadBox(
-          title: '보험 증권 업로드',
-          uploaded: data.insuranceUploaded,
-          onTap:
-              () =>
-                  store.updatePilotInsurance(uploaded: !data.insuranceUploaded),
         ),
       ],
     );
@@ -2921,16 +2857,6 @@ class _DroneStep extends StatelessWidget {
                       (value) => store.updatePilotDrone(
                         index,
                         registrationNumber: value,
-                      ),
-                ),
-                const SizedBox(height: 18),
-                _PilotUploadBox(
-                  title: '기체 사진 업로드',
-                  uploaded: drone.photoUploaded,
-                  onTap:
-                      () => store.updatePilotDrone(
-                        index,
-                        photoUploaded: !drone.photoUploaded,
                       ),
                 ),
               ],
@@ -3030,55 +2956,6 @@ class _PilotSelectField extends StatelessWidget {
         if (value != null) onChanged(value);
       },
       decoration: _pilotInputDecoration(label: label),
-    );
-  }
-}
-
-class _PilotUploadBox extends StatelessWidget {
-  const _PilotUploadBox({
-    required this.title,
-    required this.uploaded,
-    required this.onTap,
-  });
-  final String title;
-  final bool uploaded;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        height: 128,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: uploaded ? const Color(0xFFE9F8F2) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: uploaded ? _mint : const Color(0xFFBFD0E4),
-            width: 1.4,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              uploaded
-                  ? Icons.check_circle_rounded
-                  : Icons.cloud_upload_outlined,
-              color: uploaded ? _mint : const Color(0xFF8BA0B8),
-              size: 30,
-            ),
-            const SizedBox(height: 10),
-            Text(title, style: AppText.smallStrong.copyWith(color: _navy)),
-            const SizedBox(height: 4),
-            Text(
-              uploaded ? '첨부 완료' : 'JPG, PNG, PDF 지원',
-              style: AppText.metricLabel,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

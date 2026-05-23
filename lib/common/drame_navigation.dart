@@ -32,6 +32,8 @@ class DrameTopNavigation extends StatelessWidget {
     this.onMyQuotesTap,
     this.onSwitchToUser,
     this.onSwitchToOperator,
+    this.operatorActiveTab,
+    this.onOperatorTabTap,
   });
 
   final bool isLoggedIn;
@@ -52,6 +54,10 @@ class DrameTopNavigation extends StatelessWidget {
   final VoidCallback? onMyQuotesTap;
   final VoidCallback? onSwitchToUser;
   final VoidCallback? onSwitchToOperator;
+
+  /// Operator dashboard active tab: 'dashboard' | 'feed' | 'portfolio'
+  final String? operatorActiveTab;
+  final ValueChanged<String>? onOperatorTabTap;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +83,31 @@ class DrameTopNavigation extends StatelessWidget {
                 // ── Center nav links (desktop only) ─────────────────────────
                 if (!compact) ...<Widget>[
                   const SizedBox(width: 40),
-                  if (isLoggedIn && !isOperator) ...<Widget>[
+                  if (isLoggedIn && isOperator) ...<Widget>[
+                    _NavLink(
+                      label: '대시보드',
+                      onTap: () => onOperatorTabTap?.call('dashboard'),
+                      active: operatorActiveTab == 'dashboard',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '요청 확인',
+                      onTap: () => onOperatorTabTap?.call('requests'),
+                      active: operatorActiveTab == 'requests',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '피드',
+                      onTap: () => onOperatorTabTap?.call('feed'),
+                      active: operatorActiveTab == 'feed',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '포트폴리오',
+                      onTap: () => onOperatorTabTap?.call('portfolio'),
+                      active: operatorActiveTab == 'portfolio',
+                    ),
+                  ] else if (isLoggedIn && !isOperator) ...<Widget>[
                     _NavLink(
                       label: '운용자 찾기',
                       onTap: onFindPilotTap,
@@ -95,7 +125,7 @@ class DrameTopNavigation extends StatelessWidget {
                       onTap: onPortfolioTap ?? () {},
                       active: activePage == 'portfolio',
                     ),
-                  ] else if (!isOperator) ...<Widget>[
+                  ] else ...<Widget>[
                     _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),
                     const SizedBox(width: 24),
                     _NavLink(label: '서비스 소개', onTap: onFindPilotTap),
@@ -125,7 +155,7 @@ class DrameTopNavigation extends StatelessWidget {
                     child: const Text('시작하기'),
                   ),
                 ] else if (isOperator) ...<Widget>[
-                  if (!compact)
+                  if (!compact) ...<Widget>[
                     TextButton(
                       onPressed: onRequestsTap,
                       style: TextButton.styleFrom(
@@ -138,7 +168,21 @@ class DrameTopNavigation extends StatelessWidget {
                       ),
                       child: const Text('요청 관리'),
                     ),
-                  const SizedBox(width: 8),
+                    const SizedBox(width: 4),
+                    TextButton(
+                      onPressed: onMyPageTap,
+                      style: TextButton.styleFrom(
+                        foregroundColor: DC.ink,
+                        textStyle: DT.navLink,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: const Text('내 프로필'),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   _ModeToggle(
                     isOperator: true,
                     onUserTap: onSwitchToUser ?? () {},

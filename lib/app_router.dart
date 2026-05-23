@@ -30,6 +30,11 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const DrameHomePage(),
     ),
     GoRoute(
+      path: '/operator',
+      name: 'operator',
+      builder: (context, state) => const DrameHomePage(operatorMode: true),
+    ),
+    GoRoute(
       path: '/login',
       name: 'login',
       builder: (context, state) => const LoginPage(),

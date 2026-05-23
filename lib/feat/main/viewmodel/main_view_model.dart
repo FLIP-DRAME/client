@@ -43,8 +43,6 @@ class DrameStore extends ChangeNotifier {
   bool isRefreshing = false;
   String? lastError;
   bool isPilotMode = false;
-  bool isPilotAuthOpen = false;
-  bool isLoginMode = false;
   bool isLoggedIn = false;
   bool isPilotOnboarding = false;
   bool operatorRegistrationCompleted = false;
@@ -161,7 +159,6 @@ class DrameStore extends ChangeNotifier {
     if (isPilotMode == value) return;
     isPilotMode = value;
     if (!value) {
-      isPilotAuthOpen = false;
       isPilotOnboarding = false;
     }
     notifyListeners();
@@ -169,15 +166,6 @@ class DrameStore extends ChangeNotifier {
 
   void openPilotOnboarding() {
     isPilotMode = true;
-    if (!isLoggedIn || accountRole != '운용자') {
-      isPilotAuthOpen = true;
-      isPilotOnboarding = false;
-      isLoginMode = false;
-      accountRole = '운용자';
-      notifyListeners();
-      return;
-    }
-    isPilotAuthOpen = false;
     isPilotOnboarding = true;
     notifyListeners();
   }
@@ -187,23 +175,13 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void openAuth({bool loginMode = false, String? role}) {
-    isPilotAuthOpen = true;
-    isPilotOnboarding = false;
-    isLoginMode = loginMode;
-    accountRole = role ?? accountRole;
-    notifyListeners();
-  }
-
   void updateAuth({
-    bool? loginMode,
     String? role,
     String? email,
     String? password,
     String? name,
     String? nickname,
   }) {
-    isLoginMode = loginMode ?? isLoginMode;
     accountRole = role ?? accountRole;
     accountEmail = email ?? accountEmail;
     accountPassword = password ?? accountPassword;
@@ -214,7 +192,6 @@ class DrameStore extends ChangeNotifier {
 
   void submitAuth() {
     isLoggedIn = true;
-    isPilotAuthOpen = false;
     if (accountRole == '운용자') {
       isPilotMode = true;
       isPilotOnboarding = false;
@@ -238,7 +215,7 @@ class DrameStore extends ChangeNotifier {
     } on AuthException catch (error) {
       throw Exception(_authErrorMessage(error));
     }
-    updateAuth(loginMode: true, role: role, email: email, password: password);
+    updateAuth(role: role, email: email, password: password);
     submitAuth();
   }
 
@@ -276,7 +253,6 @@ class DrameStore extends ChangeNotifier {
       }
     }
     updateAuth(
-      loginMode: false,
       role: role,
       email: email,
       password: password,
@@ -313,7 +289,6 @@ class DrameStore extends ChangeNotifier {
     final metadata = user.userMetadata ?? const <String, dynamic>{};
     final role = metadata['role'] == 'operator' ? '운용자' : '이용자';
     updateAuth(
-      loginMode: true,
       role: role,
       email: user.email ?? '',
       name: (metadata['name'] ?? '').toString(),
@@ -352,6 +327,8 @@ class DrameStore extends ChangeNotifier {
           throw Exception(
             '운용자 등록 저장에 실패했습니다. Supabase SQL 패치와 RLS 정책을 적용한 뒤 다시 시도해 주세요. (${error.message})',
           );
+        } catch (error) {
+          throw Exception('운용자 등록 중 오류가 발생했습니다. 잠시 뒤 다시 시도해 주세요.');
         }
       }
       pilotOnboarding.submitted = true;
@@ -469,14 +446,18 @@ class DrameStore extends ChangeNotifier {
   }
 
   Future<QuoteEstimate> submitQuoteRequest(QuoteRequest request) async {
-    quoteRequest = request;
-    estimate = await _quoteApi.createEstimate(request);
-    paymentInstruction = await _quoteApi.createPaymentInstruction(estimate!);
-    estimate = estimate!.copyWith(paymentId: paymentInstruction?.paymentId);
-    contactAccess = null;
-    paymentConfirmed = false;
-    notifyListeners();
-    return estimate!;
+    try {
+      quoteRequest = request;
+      estimate = await _quoteApi.createEstimate(request);
+      paymentInstruction = await _quoteApi.createPaymentInstruction(estimate!);
+      estimate = estimate!.copyWith(paymentId: paymentInstruction?.paymentId);
+      contactAccess = null;
+      paymentConfirmed = false;
+      notifyListeners();
+      return estimate!;
+    } on PostgrestException catch (error) {
+      throw Exception('견적 요청 저장에 실패했습니다. (${error.message})');
+    }
   }
 
   Future<void> confirmPayment() async {
@@ -492,15 +473,38 @@ class DrameStore extends ChangeNotifier {
     required String caption,
     List<int>? imageBytes,
   }) async {
-    final post = await _feedApi.createPost(
-      caption: caption,
-      imageBytes: imageBytes,
+    try {
+      final post = await _feedApi.createPost(
+        caption: caption,
+        imageBytes: imageBytes,
+      );
+      myFeedPosts = <OperatorFeedPost>[
+        _operatorPostFromFeed(post),
+        ...myFeedPosts,
+      ];
+      notifyListeners();
+    } on StateError {
+      rethrow;
+    } on PostgrestException catch (error) {
+      throw Exception('피드 등록에 실패했습니다. (${error.message})');
+    } catch (_) {
+      throw Exception('피드 등록 중 오류가 발생했습니다. 잠시 뒤 다시 시도해 주세요.');
+    }
+  }
+
+  Future<void> updateOperatorProfile({
+    required String intro,
+    required String description,
+    required String specialty,
+    required List<String> portfolioImageUrls,
+  }) async {
+    await _api.updateOperatorProfile(
+      intro: intro,
+      description: description,
+      specialty: specialty,
+      portfolioImageUrls: portfolioImageUrls,
     );
-    myFeedPosts = <OperatorFeedPost>[
-      _operatorPostFromFeed(post),
-      ...myFeedPosts,
-    ];
-    notifyListeners();
+    await load();
   }
 
   Future<void> deleteFeedPost(String id) async {

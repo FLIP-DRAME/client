@@ -16,6 +16,12 @@ abstract class DronePilotApi {
   Future<List<PilotWorkRequestData>> fetchOperatorRequests();
   Future<List<UserQuoteSummary>> fetchMyQuotes();
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
+  Future<void> updateOperatorProfile({
+    required String intro,
+    required String description,
+    required String specialty,
+    required List<String> portfolioImageUrls,
+  });
 }
 
 class PilotWorkRequestData {
@@ -289,6 +295,63 @@ class SupabaseDronePilotApi implements DronePilotApi {
           'registration_number': drone.registrationNumber,
         }),
       );
+    }
+  }
+
+  @override
+  Future<void> updateOperatorProfile({
+    required String intro,
+    required String description,
+    required String specialty,
+    required List<String> portfolioImageUrls,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    final existing =
+        await _client
+            .from('operator_profiles')
+            .select('id')
+            .eq('user_id', userId)
+            .maybeSingle();
+    if (existing == null) return;
+    final operatorId = existing['id'].toString();
+
+    await _client.from('operator_profiles').update(<String, Object?>{
+      'intro': intro,
+      'description': description,
+      'specialty': specialty.isEmpty ? null : specialty,
+    }).eq('user_id', userId);
+
+    await _client
+        .from('portfolio_items')
+        .delete()
+        .eq('operator_id', operatorId);
+
+    for (final url in portfolioImageUrls) {
+      final trimmed = url.trim();
+      if (trimmed.isEmpty) continue;
+      await _tryOptionalWrite(
+        () => _client.from('portfolio_items').insert(<String, Object?>{
+          'operator_id': operatorId,
+          'body': trimmed,
+        }),
+      );
+      if (_isHttpUrl(trimmed)) {
+        await _tryOptionalWrite(
+          () =>
+              _client
+                  .from('portfolio_assets')
+                  .upsert(
+                    <String, Object?>{
+                      'operator_id': operatorId,
+                      'url': trimmed,
+                      'sort_order': portfolioImageUrls.indexOf(url),
+                    },
+                    onConflict: 'url',
+                  ),
+        );
+      }
     }
   }
 
