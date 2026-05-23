@@ -25,6 +25,10 @@ class _LandingPageState extends State<LandingPage> {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 768;
 
+    if (compact) {
+      return const _MobileAppEntryFlow();
+    }
+
     return Scaffold(
       backgroundColor: DC.canvas,
       body: Column(
@@ -98,6 +102,382 @@ class _LandingPageState extends State<LandingPage> {
 }
 
 // ── Hero ───────────────────────────────────────────────────────────────────────
+
+class _MobileAppEntryFlow extends StatefulWidget {
+  const _MobileAppEntryFlow();
+
+  @override
+  State<_MobileAppEntryFlow> createState() => _MobileAppEntryFlowState();
+}
+
+class _MobileAppEntryFlowState extends State<_MobileAppEntryFlow> {
+  final PageController _pageController = PageController();
+  bool _showSplash = true;
+  int _page = 0;
+
+  static const List<_OnboardingItem> _items = <_OnboardingItem>[
+    _OnboardingItem(
+      step: '01 · MATCHING',
+      asset: 'assets/onboarding/onboarding_matching.png',
+      title: '전문 드론 기사를\n2분 만에 매칭',
+      body: '항공촬영부터 측량까지, 카테고리 선택 한 번이면 인증된 운용자가 견적을 보내드려요.',
+    ),
+    _OnboardingItem(
+      step: '02 · SAFE PAY',
+      asset: 'assets/onboarding/onboarding_safe_pay.png',
+      title: '안전 결제로\n시작부터 끝까지',
+      body: '에스크로 방식으로 결제 후 작업 완료 확인이 끝나야 운용자에게 정산됩니다.',
+    ),
+    _OnboardingItem(
+      step: '03 · VERIFIED',
+      asset: 'assets/onboarding/onboarding_verified.png',
+      title: '자격증과 보험까지\n검증된 운용자만',
+      body: '국토부 자격증 확인, 보험 가입 여부, 작업 이력까지 확인된 기사만 등록할 수 있어요.',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _showSplash = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 360),
+      child:
+          _showSplash
+              ? const _MobileSplashScreen()
+              : Scaffold(
+                backgroundColor: Colors.white,
+                body: SafeArea(
+                  child: Column(
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => context.go('/login'),
+                          child: const Text(
+                            '건너뛰기',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontFamily: 'Pretendard',
+                              color: Color(0xFF6B7280),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: _items.length,
+                          onPageChanged:
+                              (value) => setState(() => _page = value),
+                          itemBuilder:
+                              (context, index) =>
+                                  _MobileOnboardingPage(item: _items[index]),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+                        child: Column(
+                          children: <Widget>[
+                            _MobilePageDots(index: _page, count: _items.length),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: <Widget>[
+                                if (_page > 0) ...<Widget>[
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: _previous,
+                                      style: _entryOutlineButtonStyle(),
+                                      child: const Text('이전'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                ],
+                                Expanded(
+                                  flex: _page > 0 ? 2 : 1,
+                                  child: FilledButton(
+                                    onPressed:
+                                        _page == _items.length - 1
+                                            ? () => context.go('/login')
+                                            : _next,
+                                    style: _entryFilledButtonStyle(),
+                                    child: Text(
+                                      _page == _items.length - 1
+                                          ? '시작하기'
+                                          : '다음',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+    );
+  }
+
+  void _next() {
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _previous() {
+    _pageController.previousPage(
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+}
+
+class _MobileSplashScreen extends StatelessWidget {
+  const _MobileSplashScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: DC.primary,
+      body: SafeArea(
+        child: Stack(
+          children: <Widget>[
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Container(
+                    width: 92,
+                    height: 92,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: const Center(
+                      child: DrameLogo(size: 48, showText: false),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    '모두의 드론',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    '전문 드론 기사 매칭 플랫폼',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.33,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 46,
+              child: Column(
+                children: <Widget>[
+                  SizedBox(
+                    width: 38,
+                    height: 38,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  SizedBox(height: 14),
+                  Text(
+                    'v 1.0.0',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      color: Colors.white70,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileOnboardingPage extends StatelessWidget {
+  const _MobileOnboardingPage({required this.item});
+
+  final _OnboardingItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            flex: 6,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 360),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F7FC),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: const Color(0xFFE5EAF2)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(item.asset, fit: BoxFit.cover),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          Text(
+            item.step,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              color: DC.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.5,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            item.title,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              color: Color(0xFF0F172A),
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              height: 1.22,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            item.body,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              color: Color(0xFF6B7280),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobilePageDots extends StatelessWidget {
+  const _MobilePageDots({required this.index, required this.count});
+
+  final int index;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List<Widget>.generate(count, (dot) {
+        final selected = dot == index;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          width: selected ? 28 : 8,
+          height: 8,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: selected ? DC.primary : const Color(0xFFD4DEE9),
+            borderRadius: BorderRadius.circular(99),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _OnboardingItem {
+  const _OnboardingItem({
+    required this.step,
+    required this.asset,
+    required this.title,
+    required this.body,
+  });
+
+  final String step;
+  final String asset;
+  final String title;
+  final String body;
+}
+
+ButtonStyle _entryFilledButtonStyle() {
+  return FilledButton.styleFrom(
+    backgroundColor: DC.primary,
+    foregroundColor: Colors.white,
+    textStyle: const TextStyle(
+      fontFamily: 'Pretendard',
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    ),
+    padding: const EdgeInsets.symmetric(vertical: 20),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  );
+}
+
+ButtonStyle _entryOutlineButtonStyle() {
+  return OutlinedButton.styleFrom(
+    foregroundColor: const Color(0xFF0F172A),
+    textStyle: const TextStyle(
+      fontFamily: 'Pretendard',
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 1.15,
+    ),
+    padding: const EdgeInsets.symmetric(vertical: 20),
+    side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+  );
+}
 
 class _HeroSection extends StatelessWidget {
   const _HeroSection({required this.compact, required this.scrollController});

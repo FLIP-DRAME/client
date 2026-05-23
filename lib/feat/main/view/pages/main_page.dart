@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
@@ -22,6 +24,7 @@ part '../component/operator_mypage_component.dart';
 part '../component/feed_standalone_component.dart';
 part '../component/portfolio_standalone_component.dart';
 part '../component/my_quotes_component.dart';
+part '../component/mobile_redesign_component.dart';
 
 class HomeText {
   static const TextStyle logo = TextStyle(
@@ -220,11 +223,12 @@ class OperatorFeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
-      builder: (context, store, _) => _OperatorStandaloneShell(
-        store: store,
-        activeTab: 'feed',
-        child: _OperatorFeedTabPage(store: store),
-      ),
+      builder:
+          (context, store, _) => _OperatorStandaloneShell(
+            store: store,
+            activeTab: 'feed',
+            child: _OperatorFeedTabPage(store: store),
+          ),
     );
   }
 }
@@ -235,11 +239,12 @@ class OperatorPortfolioPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
-      builder: (context, store, _) => _OperatorStandaloneShell(
-        store: store,
-        activeTab: 'portfolio',
-        child: _OperatorPortfolioBuilderSection(store: store),
-      ),
+      builder:
+          (context, store, _) => _OperatorStandaloneShell(
+            store: store,
+            activeTab: 'portfolio',
+            child: _OperatorPortfolioBuilderSection(store: store),
+          ),
     );
   }
 }
@@ -258,7 +263,9 @@ class _OperatorStandaloneShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nickname =
-        store.accountNickname.isNotEmpty ? store.accountNickname : store.accountName;
+        store.accountNickname.isNotEmpty
+            ? store.accountNickname
+            : store.accountName;
     return Scaffold(
       backgroundColor: DC.canvas,
       body: Column(
@@ -301,7 +308,12 @@ class _OperatorStandaloneShell extends StatelessWidget {
               }
             },
           ),
-          Expanded(child: SingleChildScrollView(child: child)),
+          Expanded(
+            child: ColoredBox(
+              color: DC.canvas,
+              child: SingleChildScrollView(child: child),
+            ),
+          ),
         ],
       ),
     );
@@ -628,94 +640,114 @@ class _DrameHomePageState extends State<DrameHomePage> {
       );
     }
 
-    final navItems =
-        store.isPilotMode
-            ? const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home_rounded),
-                label: '홈',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dynamic_feed_outlined),
-                activeIcon: Icon(Icons.dynamic_feed_rounded),
-                label: '피드',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.description_outlined),
-                activeIcon: Icon(Icons.description_rounded),
-                label: '요청 확인',
-              ),
-            ]
-            : const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.search_rounded),
-                label: '촬영자 찾기',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.dynamic_feed_outlined),
-                activeIcon: Icon(Icons.dynamic_feed_rounded),
-                label: '피드',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.grid_view_outlined),
-                activeIcon: Icon(Icons.grid_view_rounded),
-                label: '포트폴리오',
-              ),
-            ];
+    const userNav = <BottomNavigationBarItem>[
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home_outlined),
+        activeIcon: Icon(Icons.home_rounded),
+        label: '홈',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.photo_library_outlined),
+        activeIcon: Icon(Icons.photo_library_rounded),
+        label: '피드',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.description_outlined),
+        activeIcon: Icon(Icons.description_rounded),
+        label: '내견적',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person_outline_rounded),
+        activeIcon: Icon(Icons.person_rounded),
+        label: '내정보',
+      ),
+    ];
 
+    const operatorNav = <BottomNavigationBarItem>[
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home_outlined),
+        activeIcon: Icon(Icons.home_rounded),
+        label: '대시보드',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.inbox_outlined),
+        activeIcon: Icon(Icons.inbox_rounded),
+        label: '요청확인',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.photo_library_outlined),
+        activeIcon: Icon(Icons.photo_library_rounded),
+        label: '피드',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.grid_view_outlined),
+        activeIcon: Icon(Icons.grid_view_rounded),
+        label: '포트폴리오',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person_outline_rounded),
+        activeIcon: Icon(Icons.person_rounded),
+        label: '내정보',
+      ),
+    ];
+
+    final navItems = store.isPilotMode ? operatorNav : userNav;
     final safeIndex = _tabIndex.clamp(0, navItems.length - 1);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(56),
-        child: _MobileAppBar(
-          store: store,
-          onLoginTap: () => context.go('/login'),
-          onLogoTap: () {
-            store.setPilotMode(false);
-            setState(() => _tabIndex = 0);
-          },
-          onModeChanged: (value) {
-            if (value) {
-              context.go('/operator');
-            } else {
-              context.go('/home');
-            }
-          },
-        ),
-      ),
-      body: SafeArea(
-        child: IndexedStack(
-          index: safeIndex,
-          children:
-              store.isPilotMode
-                  ? <Widget>[
-                    SingleChildScrollView(
-                      child:
-                          store.isPilotOnboarding
-                              ? _PilotOnboardingSection(store: store)
-                              : _PilotDashboardSection(store: store),
-                    ),
-                    SingleChildScrollView(
-                      child: _OperatorFeedSection(store: store),
-                    ),
-                    _MobilePilotRequestsPage(store: store),
-                  ]
-                  : <Widget>[
-                    _MobileSearchFlow(store: store),
-                    const SingleChildScrollView(
-                      child: ColoredBox(
+    final tabChildren =
+        store.isPilotMode
+            ? <Widget>[
+              _OperatorDashboardTab(store: store),
+              _MobilePilotRequestsPage(store: store),
+              ColoredBox(
+                color: _bgBeige,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: <Widget>[
+                      Container(
                         color: Colors.white,
+                        padding: const EdgeInsets.all(16),
+                        child: _OperatorFeedSection(store: store),
+                      ),
+                      const SizedBox(height: 8),
+                      const ColoredBox(
+                        color: DC.canvas,
                         child: DroneFeedSection(),
                       ),
-                    ),
-                    SingleChildScrollView(
-                      child: _PopularPortfolioSection(store: store),
-                    ),
-                  ],
-        ),
+                      const SizedBox(height: 80),
+                    ],
+                  ),
+                ),
+              ),
+              SingleChildScrollView(
+                child: _OperatorPortfolioBuilderSection(store: store),
+              ),
+              _OperatorMyPageMobileTab(store: store),
+            ]
+            : <Widget>[
+              _UserHomeTab(store: store),
+              const SingleChildScrollView(
+                child: ColoredBox(color: DC.canvas, child: DroneFeedSection()),
+              ),
+              _MobileMyQuotesTab(store: store),
+              _UserMyPageTab(store: store),
+            ];
+
+    return Scaffold(
+      backgroundColor: _bgBeige,
+      appBar: _MobileNewAppBar(
+        store: store,
+        onLoginTap: () => context.go('/login'),
+        onModeChanged: (value) {
+          if (value) {
+            context.go('/operator');
+          } else {
+            context.go('/home');
+          }
+        },
+      ),
+      body: SafeArea(
+        child: IndexedStack(index: safeIndex, children: tabChildren),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: safeIndex,
@@ -727,12 +759,12 @@ class _DrameHomePageState extends State<DrameHomePage> {
         type: BottomNavigationBarType.fixed,
         selectedLabelStyle: const TextStyle(
           fontFamily: 'Pretendard',
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: const TextStyle(
           fontFamily: 'Pretendard',
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w500,
         ),
         items: navItems,

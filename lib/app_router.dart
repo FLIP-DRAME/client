@@ -46,6 +46,11 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const SignupPage(),
     ),
     GoRoute(
+      path: '/signup/done',
+      name: 'signup-done',
+      builder: (context, state) => const SignupWelcomePage(),
+    ),
+    GoRoute(
       path: '/feed',
       name: 'feed',
       builder: (context, state) => const FeedStandalonePage(),

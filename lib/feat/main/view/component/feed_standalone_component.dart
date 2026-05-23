@@ -108,7 +108,7 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
                   slivers: <Widget>[
                     const SliverToBoxAdapter(
                       child: ColoredBox(
-                        color: Colors.white,
+                        color: DC.canvas,
                         child: DroneFeedSection(),
                       ),
                     ),

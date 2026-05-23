@@ -321,7 +321,6 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
       if (mounted) setState(() => _saving = false);
     }
   }
-
 }
 
 class _QuoteEditField extends StatelessWidget {
