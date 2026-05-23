@@ -8,7 +8,6 @@ class AuthViewModel {
 
   Future<void> signIn(AuthFormModel form) {
     return _store.signIn(
-      role: form.role,
       email: form.email,
       password: form.password,
     );
@@ -16,7 +15,6 @@ class AuthViewModel {
 
   Future<void> signUp(AuthFormModel form) {
     return _store.signUp(
-      role: form.role,
       email: form.email,
       password: form.password,
       name: form.name,
