@@ -79,11 +79,16 @@ class DrameStore extends ChangeNotifier {
       myQuotes = await _api.fetchMyQuotes();
       myFeedPosts =
           (await _feedApi.fetchMyPosts()).map(_operatorPostFromFeed).toList();
+      final myOperator =
+          isLoggedIn && accountRole == '운용자'
+              ? await _api.fetchMyOperatorProfile()
+              : null;
+      operatorRegistrationCompleted = myOperator != null;
       pilots = nextPilots;
       if (initial) {
         allPilots = nextPilots;
       }
-      selectedPilot = pilots.isEmpty ? null : pilots.first;
+      selectedPilot = myOperator ?? (pilots.isEmpty ? null : pilots.first);
       lastError = null;
     } catch (error) {
       lastError = error.toString();
@@ -332,15 +337,22 @@ class DrameStore extends ChangeNotifier {
     if (pilotOnboardingStep >= 4) {
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
-        await _api.submitOperatorRegistration(
-          PilotRegistrationPayload(
-            userId: user.id,
-            email: accountEmail.isNotEmpty ? accountEmail : (user.email ?? ''),
-            name: accountName,
-            nickname: accountNickname,
-            data: pilotOnboarding,
-          ),
-        );
+        try {
+          await _api.submitOperatorRegistration(
+            PilotRegistrationPayload(
+              userId: user.id,
+              email:
+                  accountEmail.isNotEmpty ? accountEmail : (user.email ?? ''),
+              name: accountName,
+              nickname: accountNickname,
+              data: pilotOnboarding,
+            ),
+          );
+        } on PostgrestException catch (error) {
+          throw Exception(
+            '운용자 등록 저장에 실패했습니다. Supabase SQL 패치와 RLS 정책을 적용한 뒤 다시 시도해 주세요. (${error.message})',
+          );
+        }
       }
       pilotOnboarding.submitted = true;
       operatorRegistrationCompleted = true;

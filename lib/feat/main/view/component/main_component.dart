@@ -1297,6 +1297,10 @@ class _OperatorProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final serviceText =
+        store.selectedPilot?.categories.isNotEmpty == true
+            ? store.selectedPilot!.categories.join(' · ')
+            : '운용자 등록을 완료하면 제공 서비스가 표시됩니다.';
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1324,20 +1328,7 @@ class _OperatorProfileCard extends StatelessWidget {
                   children: <Widget>[
                     Text(name, style: AppText.portfolioTitle),
                     const SizedBox(height: 6),
-                    Text(
-                      '$nickname 운용자의 항공촬영·방제 서비스',
-                      style: AppText.cardSubtitle,
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: const <Widget>[
-                        _MiniChip(label: '리뷰 0'),
-                        _MiniChip(label: '응답 30분 내'),
-                        _MiniChip(label: '인증 완료'),
-                      ],
-                    ),
+                    Text(serviceText, style: AppText.cardSubtitle),
                   ],
                 ),
               ),
@@ -1369,6 +1360,24 @@ class _OperatorProfileCard extends StatelessWidget {
                   child: const Text('미리보기'),
                 ),
               ),
+              if (!store.operatorRegistrationCompleted) ...<Widget>[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => context.push('/pilot/register'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
+                      textStyle: AppText.button,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('운용자 등록'),
+                  ),
+                ),
+              ],
             ],
           ),
         ],
@@ -2687,7 +2696,22 @@ class _PilotFormCard extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: FilledButton(
-                  onPressed: store.nextPilotOnboardingStep,
+                  onPressed: () async {
+                    try {
+                      await store.nextPilotOnboardingStep();
+                    } catch (error) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            error.toString().replaceFirst('Exception: ', ''),
+                          ),
+                          backgroundColor: _ink,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: _navy,
                     foregroundColor: Colors.white,
@@ -4618,125 +4642,62 @@ class _FooterSection extends StatelessWidget {
     final compact = MediaQuery.sizeOf(context).width < 900;
 
     return Container(
-      color: Colors.white,
-      child: _PageShell(
-        top: 58,
-        bottom: 54,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            if (compact)
-              const Wrap(
-                spacing: 28,
-                runSpacing: 28,
-                children: <Widget>[
-                  SizedBox(width: 240, child: _FooterBrand()),
-                  SizedBox(
-                    width: 180,
-                    child: _FooterColumn(
-                      title: '서비스',
-                      items: <String>[
-                        '카테고리',
-                        '작동 원리',
-                        '모두의 드론 vs 기존',
-                        '의뢰자 요금',
-                        '비행공역 확인',
-                      ],
-                    ),
-                  ),
-                  SizedBox(
-                    width: 180,
-                    child: _FooterColumn(
-                      title: '운용자',
-                      items: <String>['운용자 등록', '운용자 가이드', '구독 관리', '일감 피드'],
-                    ),
-                  ),
-                  SizedBox(
-                    width: 180,
-                    child: _FooterColumn(
-                      title: '정책',
-                      items: <String>['이용약관', '개인정보처리방침', '환불 정책', '청소년 보호'],
-                    ),
-                  ),
-                  SizedBox(
-                    width: 200,
-                    child: _FooterColumn(
-                      title: '고객센터',
-                      items: <String>[
-                        '카카오 채널',
-                        'hello@drame.co.kr',
-                        '평일 09:00 - 18:00',
-                      ],
-                    ),
-                  ),
-                ],
-              )
-            else
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const <Widget>[
-                  Expanded(flex: 2, child: _FooterBrand()),
-                  Expanded(
-                    child: _FooterColumn(
-                      title: '서비스',
-                      items: <String>[
-                        '카테고리',
-                        '작동 원리',
-                        '모두의 드론 vs 기존',
-                        '의뢰자 요금',
-                        '비행공역 확인',
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: _FooterColumn(
-                      title: '운용자',
-                      items: <String>['운용자 등록', '운용자 가이드', '구독 관리', '일감 피드'],
-                    ),
-                  ),
-                  Expanded(
-                    child: _FooterColumn(
-                      title: '정책',
-                      items: <String>['이용약관', '개인정보처리방침', '환불 정책', '청소년 보호'],
-                    ),
-                  ),
-                  Expanded(
-                    child: _FooterColumn(
-                      title: '고객센터',
-                      items: <String>[
-                        '카카오 채널',
-                        'hello@drame.co.kr',
-                        '평일 09:00 - 18:00',
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 42),
-            const Divider(color: _line),
-            const SizedBox(height: 24),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: const <Widget>[
-                Expanded(
-                  child: Text(
-                    '상호: 주식회사 드라메  |  대표자: 김드론  |  사업자등록번호: 123-45-67890\n'
-                    '통신판매신고번호: 제2026-서울강남-0001호  |  개인정보 보호책임자: 이보호\n'
-                    '주소: 서울특별시 강남구 테헤란로 123, 드라메빌딩 5층',
-                    style: TextStyle(
-                      color: _muted,
-                      fontWeight: FontWeight.w700,
-                      height: 1.7,
-                    ),
-                  ),
+      color: const Color(0xFF0F1117),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: DC.maxWidth),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? DC.spLg : DC.spXxl,
+              vertical: DC.spXxl,
+            ),
+            child: Column(
+              children: <Widget>[
+                Container(
+                  height: 1,
+                  color: const Color(0xFF1E2128),
+                  margin: const EdgeInsets.only(bottom: DC.spXxl),
                 ),
-                Text(
-                  '© 2026 모두의 드론. All rights reserved.',
-                  style: TextStyle(color: _muted, fontWeight: FontWeight.w700),
-                ),
+                compact
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const <Widget>[
+                        _FooterBrand(),
+                        SizedBox(height: DC.spXl),
+                        _FooterLinks(
+                          title: '서비스',
+                          links: <String>['운용자 등록', '촬영자 찾기', '사용 안내'],
+                        ),
+                        SizedBox(height: DC.spLg),
+                        _FooterLinks(
+                          title: '회사',
+                          links: <String>['회사소개', '공지사항', '이용약관', '개인정보처리방침'],
+                        ),
+                      ],
+                    )
+                    : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const <Widget>[
+                        Expanded(flex: 2, child: _FooterBrand()),
+                        SizedBox(width: DC.spXxl),
+                        Expanded(
+                          child: _FooterLinks(
+                            title: '서비스',
+                            links: <String>['운용자 등록', '촬영자 찾기', '사용 안내'],
+                          ),
+                        ),
+                        SizedBox(width: DC.spXxl),
+                        Expanded(
+                          child: _FooterLinks(
+                            title: '회사',
+                            links: <String>['회사소개', '공지사항', '이용약관', '개인정보처리방침'],
+                          ),
+                        ),
+                      ],
+                    ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -4751,21 +4712,65 @@ class _FooterBrand extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
+        DrameLogo(size: 22, onDark: true),
+        SizedBox(height: DC.spXs),
         Text(
-          '•  모두의 드론',
+          '모두의 드론 — 드론 매칭 플랫폼',
           style: TextStyle(
-            color: _ink,
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
+            fontFamily: 'Pretendard',
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF6B7280),
           ),
         ),
-        SizedBox(height: 22),
+        SizedBox(height: DC.spBase),
         Text(
-          '30분 안에,\n검증된 드론 운용자와 만나세요.',
+          '© 2026 Mode Drone. All rights reserved.',
           style: TextStyle(
-            color: _muted,
-            fontWeight: FontWeight.w800,
-            height: 1.7,
+            fontFamily: 'Pretendard',
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF4B5563),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FooterLinks extends StatelessWidget {
+  const _FooterLinks({required this.title, required this.links});
+
+  final String title;
+  final List<String> links;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          title,
+          style: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: DC.spSm),
+        ...links.map(
+          (link) => Padding(
+            padding: const EdgeInsets.only(bottom: DC.spXs),
+            child: Text(
+              link,
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF6B7280),
+              ),
+            ),
           ),
         ),
       ],

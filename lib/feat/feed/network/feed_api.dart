@@ -101,7 +101,7 @@ class FeedApi {
             .maybeSingle();
     final operatorId = operator?['id']?.toString();
     if (operatorId == null || operatorId.isEmpty) {
-      throw StateError('운용자 프로필이 없습니다.');
+      throw StateError('운용자 등록을 먼저 완료한 뒤 피드를 등록해 주세요.');
     }
 
     final categoryId = await _primaryCategoryId(operatorId);

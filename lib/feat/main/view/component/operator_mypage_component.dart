@@ -316,6 +316,10 @@ class _OperatorMyPageProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final serviceText =
+        store.selectedPilot?.categories.isNotEmpty == true
+            ? store.selectedPilot!.categories.join(' · ')
+            : '운용자 등록을 완료하면 제공 서비스가 표시됩니다.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -360,7 +364,7 @@ class _OperatorMyPageProfile extends StatelessWidget {
                   Text(name, style: AppText.cardTitle),
                   const SizedBox(height: 8),
                   Text(
-                    '$nickname 운용자의 항공촬영·방제 서비스',
+                    serviceText,
                     style: AppText.portfolioTitle.copyWith(
                       fontWeight: DrameTextStyles.medium,
                     ),
@@ -409,6 +413,24 @@ class _OperatorMyPageProfile extends StatelessWidget {
                 child: const Text('미리보기'),
               ),
             ),
+            if (!store.operatorRegistrationCompleted) ...<Widget>[
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => context.push('/pilot/register'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    textStyle: AppText.button,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('운용자 등록'),
+                ),
+              ),
+            ],
           ],
         ),
       ],
@@ -798,10 +820,22 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     final caption = _captionController.text.trim();
     if (caption.isEmpty && _pendingImageBytes == null) return;
 
-    await widget.store.addFeedPost(
-      caption: caption,
-      imageBytes: _pendingImageBytes,
-    );
+    try {
+      await widget.store.addFeedPost(
+        caption: caption,
+        imageBytes: _pendingImageBytes,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Bad state: ', '')),
+          backgroundColor: _ink,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (!mounted) return;
     _captionController.clear();
     setState(() {

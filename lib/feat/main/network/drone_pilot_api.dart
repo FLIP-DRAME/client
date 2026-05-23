@@ -12,6 +12,7 @@ abstract class DronePilotApi {
   Future<List<DroneCategory>> fetchCategories();
   Future<List<String>> fetchRegions();
   Future<DronePilot?> fetchPilotById(String id);
+  Future<DronePilot?> fetchMyOperatorProfile();
   Future<List<PilotWorkRequestData>> fetchOperatorRequests();
   Future<List<UserQuoteSummary>> fetchMyQuotes();
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
@@ -196,12 +197,44 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   @override
+  Future<DronePilot?> fetchMyOperatorProfile() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return null;
+    final rows = await _client
+        .from('operator_profiles')
+        .select('''
+          id,
+          display_name,
+          business_name,
+          location_label,
+          specialty,
+          intro,
+          description,
+          base_price,
+          response_time_label,
+          phone,
+          email,
+          kakao_channel,
+          operator_categories(service_categories(slug,label)),
+          operator_service_areas(permission_type, regions(name)),
+          portfolio_assets(url, sort_order),
+          portfolio_items(portfolio_assets(url, sort_order))
+        ''')
+        .eq('user_id', userId)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return _pilotFromRow(Map<String, dynamic>.from(rows.first as Map));
+  }
+
+  @override
   Future<void> submitOperatorRegistration(
     PilotRegistrationPayload payload,
   ) async {
     final data = payload.data;
     final displayName =
         payload.nickname.isNotEmpty ? payload.nickname : payload.name;
+    final serviceLabels = _serviceLabelsForRegistration(data);
+    await _ensureProfile(payload);
     final operator =
         await _client
             .from('operator_profiles')
@@ -215,9 +248,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
               'location_label':
                   data.areas.isEmpty ? null : data.areas.join(', '),
               'specialty':
-                  data.portfolioTypes.isEmpty
-                      ? null
-                      : data.portfolioTypes.join(', '),
+                  serviceLabels.isEmpty ? null : serviceLabels.join(', '),
               'intro': 'Drame 등록 운용자입니다.',
               'description': data.portfolioUrl,
               'phone': null,
@@ -227,44 +258,67 @@ class SupabaseDronePilotApi implements DronePilotApi {
             .single();
 
     final operatorId = operator['id'].toString();
-    await _syncOperatorCategories(operatorId, data);
-    await _syncOperatorAreas(operatorId, data);
-    await _syncOperatorPortfolio(operatorId, data);
+    await _tryOptionalWrite(() => _syncOperatorCategories(operatorId, data));
+    await _tryOptionalWrite(() => _syncOperatorAreas(operatorId, data));
+    await _tryOptionalWrite(() => _syncOperatorPortfolio(operatorId, data));
     if (data.licenseNumber.toString().isNotEmpty) {
-      await _client.from('operator_licenses').insert(<String, Object?>{
-        'operator_id': operatorId,
-        'license_type': data.licenseType,
-        'license_number': data.licenseNumber,
-      });
+      await _tryOptionalWrite(
+        () => _client.from('operator_licenses').insert(<String, Object?>{
+          'operator_id': operatorId,
+          'license_type': data.licenseType,
+          'license_number': data.licenseNumber,
+        }),
+      );
     }
     if (data.insuranceNumber.toString().isNotEmpty) {
-      await _client.from('operator_insurances').insert(<String, Object?>{
-        'operator_id': operatorId,
-        'company': data.insuranceCompany,
-        'policy_number': data.insuranceNumber,
-      });
+      await _tryOptionalWrite(
+        () => _client.from('operator_insurances').insert(<String, Object?>{
+          'operator_id': operatorId,
+          'company': data.insuranceCompany,
+          'policy_number': data.insuranceNumber,
+        }),
+      );
     }
     for (final drone in data.drones) {
       if (drone.model.toString().trim().isEmpty) continue;
-      await _client.from('operator_drones').insert(<String, Object?>{
-        'operator_id': operatorId,
-        'maker': drone.maker,
-        'model': drone.model,
-        'registration_number': drone.registrationNumber,
-      });
+      await _tryOptionalWrite(
+        () => _client.from('operator_drones').insert(<String, Object?>{
+          'operator_id': operatorId,
+          'maker': drone.maker,
+          'model': drone.model,
+          'registration_number': drone.registrationNumber,
+        }),
+      );
+    }
+  }
+
+  Future<void> _ensureProfile(PilotRegistrationPayload payload) async {
+    try {
+      await _client.from('profiles').upsert(<String, Object?>{
+        'id': payload.userId,
+        'role': payload.data == null ? 'client' : 'operator',
+        'email': payload.email,
+        'name': payload.name,
+        'nickname': payload.nickname,
+      }, onConflict: 'id');
+    } on PostgrestException {
+      // The auth trigger normally creates this row. If direct profile upsert is
+      // blocked by project RLS, the operator upsert below will surface the real
+      // FK/RLS error instead of hiding it here.
+    }
+  }
+
+  Future<void> _tryOptionalWrite(Future<Object?> Function() write) async {
+    try {
+      await write();
+    } on PostgrestException {
+      return;
     }
   }
 
   Future<void> _syncOperatorCategories(String operatorId, dynamic data) async {
-    final labels = <String>{
-      for (final drone in data.drones)
-        ..._serviceLabelsForDroneCategories(
-          Set<String>.from(drone.categories as Set),
-        ),
-    };
-    if (labels.isEmpty) {
-      labels.addAll(defaultDroneCategories.map((category) => category.label));
-    }
+    final labels = _serviceLabelsForRegistration(data);
+    if (labels.isEmpty) return;
     final rows = await _client
         .from('service_categories')
         .select('id,label')
@@ -381,6 +435,19 @@ class SupabaseDronePilotApi implements DronePilotApi {
     return labels;
   }
 
+  Set<String> _serviceLabelsForRegistration(dynamic data) {
+    return <String>{
+      for (final drone in data.drones)
+        ..._serviceLabelsForDroneCategories(
+          Set<String>.from(drone.categories as Set),
+        ),
+      ...Set<String>.from(data.portfolioTypes as Set).where(
+        (label) =>
+            defaultDroneCategories.any((category) => category.label == label),
+      ),
+    };
+  }
+
   DronePilot _pilotFromRow(Map<String, dynamic> row) {
     final categoryRows = List<Object?>.from(
       row['operator_categories'] as List? ?? const [],
@@ -391,6 +458,18 @@ class SupabaseDronePilotApi implements DronePilotApi {
             .whereType<Map>()
             .map((item) => (item['label'] ?? '').toString())
             .where((label) => label.isNotEmpty)
+            .toSet()
+            .toList();
+    final specialtyCategories =
+        (row['specialty'] ?? '')
+            .toString()
+            .split(RegExp(r'[,·]'))
+            .map((label) => label.trim())
+            .where(
+              (label) => defaultDroneCategories.any(
+                (category) => category.label == label,
+              ),
+            )
             .toSet()
             .toList();
 
@@ -433,7 +512,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
       id: row['id'].toString(),
       name: (row['display_name'] ?? row['business_name'] ?? '운용자').toString(),
       location: (row['location_label'] ?? '지역 협의').toString(),
-      categories: categories.isEmpty ? const <String>['항공촬영'] : categories,
+      categories: categories.isEmpty ? specialtyCategories : categories,
       availableAreas:
           availableAreas.isEmpty
               ? const <String>['전체']

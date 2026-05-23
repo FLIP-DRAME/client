@@ -675,22 +675,6 @@ class _TopNavigation extends StatelessWidget {
                   ),
                   child: const Text('로그인 / 회원가입'),
                 ),
-                FilledButton(
-                  onPressed: () => context.push('/pilot/register'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.white,
-                    textStyle: HomeText.primaryButton,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 13,
-                    ),
-                  ),
-                  child: const Text('운용자 등록'),
-                ),
               ],
             ),
           ),

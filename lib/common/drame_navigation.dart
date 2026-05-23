@@ -95,12 +95,10 @@ class DrameTopNavigation extends StatelessWidget {
                       onTap: onPortfolioTap ?? () {},
                       active: activePage == 'portfolio',
                     ),
-                  ] else ...<Widget>[
+                  ] else if (!isOperator) ...<Widget>[
                     _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),
                     const SizedBox(width: 24),
                     _NavLink(label: '서비스 소개', onTap: onFindPilotTap),
-                    const SizedBox(width: 24),
-                    _NavLink(label: '기사 등록', onTap: onRegisterPilotTap),
                   ],
                 ],
 
@@ -140,27 +138,6 @@ class DrameTopNavigation extends StatelessWidget {
                       ),
                       child: const Text('요청 관리'),
                     ),
-                  if (!isOperatorRegistered) ...<Widget>[
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: onRegisterPilotTap,
-                      icon: const Icon(Icons.verified_outlined, size: 16),
-                      label: const Text('운용자 등록하기'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF6B2B),
-                        foregroundColor: Colors.white,
-                        textStyle: DT.navLink.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                        shape: const StadiumBorder(),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 9,
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ],
                   const SizedBox(width: 8),
                   _ModeToggle(
                     isOperator: true,
