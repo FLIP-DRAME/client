@@ -23,6 +23,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
   final _dateController = TextEditingController();
   final _detailController = TextEditingController();
   final _contactController = TextEditingController();
+  final _amountController = TextEditingController();
   String? _category;
   String? _area;
   String _budget = '50만원 이하';
@@ -46,6 +47,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
     _dateController.dispose();
     _detailController.dispose();
     _contactController.dispose();
+    _amountController.dispose();
     super.dispose();
   }
 
@@ -63,13 +65,17 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
     }
     setState(() => _submitting = true);
     final messenger = ScaffoldMessenger.of(context);
+    final effectiveBudget =
+        _amountController.text.trim().isNotEmpty
+            ? _amountController.text.trim()
+            : _budget;
     final request = QuoteRequest(
       pilot: widget.pilot,
       category: category,
       area: area,
       preferredDate: _dateController.text,
       detail: _detailController.text,
-      budgetRange: _budget,
+      budgetRange: effectiveBudget,
       contactWindow: _contactController.text,
     );
     try {
@@ -80,7 +86,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
           area: area,
           preferredDate: _dateController.text,
           detail: _detailController.text,
-          budgetRange: _budget,
+          budgetRange: effectiveBudget,
           contactWindow: _contactController.text,
         );
       } else {
@@ -122,25 +128,16 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
     final selectedArea =
         areaOptions.contains(_area) ? _area! : areaOptions.first;
     return QuoteScaffold(
-      title: _isEditing ? '견적 요청 수정' : '견적 작성',
+      title: _isEditing ? '견적 요청 수정' : '견적 요청',
       child: QuoteShell(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              _isEditing
-                  ? '${widget.pilot.name}에게 보낸 요청을 수정하세요'
-                  : '${widget.pilot.name}에게 요청할 작업을 작성하세요',
-              style: QuoteText.title,
-            ),
-            const SizedBox(height: 10),
-            Text(widget.pilot.intro, style: QuoteText.body),
-            const SizedBox(height: 28),
             QuotePanel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const FieldLabel('카테고리'),
+                  const FieldLabel('서비스 종류'),
                   ChoiceWrap(
                     values: categoryOptions,
                     selected: selectedCategory,
@@ -154,45 +151,75 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                     onSelected: (value) => setState(() => _area = value),
                   ),
                   const SizedBox(height: 20),
-                  QuoteTextField(label: '촬영 희망일', controller: _dateController),
+                  QuoteTextField(label: '일정', controller: _dateController),
                   const SizedBox(height: 16),
                   QuoteTextField(
-                    label: '상세 요청',
+                    label: '요청사항',
                     controller: _detailController,
                     maxLines: 4,
                   ),
                   const SizedBox(height: 20),
-                  const FieldLabel('예산 범위'),
+                  const FieldLabel('예산'),
                   ChoiceWrap(
-                    values: const <String>['50만원 이하', '50~100만원', '100만원 이상'],
+                    values: const <String>[
+                      '~30만원',
+                      '30~50만원',
+                      '50~100만원',
+                      '협의',
+                    ],
                     selected: _budget,
                     onSelected: (value) => setState(() => _budget = value),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  QuoteTextField(
+                    label: '제안 금액 (선택)',
+                    controller: _amountController,
+                  ),
+                  const SizedBox(height: 16),
                   QuoteTextField(
                     label: '연락 가능 시간',
                     controller: _contactController,
                   ),
                   const SizedBox(height: 28),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _submitting ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: quoteNavy,
-                        foregroundColor: Colors.white,
-                        textStyle: QuoteText.button,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _submitting ? null : () => context.pop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF5B616E),
+                            side: const BorderSide(color: Color(0xFFE4EAF2)),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            textStyle: QuoteText.button,
+                          ),
+                          child: const Text('이전'),
                         ),
                       ),
-                      child: Text(
-                        _submitting
-                            ? (_isEditing ? '수정 중' : '요청 보내는 중')
-                            : (_isEditing ? '수정 완료' : '견적 요청하기'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: FilledButton(
+                          onPressed: _submitting ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF0052FF),
+                            foregroundColor: Colors.white,
+                            textStyle: QuoteText.button,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            _submitting
+                                ? (_isEditing ? '수정 중…' : '요청 중…')
+                                : (_isEditing ? '수정 완료' : '요청 보내기'),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),

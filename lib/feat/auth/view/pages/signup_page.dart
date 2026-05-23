@@ -125,7 +125,7 @@ class _SignupPageState extends State<SignupPage> {
       );
       if (!mounted) return;
       setState(() => _isLoading = false);
-      context.replace('/home');
+      context.replace('/signup/done');
     } catch (error) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -170,7 +170,241 @@ class _SignupPageState extends State<SignupPage> {
 
   // ── Mobile Layout ───────────────────────────────────────────────────────────
   Widget _buildMobileLayout(BuildContext context, DrameStore store) {
-    return _buildFormPanel(context, store, isDesktop: false);
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+              child: Row(
+                children: <Widget>[
+                  IconButton(
+                    onPressed: () => context.go('/login'),
+                    icon: const Icon(Icons.chevron_left_rounded, size: 34),
+                    color: const Color(0xFF0F172A),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    '회원가입',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      color: Color(0xFF0F172A),
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      height: 1.33,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Text(
+                    '폼 입력',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      color: Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: _agreedToTerms ? 1 : 0.65,
+                  minHeight: 6,
+                  backgroundColor: const Color(0xFFEFF3F8),
+                  color: DC.primary,
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(28, 34, 28, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text(
+                      '모두의 드론을\n시작해볼까요?',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        color: Color(0xFF0F172A),
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        height: 1.22,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    TextField(
+                      controller: _nameCtrl,
+                      style: _mobileInputTextStyle(),
+                      decoration: _mobileInputDec('이름', hint: '실명을 입력해 주세요'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _nicknameCtrl,
+                      style: _mobileInputTextStyle(),
+                      decoration: _mobileInputDec('닉네임', hint: '서비스에서 사용할 이름'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      style: _mobileInputTextStyle(),
+                      decoration: _mobileInputDec(
+                        '이메일',
+                        hint: 'name@email.com',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _passwordCtrl,
+                      obscureText: _obscurePassword,
+                      style: _mobileInputTextStyle(),
+                      decoration: _mobileInputDec(
+                        '비밀번호',
+                        suffix: IconButton(
+                          onPressed:
+                              () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: DC.muted,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _confirmCtrl,
+                      obscureText: _obscureConfirm,
+                      style: _mobileInputTextStyle(),
+                      decoration: _mobileInputDec(
+                        '비밀번호 확인',
+                        suffix: IconButton(
+                          onPressed:
+                              () => setState(
+                                () => _obscureConfirm = !_obscureConfirm,
+                              ),
+                          icon: Icon(
+                            _obscureConfirm
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: DC.muted,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTermsRow(),
+                    const SizedBox(height: 26),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: FilledButton(
+                        onPressed:
+                            _isLoading ? null : () => _handleSignup(store),
+                        style: _mobilePrimaryButtonStyle(),
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.4,
+                                  ),
+                                )
+                                : const Text('회원가입 완료'),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                    Center(
+                      child: TextButton(
+                        onPressed: () => context.go('/login'),
+                        child: const Text(
+                          '이미 계정이 있으신가요? 로그인',
+                          style: TextStyle(
+                            fontFamily: 'Pretendard',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  TextStyle _mobileInputTextStyle() {
+    return const TextStyle(
+      fontFamily: 'Pretendard',
+      fontSize: 14,
+      color: DC.ink,
+    );
+  }
+
+  InputDecoration _mobileInputDec(
+    String label, {
+    String? hint,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.4),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.4),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: DC.primary, width: 1.6),
+      ),
+      labelStyle: const TextStyle(
+        fontFamily: 'Pretendard',
+        color: Color(0xFF6B7280),
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  ButtonStyle _mobilePrimaryButtonStyle() {
+    return FilledButton.styleFrom(
+      backgroundColor: DC.primary,
+      foregroundColor: Colors.white,
+      disabledBackgroundColor: DC.primary.withValues(alpha: 0.55),
+      textStyle: const TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        height: 1.15,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    );
   }
 
   // ── Form Panel ──────────────────────────────────────────────────────────────
@@ -525,6 +759,129 @@ class _SignupPageState extends State<SignupPage> {
   }
 }
 
+class SignupWelcomePage extends StatelessWidget {
+  const SignupWelcomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final store = ref.watch(drameStoreProvider);
+        final name = store.accountName.isEmpty ? '고객' : store.accountName;
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 64, 24, 28),
+              child: Column(
+                children: <Widget>[
+                  const Spacer(),
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEFF6FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: const BoxDecoration(
+                          color: DC.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 34,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text(
+                    '$name님, 환영합니다',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: 0,
+                      height: 1.25,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text.rich(
+                    TextSpan(
+                      children: <InlineSpan>[
+                        TextSpan(text: '모두의 드론에 가입되었어요.\n첫 의뢰는 '),
+                        TextSpan(
+                          text: '플랫폼 수수료 무료',
+                          style: TextStyle(
+                            color: DC.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        TextSpan(text: '예요.'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280),
+                      height: 1.33,
+                    ),
+                  ),
+                  const Spacer(flex: 2),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => context.go('/home'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: DC.primary,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          height: 1.15,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('드론 서비스 둘러보기'),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  TextButton(
+                    onPressed: () => context.go('/pilot/register'),
+                    child: const Text(
+                      '운용자로도 등록하기 →',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        color: Color(0xFF6B7280),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 // ── Signup Left Panel ────────────────────────────────────────────────────────
 
 class _SignupLeftPanel extends StatelessWidget {
@@ -697,4 +1054,3 @@ class _FeatureItem {
   final String text;
   final String detail;
 }
-

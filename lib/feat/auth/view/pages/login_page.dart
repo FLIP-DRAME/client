@@ -144,7 +144,202 @@ class _LoginPageState extends State<LoginPage> {
 
   // ── Mobile Layout ───────────────────────────────────────────────────────────
   Widget _buildMobileLayout(BuildContext context, DrameStore store) {
-    return _buildFormPanel(context, store, isDesktop: false);
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+          child: Column(
+            children: <Widget>[
+              const Spacer(flex: 2),
+              const DrameLogo(size: 44, showText: false),
+              const SizedBox(height: 24),
+              const Text(
+                '모두의 드론',
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.5,
+                  height: 1.11,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '드론 서비스를 가장 쉽게, 가장 안전하게',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF6B7280),
+                  height: 1.5,
+                ),
+              ),
+              const Spacer(),
+              TextField(
+                controller: _emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 14,
+                  color: DC.ink,
+                ),
+                decoration: _mobileInputDec('이메일', hint: 'name@email.com'),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _passwordCtrl,
+                obscureText: _obscurePassword,
+                style: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 14,
+                  color: DC.ink,
+                ),
+                decoration: _mobileInputDec(
+                  '비밀번호',
+                  suffix: IconButton(
+                    onPressed:
+                        () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: DC.muted,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: FilledButton(
+                  onPressed: _isLoading ? null : () => _handleLogin(store),
+                  style: _mobilePrimaryButtonStyle(),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2.4,
+                            ),
+                          )
+                          : const Text('이메일로 로그인'),
+                ),
+              ),
+              const SizedBox(height: 26),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const Text(
+                    '처음이신가요?',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF9CA3AF),
+                      height: 1.5,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.go('/signup'),
+                    child: const Text(
+                      '회원가입',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(flex: 2),
+              const Text.rich(
+                TextSpan(
+                  children: <InlineSpan>[
+                    TextSpan(text: '로그인 시 '),
+                    TextSpan(
+                      text: '이용약관',
+                      style: TextStyle(decoration: TextDecoration.underline),
+                    ),
+                    TextSpan(text: '과 '),
+                    TextSpan(
+                      text: '개인정보처리방침',
+                      style: TextStyle(decoration: TextDecoration.underline),
+                    ),
+                    TextSpan(text: '에 동의하게 됩니다.'),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFFA3AFBF),
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _mobileInputDec(
+    String label, {
+    String? hint,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.4),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.4),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: DC.primary, width: 1.6),
+      ),
+      labelStyle: const TextStyle(
+        fontFamily: 'Pretendard',
+        color: Color(0xFF6B7280),
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  ButtonStyle _mobilePrimaryButtonStyle() {
+    return FilledButton.styleFrom(
+      backgroundColor: DC.primary,
+      foregroundColor: Colors.white,
+      disabledBackgroundColor: DC.primary.withValues(alpha: 0.55),
+      textStyle: const TextStyle(
+        fontFamily: 'Pretendard',
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        height: 1.15,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    );
   }
 
   // ── Form Panel (shared) ─────────────────────────────────────────────────────
@@ -392,7 +587,6 @@ class _LoginPageState extends State<LoginPage> {
       ],
     );
   }
-
 }
 
 // ── Left Panel Widget ────────────────────────────────────────────────────────
@@ -522,4 +716,3 @@ class _LeftPanel extends StatelessWidget {
     );
   }
 }
-

@@ -113,6 +113,7 @@ class _FeedPost {
     required this.authorRole,
     required this.date,
     required this.likes,
+    required this.caption,
     this.operatorId,
   });
 
@@ -124,6 +125,7 @@ class _FeedPost {
   final String authorRole;
   final String date;
   final int likes;
+  final String caption;
   final String? operatorId;
 }
 
@@ -157,6 +159,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                     authorRole: post.authorRole,
                     date: post.date,
                     likes: post.likes,
+                    caption: post.caption,
                     operatorId: post.operatorId,
                   ),
                 )
@@ -182,42 +185,26 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
     final hasMore = _visibleCount < actualFeed.length;
 
     return _FeedPageShell(
-      top: 22,
+      top: 10,
       bottom: 46,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _FeedSectionHeader(eyebrow: '실제 작업 리뷰', title: '드론으로 찍은 사진 피드'),
-          const SizedBox(height: 22),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final count =
-                  constraints.maxWidth >= 900
-                      ? 3
-                      : constraints.maxWidth >= 760
-                      ? 2
-                      : 2;
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: visibleItems.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: count,
-                  crossAxisSpacing: 6,
-                  mainAxisSpacing: 6,
-                  mainAxisExtent: constraints.maxWidth >= 900 ? 392 : 300,
-                ),
-                itemBuilder: (context, index) {
-                  final item = visibleItems[index];
-                  return _FeedCard(
-                    image: item.images.isEmpty ? null : item.images.first,
-                    location: item.location,
-                    category: item.category,
-                    onTap: () => _openPostDialog(context, item),
-                  );
-                },
-              );
-            },
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                children:
+                    visibleItems
+                        .map(
+                          (item) => _FeedTimelineCard(
+                            post: item,
+                            onTap: () => _openPostDialog(context, item),
+                          ),
+                        )
+                        .toList(),
+              ),
+            ),
           ),
           if (hasMore) ...<Widget>[
             const SizedBox(height: 24),
@@ -332,6 +319,129 @@ class _FeedCardState extends State<_FeedCard> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FeedTimelineCard extends StatelessWidget {
+  const _FeedTimelineCard({required this.post, required this.onTap});
+
+  final _FeedPost post;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial =
+        post.authorName.trim().isEmpty ? '모' : post.authorName.characters.first;
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+              child: Row(
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 22,
+                    backgroundColor: const Color(0xFFF1F4F8),
+                    child: Text(
+                      initial,
+                      style: FeedText.authorName.copyWith(color: _navy),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(post.authorName, style: FeedText.authorName),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${post.location} · ${post.category}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: FeedText.authorRole,
+                        ),
+                      ],
+                    ),
+                  ),
+                  _FeedCategoryChip(label: post.category),
+                ],
+              ),
+            ),
+            AspectRatio(
+              aspectRatio: 1.38,
+              child:
+                  post.images.isEmpty
+                      ? const _FeedEmptyCover()
+                      : _FeedNetworkCover(imageUrl: post.images.first),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      const Icon(Icons.favorite_border_rounded, size: 25),
+                      const SizedBox(width: 14),
+                      const Icon(Icons.chat_bubble_outline_rounded, size: 23),
+                      const Spacer(),
+                      Text('${post.likes}명이 좋아함', style: FeedText.authorRole),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text.rich(
+                    TextSpan(
+                      children: <InlineSpan>[
+                        TextSpan(
+                          text: post.authorName,
+                          style: FeedText.bodyStrong,
+                        ),
+                        const TextSpan(text: ' '),
+                        TextSpan(
+                          text:
+                              post.caption.isEmpty
+                                  ? '${post.location}에서 진행한 ${post.category} 작업입니다.'
+                                  : post.caption,
+                        ),
+                      ],
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: FeedText.body,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: _line),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeedCategoryChip extends StatelessWidget {
+  const _FeedCategoryChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF2FF),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: FeedText.metaPill.copyWith(color: const Color(0xFF0052FF)),
       ),
     );
   }

@@ -671,11 +671,20 @@ class _OperatorFeedTabPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: DC.canvas,
       child: _PageShell(
         top: 40,
         bottom: 80,
-        child: _OperatorFeedSection(store: store),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            _OperatorFeedSection(store: store),
+            const SizedBox(height: 42),
+            const Text('전체피드', style: AppText.cardTitle),
+            const SizedBox(height: 14),
+            const DroneFeedSection(),
+          ],
+        ),
       ),
     );
   }
@@ -696,6 +705,7 @@ class _OperatorPortfolioBuilderSectionState
     extends State<_OperatorPortfolioBuilderSection> {
   bool _editing = false;
   bool _saving = false;
+  int _previewTab = 0;
 
   late TextEditingController _introCtrl;
   late TextEditingController _descCtrl;
@@ -778,12 +788,13 @@ class _OperatorPortfolioBuilderSectionState
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
     return Container(
       width: double.infinity,
       color: Colors.white,
       child: _PageShell(
-        top: 48,
-        bottom: 80,
+        top: compact ? 8 : 48,
+        bottom: compact ? 24 : 80,
         child: _editing ? _buildEditView() : _buildPreviewView(),
       ),
     );
@@ -791,61 +802,234 @@ class _OperatorPortfolioBuilderSectionState
 
   Widget _buildPreviewView() {
     final pilot = widget.store.selectedPilot;
+    final compact = MediaQuery.sizeOf(context).width < 760;
 
+    if (!compact) {
+      // ── Web layout ──────────────────────────────────────────────────────
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('포트폴리오 미리보기', style: AppText.cardTitle),
+                    SizedBox(height: 6),
+                    Text(
+                      '고객에게 보여지는 내 프로필 페이지입니다.',
+                      style: AppText.cardSubtitle,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              FilledButton.icon(
+                onPressed: () => setState(() => _editing = true),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('편집하기'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  textStyle: AppText.button,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          const Divider(color: _line),
+          const SizedBox(height: 32),
+          if (pilot == null)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 48),
+                child: Text('프로필 정보를 불러오는 중입니다.', style: AppText.cardSubtitle),
+              ),
+            )
+          else ...<Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: _soft,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _line),
+                  ),
+                  child:
+                      pilot.portfolioImages.isNotEmpty
+                          ? ClipOval(
+                            child: Image.network(
+                              pilot.portfolioImages.first,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => const Icon(
+                                    Icons.flight_takeoff_rounded,
+                                    color: _muted,
+                                    size: 32,
+                                  ),
+                            ),
+                          )
+                          : const Center(
+                            child: Icon(
+                              Icons.flight_takeoff_rounded,
+                              color: _muted,
+                              size: 32,
+                            ),
+                          ),
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(pilot.name, style: AppText.cardTitle),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 6,
+                        children: <Widget>[
+                          _PortfolioMeta(
+                            icon: Icons.place_outlined,
+                            text: pilot.location,
+                          ),
+                          _PortfolioMeta(
+                            icon: Icons.sell_outlined,
+                            text: pilot.specialty,
+                          ),
+                          _PortfolioMeta(
+                            icon: Icons.map_outlined,
+                            text: pilot.availableAreas.join(', '),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(pilot.intro, style: AppText.cardSubtitle),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            const Divider(color: _line),
+            const SizedBox(height: 28),
+            const Text('서비스 상세설명', style: AppText.smallStrong),
+            const SizedBox(height: 12),
+            Text(
+              pilot.description.isEmpty ? '(설명 없음)' : pilot.description,
+              style: AppText.cardSubtitle,
+            ),
+            if (pilot.portfolioImages.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 36),
+              const Text('사진 포트폴리오', style: AppText.smallStrong),
+              const SizedBox(height: 16),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: pilot.portfolioImages.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  mainAxisExtent: 200,
+                ),
+                itemBuilder:
+                    (context, index) => ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        pilot.portfolioImages[index],
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (_, __, ___) => Container(
+                              color: _soft,
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image_outlined,
+                                  color: _muted,
+                                ),
+                              ),
+                            ),
+                      ),
+                    ),
+              ),
+            ],
+          ],
+        ],
+      );
+    }
+
+    // ── Mobile compact layout ────────────────────────────────────────────
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text('포트폴리오 미리보기', style: AppText.cardTitle),
-                  SizedBox(height: 6),
-                  Text('고객에게 보여지는 내 프로필 페이지입니다.', style: AppText.cardSubtitle),
+                  SizedBox(height: 2),
+                  Text(
+                    '고객에게 보이는 내 프로필 페이지',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 12,
+                      color: Color(0xFF7C828A),
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
-            FilledButton.icon(
+            OutlinedButton.icon(
               onPressed: () => setState(() => _editing = true),
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('편집하기'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _navy,
-                foregroundColor: Colors.white,
-                textStyle: AppText.button,
+              icon: const Icon(Icons.edit_outlined, size: 14),
+              label: const Text('편집'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _primary,
+                side: const BorderSide(color: _primary, width: 1),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
+                  horizontal: 10,
+                  vertical: 6,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                textStyle: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                 ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 32),
-        const Divider(color: _line),
-        const SizedBox(height: 32),
+        const SizedBox(height: 14),
         if (pilot == null)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 48),
-              child: Text('프로필 정보를 불러오는 중입니다.', style: AppText.cardSubtitle),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Center(
+              child: Text('프로필 정보를 불러오는 중입니다.', style: AppText.metricLabel),
             ),
           )
         else ...<Widget>[
-          // Profile header
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Container(
-                width: 100,
-                height: 100,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: _soft,
                   shape: BoxShape.circle,
@@ -860,96 +1044,197 @@ class _OperatorPortfolioBuilderSectionState
                             errorBuilder:
                                 (_, __, ___) => const Icon(
                                   Icons.flight_takeoff_rounded,
-                                  color: _muted,
-                                  size: 32,
+                                  color: Color(0xFF7C828A),
+                                  size: 20,
                                 ),
                           ),
                         )
                         : const Center(
                           child: Icon(
                             Icons.flight_takeoff_rounded,
-                            color: _muted,
-                            size: 32,
+                            color: Color(0xFF7C828A),
+                            size: 20,
                           ),
                         ),
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(pilot.name, style: AppText.cardTitle),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 6,
+                    Text(
+                      pilot.name,
+                      style: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0A0B0D),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
                       children: <Widget>[
-                        _PortfolioMeta(
-                          icon: Icons.place_outlined,
-                          text: pilot.location,
+                        const Icon(
+                          Icons.place_outlined,
+                          size: 12,
+                          color: Color(0xFF7C828A),
                         ),
-                        _PortfolioMeta(
-                          icon: Icons.sell_outlined,
-                          text: pilot.specialty,
-                        ),
-                        _PortfolioMeta(
-                          icon: Icons.map_outlined,
-                          text: pilot.availableAreas.join(', '),
+                        const SizedBox(width: 2),
+                        Flexible(
+                          child: Text(
+                            '${pilot.location}  ·  ${pilot.specialty}',
+                            style: const TextStyle(
+                              fontFamily: 'Pretendard',
+                              fontSize: 12,
+                              color: Color(0xFF7C828A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(pilot.intro, style: AppText.cardSubtitle),
+                    if (pilot.intro.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 2),
+                      Text(
+                        pilot.intro,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 12,
+                          color: Color(0xFF7C828A),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 32),
-          const Divider(color: _line),
-          const SizedBox(height: 28),
-          const Text('서비스 상세설명', style: AppText.smallStrong),
-          const SizedBox(height: 12),
-          Text(
-            pilot.description.isEmpty ? '(설명 없음)' : pilot.description,
-            style: AppText.cardSubtitle,
-          ),
-          if (pilot.portfolioImages.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 36),
-            const Text('사진 포트폴리오', style: AppText.smallStrong),
-            const SizedBox(height: 16),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: pilot.portfolioImages.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                mainAxisExtent: 200,
-              ),
-              itemBuilder: (context, index) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    pilot.portfolioImages[index],
-                    fit: BoxFit.cover,
-                    errorBuilder:
-                        (_, __, ___) => Container(
-                          color: _soft,
-                          child: const Center(
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              color: _muted,
-                            ),
-                          ),
+          const SizedBox(height: 16),
+          Row(
+            children: <Widget>[
+              for (int i = 0; i < 3; i++)
+                GestureDetector(
+                  onTap: () => setState(() => _previewTab = i),
+                  child: Container(
+                    padding: EdgeInsets.only(bottom: 8, right: i < 2 ? 20 : 0),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color:
+                              _previewTab == i ? _primary : Colors.transparent,
+                          width: 2,
                         ),
+                      ),
+                    ),
+                    child: Text(
+                      const <String>['포트폴리오', '리뷰', '정보'][i],
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 14,
+                        fontWeight:
+                            _previewTab == i
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                        color:
+                            _previewTab == i
+                                ? _primary
+                                : const Color(0xFF7C828A),
+                      ),
+                    ),
                   ),
-                );
-              },
+                ),
+            ],
+          ),
+          const Divider(color: _line, height: 1),
+          const SizedBox(height: 12),
+          if (_previewTab == 0) ..._buildMobilePortfolioTab(pilot),
+          if (_previewTab == 1)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text('아직 리뷰가 없습니다', style: AppText.metricLabel),
+              ),
             ),
-          ],
+          if (_previewTab == 2) _buildMobileInfoTab(pilot),
         ],
+      ],
+    );
+  }
+
+  List<Widget> _buildMobilePortfolioTab(DronePilot pilot) {
+    final images = pilot.portfolioImages;
+    final feedPosts = widget.store.myFeedPosts;
+    return <Widget>[
+      if (images.isNotEmpty)
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: images.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 2,
+            mainAxisSpacing: 2,
+          ),
+          itemBuilder:
+              (context, i) => Image.network(
+                images[i],
+                fit: BoxFit.cover,
+                errorBuilder:
+                    (_, __, ___) => Container(
+                      color: _soft,
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: _muted,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+              ),
+        )
+      else
+        Container(
+          width: double.infinity,
+          height: 100,
+          decoration: BoxDecoration(
+            color: _soft,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Center(
+            child: Text('사진 포트폴리오가 없습니다', style: AppText.metricLabel),
+          ),
+        ),
+      const SizedBox(height: 20),
+      const Text('서비스 상세설명', style: AppText.smallStrong),
+      const SizedBox(height: 8),
+      Text(
+        pilot.description.isEmpty ? '(설명 없음)' : pilot.description,
+        style: AppText.cardSubtitle,
+      ),
+      if (feedPosts.isNotEmpty) ...<Widget>[
+        const SizedBox(height: 20),
+        const Text('내 피드', style: AppText.smallStrong),
+        const SizedBox(height: 12),
+        ...feedPosts.map((post) => _PreviewFeedTile(post: post)),
+      ],
+    ];
+  }
+
+  Widget _buildMobileInfoTab(DronePilot pilot) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _PortfolioMeta(icon: Icons.place_outlined, text: pilot.location),
+        const SizedBox(height: 8),
+        _PortfolioMeta(icon: Icons.sell_outlined, text: pilot.specialty),
+        const SizedBox(height: 8),
+        _PortfolioMeta(
+          icon: Icons.map_outlined,
+          text: pilot.availableAreas.join(', '),
+        ),
       ],
     );
   }
@@ -1166,6 +1451,60 @@ class _OperatorPortfolioBuilderSectionState
           style: TextButton.styleFrom(foregroundColor: _navy),
         ),
       ],
+    );
+  }
+}
+
+class _PreviewFeedTile extends StatelessWidget {
+  const _PreviewFeedTile({required this.post});
+
+  final OperatorFeedPost post;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageProvider =
+        post.imageBytes != null
+            ? MemoryImage(Uint8List.fromList(post.imageBytes!)) as ImageProvider
+            : post.imageUrl != null
+            ? NetworkImage(post.imageUrl!) as ImageProvider
+            : null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          if (imageProvider != null)
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(10),
+              ),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image(image: imageProvider, fit: BoxFit.cover),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                if (post.caption.isNotEmpty)
+                  Text(post.caption, style: AppText.cardSubtitle),
+                const SizedBox(height: 4),
+                Text(
+                  '${post.createdAt.year}.${post.createdAt.month.toString().padLeft(2, '0')}.${post.createdAt.day.toString().padLeft(2, '0')}',
+                  style: AppText.metricLabel,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -4160,42 +4499,91 @@ class _SearchResultsPage extends StatelessWidget {
   }
 }
 
-class _MobilePilotRequestsPage extends StatelessWidget {
+class _MobilePilotRequestsPage extends StatefulWidget {
   const _MobilePilotRequestsPage({required this.store});
 
   final DrameStore store;
 
   @override
+  State<_MobilePilotRequestsPage> createState() =>
+      _MobilePilotRequestsPageState();
+}
+
+class _MobilePilotRequestsPageState extends State<_MobilePilotRequestsPage> {
+  String? _selectedId;
+
+  @override
   Widget build(BuildContext context) {
+    final requests = widget.store.pilotWorkRequests;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: <Widget>[
-              Expanded(child: Text('받은 요청', style: AppText.portfolioTitle)),
-              Text(
-                '${store.pilotWorkRequests.length}건',
-                style: AppText.cardSubtitle.copyWith(color: _navy),
+              Expanded(
+                child: Text(
+                  '받은 요청 · ${requests.length}건',
+                  style: AppText.portfolioTitle,
+                ),
+              ),
+              const Text(
+                '최신순',
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 13,
+                  color: Color(0xFF7C828A),
+                ),
+              ),
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 18,
+                color: Color(0xFF7C828A),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ...store.pilotWorkRequests.map(
-            (request) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _RequestReviewCard(
-                request: request,
-                selected: false,
-                onTap:
-                    () => _openPilotRequestReviewPage(
+          if (requests.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F8FA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _line),
+              ),
+              child: const Center(
+                child: Text(
+                  '아직 받은 요청이 없습니다',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 14,
+                    color: Color(0xFF7C828A),
+                  ),
+                ),
+              ),
+            )
+          else
+            ...requests.map(
+              (request) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _RequestReviewCard(
+                  request: request,
+                  selected: _selectedId == request.id,
+                  onTap: () {
+                    setState(() => _selectedId = request.id);
+                    _showOperatorRequestSheet(
                       context,
-                      initialRequest: request,
-                    ),
+                      request,
+                      widget.store,
+                    ).then((_) {
+                      if (mounted) setState(() => _selectedId = null);
+                    });
+                  },
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

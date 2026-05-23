@@ -285,8 +285,7 @@ class _OperatorMyPageBody extends StatelessWidget {
                         store.selectedPilot?.description ??
                         store.pilotOnboarding.portfolioUrl,
                     categoryLabels:
-                        store.selectedPilot?.categories ??
-                        const <String>[],
+                        store.selectedPilot?.categories ?? const <String>[],
                     areaNames: store.pilotOnboarding.areas.toList(),
                     portfolioImageUrls:
                         store.selectedPilot?.portfolioImages ??
@@ -747,9 +746,10 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   }
 
   Future<void> _pickImage() async {
-    final input = web.HTMLInputElement()
-      ..type = 'file'
-      ..accept = 'image/*';
+    final input =
+        web.HTMLInputElement()
+          ..type = 'file'
+          ..accept = 'image/*';
     input.click();
     await Future.any(<Future<void>>[
       input.onChange.first.then((_) {}),
@@ -791,7 +791,10 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      await widget.store.addFeedPost(caption: caption, imageBytes: _pendingImageBytes);
+      await widget.store.addFeedPost(
+        caption: caption,
+        imageBytes: _pendingImageBytes,
+      );
     } catch (error) {
       if (!mounted) return;
       messenger.showSnackBar(
@@ -819,204 +822,221 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            const Expanded(
+    return Container(
+      width: double.infinity,
+      color: DC.canvas,
+      padding: const EdgeInsets.symmetric(vertical: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('내 피드', style: AppText.cardTitle),
+                    SizedBox(height: 6),
+                    Text(
+                      '작업 사진과 소개글을 피드에 올려 고객에게 보여주세요.',
+                      style: AppText.cardSubtitle,
+                    ),
+                  ],
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                icon: Icon(
+                  _isExpanded ? Icons.close_rounded : Icons.add_rounded,
+                ),
+                label: Text(_isExpanded ? '닫기' : '새 게시물'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  textStyle: AppText.button,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 13,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (_isExpanded) ...<Widget>[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFD),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _line),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('내 피드', style: AppText.cardTitle),
-                  SizedBox(height: 6),
-                  Text(
-                    '작업 사진과 소개글을 피드에 올려 고객에게 보여주세요.',
-                    style: AppText.cardSubtitle,
-                  ),
-                ],
-              ),
-            ),
-            FilledButton.icon(
-              onPressed: () => setState(() => _isExpanded = !_isExpanded),
-              icon: Icon(_isExpanded ? Icons.close_rounded : Icons.add_rounded),
-              label: Text(_isExpanded ? '닫기' : '새 게시물'),
-              style: FilledButton.styleFrom(
-                backgroundColor: _navy,
-                foregroundColor: Colors.white,
-                textStyle: AppText.button,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 13,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        if (_isExpanded) ...<Widget>[
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFD),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _line),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                TextFormField(
-                  controller: _captionController,
-                  maxLines: 3,
-                  style: AppText.smallStrong.copyWith(color: _ink),
-                  decoration: InputDecoration(
-                    hintText: '작업 내용이나 소개글을 입력하세요...',
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.all(14),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _line),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _line),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _focus, width: 1.2),
+                  TextFormField(
+                    controller: _captionController,
+                    maxLines: 3,
+                    style: AppText.smallStrong.copyWith(color: _ink),
+                    decoration: InputDecoration(
+                      hintText: '작업 내용이나 소개글을 입력하세요...',
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _focus, width: 1.2),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    height: 96,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _line),
-                    ),
-                    child: _pendingImageBytes != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.memory(
-                              Uint8List.fromList(_pendingImageBytes!),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            ),
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Icon(
-                                Icons.add_photo_alternate_outlined,
-                                color: DC.muted,
-                                size: 26,
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: _line),
+                      ),
+                      child:
+                          _pendingImageBytes != null
+                              ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.memory(
+                                  Uint8List.fromList(_pendingImageBytes!),
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
+                              )
+                              : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Icon(
+                                    Icons.add_photo_alternate_outlined,
+                                    color: DC.muted,
+                                    size: 26,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    '사진 추가 (선택)',
+                                    style: AppText.metricLabel,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 6),
-                              Text('사진 추가 (선택)', style: AppText.metricLabel),
-                            ],
-                          ),
+                    ),
                   ),
-                ),
-                if (_pendingImageName != null) ...<Widget>[
-                  const SizedBox(height: 8),
-                  Row(
-                    children: <Widget>[
-                      Icon(Icons.image_rounded, size: 13, color: _mint),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          _pendingImageName!,
-                          style: AppText.metricLabel,
-                          overflow: TextOverflow.ellipsis,
+                  if (_pendingImageName != null) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: <Widget>[
+                        Icon(Icons.image_rounded, size: 13, color: _mint),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _pendingImageName!,
+                            style: AppText.metricLabel,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap:
+                              () => setState(() {
+                                _pendingImageBytes = null;
+                                _pendingImageName = null;
+                              }),
+                          child: Icon(
+                            Icons.close_rounded,
+                            size: 14,
+                            color: DC.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _submit,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _primary,
+                        foregroundColor: Colors.white,
+                        textStyle: AppText.button,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () => setState(() {
-                          _pendingImageBytes = null;
-                          _pendingImageName = null;
-                        }),
-                        child: Icon(Icons.close_rounded, size: 14, color: DC.muted),
-                      ),
-                    ],
+                      child: const Text('피드에 등록'),
+                    ),
                   ),
                 ],
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _submit,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _navy,
-                      foregroundColor: Colors.white,
-                      textStyle: AppText.button,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('피드에 등록'),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (widget.store.myFeedPosts.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFD),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _line),
+              ),
+              child: Column(
+                children: <Widget>[
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: 40,
+                    color: _muted.withValues(alpha: 0.5),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Text('아직 올린 피드가 없어요', style: AppText.cardSubtitle),
+                  const SizedBox(height: 4),
+                  Text('작업 사진을 올려 고객에게 어필해보세요!', style: AppText.metricLabel),
+                ],
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = constraints.maxWidth >= 760 ? 3 : 2;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: widget.store.myFeedPosts.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final post = widget.store.myFeedPosts[index];
+                    return _FeedPostCard(
+                      post: post,
+                      onDelete:
+                          () async => widget.store.deleteFeedPost(post.id),
+                    );
+                  },
+                );
+              },
             ),
-          ),
-          const SizedBox(height: 24),
         ],
-        if (widget.store.myFeedPosts.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 48),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFD),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _line),
-            ),
-            child: Column(
-              children: <Widget>[
-                Icon(
-                  Icons.photo_library_outlined,
-                  size: 40,
-                  color: _muted.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 12),
-                Text('아직 올린 피드가 없어요', style: AppText.cardSubtitle),
-                const SizedBox(height: 4),
-                Text('작업 사진을 올려 고객에게 어필해보세요!', style: AppText.metricLabel),
-              ],
-            ),
-          )
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth >= 600 ? 3 : 2;
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1,
-                ),
-                itemCount: widget.store.myFeedPosts.length,
-                itemBuilder: (context, index) {
-                  final post = widget.store.myFeedPosts[index];
-                  return _FeedPostCard(
-                    post: post,
-                    onDelete: () async => widget.store.deleteFeedPost(post.id),
-                  );
-                },
-              );
-            },
-          ),
-      ],
+      ),
     );
   }
 }
@@ -1053,7 +1073,7 @@ class _FeedPostCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        post.caption,
+                        post.caption.isEmpty ? '이미지 없음' : post.caption,
                         style: AppText.cardSubtitle,
                         maxLines: 4,
                         overflow: TextOverflow.ellipsis,
@@ -1075,7 +1095,7 @@ class _FeedPostCard extends StatelessWidget {
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: <Color>[
-                            Colors.black.withValues(alpha: 0.55),
+                            Colors.black.withValues(alpha: 0.58),
                             Colors.transparent,
                           ],
                         ),

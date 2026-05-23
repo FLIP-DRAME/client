@@ -79,6 +79,7 @@ flutter:
   assets:
     - assets/logo.svg
     - assets/logo_not_text.svg
+    - assets/onboarding/
     - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
