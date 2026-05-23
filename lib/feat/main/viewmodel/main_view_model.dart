@@ -203,7 +203,6 @@ class DrameStore extends ChangeNotifier {
   }
 
   Future<void> signIn({
-    required String role,
     required String email,
     required String password,
   }) async {
@@ -215,12 +214,14 @@ class DrameStore extends ChangeNotifier {
     } on AuthException catch (error) {
       throw Exception(_authErrorMessage(error));
     }
+    final user = Supabase.instance.client.auth.currentUser;
+    final meta = user?.userMetadata ?? const <String, dynamic>{};
+    final role = meta['role'] == 'operator' ? '운용자' : '이용자';
     updateAuth(role: role, email: email, password: password);
     submitAuth();
   }
 
   Future<void> signUp({
-    required String role,
     required String email,
     required String password,
     required String name,
@@ -231,7 +232,7 @@ class DrameStore extends ChangeNotifier {
         email: email,
         password: password,
         data: <String, Object?>{
-          'role': role == '운용자' ? 'operator' : 'client',
+          'role': 'client',
           'name': name,
           'nickname': nickname,
         },
@@ -253,7 +254,7 @@ class DrameStore extends ChangeNotifier {
       }
     }
     updateAuth(
-      role: role,
+      role: '이용자',
       email: email,
       password: password,
       name: name,

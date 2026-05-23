@@ -1367,6 +1367,79 @@ class _OperatorProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 22),
+          // Registration status chip
+          Row(
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      store.operatorRegistrationCompleted
+                          ? const Color(0xFFD1FAE5)
+                          : const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color:
+                        store.operatorRegistrationCompleted
+                            ? const Color(0xFF6EE7B7)
+                            : const Color(0xFFFCD34D),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(
+                      store.operatorRegistrationCompleted
+                          ? Icons.verified_rounded
+                          : Icons.warning_amber_rounded,
+                      size: 14,
+                      color:
+                          store.operatorRegistrationCompleted
+                              ? const Color(0xFF059669)
+                              : const Color(0xFFD97706),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      store.operatorRegistrationCompleted
+                          ? '운용자 등록 완료'
+                          : '운용자 등록 미완료',
+                      style: AppText.chip.copyWith(
+                        color:
+                            store.operatorRegistrationCompleted
+                                ? const Color(0xFF059669)
+                                : const Color(0xFFD97706),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (!store.operatorRegistrationCompleted) ...<Widget>[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => context.push('/pilot/register'),
+                icon: const Icon(Icons.app_registration_rounded, size: 18),
+                label: const Text('운용자 등록하기'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  textStyle: AppText.button,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 4),
           Row(
             children: <Widget>[
               Expanded(
@@ -1375,7 +1448,7 @@ class _OperatorProfileCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _navy,
                     textStyle: AppText.button,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text('내 소개 편집'),
                 ),
@@ -1387,29 +1460,11 @@ class _OperatorProfileCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _navy,
                     textStyle: AppText.button,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text('미리보기'),
                 ),
               ),
-              if (!store.operatorRegistrationCompleted) ...<Widget>[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () => context.push('/pilot/register'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _primary,
-                      foregroundColor: Colors.white,
-                      textStyle: AppText.button,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('운용자 등록'),
-                  ),
-                ),
-              ],
             ],
           ),
         ],
@@ -2975,7 +3030,7 @@ class _AreaStep extends StatelessWidget {
   }
 }
 
-class _PilotTextField extends StatelessWidget {
+class _PilotTextField extends StatefulWidget {
   const _PilotTextField({
     required this.label,
     required this.initialValue,
@@ -2990,14 +3045,33 @@ class _PilotTextField extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
+
+  @override
+  State<_PilotTextField> createState() => _PilotTextFieldState();
+}
+
+class _PilotTextFieldState extends State<_PilotTextField> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => TextFormField(
-    key: ValueKey<String>('$label-$initialValue'),
-    initialValue: initialValue,
-    keyboardType: keyboardType,
-    inputFormatters: inputFormatters,
-    onChanged: onChanged,
-    decoration: _pilotInputDecoration(label: label, hint: hint),
+    controller: _ctrl,
+    keyboardType: widget.keyboardType,
+    inputFormatters: widget.inputFormatters,
+    onChanged: widget.onChanged,
+    decoration: _pilotInputDecoration(label: widget.label, hint: widget.hint),
   );
 }
 

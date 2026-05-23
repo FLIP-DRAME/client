@@ -115,7 +115,70 @@ create policy "feed_post_assets select public" on public.feed_post_assets
     )
   );
 
--- ─── PART 4: 기존 유저 profiles 행 backfill ─────────────────
+-- ─── PART 4: operator sub-table RLS ─────────────────────────
+-- operator_licenses / operator_insurances / operator_drones / operator_service_areas
+-- These all have an operator_id FK → operator_profiles.id.
+-- Ownership check: operator_profiles.user_id = auth.uid()
+
+alter table public.operator_licenses    enable row level security;
+alter table public.operator_insurances  enable row level security;
+alter table public.operator_drones      enable row level security;
+alter table public.operator_service_areas enable row level security;
+alter table public.operator_categories  enable row level security;
+
+-- helper macro repeated for each table ──────────────────────
+
+-- operator_licenses
+drop policy if exists "operators manage own licenses"    on public.operator_licenses;
+drop policy if exists "public read operator licenses"    on public.operator_licenses;
+create policy "operators manage own licenses" on public.operator_licenses
+  for all to authenticated
+  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
+  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+create policy "public read operator licenses" on public.operator_licenses
+  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+
+-- operator_insurances
+drop policy if exists "operators manage own insurances"  on public.operator_insurances;
+drop policy if exists "public read operator insurances"  on public.operator_insurances;
+create policy "operators manage own insurances" on public.operator_insurances
+  for all to authenticated
+  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
+  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+create policy "public read operator insurances" on public.operator_insurances
+  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+
+-- operator_drones
+drop policy if exists "operators manage own drones"      on public.operator_drones;
+drop policy if exists "public read operator drones"      on public.operator_drones;
+create policy "operators manage own drones" on public.operator_drones
+  for all to authenticated
+  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
+  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+create policy "public read operator drones" on public.operator_drones
+  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+
+-- operator_service_areas
+drop policy if exists "operators manage own service areas" on public.operator_service_areas;
+drop policy if exists "public read operator service areas" on public.operator_service_areas;
+create policy "operators manage own service areas" on public.operator_service_areas
+  for all to authenticated
+  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
+  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+create policy "public read operator service areas" on public.operator_service_areas
+  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+
+-- operator_categories
+drop policy if exists "operators manage own categories"  on public.operator_categories;
+drop policy if exists "public read operator categories"  on public.operator_categories;
+create policy "operators manage own categories" on public.operator_categories
+  for all to authenticated
+  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
+  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+create policy "public read operator categories" on public.operator_categories
+  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+
+-- ─── PART 5: 기존 유저 profiles 행 backfill ─────────────────
 -- 트리거 적용 전에 가입한 유저는 profiles 행이 없어 FK / 피드 INSERT 모두 실패함.
 -- SQL Editor 는 postgres 권한으로 실행되므로 RLS 우회 가능.
 -- ON CONFLICT DO NOTHING 으로 중복 실행해도 안전.

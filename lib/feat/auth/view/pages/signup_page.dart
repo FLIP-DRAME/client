@@ -24,7 +24,6 @@ class _SignupPageState extends State<SignupPage> {
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
-  String _selectedRole = '이용자';
   bool _agreedToTerms = false;
 
   @override
@@ -119,7 +118,6 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       await store.signUp(
-        role: _selectedRole,
         email: email,
         password: password,
         name: name,
@@ -127,11 +125,7 @@ class _SignupPageState extends State<SignupPage> {
       );
       if (!mounted) return;
       setState(() => _isLoading = false);
-      if (_selectedRole == '운용자') {
-        context.replace('/pilot/register');
-      } else {
-        context.replace('/home');
-      }
+      context.replace('/home');
     } catch (error) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -244,10 +238,6 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                       ),
                       const SizedBox(height: 28),
-
-                      // Role toggle
-                      _buildRoleToggle(),
-                      const SizedBox(height: 20),
 
                       // Name field
                       TextField(
@@ -467,32 +457,6 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildRoleToggle() {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: DC.surfaceSoft,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DC.hairline),
-      ),
-      child: Row(
-        children: <Widget>[
-          _RoleToggleItem(
-            label: '이용자',
-            selected: _selectedRole == '이용자',
-            onTap: () => setState(() => _selectedRole = '이용자'),
-          ),
-          _RoleToggleItem(
-            label: '운용자',
-            selected: _selectedRole == '운용자',
-            onTap: () => setState(() => _selectedRole = '운용자'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -734,55 +698,3 @@ class _FeatureItem {
   final String detail;
 }
 
-// ── Role Toggle Item ─────────────────────────────────────────────────────────
-
-class _RoleToggleItem extends StatelessWidget {
-  const _RoleToggleItem({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            color: selected ? DC.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-            boxShadow:
-                selected
-                    ? <BoxShadow>[
-                      BoxShadow(
-                        color: DC.primary.withValues(alpha: 0.22),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                    : null,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 14,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                color: selected ? Colors.white : DC.body,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
