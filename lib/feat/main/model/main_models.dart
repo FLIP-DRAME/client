@@ -42,12 +42,14 @@ class OperatorFeedPost {
     required this.caption,
     required this.createdAt,
     this.imageBytes,
+    this.imageUrl,
   });
 
   final String id;
   final String caption;
   final DateTime createdAt;
   final List<int>? imageBytes;
+  final String? imageUrl;
 }
 
 class PilotWorkRequest {

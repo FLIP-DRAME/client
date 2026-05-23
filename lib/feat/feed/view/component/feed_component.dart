@@ -79,8 +79,33 @@ class _FeedNetworkCover extends StatelessWidget {
   }
 }
 
+class _FeedEmptyCover extends StatelessWidget {
+  const _FeedEmptyCover();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[Color(0xFFE4EAF2), Color(0xFFB8C7D8)],
+        ),
+      ),
+      child: const Center(
+        child: Icon(
+          Icons.flight_takeoff_rounded,
+          color: Colors.white,
+          size: 42,
+        ),
+      ),
+    );
+  }
+}
+
 class _FeedPost {
   const _FeedPost({
+    required this.id,
     required this.location,
     required this.category,
     required this.images,
@@ -88,8 +113,10 @@ class _FeedPost {
     required this.authorRole,
     required this.date,
     required this.likes,
+    this.operatorId,
   });
 
+  final String id;
   final String location;
   final String category;
   final List<String> images;
@@ -97,6 +124,7 @@ class _FeedPost {
   final String authorRole;
   final String date;
   final int likes;
+  final String? operatorId;
 }
 
 class DroneFeedSection extends ConsumerStatefulWidget {
@@ -121,6 +149,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
             posts
                 .map(
                   (post) => _FeedPost(
+                    id: post.id,
                     location: post.location,
                     category: post.category,
                     images: post.images,
@@ -128,6 +157,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                     authorRole: post.authorRole,
                     date: post.date,
                     likes: post.likes,
+                    operatorId: post.operatorId,
                   ),
                 )
                 .toList();
@@ -180,7 +210,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                 itemBuilder: (context, index) {
                   final item = visibleItems[index];
                   return _FeedCard(
-                    image: item.images.first,
+                    image: item.images.isEmpty ? null : item.images.first,
                     location: item.location,
                     category: item.category,
                     onTap: () => _openPostDialog(context, item),
@@ -225,7 +255,12 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
     return showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.72),
-      builder: (_) => _FeedPostDialog(post: post),
+      builder:
+          (_) => _FeedPostDialog(
+            post: post,
+            loadPilot:
+                (id) => ref.read(dronePilotApiProvider).fetchPilotById(id),
+          ),
     );
   }
 }
@@ -238,7 +273,7 @@ class _FeedCard extends StatefulWidget {
     required this.onTap,
   });
 
-  final String image;
+  final String? image;
   final String location;
   final String category;
   final VoidCallback onTap;
@@ -262,7 +297,10 @@ class _FeedCardState extends State<_FeedCard> {
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              _FeedNetworkCover(imageUrl: widget.image),
+              if (widget.image == null)
+                const _FeedEmptyCover()
+              else
+                _FeedNetworkCover(imageUrl: widget.image!),
               AnimatedOpacity(
                 opacity: _hovered ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 220),
@@ -300,9 +338,10 @@ class _FeedCardState extends State<_FeedCard> {
 }
 
 class _FeedPostDialog extends StatefulWidget {
-  const _FeedPostDialog({required this.post});
+  const _FeedPostDialog({required this.post, required this.loadPilot});
 
   final _FeedPost post;
+  final Future<DronePilot?> Function(String id) loadPilot;
 
   @override
   State<_FeedPostDialog> createState() => _FeedPostDialogState();
@@ -311,11 +350,7 @@ class _FeedPostDialog extends StatefulWidget {
 class _FeedPostDialogState extends State<_FeedPostDialog> {
   final TextEditingController _commentController = TextEditingController();
   final PageController _pageController = PageController();
-  final List<String> _comments = <String>[
-    '촬영 구도가 정말 깔끔하네요.',
-    '이 지역 허가까지 포함된 작업인가요?',
-    '비슷한 촬영 견적도 받아보고 싶어요.',
-  ];
+  final List<String> _comments = <String>[];
   bool _liked = false;
   int _imageIndex = 0;
 
@@ -364,6 +399,9 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
   }
 
   Widget _imagePane() {
+    if (widget.post.images.isEmpty) {
+      return const _FeedEmptyCover();
+    }
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
@@ -492,11 +530,17 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      onPressed: () {
-                        final pilot = null;
-                        Navigator.of(context).pop();
-                        _openPortfolio(context, pilot);
-                      },
+                      onPressed:
+                          widget.post.operatorId == null
+                              ? null
+                              : () async {
+                                final pilot = await widget.loadPilot(
+                                  widget.post.operatorId!,
+                                );
+                                if (!mounted || pilot == null) return;
+                                Navigator.of(context).pop();
+                                _openPortfolio(context, pilot);
+                              },
                       icon: const Icon(Icons.grid_view_rounded, size: 17),
                       label: const Text('포트폴리오 보러가기'),
                     ),
@@ -525,7 +569,10 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
               const SizedBox(height: 20),
               const Text('댓글', style: FeedText.dialogTitle),
               const SizedBox(height: 12),
-              ..._comments.map((comment) => _CommentTile(comment: comment)),
+              if (_comments.isEmpty)
+                const Text('아직 댓글이 없습니다.', style: FeedText.body)
+              else
+                ..._comments.map((comment) => _CommentTile(comment: comment)),
             ],
           ),
         ),

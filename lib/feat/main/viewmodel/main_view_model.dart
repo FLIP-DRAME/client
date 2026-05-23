@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_defaults.dart';
+import '../../feed/network/feed_api.dart';
 import '../../quote/network/quote_api.dart';
 import '../../quote/model/quote_model.dart';
 import '../model/main_models.dart';
@@ -9,12 +10,17 @@ import '../network/drone_pilot_api.dart';
 import '../model/drone_pilot_model.dart';
 
 class DrameStore extends ChangeNotifier {
-  DrameStore({required DronePilotApi api, required QuoteApi quoteApi})
-    : _api = api,
-      _quoteApi = quoteApi;
+  DrameStore({
+    required DronePilotApi api,
+    required QuoteApi quoteApi,
+    required FeedApi feedApi,
+  }) : _api = api,
+       _quoteApi = quoteApi,
+       _feedApi = feedApi;
 
   final DronePilotApi _api;
   final QuoteApi _quoteApi;
+  final FeedApi _feedApi;
 
   List<DronePilot> pilots = const <DronePilot>[];
   List<DronePilot> allPilots = const <DronePilot>[];
@@ -71,6 +77,8 @@ class DrameStore extends ChangeNotifier {
               .map(_workRequestFromData)
               .toList();
       myQuotes = await _api.fetchMyQuotes();
+      myFeedPosts =
+          (await _feedApi.fetchMyPosts()).map(_operatorPostFromFeed).toList();
       pilots = nextPilots;
       if (initial) {
         allPilots = nextPilots;
@@ -426,20 +434,23 @@ class DrameStore extends ChangeNotifier {
 
   List<OperatorFeedPost> myFeedPosts = <OperatorFeedPost>[];
 
-  void addFeedPost({required String caption, List<int>? imageBytes}) {
+  Future<void> addFeedPost({
+    required String caption,
+    List<int>? imageBytes,
+  }) async {
+    final post = await _feedApi.createPost(
+      caption: caption,
+      imageBytes: imageBytes,
+    );
     myFeedPosts = <OperatorFeedPost>[
-      OperatorFeedPost(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        caption: caption,
-        createdAt: DateTime.now(),
-        imageBytes: imageBytes,
-      ),
+      _operatorPostFromFeed(post),
       ...myFeedPosts,
     ];
     notifyListeners();
   }
 
-  void deleteFeedPost(String id) {
+  Future<void> deleteFeedPost(String id) async {
+    await _feedApi.deletePost(id);
     myFeedPosts = myFeedPosts.where((p) => p.id != id).toList();
     notifyListeners();
   }
@@ -461,6 +472,15 @@ class DrameStore extends ChangeNotifier {
       progress: '견적 응답 대기',
       remaining: data.remaining,
       mapLabel: '${data.location} 지도',
+    );
+  }
+
+  OperatorFeedPost _operatorPostFromFeed(FeedPost post) {
+    return OperatorFeedPost(
+      id: post.id,
+      caption: post.caption,
+      createdAt: DateTime.now(),
+      imageUrl: post.images.isEmpty ? null : post.images.first,
     );
   }
 }

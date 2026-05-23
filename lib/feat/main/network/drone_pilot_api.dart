@@ -130,7 +130,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
           kakao_channel,
           operator_categories(service_categories(slug,label)),
           operator_service_areas(permission_type, regions(name)),
-          portfolio_assets(url, sort_order)
+          portfolio_assets(url, sort_order),
+          portfolio_items(portfolio_assets(url, sort_order))
         ''')
         .eq('status', 'approved')
         .order('created_at', ascending: false);
@@ -185,7 +186,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
           kakao_channel,
           operator_categories(service_categories(slug,label)),
           operator_service_areas(permission_type, regions(name)),
-          portfolio_assets(url, sort_order)
+          portfolio_assets(url, sort_order),
+          portfolio_items(portfolio_assets(url, sort_order))
         ''')
         .eq('id', id)
         .limit(1);
@@ -227,6 +229,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
     final operatorId = operator['id'].toString();
     await _syncOperatorCategories(operatorId, data);
     await _syncOperatorAreas(operatorId, data);
+    await _syncOperatorPortfolio(operatorId, data);
     if (data.licenseNumber.toString().isNotEmpty) {
       await _client.from('operator_licenses').insert(<String, Object?>{
         'operator_id': operatorId,
@@ -314,6 +317,59 @@ class SupabaseDronePilotApi implements DronePilotApi {
         );
   }
 
+  Future<void> _syncOperatorPortfolio(String operatorId, dynamic data) async {
+    final portfolioUrl = data.portfolioUrl.toString().trim();
+    if (portfolioUrl.isEmpty) return;
+
+    final existingItems = await _client
+        .from('portfolio_items')
+        .select('id')
+        .eq('operator_id', operatorId)
+        .eq('title', '등록 포트폴리오')
+        .limit(1);
+    final item =
+        existingItems.isEmpty
+            ? await _client
+                .from('portfolio_items')
+                .insert(<String, Object?>{
+                  'operator_id': operatorId,
+                  'title': '등록 포트폴리오',
+                  'body': portfolioUrl,
+                  'is_published': true,
+                })
+                .select('id')
+                .single()
+            : await _client
+                .from('portfolio_items')
+                .update(<String, Object?>{
+                  'body': portfolioUrl,
+                  'is_published': true,
+                })
+                .eq('id', existingItems.first['id'])
+                .select('id')
+                .single();
+
+    if (!_isHttpUrl(portfolioUrl)) return;
+
+    await _client
+        .from('portfolio_assets')
+        .delete()
+        .eq('operator_id', operatorId)
+        .eq('url', portfolioUrl);
+    await _client.from('portfolio_assets').insert(<String, Object?>{
+      'portfolio_item_id': item['id'],
+      'operator_id': operatorId,
+      'kind': 'image',
+      'url': portfolioUrl,
+      'alt_text': '운용자 포트폴리오',
+    });
+  }
+
+  bool _isHttpUrl(String value) {
+    final uri = Uri.tryParse(value);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+  }
+
   Set<String> _serviceLabelsForDroneCategories(Set<String> categories) {
     final labels = <String>{};
     if (categories.contains('촬영용') || categories.contains('다목적')) {
@@ -355,12 +411,23 @@ class SupabaseDronePilotApi implements DronePilotApi {
     final assetRows = List<Object?>.from(
       row['portfolio_assets'] as List? ?? const [],
     );
+    final itemRows = List<Object?>.from(
+      row['portfolio_items'] as List? ?? const [],
+    );
     final images =
-        assetRows
-            .whereType<Map>()
-            .map((item) => (item['url'] ?? '').toString())
-            .where((url) => url.isNotEmpty)
-            .toList();
+        <String>{
+          ...assetRows.whereType<Map>().map(
+            (item) => (item['url'] ?? '').toString(),
+          ),
+          ...itemRows.whereType<Map>().expand<String>((item) {
+            final nested = List<Object?>.from(
+              item['portfolio_assets'] as List? ?? const [],
+            );
+            return nested.whereType<Map>().map(
+              (asset) => (asset['url'] ?? '').toString(),
+            );
+          }),
+        }.where((url) => url.isNotEmpty).toList();
 
     return DronePilot(
       id: row['id'].toString(),

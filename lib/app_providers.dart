@@ -33,6 +33,7 @@ final drameStoreProvider = ChangeNotifierProvider<DrameStore>((ref) {
   return DrameStore(
     api: ref.watch(dronePilotApiProvider),
     quoteApi: ref.watch(quoteApiProvider),
+    feedApi: ref.watch(feedApiProvider),
   );
 });
 

@@ -794,11 +794,15 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final caption = _captionController.text.trim();
     if (caption.isEmpty && _pendingImageBytes == null) return;
 
-    widget.store.addFeedPost(caption: caption, imageBytes: _pendingImageBytes);
+    await widget.store.addFeedPost(
+      caption: caption,
+      imageBytes: _pendingImageBytes,
+    );
+    if (!mounted) return;
     _captionController.clear();
     setState(() {
       _pendingImageBytes = null;
@@ -1024,7 +1028,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   final post = widget.store.myFeedPosts[index];
                   return _FeedPostCard(
                     post: post,
-                    onDelete: () => widget.store.deleteFeedPost(post.id),
+                    onDelete: () async => widget.store.deleteFeedPost(post.id),
                   );
                 },
               );
@@ -1043,6 +1047,12 @@ class _FeedPostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ImageProvider? imageProvider =
+        post.imageBytes != null
+            ? MemoryImage(Uint8List.fromList(post.imageBytes!))
+            : post.imageUrl != null
+            ? NetworkImage(post.imageUrl!)
+            : null;
     return Stack(
       children: <Widget>[
         Container(
@@ -1051,15 +1061,12 @@ class _FeedPostCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: _line),
             image:
-                post.imageBytes != null
-                    ? DecorationImage(
-                      image: MemoryImage(Uint8List.fromList(post.imageBytes!)),
-                      fit: BoxFit.cover,
-                    )
-                    : null,
+                imageProvider == null
+                    ? null
+                    : DecorationImage(image: imageProvider, fit: BoxFit.cover),
           ),
           child:
-              post.imageBytes == null
+              imageProvider == null
                   ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(12),

@@ -124,6 +124,70 @@ for select using (
   )
 );
 
+drop policy if exists "operators manage own portfolio items" on public.portfolio_items;
+create policy "operators manage own portfolio items" on public.portfolio_items
+for all using (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+) with check (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "operators manage own portfolio assets" on public.portfolio_assets;
+create policy "operators manage own portfolio assets" on public.portfolio_assets
+for all using (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+) with check (
+  exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "operators manage own feed posts" on public.feed_posts;
+create policy "operators manage own feed posts" on public.feed_posts
+for all using (
+  author_id = auth.uid()
+  or exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+) with check (
+  author_id = auth.uid()
+  or exists (
+    select 1 from public.operator_profiles op
+    where op.id = operator_id and op.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "operators manage own feed assets" on public.feed_post_assets;
+create policy "operators manage own feed assets" on public.feed_post_assets
+for all using (
+  exists (
+    select 1
+    from public.feed_posts fp
+    left join public.operator_profiles op on op.id = fp.operator_id
+    where fp.id = post_id
+      and (fp.author_id = auth.uid() or op.user_id = auth.uid())
+  )
+) with check (
+  exists (
+    select 1
+    from public.feed_posts fp
+    left join public.operator_profiles op on op.id = fp.operator_id
+    where fp.id = post_id
+      and (fp.author_id = auth.uid() or op.user_id = auth.uid())
+  )
+);
+
 -- Existing MVP registrations should become searchable immediately.
 update public.operator_profiles
 set status = 'approved'
