@@ -203,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Drame에 오신 것을 환영합니다',
+                        '모드에 오신 것을 환영합니다',
                         style: TextStyle(
                           fontFamily: 'Pretendard',
                           fontSize: 14,

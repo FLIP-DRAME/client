@@ -49,8 +49,9 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
-        if (!store.isLoggedIn)
+        if (!store.isLoggedIn) {
           return const Scaffold(backgroundColor: DC.canvas);
+        }
         final compact = MediaQuery.sizeOf(context).width < 760;
         final nickname =
             store.accountNickname.isNotEmpty
@@ -79,7 +80,7 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
                 },
                 onSwitchToOperator: () {
                   store.setPilotMode(true);
-                  context.go('/home');
+                  context.go('/operator');
                 },
                 onRequestsTap:
                     () => _openPilotRequestReviewPage(

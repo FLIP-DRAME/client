@@ -184,7 +184,7 @@ class FeedApi {
       location: (map['location_label'] ?? '지역 미정').toString(),
       category: ((map['category'] as Map?)?['label'] ?? '드론 작업').toString(),
       images: images,
-      authorName: (operator?['display_name'] ?? 'Drame 운용자').toString(),
+      authorName: (operator?['display_name'] ?? '모드 운용자').toString(),
       authorRole: (operator?['specialty'] ?? '드론 운용자').toString(),
       date: _dateOnly(map['created_at']),
       likes:

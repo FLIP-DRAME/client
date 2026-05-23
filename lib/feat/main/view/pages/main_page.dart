@@ -136,7 +136,7 @@ void _openPilotRequestReviewPage(
   BuildContext context, {
   PilotWorkRequest? initialRequest,
 }) {
-  context.push('/pilot/requests', extra: initialRequest);
+  context.push('/operator/requests', extra: initialRequest);
 }
 
 class PilotRequestReviewPage extends StatelessWidget {
@@ -169,7 +169,10 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
           context.go('/login');
           return;
         }
-        store.openPilotOnboarding();
+        if (!store.operatorRegistrationCompleted &&
+            !store.registrationJustCompleted) {
+          store.openPilotOnboarding();
+        }
       });
     });
   }
@@ -184,8 +187,9 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
             if (!store.isLoggedIn) {
               return const SizedBox.shrink();
             }
-            if (store.operatorRegistrationCompleted &&
-                !store.isPilotOnboarding) {
+            if (store.registrationJustCompleted ||
+                (store.operatorRegistrationCompleted &&
+                    !store.isPilotOnboarding)) {
               return _PilotRegistrationDoneSection(store: store);
             }
             return SingleChildScrollView(
@@ -206,6 +210,100 @@ class OperatorMyPage extends StatelessWidget {
     return Consumer<DrameStore>(
       builder:
           (context, store, _) => _OperatorProfileManagementPage(store: store),
+    );
+  }
+}
+
+class OperatorFeedPage extends StatelessWidget {
+  const OperatorFeedPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<DrameStore>(
+      builder: (context, store, _) => _OperatorStandaloneShell(
+        store: store,
+        activeTab: 'feed',
+        child: _OperatorFeedTabPage(store: store),
+      ),
+    );
+  }
+}
+
+class OperatorPortfolioPage extends StatelessWidget {
+  const OperatorPortfolioPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<DrameStore>(
+      builder: (context, store, _) => _OperatorStandaloneShell(
+        store: store,
+        activeTab: 'portfolio',
+        child: _OperatorPortfolioBuilderSection(store: store),
+      ),
+    );
+  }
+}
+
+class _OperatorStandaloneShell extends StatelessWidget {
+  const _OperatorStandaloneShell({
+    required this.store,
+    required this.activeTab,
+    required this.child,
+  });
+
+  final DrameStore store;
+  final String activeTab;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final nickname =
+        store.accountNickname.isNotEmpty ? store.accountNickname : store.accountName;
+    return Scaffold(
+      backgroundColor: DC.canvas,
+      body: Column(
+        children: <Widget>[
+          DrameTopNavigation(
+            isLoggedIn: store.isLoggedIn,
+            isOperator: true,
+            isOperatorRegistered: store.operatorRegistrationCompleted,
+            nickname: nickname,
+            onLoginTap: () => context.go('/login'),
+            onRegisterPilotTap: () => context.push('/pilot/register'),
+            onLogoTap: () => context.go('/operator'),
+            onFindPilotTap: () => context.go('/home'),
+            onFeedTap: () => context.go('/feed'),
+            onPortfolioTap: () => context.go('/portfolio'),
+            onRequestsTap: () => context.go('/operator/requests'),
+            onMyPageTap: () => context.go('/operator/mypage'),
+            onMyQuotesTap: () => context.go('/my/quotes'),
+            onSwitchToUser: () {
+              store.setPilotMode(false);
+              context.go('/home');
+            },
+            onSwitchToOperator: () {
+              store.setPilotMode(true);
+              context.go('/operator');
+            },
+            operatorActiveTab: activeTab,
+            onOperatorTabTap: (id) {
+              switch (id) {
+                case 'requests':
+                  context.go('/operator/requests');
+                case 'feed':
+                  context.go('/operator/feed');
+                case 'portfolio':
+                  context.go('/operator/portfolio');
+                case 'profile':
+                  context.go('/operator/mypage');
+                default:
+                  context.go('/operator');
+              }
+            },
+          ),
+          Expanded(child: SingleChildScrollView(child: child)),
+        ],
+      ),
     );
   }
 }
@@ -243,6 +341,19 @@ class _DrameHomePageState extends State<DrameHomePage> {
         }
         store.setPilotMode(widget.operatorMode);
         store.load(initial: true);
+      });
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant DrameHomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.operatorMode == widget.operatorMode) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<DrameStore>().setPilotMode(widget.operatorMode);
+      setState(() {
+        _selectedTabId = widget.operatorMode ? 'dashboard' : 'all';
       });
     });
   }
@@ -297,14 +408,16 @@ class _DrameHomePageState extends State<DrameHomePage> {
     BuildContext ctx,
     DrameStore store,
   ) {
-    switch (id) {
-      case 'requests':
-        _openPilotRequestReviewPage(
-          ctx,
-          initialRequest: store.firstPilotWorkRequest,
-        );
-      default:
-        setState(() => _selectedTabId = id);
+    if (id == 'requests') {
+      ctx.go('/operator/requests');
+    } else if (id == 'feed') {
+      ctx.go('/operator/feed');
+    } else if (id == 'portfolio') {
+      ctx.go('/operator/portfolio');
+    } else if (id == 'profile') {
+      ctx.go('/operator/mypage');
+    } else {
+      setState(() => _selectedTabId = id);
     }
   }
 
@@ -368,14 +481,22 @@ class _DrameHomePageState extends State<DrameHomePage> {
             onFeedTap: () => context.go('/feed'),
             onPortfolioTap: () => context.go('/portfolio'),
             onMyQuotesTap: () => context.go('/my/quotes'),
-            onSwitchToUser: () => context.go('/home'),
-            onSwitchToOperator: () => context.go('/operator'),
+            onSwitchToUser: () {
+              store.setPilotMode(false);
+              setState(() => _selectedTabId = 'all');
+              context.go('/home');
+            },
+            onSwitchToOperator: () {
+              store.setPilotMode(true);
+              setState(() => _selectedTabId = 'dashboard');
+              context.go('/operator');
+            },
             onRequestsTap:
                 () => _openPilotRequestReviewPage(
                   context,
                   initialRequest: store.firstPilotWorkRequest,
                 ),
-            onMyPageTap: () => context.push('/pilot/mypage'),
+            onMyPageTap: () => context.go('/operator/mypage'),
             operatorActiveTab: isOperatorDashboard ? _selectedTabId : null,
             onOperatorTabTap:
                 isOperatorDashboard
@@ -643,7 +764,7 @@ class _TopNavigation extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: <Widget>[
-                const Text('Drame', style: HomeText.logo),
+                const Text('모드', style: HomeText.logo),
                 if (!compact) ...const <Widget>[
                   SizedBox(width: 54),
                   // _TopSearch(),
@@ -766,7 +887,7 @@ class _SecondaryNavigation extends StatelessWidget {
         onTap: onFindPilotTap,
       ),
       (icon: Icons.grid_view_rounded, label: '포트폴리오', onTap: onPortfolioTap),
-      (icon: Icons.info_outline_rounded, label: 'Drame 소개', onTap: () {}),
+      (icon: Icons.info_outline_rounded, label: '모드 소개', onTap: () {}),
       (icon: Icons.map_outlined, label: '비행공역 확인', onTap: () {}),
     ];
 

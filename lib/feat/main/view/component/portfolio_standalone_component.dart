@@ -26,8 +26,9 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
-        if (!store.isLoggedIn)
+        if (!store.isLoggedIn) {
           return const Scaffold(backgroundColor: DC.canvas);
+        }
         final nickname =
             store.accountNickname.isNotEmpty
                 ? store.accountNickname
@@ -62,7 +63,7 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
                 },
                 onSwitchToOperator: () {
                   store.setPilotMode(true);
-                  context.go('/home');
+                  context.go('/operator');
                 },
                 onRequestsTap:
                     () => _openPilotRequestReviewPage(

@@ -41,52 +41,13 @@ class SupabaseQuoteApi implements QuoteApi {
             .select('id')
             .single();
 
-    final proposedPrice = _proposedPrice(request.pilot, request.category);
-    String? quoteId;
-    try {
-      final quote =
-          await _client
-              .from('quotes')
-              .insert(<String, Object?>{
-                'job_request_id': job['id'],
-                'operator_id': request.pilot.id,
-                'status': 'submitted',
-                'proposed_price': proposedPrice,
-                'estimated_time_label': _estimatedTime(request.category),
-                'message': _message(request),
-              })
-              .select('id')
-              .single();
-      quoteId = quote['id'].toString();
-      await _client
-          .from('quote_included_items')
-          .insert(
-            _includedItems(request.category)
-                .asMap()
-                .entries
-                .map(
-                  (entry) => <String, Object?>{
-                    'quote_id': quoteId,
-                    'item_text': entry.value,
-                    'sort_order': entry.key,
-                  },
-                )
-                .toList(),
-          );
-    } on PostgrestException {
-      // Operators normally create quotes. When RLS blocks this client-side
-      // convenience quote, the job request is still saved and the estimate UI
-      // can continue as a pending request.
-    }
-
     return QuoteEstimate(
       request: request,
-      proposedPrice: proposedPrice,
-      estimatedTime: _estimatedTime(request.category),
-      includedItems: _includedItems(request.category),
-      message: _message(request),
+      proposedPrice: 0,
+      estimatedTime: '운용자 검토 대기',
+      includedItems: const <String>[],
+      message: '${request.pilot.name}에게 견적 요청을 보냈습니다. 운용자가 확인 후 견적을 보내면 내 견적에서 확인할 수 있습니다.',
       jobRequestId: job['id'].toString(),
-      quoteId: quoteId,
     );
   }
 
@@ -105,7 +66,7 @@ class SupabaseQuoteApi implements QuoteApi {
                 'status': 'pending',
                 'method': 'bank_transfer',
                 'amount': estimate.proposedPrice,
-                'bank_name': 'DRAME 안심계좌',
+                'bank_name': '모드 안심계좌',
                 'account_holder': '주식회사 드라메',
                 'account_number': '110-482-903184',
                 'depositor_name': '의뢰자명 + ${estimate.request.pilot.name}',
@@ -115,7 +76,7 @@ class SupabaseQuoteApi implements QuoteApi {
       paymentId = payment['id'].toString();
     }
     return PaymentInstruction(
-      bankName: 'DRAME 안심계좌',
+      bankName: '모드 안심계좌',
       accountHolder: '주식회사 드라메',
       accountNumber: '110-482-903184',
       amount: estimate.proposedPrice,
@@ -139,8 +100,8 @@ class SupabaseQuoteApi implements QuoteApi {
     }
     return ContactAccess(
       phone: pilot.contact.isEmpty ? '운용자 승인 후 공개' : pilot.contact,
-      email: '${pilot.id}@drame.co.kr',
-      kakaoChannel: '@drame-${pilot.id}',
+      email: '${pilot.id}@mode.co.kr',
+      kakaoChannel: '@mode-${pilot.id}',
       note: '입금 확인 후 24시간 동안 연락수단이 제공됩니다. 작업 조건은 채팅에서 최종 확정하세요.',
     );
   }

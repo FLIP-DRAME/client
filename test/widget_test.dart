@@ -1,6 +1,6 @@
-import 'package:drane/core/app_defaults.dart';
-import 'package:drane/feat/main/model/drone_pilot_model.dart';
-import 'package:drane/feat/quote/model/quote_model.dart';
+import 'package:mode/core/app_defaults.dart';
+import 'package:mode/feat/main/model/drone_pilot_model.dart';
+import 'package:mode/feat/quote/model/quote_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

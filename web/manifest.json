@@ -1,6 +1,6 @@
 {
-    "name": "drane",
-    "short_name": "drane",
+    "name": "모드",
+    "short_name": "모드",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

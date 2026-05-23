@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_defaults.dart';
+import '../model/main_models.dart';
 import '../model/drone_pilot_model.dart';
 
 abstract class DronePilotApi {
@@ -15,6 +16,16 @@ abstract class DronePilotApi {
   Future<DronePilot?> fetchMyOperatorProfile();
   Future<List<PilotWorkRequestData>> fetchOperatorRequests();
   Future<List<UserQuoteSummary>> fetchMyQuotes();
+  Future<void> markOperatorRequestSeen(String requestId);
+  Future<void> updateMyQuoteRequest({
+    required String requestId,
+    required String area,
+    required String preferredDate,
+    required String detail,
+    required String budgetRange,
+    required String contactWindow,
+  });
+  Future<void> submitQuoteForRequest(PilotWorkRequest request, String message);
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
   Future<void> updateOperatorProfile({
     required String intro,
@@ -51,20 +62,32 @@ class PilotWorkRequestData {
 
 class UserQuoteSummary {
   const UserQuoteSummary({
+    required this.id,
+    required this.pilotId,
     required this.pilotName,
     required this.category,
     required this.area,
     required this.date,
     required this.status,
     required this.price,
+    required this.detail,
+    required this.budgetRange,
+    required this.contactWindow,
+    required this.message,
   });
 
+  final String id;
+  final String pilotId;
   final String pilotName;
   final String category;
   final String area;
   final String date;
   final String status;
   final String price;
+  final String detail;
+  final String budgetRange;
+  final String contactWindow;
+  final String message;
 }
 
 class PilotRegistrationPayload {
@@ -256,7 +279,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
                   data.areas.isEmpty ? null : data.areas.join(', '),
               'specialty':
                   serviceLabels.isEmpty ? null : serviceLabels.join(', '),
-              'intro': 'Drame 등록 운용자입니다.',
+              'intro': '모드 등록 운용자입니다.',
               'description': data.portfolioUrl,
               'phone': null,
               'email': payload.email,
@@ -322,19 +345,20 @@ class SupabaseDronePilotApi implements DronePilotApi {
     final specialtyLabel = categoryLabels.join(', ');
     final locationLabel = areaNames.join(', ');
 
-    await _client.from('operator_profiles').update(<String, Object?>{
-      'intro': intro,
-      'description': description,
-      'specialty': specialtyLabel.isEmpty ? null : specialtyLabel,
-      'location_label': locationLabel.isEmpty ? null : locationLabel,
-    }).eq('user_id', userId);
+    await _client
+        .from('operator_profiles')
+        .update(<String, Object?>{
+          'intro': intro,
+          'description': description,
+          'specialty': specialtyLabel.isEmpty ? null : specialtyLabel,
+          'location_label': locationLabel.isEmpty ? null : locationLabel,
+        })
+        .eq('user_id', userId);
 
     await _tryOptionalWrite(
       () => _syncCategoriesByLabels(operatorId, categoryLabels),
     );
-    await _tryOptionalWrite(
-      () => _syncAreasByNames(operatorId, areaNames),
-    );
+    await _tryOptionalWrite(() => _syncAreasByNames(operatorId, areaNames));
 
     await _client
         .from('portfolio_items')
@@ -352,17 +376,11 @@ class SupabaseDronePilotApi implements DronePilotApi {
       );
       if (_isHttpUrl(trimmed)) {
         await _tryOptionalWrite(
-          () =>
-              _client
-                  .from('portfolio_assets')
-                  .upsert(
-                    <String, Object?>{
-                      'operator_id': operatorId,
-                      'url': trimmed,
-                      'sort_order': portfolioImageUrls.indexOf(url),
-                    },
-                    onConflict: 'url',
-                  ),
+          () => _client.from('portfolio_assets').upsert(<String, Object?>{
+            'operator_id': operatorId,
+            'url': trimmed,
+            'sort_order': portfolioImageUrls.indexOf(url),
+          }, onConflict: 'url'),
         );
       }
     }
@@ -382,22 +400,21 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .select('id,label')
         .inFilter('label', labels);
     if (rows.isEmpty) return;
-    await _client.from('operator_categories').insert(
-      rows
-          .map<Map<String, Object?>>(
-            (row) => <String, Object?>{
-              'operator_id': operatorId,
-              'category_id': row['id'],
-            },
-          )
-          .toList(),
-    );
+    await _client
+        .from('operator_categories')
+        .insert(
+          rows
+              .map<Map<String, Object?>>(
+                (row) => <String, Object?>{
+                  'operator_id': operatorId,
+                  'category_id': row['id'],
+                },
+              )
+              .toList(),
+        );
   }
 
-  Future<void> _syncAreasByNames(
-    String operatorId,
-    List<String> names,
-  ) async {
+  Future<void> _syncAreasByNames(String operatorId, List<String> names) async {
     await _client
         .from('operator_service_areas')
         .delete()
@@ -408,17 +425,19 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .select('id,name')
         .inFilter('name', names);
     if (rows.isEmpty) return;
-    await _client.from('operator_service_areas').insert(
-      rows
-          .map<Map<String, Object?>>(
-            (row) => <String, Object?>{
-              'operator_id': operatorId,
-              'region_id': row['id'],
-              'permission_type': 'available',
-            },
-          )
-          .toList(),
-    );
+    await _client
+        .from('operator_service_areas')
+        .insert(
+          rows
+              .map<Map<String, Object?>>(
+                (row) => <String, Object?>{
+                  'operator_id': operatorId,
+                  'region_id': row['id'],
+                  'permission_type': 'available',
+                },
+              )
+              .toList(),
+        );
   }
 
   Future<void> _ensureProfile(PilotRegistrationPayload payload) async {
@@ -615,6 +634,9 @@ class SupabaseDronePilotApi implements DronePilotApi {
         permittedAreas.add(name);
       }
     }
+    if (availableAreas.isEmpty) {
+      availableAreas.addAll(_splitLabels(row['location_label']));
+    }
 
     final assetRows = List<Object?>.from(
       row['portfolio_assets'] as List? ?? const [],
@@ -637,11 +659,18 @@ class SupabaseDronePilotApi implements DronePilotApi {
           }),
         }.where((url) => url.isNotEmpty).toList();
 
+    final categoryLabels =
+        categories.isNotEmpty
+            ? categories
+            : specialtyCategories.isNotEmpty
+            ? specialtyCategories
+            : defaultDroneCategories.map((category) => category.label).toList();
+
     return DronePilot(
       id: row['id'].toString(),
       name: (row['display_name'] ?? row['business_name'] ?? '운용자').toString(),
       location: (row['location_label'] ?? '지역 협의').toString(),
-      categories: categories.isEmpty ? specialtyCategories : categories,
+      categories: categoryLabels,
       availableAreas:
           availableAreas.isEmpty
               ? const <String>['전체']
@@ -655,8 +684,16 @@ class SupabaseDronePilotApi implements DronePilotApi {
       specialty: (row['specialty'] ?? '').toString(),
       intro: (row['intro'] ?? '').toString(),
       description: (row['description'] ?? '').toString(),
-      quoteOptions: categories.isEmpty ? const <String>['상담 견적'] : categories,
+      quoteOptions: categoryLabels,
     );
+  }
+
+  Iterable<String> _splitLabels(Object? value) {
+    return (value ?? '')
+        .toString()
+        .split(',')
+        .map((label) => label.trim())
+        .where((label) => label.isNotEmpty);
   }
 
   IconData _iconForName(String iconName) {
@@ -686,6 +723,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
           budget_max,
           contact_window,
           client_display_name,
+          operator_viewed_at,
           created_at,
           service_categories(label)
         ''')
@@ -698,7 +736,10 @@ class SupabaseDronePilotApi implements DronePilotApi {
         category:
             ((map['service_categories'] as Map?)?['label'] ?? '작업 요청')
                 .toString(),
-        status: _jobStatusLabel((map['status'] ?? '').toString()),
+        status: _operatorRequestStatus(
+          (map['status'] ?? '').toString(),
+          map['operator_viewed_at'],
+        ),
         location: (map['location_label'] ?? '지역 미정').toString(),
         dateRange: _dateRange(
           map['preferred_start_at'],
@@ -713,6 +754,17 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   @override
+  Future<void> markOperatorRequestSeen(String requestId) async {
+    await _client
+        .from('job_requests')
+        .update(<String, Object?>{
+          'operator_viewed_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', requestId)
+        .eq('status', 'open');
+  }
+
+  @override
   Future<List<UserQuoteSummary>> fetchMyQuotes() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return const <UserQuoteSummary>[];
@@ -722,11 +774,16 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .select('''
           id,
           status,
+          preferred_operator_id,
           location_label,
           preferred_start_at,
           created_at,
+          detail,
+          budget_min,
+          budget_max,
+          contact_window,
           service_categories(label),
-          quotes(status, proposed_price, operator_profiles(display_name, business_name))
+          quotes(status, proposed_price, message, operator_profiles(display_name, business_name))
         ''')
         .eq('client_id', userId)
         .order('created_at', ascending: false);
@@ -740,7 +797,15 @@ class SupabaseDronePilotApi implements DronePilotApi {
               : Map<String, dynamic>.from(quoteRows.whereType<Map>().first);
       final operator = quote['operator_profiles'] as Map?;
       final price = (quote['proposed_price'] as num?)?.toInt();
+      final jobStatus = (map['status'] ?? '').toString();
+      final quoteStatus = (quote['status'] ?? '').toString();
+      final status =
+          jobStatus == 'open'
+              ? jobStatus
+              : (quoteStatus.isEmpty ? jobStatus : quoteStatus);
       return UserQuoteSummary(
+        id: (map['id'] ?? '').toString(),
+        pilotId: (map['preferred_operator_id'] ?? '').toString(),
         pilotName:
             (operator?['display_name'] ??
                     operator?['business_name'] ??
@@ -751,22 +816,112 @@ class SupabaseDronePilotApi implements DronePilotApi {
                 .toString(),
         area: (map['location_label'] ?? '지역 미정').toString(),
         date: _dateOnly(map['preferred_start_at'] ?? map['created_at']),
-        status: _quoteStatusLabel(
-          (quote['status'] ?? map['status'] ?? '').toString(),
-        ),
+        status: _quoteStatusLabel(status),
         price: price == null ? '-' : '${(price / 10000).round()}만원',
+        detail: (map['detail'] ?? '').toString(),
+        budgetRange: _budgetLabel(map['budget_min'], map['budget_max']),
+        contactWindow: (map['contact_window'] ?? '').toString(),
+        message: (quote['message'] ?? '').toString(),
       );
     }).toList();
   }
 
+  @override
+  Future<void> updateMyQuoteRequest({
+    required String requestId,
+    required String area,
+    required String preferredDate,
+    required String detail,
+    required String budgetRange,
+    required String contactWindow,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('로그인이 필요합니다.');
+    }
+    final budget = _parseBudgetLabel(budgetRange);
+    await _client
+        .from('job_requests')
+        .update(<String, Object?>{
+          'status': 'open',
+          'operator_viewed_at': null,
+          'location_label': area,
+          'detail': detail,
+          'budget_min': budget.$1,
+          'budget_max': budget.$2,
+          'contact_window': contactWindow,
+        })
+        .eq('id', requestId)
+        .eq('client_id', userId);
+  }
+
+  @override
+  Future<void> submitQuoteForRequest(
+    PilotWorkRequest request,
+    String message,
+  ) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('로그인이 필요합니다.');
+    }
+    final operator =
+        await _client
+            .from('operator_profiles')
+            .select('id, display_name, business_name')
+            .eq('user_id', userId)
+            .maybeSingle();
+    if (operator == null) {
+      throw StateError('운용자 등록을 먼저 완료해 주세요.');
+    }
+
+    final operatorId = operator['id'].toString();
+    final existing = await _client
+        .from('quotes')
+        .select('id')
+        .eq('job_request_id', request.id)
+        .eq('operator_id', operatorId)
+        .limit(1);
+    final payload = <String, Object?>{
+      'job_request_id': request.id,
+      'operator_id': operatorId,
+      'status': 'submitted',
+      'proposed_price': _proposedPriceFromBudget(request.budget),
+      'estimated_time_label': '일정 협의 후 진행',
+      'message':
+          message.trim().isEmpty
+              ? '${operator['display_name'] ?? operator['business_name'] ?? '운용자'}가 요청 내용을 확인하고 견적을 보냈습니다.'
+              : message.trim(),
+    };
+
+    if (existing.isEmpty) {
+      await _client.from('quotes').insert(payload);
+    } else {
+      await _client
+          .from('quotes')
+          .update(payload)
+          .eq('id', existing.first['id']);
+    }
+    await _client
+        .from('job_requests')
+        .update(<String, Object?>{'status': 'quoted'})
+        .eq('id', request.id);
+  }
+
   String _jobStatusLabel(String status) => switch (status) {
-    'open' => '신규',
-    'quoted' => '견적 도착',
+    'open' => '요청 도착',
+    'quoted' => '견적 보냄',
     'accepted' || 'paid' || 'contact_opened' || 'in_progress' => '진행 중',
     'completed' => '완료',
     'cancelled' => '취소',
-    _ => '신규',
+    _ => '요청 도착',
   };
+
+  String _operatorRequestStatus(String status, Object? viewedAt) {
+    if (status == 'open') {
+      return viewedAt == null ? '신규' : '확인 중';
+    }
+    return _jobStatusLabel(status);
+  }
 
   String _quoteStatusLabel(String status) => switch (status) {
     'submitted' => '견적 도착',
@@ -775,8 +930,28 @@ class SupabaseDronePilotApi implements DronePilotApi {
     'expired' => '만료',
     'paid' || 'confirmed' => '결제 완료',
     'completed' => '작업 완료',
-    _ => '견적 검토중',
+    _ => '요청 보냄',
   };
+
+  int _proposedPriceFromBudget(String budget) {
+    final numbers =
+        RegExp(r'\d+')
+            .allMatches(budget)
+            .map((match) => int.tryParse(match.group(0) ?? '') ?? 0)
+            .where((value) => value > 0)
+            .toList();
+    if (numbers.isEmpty) return 300000;
+    return numbers.last * 10000;
+  }
+
+  (int?, int?) _parseBudgetLabel(String label) {
+    if (label.contains('50') && label.contains('100')) {
+      return (500000, 1000000);
+    }
+    if (label.contains('100')) return (1000000, null);
+    if (label.contains('50')) return (0, 500000);
+    return (null, null);
+  }
 
   String _budgetLabel(Object? min, Object? max) {
     final minValue = (min as num?)?.toInt();

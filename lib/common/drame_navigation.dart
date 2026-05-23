@@ -125,6 +125,12 @@ class DrameTopNavigation extends StatelessWidget {
                       onTap: onPortfolioTap ?? () {},
                       active: activePage == 'portfolio',
                     ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '내 견적',
+                      onTap: onMyQuotesTap ?? () {},
+                      active: activePage == 'quotes',
+                    ),
                   ] else ...<Widget>[
                     _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),
                     const SizedBox(width: 24),
@@ -189,21 +195,6 @@ class DrameTopNavigation extends StatelessWidget {
                     onOperatorTap: onSwitchToOperator ?? () {},
                   ),
                 ] else ...<Widget>[
-                  if (!compact)
-                    TextButton(
-                      onPressed: onMyQuotesTap,
-                      style: TextButton.styleFrom(
-                        foregroundColor:
-                            activePage == 'quotes' ? DC.primary : DC.ink,
-                        textStyle: DT.navLink,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      child: const Text('내 견적'),
-                    ),
-                  if (!compact) const SizedBox(width: 8),
                   _ModeToggle(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
@@ -259,7 +250,7 @@ class DrameLogo extends StatelessWidget {
               fontSize: size * 0.65,
               fontWeight: FontWeight.w800,
               color: onDark ? Colors.white : DC.ink,
-              letterSpacing: -0.5,
+              letterSpacing: 0,
               height: 1.0,
             ),
           ),
@@ -377,30 +368,37 @@ class _ToggleTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(DC.rxPill),
-          boxShadow:
-              active
-                  ? <BoxShadow>[
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                  : null,
-        ),
-        child: Text(
-          label,
-          style: DT.navLink.copyWith(
-            color: active ? DC.ink : DC.muted,
-            fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(DC.rxPill),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          constraints: const BoxConstraints(minWidth: 64, minHeight: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: active ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(DC.rxPill),
+            boxShadow:
+                active
+                    ? <BoxShadow>[
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ]
+                    : null,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: DT.navLink.copyWith(
+                color: active ? DC.ink : DC.muted,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
           ),
         ),
       ),

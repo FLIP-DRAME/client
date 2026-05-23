@@ -229,7 +229,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Drame 계정을 만들어 드론 서비스를 시작하세요',
+                        '모드 계정을 만들어 드론 서비스를 시작하세요',
                         style: TextStyle(
                           fontFamily: 'Pretendard',
                           fontSize: 14,
@@ -551,7 +551,7 @@ class _SignupLeftPanel extends StatelessWidget {
 
           // Tagline
           const Text(
-            'Drame 운용자가 되어\n더 많은 고객을 만나세요',
+            '모드 운용자가 되어\n더 많은 고객을 만나세요',
             style: TextStyle(
               fontFamily: 'Pretendard',
               fontSize: 32,

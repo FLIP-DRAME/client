@@ -145,7 +145,7 @@ class PilotPortfolioPage extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         elevation: 0,
-        title: const Text('Drame', style: PortfolioText.logo),
+        title: const Text('모드', style: PortfolioText.logo),
       ),
       body: CustomScrollView(
         slivers: <Widget>[

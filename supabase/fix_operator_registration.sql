@@ -64,6 +64,7 @@ alter table public.feed_post_assets enable row level security;
 drop policy if exists "operators manage own feed posts" on public.feed_posts;
 drop policy if exists "public read published feed posts" on public.feed_posts;
 drop policy if exists "feed_posts insert own" on public.feed_posts;
+drop policy if exists "feed_posts manage own" on public.feed_posts;
 drop policy if exists "feed_posts update own" on public.feed_posts;
 drop policy if exists "feed_posts delete own" on public.feed_posts;
 drop policy if exists "feed_posts select public" on public.feed_posts;
@@ -89,6 +90,7 @@ create policy "feed_posts select public" on public.feed_posts
 -- feed_post_assets: follow the parent post's author
 drop policy if exists "operators manage own feed assets" on public.feed_post_assets;
 drop policy if exists "feed_post_assets manage own" on public.feed_post_assets;
+drop policy if exists "feed_post_assets select public" on public.feed_post_assets;
 
 create policy "feed_post_assets manage own" on public.feed_post_assets
   for all
@@ -126,6 +128,45 @@ alter table public.operator_drones      enable row level security;
 alter table public.operator_service_areas enable row level security;
 alter table public.operator_categories  enable row level security;
 
+-- RLS policy helpers.
+-- Sub-table policies need to check operator_profiles ownership. In some
+-- projects, existing operator_profiles SELECT policies can make that lookup
+-- invisible inside another table's RLS check. SECURITY DEFINER keeps the
+-- ownership check tied to auth.uid(), but avoids that policy recursion/visibility
+-- problem.
+create or replace function public.is_operator_profile_owner(operator_profile_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.operator_profiles op
+    where op.id = operator_profile_id
+      and op.user_id = auth.uid()
+  );
+$$;
+
+create or replace function public.is_operator_profile_approved(operator_profile_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.operator_profiles op
+    where op.id = operator_profile_id
+      and op.status = 'approved'
+  );
+$$;
+
+grant execute on function public.is_operator_profile_owner(uuid) to authenticated;
+grant execute on function public.is_operator_profile_approved(uuid) to anon, authenticated;
+
 -- helper macro repeated for each table ──────────────────────
 
 -- operator_licenses
@@ -133,50 +174,50 @@ drop policy if exists "operators manage own licenses"    on public.operator_lice
 drop policy if exists "public read operator licenses"    on public.operator_licenses;
 create policy "operators manage own licenses" on public.operator_licenses
   for all to authenticated
-  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
-  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+  using   (public.is_operator_profile_owner(operator_id))
+  with check (public.is_operator_profile_owner(operator_id));
 create policy "public read operator licenses" on public.operator_licenses
-  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+  for select using (public.is_operator_profile_approved(operator_id));
 
 -- operator_insurances
 drop policy if exists "operators manage own insurances"  on public.operator_insurances;
 drop policy if exists "public read operator insurances"  on public.operator_insurances;
 create policy "operators manage own insurances" on public.operator_insurances
   for all to authenticated
-  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
-  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+  using   (public.is_operator_profile_owner(operator_id))
+  with check (public.is_operator_profile_owner(operator_id));
 create policy "public read operator insurances" on public.operator_insurances
-  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+  for select using (public.is_operator_profile_approved(operator_id));
 
 -- operator_drones
 drop policy if exists "operators manage own drones"      on public.operator_drones;
 drop policy if exists "public read operator drones"      on public.operator_drones;
 create policy "operators manage own drones" on public.operator_drones
   for all to authenticated
-  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
-  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+  using   (public.is_operator_profile_owner(operator_id))
+  with check (public.is_operator_profile_owner(operator_id));
 create policy "public read operator drones" on public.operator_drones
-  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+  for select using (public.is_operator_profile_approved(operator_id));
 
 -- operator_service_areas
 drop policy if exists "operators manage own service areas" on public.operator_service_areas;
 drop policy if exists "public read operator service areas" on public.operator_service_areas;
 create policy "operators manage own service areas" on public.operator_service_areas
   for all to authenticated
-  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
-  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+  using   (public.is_operator_profile_owner(operator_id))
+  with check (public.is_operator_profile_owner(operator_id));
 create policy "public read operator service areas" on public.operator_service_areas
-  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+  for select using (public.is_operator_profile_approved(operator_id));
 
 -- operator_categories
 drop policy if exists "operators manage own categories"  on public.operator_categories;
 drop policy if exists "public read operator categories"  on public.operator_categories;
 create policy "operators manage own categories" on public.operator_categories
   for all to authenticated
-  using   (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()))
-  with check (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.user_id = auth.uid()));
+  using   (public.is_operator_profile_owner(operator_id))
+  with check (public.is_operator_profile_owner(operator_id));
 create policy "public read operator categories" on public.operator_categories
-  for select using (exists (select 1 from public.operator_profiles op where op.id = operator_id and op.status = 'approved'));
+  for select using (public.is_operator_profile_approved(operator_id));
 
 -- ─── PART 5: 기존 유저 profiles 행 backfill ─────────────────
 -- 트리거 적용 전에 가입한 유저는 profiles 행이 없어 FK / 피드 INSERT 모두 실패함.
@@ -198,3 +239,89 @@ where not exists (
   select 1 from public.profiles p where p.id = au.id
 )
 on conflict (id) do nothing;
+
+-- ─── PART 6: quote request / quote status RLS ───────────────
+
+create or replace function public.is_job_request_client(job_request_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.job_requests jr
+    where jr.id = job_request_id
+      and jr.client_id = auth.uid()
+  );
+$$;
+
+create or replace function public.is_job_request_operator(job_request_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.job_requests jr
+    join public.operator_profiles op
+      on op.id = jr.preferred_operator_id
+    where jr.id = job_request_id
+      and op.user_id = auth.uid()
+  );
+$$;
+
+grant execute on function public.is_job_request_client(uuid) to authenticated;
+grant execute on function public.is_job_request_operator(uuid) to authenticated;
+
+alter table public.job_requests enable row level security;
+alter table public.quotes enable row level security;
+
+alter table public.job_requests
+  add column if not exists operator_viewed_at timestamptz;
+
+drop policy if exists "clients read own job requests" on public.job_requests;
+drop policy if exists "clients insert own job requests" on public.job_requests;
+drop policy if exists "clients update own job requests" on public.job_requests;
+drop policy if exists "operators read assigned job requests" on public.job_requests;
+drop policy if exists "operators update assigned job requests" on public.job_requests;
+
+create policy "clients read own job requests" on public.job_requests
+  for select to authenticated
+  using (client_id = auth.uid());
+
+create policy "clients insert own job requests" on public.job_requests
+  for insert to authenticated
+  with check (client_id = auth.uid());
+
+create policy "clients update own job requests" on public.job_requests
+  for update to authenticated
+  using (client_id = auth.uid())
+  with check (client_id = auth.uid());
+
+create policy "operators read assigned job requests" on public.job_requests
+  for select to authenticated
+  using (public.is_operator_profile_owner(preferred_operator_id));
+
+create policy "operators update assigned job requests" on public.job_requests
+  for update to authenticated
+  using (public.is_operator_profile_owner(preferred_operator_id))
+  with check (public.is_operator_profile_owner(preferred_operator_id));
+
+drop policy if exists "clients read quotes for own requests" on public.quotes;
+drop policy if exists "operators manage own quotes" on public.quotes;
+
+create policy "clients read quotes for own requests" on public.quotes
+  for select to authenticated
+  using (public.is_job_request_client(job_request_id));
+
+create policy "operators manage own quotes" on public.quotes
+  for all to authenticated
+  using (public.is_operator_profile_owner(operator_id))
+  with check (
+    public.is_operator_profile_owner(operator_id)
+    and public.is_job_request_operator(job_request_id)
+  );

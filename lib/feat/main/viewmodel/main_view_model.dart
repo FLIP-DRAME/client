@@ -78,10 +78,16 @@ class DrameStore extends ChangeNotifier {
       myFeedPosts =
           (await _feedApi.fetchMyPosts()).map(_operatorPostFromFeed).toList();
       final myOperator =
-          isLoggedIn && accountRole == '운용자'
+          isLoggedIn &&
+                  (accountRole == '운용자' ||
+                      isPilotMode ||
+                      operatorRegistrationCompleted)
               ? await _api.fetchMyOperatorProfile()
               : null;
-      operatorRegistrationCompleted = myOperator != null;
+      if (myOperator != null) {
+        accountRole = '운용자';
+        operatorRegistrationCompleted = true;
+      }
       pilots = nextPilots;
       if (initial) {
         allPilots = nextPilots;
@@ -202,10 +208,7 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     try {
       await Supabase.instance.client.auth.signInWithPassword(
         email: email,
@@ -310,6 +313,7 @@ class DrameStore extends ChangeNotifier {
   }
 
   Future<void> nextPilotOnboardingStep() async {
+    _validatePilotOnboardingStep(pilotOnboardingStep);
     if (pilotOnboardingStep >= 4) {
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
@@ -333,15 +337,56 @@ class DrameStore extends ChangeNotifier {
         }
       }
       pilotOnboarding.submitted = true;
+      accountRole = '운용자';
       operatorRegistrationCompleted = true;
       registrationJustCompleted = true;
       isPilotOnboarding = false;
-      await load(initial: true);
       notifyListeners();
       return;
     }
     pilotOnboardingStep += 1;
     notifyListeners();
+  }
+
+  void _validatePilotOnboardingStep(int step) {
+    final data = pilotOnboarding;
+    String? message;
+    if (step == 0) {
+      if (data.licenseNumber.trim().isEmpty) {
+        message = '자격증 번호를 입력해 주세요.';
+      }
+    } else if (step == 1) {
+      if (data.businessName.trim().isEmpty) {
+        message = '상호명을 입력해 주세요.';
+      } else if (!RegExp(
+        r'^\d{3}-\d{2}-\d{5}$',
+      ).hasMatch(data.businessNumber.trim())) {
+        message = '사업자등록번호는 000-00-00000 형식으로 입력해 주세요.';
+      } else if (data.representativeName.trim().isEmpty) {
+        message = '대표자명을 입력해 주세요.';
+      }
+    } else if (step == 2) {
+      if (data.insuranceNumber.trim().isEmpty) {
+        message = '보험 증권번호를 입력해 주세요.';
+      }
+    } else if (step == 3) {
+      final hasDrone = data.drones.any(
+        (drone) => drone.model.trim().isNotEmpty,
+      );
+      final hasCategory = data.drones.any(
+        (drone) => drone.categories.isNotEmpty,
+      );
+      if (!hasDrone) {
+        message = '보유 기체의 모델명을 하나 이상 입력해 주세요.';
+      } else if (!hasCategory) {
+        message = '기체 작업 분야를 하나 이상 선택해 주세요.';
+      }
+    } else if (step == 4 && data.areas.isEmpty) {
+      message = '주요 활동 지역을 하나 이상 선택해 주세요.';
+    }
+    if (message != null) {
+      throw Exception(message);
+    }
   }
 
   void acknowledgeRegistrationDone() {
@@ -450,8 +495,8 @@ class DrameStore extends ChangeNotifier {
     try {
       quoteRequest = request;
       estimate = await _quoteApi.createEstimate(request);
-      paymentInstruction = await _quoteApi.createPaymentInstruction(estimate!);
-      estimate = estimate!.copyWith(paymentId: paymentInstruction?.paymentId);
+      myQuotes = await _api.fetchMyQuotes();
+      paymentInstruction = null;
       contactAccess = null;
       paymentConfirmed = false;
       notifyListeners();
@@ -459,6 +504,62 @@ class DrameStore extends ChangeNotifier {
     } on PostgrestException catch (error) {
       throw Exception('견적 요청 저장에 실패했습니다. (${error.message})');
     }
+  }
+
+  Future<void> submitOperatorQuote(
+    PilotWorkRequest request,
+    String message,
+  ) async {
+    await _api.submitQuoteForRequest(request, message);
+    await load();
+  }
+
+  Future<void> markOperatorRequestSeen(PilotWorkRequest request) async {
+    if (request.status != '신규') return;
+    await _api.markOperatorRequestSeen(request.id);
+    pilotWorkRequests =
+        pilotWorkRequests
+            .map(
+              (item) =>
+                  item.id == request.id
+                      ? PilotWorkRequest(
+                        id: item.id,
+                        category: item.category,
+                        status: '확인 중',
+                        location: item.location,
+                        distance: item.distance,
+                        dateRange: item.dateRange,
+                        budget: item.budget,
+                        client: item.client,
+                        summary: item.summary,
+                        progress: item.progress,
+                        remaining: item.remaining,
+                        mapLabel: item.mapLabel,
+                      )
+                      : item,
+            )
+            .toList();
+    notifyListeners();
+  }
+
+  Future<void> updateMyQuoteRequest({
+    required String requestId,
+    required String area,
+    required String preferredDate,
+    required String detail,
+    required String budgetRange,
+    required String contactWindow,
+  }) async {
+    await _api.updateMyQuoteRequest(
+      requestId: requestId,
+      area: area,
+      preferredDate: preferredDate,
+      detail: detail,
+      budgetRange: budgetRange,
+      contactWindow: contactWindow,
+    );
+    myQuotes = await _api.fetchMyQuotes();
+    notifyListeners();
   }
 
   Future<void> confirmPayment() async {

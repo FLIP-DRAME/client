@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mode/feat/main/network/drone_pilot_api.dart';
 
 import 'app_providers.dart';
 import 'feat/auth/view/pages/login_page.dart';
@@ -62,6 +63,23 @@ final GoRouter appRouter = GoRouter(
           pilotId: state.pathParameters['pilotId'],
           extra: state.extra,
           builder: (pilot) => PilotPortfolioPage(pilot: pilot),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/quote/request/:pilotId/edit/:requestId',
+      name: 'quote-request-edit',
+      builder: (context, state) {
+        final initialQuote =
+            state.extra is UserQuoteSummary
+                ? state.extra! as UserQuoteSummary
+                : null;
+        return _PilotResolverPage(
+          pilotId: state.pathParameters['pilotId'],
+          extra: null,
+          builder:
+              (pilot) =>
+                  QuoteRequestPage(pilot: pilot, initialQuote: initialQuote),
         );
       },
     ),
@@ -137,6 +155,26 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const MyQuotesPage(),
     ),
     GoRoute(
+      path: '/my/quotes/:requestId',
+      name: 'my-quote-detail',
+      builder: (context, state) {
+        final initialQuote =
+            state.extra is UserQuoteSummary
+                ? state.extra! as UserQuoteSummary
+                : null;
+        if (initialQuote == null || initialQuote.pilotId.isEmpty) {
+          return const MyQuotesPage();
+        }
+        return _PilotResolverPage(
+          pilotId: initialQuote.pilotId,
+          extra: null,
+          builder:
+              (pilot) =>
+                  QuoteRequestPage(pilot: pilot, initialQuote: initialQuote),
+        );
+      },
+    ),
+    GoRoute(
       path: '/pilot/register',
       name: 'pilot-register',
       builder: (context, state) => const PilotRegistrationPage(),
@@ -145,6 +183,32 @@ final GoRouter appRouter = GoRouter(
       path: '/pilot/mypage',
       name: 'pilot-mypage',
       builder: (context, state) => const OperatorMyPage(),
+    ),
+    GoRoute(
+      path: '/operator/mypage',
+      name: 'operator-mypage',
+      builder: (context, state) => const OperatorMyPage(),
+    ),
+    GoRoute(
+      path: '/operator/feed',
+      name: 'operator-feed',
+      builder: (context, state) => const OperatorFeedPage(),
+    ),
+    GoRoute(
+      path: '/operator/portfolio',
+      name: 'operator-portfolio',
+      builder: (context, state) => const OperatorPortfolioPage(),
+    ),
+    GoRoute(
+      path: '/operator/requests',
+      name: 'operator-requests',
+      builder: (context, state) {
+        final initialRequest =
+            state.extra is PilotWorkRequest
+                ? state.extra! as PilotWorkRequest
+                : null;
+        return PilotRequestReviewPage(initialRequest: initialRequest);
+      },
     ),
     GoRoute(
       path: '/pilot/requests',

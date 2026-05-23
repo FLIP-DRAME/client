@@ -29,19 +29,26 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                     initialRequest: store.firstPilotWorkRequest,
                   ),
               onMyPageTap: () {},
-              onSwitchToUser: () => context.go('/home'),
-              onSwitchToOperator: () => context.go('/operator'),
+              onSwitchToUser: () {
+                store.setPilotMode(false);
+                context.go('/home');
+              },
+              onSwitchToOperator: () {
+                store.setPilotMode(true);
+                context.go('/operator');
+              },
               operatorActiveTab: 'profile',
               onOperatorTabTap: (id) {
-                switch (id) {
-                  case 'dashboard':
-                    context.go('/operator');
-                  case 'feed':
-                    context.go('/operator');
-                  case 'portfolio':
-                    context.go('/operator');
-                  default:
-                    break;
+                if (id == 'dashboard') {
+                  context.go('/operator');
+                } else if (id == 'feed') {
+                  context.go('/operator/feed');
+                } else if (id == 'portfolio') {
+                  context.go('/operator/portfolio');
+                } else if (id == 'requests') {
+                  context.go('/operator/requests');
+                } else if (id == 'profile') {
+                  context.go('/operator/mypage');
                 }
               },
             ),
@@ -265,13 +272,28 @@ class _OperatorMyPageBody extends StatelessWidget {
                 );
               },
             ),
-            _OperatorFeedSection(store: store),
-            const SizedBox(height: 30),
             const SizedBox(height: 30),
             Align(
               alignment: Alignment.centerRight,
               child: FilledButton(
-                onPressed: () => context.go('/home'),
+                onPressed: () async {
+                  await store.updateOperatorProfile(
+                    intro:
+                        store.selectedPilot?.intro ??
+                        '${store.accountNickname.isNotEmpty ? store.accountNickname : store.accountName} 운용자입니다.',
+                    description:
+                        store.selectedPilot?.description ??
+                        store.pilotOnboarding.portfolioUrl,
+                    categoryLabels:
+                        store.selectedPilot?.categories ??
+                        const <String>[],
+                    areaNames: store.pilotOnboarding.areas.toList(),
+                    portfolioImageUrls:
+                        store.selectedPilot?.portfolioImages ??
+                        const <String>[],
+                  );
+                  if (context.mounted) context.go('/operator');
+                },
                 style: FilledButton.styleFrom(
                   backgroundColor: _navy,
                   foregroundColor: Colors.white,
@@ -316,36 +338,13 @@ class _OperatorMyPageProfile extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            Stack(
-              clipBehavior: Clip.none,
-              children: <Widget>[
-                CircleAvatar(
-                  radius: 44,
-                  backgroundColor: Colors.white,
-                  child: Text(
-                    nickname.characters.first,
-                    style: AppText.cardTitle.copyWith(color: _navy),
-                  ),
-                ),
-                Positioned(
-                  right: -2,
-                  bottom: -2,
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: _ink,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                  ),
-                ),
-              ],
+            CircleAvatar(
+              radius: 44,
+              backgroundColor: Colors.white,
+              child: Text(
+                nickname.characters.first,
+                style: AppText.cardTitle.copyWith(color: _navy),
+              ),
             ),
             const SizedBox(width: 22),
             Expanded(
@@ -380,32 +379,10 @@ class _OperatorMyPageProfile extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 26),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {},
-                style: _myPageOutlineButtonStyle(),
-                child: const Text('내 소개 편집'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  final pilot =
-                      store.selectedPilot ??
-                      (store.pilots.isNotEmpty ? store.pilots.first : null);
-                  if (pilot == null) return;
-                  context.push('/portfolio/${pilot.id}', extra: pilot);
-                },
-                style: _myPageOutlineButtonStyle(),
-                child: const Text('미리보기'),
-              ),
-            ),
-            if (!store.operatorRegistrationCompleted) ...<Widget>[
-              const SizedBox(width: 12),
+        if (!store.operatorRegistrationCompleted) ...<Widget>[
+          const SizedBox(height: 26),
+          Row(
+            children: <Widget>[
               Expanded(
                 child: FilledButton(
                   onPressed: () => context.push('/pilot/register'),
@@ -422,13 +399,14 @@ class _OperatorMyPageProfile extends StatelessWidget {
                 ),
               ),
             ],
-          ],
-        ),
+          ),
+        ],
       ],
     );
   }
 }
 
+// ignore: unused_element
 class _OperatorMyPageSideCard extends StatelessWidget {
   const _OperatorMyPageSideCard();
 

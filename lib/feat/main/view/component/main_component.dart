@@ -804,10 +804,7 @@ class _OperatorPortfolioBuilderSectionState
                 children: <Widget>[
                   Text('포트폴리오 미리보기', style: AppText.cardTitle),
                   SizedBox(height: 6),
-                  Text(
-                    '고객에게 보여지는 내 프로필 페이지입니다.',
-                    style: AppText.cardSubtitle,
-                  ),
+                  Text('고객에게 보여지는 내 프로필 페이지입니다.', style: AppText.cardSubtitle),
                 ],
               ),
             ),
@@ -969,7 +966,10 @@ class _OperatorPortfolioBuilderSectionState
                 children: <Widget>[
                   Text('포트폴리오 편집', style: AppText.cardTitle),
                   SizedBox(height: 6),
-                  Text('변경 후 저장하면 고객 페이지에 바로 반영됩니다.', style: AppText.cardSubtitle),
+                  Text(
+                    '변경 후 저장하면 고객 페이지에 바로 반영됩니다.',
+                    style: AppText.cardSubtitle,
+                  ),
                 ],
               ),
             ),
@@ -1023,35 +1023,40 @@ class _OperatorPortfolioBuilderSectionState
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: widget.store.categories.map((cat) {
-            final selected = _selectedCategories.contains(cat.label);
-            return FilterChip(
-              label: Text(cat.label),
-              selected: selected,
-              showCheckmark: false,
-              onSelected: (_) => setState(() {
-                if (selected) {
-                  _selectedCategories.remove(cat.label);
-                } else {
-                  _selectedCategories.add(cat.label);
-                }
-              }),
-              selectedColor: _navy,
-              backgroundColor: Colors.white,
-              side: BorderSide(
-                color: selected ? _navy : _line,
-                width: selected ? 1.5 : 1,
-              ),
-              labelStyle: AppText.chip.copyWith(
-                color: selected ? Colors.white : _ink,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(999),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            );
-          }).toList(),
+          children:
+              widget.store.categories.map((cat) {
+                final selected = _selectedCategories.contains(cat.label);
+                return FilterChip(
+                  label: Text(cat.label),
+                  selected: selected,
+                  showCheckmark: false,
+                  onSelected:
+                      (_) => setState(() {
+                        if (selected) {
+                          _selectedCategories.remove(cat.label);
+                        } else {
+                          _selectedCategories.add(cat.label);
+                        }
+                      }),
+                  selectedColor: _navy,
+                  backgroundColor: Colors.white,
+                  side: BorderSide(
+                    color: selected ? _navy : _line,
+                    width: selected ? 1.5 : 1,
+                  ),
+                  labelStyle: AppText.chip.copyWith(
+                    color: selected ? Colors.white : _ink,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                );
+              }).toList(),
         ),
         const SizedBox(height: 24),
         const Text('서비스 지역', style: AppText.smallStrong),
@@ -1059,35 +1064,40 @@ class _OperatorPortfolioBuilderSectionState
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: widget.store.serviceAreas.map((area) {
-            final selected = _selectedAreas.contains(area);
-            return FilterChip(
-              label: Text(area),
-              selected: selected,
-              showCheckmark: false,
-              onSelected: (_) => setState(() {
-                if (selected) {
-                  _selectedAreas.remove(area);
-                } else {
-                  _selectedAreas.add(area);
-                }
-              }),
-              selectedColor: _navy,
-              backgroundColor: Colors.white,
-              side: BorderSide(
-                color: selected ? _navy : _line,
-                width: selected ? 1.5 : 1,
-              ),
-              labelStyle: AppText.chip.copyWith(
-                color: selected ? Colors.white : _ink,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(999),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            );
-          }).toList(),
+          children:
+              widget.store.serviceAreas.map((area) {
+                final selected = _selectedAreas.contains(area);
+                return FilterChip(
+                  label: Text(area),
+                  selected: selected,
+                  showCheckmark: false,
+                  onSelected:
+                      (_) => setState(() {
+                        if (selected) {
+                          _selectedAreas.remove(area);
+                        } else {
+                          _selectedAreas.add(area);
+                        }
+                      }),
+                  selectedColor: _navy,
+                  backgroundColor: Colors.white,
+                  side: BorderSide(
+                    color: selected ? _navy : _line,
+                    width: selected ? 1.5 : 1,
+                  ),
+                  labelStyle: AppText.chip.copyWith(
+                    color: selected ? Colors.white : _ink,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                );
+              }).toList(),
         ),
         const SizedBox(height: 20),
         _EditField(
@@ -1099,10 +1109,7 @@ class _OperatorPortfolioBuilderSectionState
         const SizedBox(height: 28),
         const Text('포트폴리오 이미지 URL', style: AppText.smallStrong),
         const SizedBox(height: 6),
-        const Text(
-          '이미지 주소(URL)를 한 줄씩 입력하세요.',
-          style: AppText.cardSubtitle,
-        ),
+        const Text('이미지 주소(URL)를 한 줄씩 입력하세요.', style: AppText.cardSubtitle),
         const SizedBox(height: 14),
         ..._imageUrlCtrls.asMap().entries.map((entry) {
           final i = entry.key;
@@ -1266,19 +1273,6 @@ class _PilotDashboardSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => context.push('/pilot/mypage'),
-                  icon: const Icon(Icons.edit_note_rounded),
-                  label: const Text('등록 정보 수정'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _navy,
-                    textStyle: AppText.button,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 14,
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 28),
@@ -1367,84 +1361,46 @@ class _OperatorProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 22),
-          // Registration status chip
-          Row(
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                      store.operatorRegistrationCompleted
-                          ? const Color(0xFFD1FAE5)
-                          : const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color:
-                        store.operatorRegistrationCompleted
-                            ? const Color(0xFF6EE7B7)
-                            : const Color(0xFFFCD34D),
+          if (!store.operatorRegistrationCompleted)
+            Row(
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(
-                      store.operatorRegistrationCompleted
-                          ? Icons.verified_rounded
-                          : Icons.warning_amber_rounded,
-                      size: 14,
-                      color:
-                          store.operatorRegistrationCompleted
-                              ? const Color(0xFF059669)
-                              : const Color(0xFFD97706),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      store.operatorRegistrationCompleted
-                          ? '운용자 등록 완료'
-                          : '운용자 등록 미완료',
-                      style: AppText.chip.copyWith(
-                        color:
-                            store.operatorRegistrationCompleted
-                                ? const Color(0xFF059669)
-                                : const Color(0xFFD97706),
-                        fontWeight: FontWeight.w600,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFFFCD34D)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 14,
+                        color: Color(0xFFD97706),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (!store.operatorRegistrationCompleted) ...<Widget>[
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () => context.push('/pilot/register'),
-                icon: const Icon(Icons.app_registration_rounded, size: 18),
-                label: const Text('운용자 등록하기'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _primary,
-                  foregroundColor: Colors.white,
-                  textStyle: AppText.button,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                      const SizedBox(width: 6),
+                      Text(
+                        '운용자 등록 미완료',
+                        style: AppText.chip.copyWith(
+                          color: const Color(0xFFD97706),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
           const SizedBox(height: 4),
           Row(
             children: <Widget>[
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => context.push('/pilot/mypage'),
+                  onPressed: () => context.go('/operator/mypage'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _navy,
                     textStyle: AppText.button,
@@ -1453,18 +1409,24 @@ class _OperatorProfileCard extends StatelessWidget {
                   child: const Text('내 소개 편집'),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _navy,
-                    textStyle: AppText.button,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+              if (!store.operatorRegistrationCompleted) ...<Widget>[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => context.push('/pilot/register'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
+                      textStyle: AppText.button,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('운용자 등록'),
                   ),
-                  child: const Text('미리보기'),
                 ),
-              ),
+              ],
             ],
           ),
         ],
@@ -1750,6 +1712,10 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
         final requests = store.pilotWorkRequests;
         selectedRequest ??= requests.isEmpty ? null : requests.first;
         final current = selectedRequest;
+        final currentCompleted =
+            current != null &&
+            (_completedRequestIds.contains(current.id) ||
+                current.status == '견적 보냄');
         if (current == null) {
           return Scaffold(
             backgroundColor: Colors.white,
@@ -1759,6 +1725,13 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
               ),
             ),
           );
+        }
+        if (current.status == '신규') {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              unawaited(store.markOperatorRequestSeen(current));
+            }
+          });
         }
         return Scaffold(
           backgroundColor: Colors.white,
@@ -1819,23 +1792,29 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                   _RequestReviewList(
                                     requests: requests,
                                     selected: current,
-                                    onSelected:
-                                        (request) => setState(
-                                          () => selectedRequest = request,
-                                        ),
+                                    onSelected: (request) {
+                                      setState(() => selectedRequest = request);
+                                      unawaited(
+                                        store.markOperatorRequestSeen(request),
+                                      );
+                                    },
                                   ),
                                   const SizedBox(height: 18),
                                   _RequestReviewDetail(
                                     request: current,
-                                    isCompleted: _completedRequestIds.contains(
-                                      current.id,
-                                    ),
-                                    onComplete:
-                                        () => setState(
-                                          () => _completedRequestIds.add(
-                                            current.id,
-                                          ),
+                                    isCompleted: currentCompleted,
+                                    onComplete: (message) async {
+                                      await store.submitOperatorQuote(
+                                        current,
+                                        message,
+                                      );
+                                      if (!mounted) return;
+                                      setState(
+                                        () => _completedRequestIds.add(
+                                          current.id,
                                         ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
@@ -1848,10 +1827,16 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                     child: _RequestReviewList(
                                       requests: requests,
                                       selected: current,
-                                      onSelected:
-                                          (request) => setState(
-                                            () => selectedRequest = request,
+                                      onSelected: (request) {
+                                        setState(
+                                          () => selectedRequest = request,
+                                        );
+                                        unawaited(
+                                          store.markOperatorRequestSeen(
+                                            request,
                                           ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
@@ -1860,14 +1845,19 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                   child: SingleChildScrollView(
                                     child: _RequestReviewDetail(
                                       request: current,
-                                      isCompleted: _completedRequestIds
-                                          .contains(current.id),
-                                      onComplete:
-                                          () => setState(
-                                            () => _completedRequestIds.add(
-                                              current.id,
-                                            ),
+                                      isCompleted: currentCompleted,
+                                      onComplete: (message) async {
+                                        await store.submitOperatorQuote(
+                                          current,
+                                          message,
+                                        );
+                                        if (!mounted) return;
+                                        setState(
+                                          () => _completedRequestIds.add(
+                                            current.id,
                                           ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ),
@@ -2091,7 +2081,7 @@ class _RequestReviewDetail extends StatelessWidget {
 
   final PilotWorkRequest request;
   final bool isCompleted;
-  final VoidCallback onComplete;
+  final Future<void> Function(String message) onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -2158,7 +2148,7 @@ class _RequestReviewDetail extends StatelessWidget {
           const SizedBox(height: 18),
           const Divider(color: _line),
           const SizedBox(height: 18),
-          _KakaoPaySection(isCompleted: isCompleted, onComplete: onComplete),
+          _QuoteSubmitSection(isCompleted: isCompleted, onComplete: onComplete),
         ],
       ),
     );
@@ -2279,7 +2269,7 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
                         child: OutlinedButton(
                           onPressed: () {
                             store.acknowledgeRegistrationDone();
-                            context.push('/pilot/mypage');
+                            context.push('/operator/mypage');
                           },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: _navy,
@@ -2837,6 +2827,11 @@ class _LicenseStep extends StatelessWidget {
           label: '자격증 번호 *',
           initialValue: data.licenseNumber,
           hint: '예: 2024-0001234',
+          keyboardType: TextInputType.text,
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
+            LengthLimitingTextInputFormatter(32),
+          ],
           onChanged: (value) => store.updatePilotLicense(number: value),
         ),
       ],
@@ -2901,6 +2896,11 @@ class _InsuranceStep extends StatelessWidget {
           label: '보험 증권번호 *',
           initialValue: data.insuranceNumber,
           hint: 'DB-DRONE-240001',
+          keyboardType: TextInputType.text,
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
+            LengthLimitingTextInputFormatter(40),
+          ],
           onChanged: (value) => store.updatePilotInsurance(number: value),
         ),
       ],
@@ -2979,6 +2979,11 @@ class _DroneStep extends StatelessWidget {
                   label: '기체 신고번호',
                   initialValue: drone.registrationNumber,
                   hint: 'S1234567',
+                  keyboardType: TextInputType.text,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
+                    LengthLimitingTextInputFormatter(32),
+                  ],
                   onChanged:
                       (value) => store.updatePilotDrone(
                         index,
@@ -3944,7 +3949,7 @@ class _MobileAppBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             child: const Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('Drame', style: HomeText.logo),
+              child: Text('모드', style: HomeText.logo),
             ),
           ),
           const Spacer(),
@@ -4558,7 +4563,7 @@ class _OperatorCtaBand extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     const Text(
-                      'DRANE에 등록하고 매달 검증된 프로젝트를 받아보세요.\n자격 확인부터 결제까지 플랫폼이 모두 처리합니다.',
+                      '모드에 등록하고 매달 검증된 프로젝트를 받아보세요.\n자격 확인부터 결제까지 플랫폼이 모두 처리합니다.',
                       style: TextStyle(
                         fontFamily: 'Pretendard',
                         fontSize: 15,
@@ -4609,7 +4614,7 @@ class _OperatorCtaBand extends StatelessWidget {
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'DRANE에 등록하고 매달 검증된 프로젝트를 받아보세요.\n자격 확인부터 결제까지 플랫폼이 모두 처리합니다.',
+                            '모드에 등록하고 매달 검증된 프로젝트를 받아보세요.\n자격 확인부터 결제까지 플랫폼이 모두 처리합니다.',
                             style: TextStyle(
                               fontFamily: 'Pretendard',
                               fontSize: 16,
@@ -5045,11 +5050,162 @@ class _KoreaMapPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+class _QuoteSubmitSection extends StatefulWidget {
+  const _QuoteSubmitSection({
+    required this.isCompleted,
+    required this.onComplete,
+  });
+
+  final bool isCompleted;
+  final Future<void> Function(String message) onComplete;
+
+  @override
+  State<_QuoteSubmitSection> createState() => _QuoteSubmitSectionState();
+}
+
+class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
+  bool _submitting = false;
+  late final TextEditingController _messageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _messageController = TextEditingController(
+      text: '요청 내용을 확인했습니다. 일정과 세부 작업 범위는 결제 후 공개되는 연락처로 조율해 주세요.',
+    );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isCompleted) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _line),
+        ),
+        child: const Row(
+          children: <Widget>[
+            Icon(Icons.check_circle_outline, color: _mint, size: 20),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '견적을 보냈습니다. 이용자의 내 견적에 견적 도착으로 표시됩니다.',
+                style: AppText.smallStrong,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const Text('견적 보내기', style: AppText.portfolioTitle),
+        const SizedBox(height: 6),
+        const Text('요청 내용을 확인한 뒤 이용자에게 견적을 보냅니다.', style: AppText.cardSubtitle),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _messageController,
+          minLines: 4,
+          maxLines: 6,
+          decoration: InputDecoration(
+            labelText: '견적 확정 메시지',
+            hintText: '별도 연락처 대신 결제 후 연락처가 공개된다는 안내를 남겨주세요.',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _line),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _focus, width: 1.2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        const Divider(color: _line),
+        const SizedBox(height: 18),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed:
+                _submitting
+                    ? null
+                    : () async {
+                      final message = _messageController.text.trim();
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder:
+                            (dialogContext) => AlertDialog(
+                              title: const Text('견적을 확정할까요?'),
+                              content: Text(
+                                message.isEmpty
+                                    ? '기본 안내 메시지로 견적을 보냅니다.'
+                                    : '아래 메시지로 견적 확정 메시지를 보내겠습니까?\n\n$message',
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(dialogContext, false),
+                                  child: const Text('취소'),
+                                ),
+                                FilledButton(
+                                  onPressed:
+                                      () => Navigator.pop(dialogContext, true),
+                                  child: const Text('보내기'),
+                                ),
+                              ],
+                            ),
+                      );
+                      if (confirmed != true) return;
+                      setState(() => _submitting = true);
+                      try {
+                        await widget.onComplete(message);
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('견적 전송 실패: $error')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => _submitting = false);
+                      }
+                    },
+            icon: const Icon(Icons.send_outlined, size: 18),
+            label: Text(_submitting ? '전송 중' : '견적 보내기'),
+            style: FilledButton.styleFrom(
+              backgroundColor: _navy,
+              foregroundColor: _line,
+              textStyle: AppText.button,
+              padding: const EdgeInsets.symmetric(vertical: 17),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _KakaoPaySection extends StatelessWidget {
   const _KakaoPaySection({required this.isCompleted, required this.onComplete});
 
   final bool isCompleted;
-  final VoidCallback onComplete;
+  final Future<void> Function() onComplete;
 
   @override
   Widget build(BuildContext context) {
