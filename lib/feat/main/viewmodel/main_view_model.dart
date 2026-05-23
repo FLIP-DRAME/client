@@ -225,10 +225,14 @@ class DrameStore extends ChangeNotifier {
     required String email,
     required String password,
   }) async {
-    await Supabase.instance.client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } on AuthException catch (error) {
+      throw Exception(_authErrorMessage(error));
+    }
     updateAuth(loginMode: true, role: role, email: email, password: password);
     submitAuth();
   }
@@ -240,15 +244,32 @@ class DrameStore extends ChangeNotifier {
     required String name,
     required String nickname,
   }) async {
-    await Supabase.instance.client.auth.signUp(
-      email: email,
-      password: password,
-      data: <String, Object?>{
-        'role': role == '운용자' ? 'operator' : 'client',
-        'name': name,
-        'nickname': nickname,
-      },
-    );
+    try {
+      await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: password,
+        data: <String, Object?>{
+          'role': role == '운용자' ? 'operator' : 'client',
+          'name': name,
+          'nickname': nickname,
+        },
+      );
+    } on AuthException catch (error) {
+      if (!_isEmailRateLimited(error)) {
+        throw Exception(_authErrorMessage(error));
+      }
+
+      try {
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
+      } on AuthException {
+        throw Exception(
+          'Supabase 메일 발송 제한에 걸렸습니다. 이미 만든 계정이면 로그인으로 진행하고, 새 계정은 Supabase 대시보드에서 Auth > Rate Limits 또는 Email Confirm 설정을 조정한 뒤 다시 시도해 주세요.',
+        );
+      }
+    }
     updateAuth(
       loginMode: false,
       role: role,
@@ -258,6 +279,27 @@ class DrameStore extends ChangeNotifier {
       nickname: nickname,
     );
     submitAuth();
+  }
+
+  bool _isEmailRateLimited(AuthException error) {
+    final message = error.message.toLowerCase();
+    return error.statusCode == '429' ||
+        message.contains('rate limit') ||
+        message.contains('over email send rate limit') ||
+        message.contains('email rate limit');
+  }
+
+  String _authErrorMessage(AuthException error) {
+    if (_isEmailRateLimited(error)) {
+      return 'Supabase 메일 발송 제한에 걸렸습니다. 잠시 뒤 다시 시도하거나, 개발 중이면 Supabase Auth 설정에서 이메일 확인을 끄거나 rate limit을 올려 주세요.';
+    }
+    if (error.message.toLowerCase().contains('invalid login credentials')) {
+      return '이메일 또는 비밀번호가 맞지 않습니다.';
+    }
+    if (error.message.toLowerCase().contains('already registered')) {
+      return '이미 가입된 이메일입니다. 로그인으로 진행해 주세요.';
+    }
+    return error.message;
   }
 
   Future<void> restoreSession() async {

@@ -822,8 +822,25 @@ class _PilotAuthSection extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () {
-                        if (!store.isLoginMode) {
+                      onPressed: () async {
+                        try {
+                          if (store.isLoginMode) {
+                            await store.signIn(
+                              role: store.accountRole,
+                              email: store.accountEmail.trim(),
+                              password: store.accountPassword,
+                            );
+                            return;
+                          }
+
+                          await store.signUp(
+                            role: store.accountRole,
+                            email: store.accountEmail.trim(),
+                            password: store.accountPassword,
+                            name: store.accountName.trim(),
+                            nickname: store.accountNickname.trim(),
+                          );
+                          if (!context.mounted) return;
                           showDialog<void>(
                             context: context,
                             builder:
@@ -862,8 +879,20 @@ class _PilotAuthSection extends StatelessWidget {
                                   ],
                                 ),
                           );
-                        } else {
-                          store.submitAuth();
+                        } catch (error) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                error.toString().replaceFirst(
+                                  'Exception: ',
+                                  '',
+                                ),
+                              ),
+                              backgroundColor: _ink,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
                         }
                       },
                       style: FilledButton.styleFrom(
