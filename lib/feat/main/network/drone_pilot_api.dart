@@ -474,14 +474,11 @@ class SupabaseDronePilotApi implements DronePilotApi {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return;
     try {
-      await _client.from('user_push_tokens').upsert(
-        <String, Object?>{
-          'user_id': userId,
-          'fcm_token': token,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        onConflict: 'user_id',
-      );
+      await _client.from('user_push_tokens').upsert(<String, Object?>{
+        'user_id': userId,
+        'fcm_token': token,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id');
     } on PostgrestException {
       return;
     }
@@ -822,19 +819,17 @@ class SupabaseDronePilotApi implements DronePilotApi {
 
     return rows.map<UserQuoteSummary>((row) {
       final map = Map<String, dynamic>.from(row as Map);
-      final quoteRows = List<Object?>.from(map['quotes'] as List? ?? const []);
-      final quote =
-          quoteRows.whereType<Map>().isEmpty
-              ? const <String, Object?>{}
-              : Map<String, dynamic>.from(quoteRows.whereType<Map>().first);
+      final quote = _preferredQuoteForClient(
+        List<Object?>.from(map['quotes'] as List? ?? const []),
+      );
       final operator = quote['operator_profiles'] as Map?;
       final price = (quote['proposed_price'] as num?)?.toInt();
       final jobStatus = (map['status'] ?? '').toString();
       final quoteStatus = (quote['status'] ?? '').toString();
-      final status =
-          jobStatus == 'open'
-              ? jobStatus
-              : (quoteStatus.isEmpty ? jobStatus : quoteStatus);
+      final status = _effectiveClientQuoteStatus(
+        jobStatus: jobStatus,
+        quoteStatus: quoteStatus,
+      );
       return UserQuoteSummary(
         id: (map['id'] ?? '').toString(),
         pilotId: (map['preferred_operator_id'] ?? '').toString(),
@@ -1018,6 +1013,48 @@ class SupabaseDronePilotApi implements DronePilotApi {
     'completed' => '완료',
     _ => '요청 보냄',
   };
+
+  Map<String, dynamic> _preferredQuoteForClient(List<Object?> quoteRows) {
+    final quotes =
+        quoteRows
+            .whereType<Map>()
+            .map((quote) => Map<String, dynamic>.from(quote))
+            .toList();
+    if (quotes.isEmpty) return const <String, Object?>{};
+    quotes.sort((a, b) {
+      final aRank = _quoteStatusRank((a['status'] ?? '').toString());
+      final bRank = _quoteStatusRank((b['status'] ?? '').toString());
+      return bRank.compareTo(aRank);
+    });
+    return quotes.first;
+  }
+
+  int _quoteStatusRank(String status) => switch (status) {
+    'completed' => 50,
+    'contact_opened' ||
+    'in_progress' ||
+    'paid' ||
+    'confirmed' ||
+    'accepted' => 40,
+    'submitted' || 'quoted' => 30,
+    'expired' || 'rejected' => 20,
+    _ => 0,
+  };
+
+  String _effectiveClientQuoteStatus({
+    required String jobStatus,
+    required String quoteStatus,
+  }) {
+    return switch (jobStatus) {
+      'completed' ||
+      'contact_opened' ||
+      'in_progress' ||
+      'paid' ||
+      'confirmed' ||
+      'accepted' => jobStatus,
+      _ => quoteStatus.isEmpty ? jobStatus : quoteStatus,
+    };
+  }
 
   int _proposedPriceFromBudget(String budget) {
     final numbers =

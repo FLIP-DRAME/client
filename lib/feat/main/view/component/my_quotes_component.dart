@@ -25,6 +25,8 @@ class MyQuotesPage extends StatelessWidget {
             quotes.where((quote) => quote.isQuoteReceived).toList();
         final inProgressQuotes =
             quotes.where((quote) => quote.isInProgress).toList();
+        final completedQuotes =
+            quotes.where((quote) => quote.isCompleted).toList();
 
         return Scaffold(
           backgroundColor: DC.canvas,
@@ -96,6 +98,16 @@ class MyQuotesPage extends StatelessWidget {
                                     (quote) =>
                                         _openQuoteFromList(context, quote),
                               ),
+                              const SizedBox(height: 24),
+                              _QuoteSection(
+                                title: '완료',
+                                quotes: completedQuotes,
+                                compact: compact,
+                                emptyText: '완료된 작업이 없습니다.',
+                                onTap:
+                                    (quote) =>
+                                        _openQuoteFromList(context, quote),
+                              ),
                             ],
                             const SizedBox(height: 72),
                           ],
@@ -122,6 +134,25 @@ class MyQuotesPage extends StatelessWidget {
               title: const Text('견적 메시지'),
               content: Text(
                 quote.message.isEmpty ? '운용자가 견적을 보냈습니다.' : quote.message,
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('닫기'),
+                ),
+              ],
+            ),
+      );
+      return;
+    }
+    if (quote.isCompleted) {
+      showDialog<void>(
+        context: context,
+        builder:
+            (dialogContext) => AlertDialog(
+              title: const Text('완료된 작업'),
+              content: Text(
+                '${quote.category} 작업이 완료되었습니다.\n${quote.pilotName} · ${quote.area}',
               ),
               actions: <Widget>[
                 TextButton(

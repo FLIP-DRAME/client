@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../main/model/drone_pilot_model.dart';
 import '../model/quote_model.dart';
 
 abstract class QuoteApi {
@@ -132,12 +131,32 @@ class SupabaseQuoteApi implements QuoteApi {
           })
           .eq('id', estimate.paymentId!);
     }
+    if (estimate.jobRequestId != null) {
+      await _client
+          .from('job_requests')
+          .update(<String, Object?>{'status': 'contact_opened'})
+          .eq('id', estimate.jobRequestId!);
+    }
+    if (estimate.quoteId != null) {
+      await _tryUpdateQuoteStatus(estimate.quoteId!, 'accepted');
+    }
     return ContactAccess(
       phone: pilot.contact.isEmpty ? '운용자 승인 후 공개' : pilot.contact,
       email: '${pilot.id}@mode.co.kr',
       kakaoChannel: '@mode-${pilot.id}',
       note: '입금 확인 후 24시간 동안 연락수단이 제공됩니다. 작업 조건은 채팅에서 최종 확정하세요.',
     );
+  }
+
+  Future<void> _tryUpdateQuoteStatus(String quoteId, String status) async {
+    try {
+      await _client
+          .from('quotes')
+          .update(<String, Object?>{'status': status})
+          .eq('id', quoteId);
+    } on PostgrestException {
+      return;
+    }
   }
 
   Future<String?> _findCategoryId(String label) async {
@@ -165,29 +184,5 @@ class SupabaseQuoteApi implements QuoteApi {
       '100만원 이상' => (1000000, null),
       _ => (null, null),
     };
-  }
-
-  int _proposedPrice(DronePilot pilot, String category) {
-    final premium = switch (category) {
-      '측량·매핑' || '시설점검' => 180000,
-      '농약방제' => 90000,
-      _ => 120000,
-    };
-    return pilot.basePrice + premium;
-  }
-
-  String _estimatedTime(String category) =>
-      category == '농약방제' ? '반나절 작업' : '촬영 2시간 + 편집 1일';
-
-  List<String> _includedItems(String category) => <String>[
-    '비행 가능 여부 사전 확인',
-    '현장 촬영 및 기본 안전 동선 설계',
-    '원본 파일 납품',
-    if (category != '농약방제') '핵심 컷 보정본 10장',
-  ];
-
-  String _message(QuoteRequest request) {
-    return '${request.pilot.name}이 ${request.area} ${request.category} 요청을 확인했습니다. '
-        '날씨와 공역 조건만 맞으면 희망 일정에 맞춰 진행 가능합니다.';
   }
 }
