@@ -486,67 +486,49 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final heroH = compact ? 420.0 : 560.0;
-
+    final screenH = MediaQuery.sizeOf(context).height;
     return SizedBox(
       width: double.infinity,
-      height: heroH,
-      child: Stack(
-        clipBehavior: Clip.hardEdge,
-        children: <Widget>[
-          // ── Sky-blue gradient background ─────────────────────────────
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: <Color>[Color(0xFFCCE0FF), Color(0xFFE8F3FF)],
-                ),
-              ),
-            ),
+      height: screenH,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[
+              Colors.white,
+              Colors.white,
+              Color(0xFFF8FBFF),
+              Color(0xFFEAF4FF),
+              Color(0xFFDCEBFF),
+            ],
+            stops: <double>[0.0, 0.55, 0.74, 0.9, 1.0],
           ),
-
-          // ── Logo — centre of hero ─────────────────────────────────────
-          // Positioned(
-          //   bottom: compact ? -10 : -20,
-          //   left: 0, right: 0,
-          //   child: Center(
-          //     child: SvgPicture.asset(
-          //       'assets/logo.svg',
-          //       width: logoSz,
-          //       height: logoSz,
-          //       fit: BoxFit.contain,
-          //       colorFilter: const ColorFilter.mode(
-          //         Color(0xFF90BBFF),
-          //         BlendMode.srcIn,
-          //       ),
-          //     ),
-          //   ),
-          // ),
-
-          // ── Top nav ───────────────────────────────────────────────────
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
+        ),
+        child: Column(
+          children: <Widget>[
+            // ── Top nav ───────────────────────────────────────────────────
+            Container(
               decoration: const BoxDecoration(
                 color: Colors.white,
                 border: Border(bottom: BorderSide(color: DC.hairline)),
               ),
               padding: EdgeInsets.symmetric(
-                horizontal: compact ? 16 : 32,
+                horizontal: compact ? 20 : 48,
                 vertical: 14,
               ),
               child: Row(
                 children: <Widget>[
-                  const DrameLogo(size: 32, showText: false),
+                  const DrameLogo(size: 28, showText: true),
+                  if (!compact) ...<Widget>[
+                    const SizedBox(width: 40),
+                    ..._buildNavLinks(context),
+                  ],
                   const Spacer(),
                   TextButton(
                     onPressed: () => context.go('/login'),
                     style: TextButton.styleFrom(
-                      foregroundColor: DC.ink,
+                      foregroundColor: const Color(0xFF374151),
                       textStyle: const TextStyle(
                         fontFamily: 'Pretendard',
                         fontSize: 14,
@@ -579,139 +561,657 @@ class _HeroSection extends StatelessWidget {
                 ],
               ),
             ),
-          ),
 
-          // ── Text + CTAs overlay (upper portion) ──────────────────────
-          Positioned(
-            top: compact ? 76 : 84,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 640),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: compact ? 20 : 0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      // Eyebrow
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Color(0x33FFFFFF),
-                          borderRadius: BorderRadius.circular(DC.rxPill),
-                          border: Border.all(color: Color(0x44FFFFFF)),
-                        ),
-                        child: const Text(
-                          '모두의 드론 · 드론 매칭 플랫폼',
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: DC.ink,
-                          ),
-                        ),
+            // ── Hero body fills remaining viewport height ──────────────
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: compact ? 24 : 80),
+                child:
+                    compact
+                        ? _buildCompactHero(context)
+                        : _buildDesktopHero(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildNavLinks(BuildContext context) {
+    const links = <String>['서비스', '운용자 찾기', '피드', '고객지원'];
+    return links
+        .map(
+          (label) => TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF374151),
+              textStyle: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+            ),
+            child: Text(label),
+          ),
+        )
+        .toList();
+  }
+
+  Widget _buildDesktopHero(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        // ── Left: text content ─────────────────────────────────────────
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              // Headline with blue accent
+              RichText(
+                text: const TextSpan(
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 56,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF0F172A),
+                    height: 1.15,
+                    letterSpacing: -2,
+                  ),
+                  children: <TextSpan>[
+                    TextSpan(text: '필요한 드론 작업,\n'),
+                    TextSpan(
+                      text: '2분 만에 매칭.',
+                      style: TextStyle(color: DC.primary),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Subtitle
+              const Text(
+                '항공 촬영, 방제, 점검, 측량까지 — 자격증과 보험까지\n검증된 드론 가사와 안전 고객로 바로 연결됩니다.',
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 17,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF6B7280),
+                  height: 1.65,
+                ),
+              ),
+              const SizedBox(height: 36),
+              // CTA buttons
+              Row(
+                children: <Widget>[
+                  ElevatedButton(
+                    onPressed: () => context.go('/login'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: DC.primary,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                      SizedBox(height: compact ? 18 : 24),
-                      // Headline — dark, bold, readable over soft logo
-                      Text(
-                        '필요한 드론 작업,\n더 쉽고 빠르게.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: compact ? 36 : 64,
-                          fontWeight: FontWeight.w900,
-                          color: DC.ink,
-                          height: 1.15,
-                          letterSpacing: -2,
-                          shadows: <Shadow>[
-                            Shadow(color: Color(0x40FFFFFF), blurRadius: 24),
-                          ],
-                        ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      SizedBox(height: compact ? 12 : 16),
-                      // Subtitle
-                      Text(
-                        '항공 촬영, 방제, 점검, 측량까지\n검증된 운용자와 바로 연결하세요.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: compact ? 14 : 18,
-                          fontWeight: FontWeight.w400,
-                          color: DC.body,
-                          height: 1.6,
-                          shadows: <Shadow>[
-                            Shadow(color: Color(0x30FFFFFF), blurRadius: 10),
-                          ],
-                        ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 16,
                       ),
-                      SizedBox(height: compact ? 28 : 36),
-                      // CTAs
-                      Wrap(
-                        spacing: DC.spBase,
-                        runSpacing: DC.spBase,
-                        alignment: WrapAlignment.center,
-                        children: <Widget>[
-                          ElevatedButton(
-                            onPressed: () => context.go('/login'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: DC.primary,
-                              foregroundColor: Colors.white,
-                              textStyle: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              shape: const StadiumBorder(),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 16,
-                              ),
-                              minimumSize: const Size(0, 56),
-                              elevation: 0,
-                            ),
-                            child: const Text('촬영자 찾기'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => context.go('/pilot/register'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: DC.ink,
-                              textStyle: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              shape: const StadiumBorder(),
-                              side: const BorderSide(
-                                color: Color(0xAAFFFFFF),
-                                width: 1.5,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 32,
-                                vertical: 16,
-                              ),
-                              minimumSize: const Size(0, 56),
-                              elevation: 0,
-                            ),
-                            child: const Text('운용자로 등록'),
-                          ),
-                        ],
+                      minimumSize: const Size(0, 54),
+                      elevation: 0,
+                    ),
+                    child: const Text('촬영자 찾기  →'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () => context.go('/pilot/register'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: DC.ink,
+                      textStyle: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: const BorderSide(
+                        color: Color(0xFFE5E7EB),
+                        width: 1.5,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 16,
+                      ),
+                      minimumSize: const Size(0, 54),
+                      elevation: 0,
+                    ),
+                    child: const Text('운용자로 등록'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 60),
+        // ── Right: app mockup ──────────────────────────────────────────
+        const Expanded(child: _AppMockupVisual()),
+      ],
+    );
+  }
+
+  Widget _buildCompactHero(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+              height: 1.18,
+              letterSpacing: -1.5,
+            ),
+            children: <TextSpan>[
+              TextSpan(text: '필요한 드론 작업,\n'),
+              TextSpan(text: '2분 만에 매칭.', style: TextStyle(color: DC.primary)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          '항공 촬영, 방제, 점검, 측량까지\n검증된 운용자와 바로 연결됩니다.',
+          style: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF6B7280),
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: 28),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: () => context.go('/login'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: DC.primary,
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                elevation: 0,
+              ),
+              child: const Text('촬영자 찾기  →'),
+            ),
+            ElevatedButton(
+              onPressed: () => context.go('/pilot/register'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: DC.ink,
+                textStyle: const TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: const BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                elevation: 0,
+              ),
+              child: const Text('운용자로 등록'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ── App Mockup Visual ──────────────────────────────────────────────────────────
+
+class _AppMockupVisual extends StatelessWidget {
+  const _AppMockupVisual();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final h = constraints.maxHeight;
+        final w = constraints.maxWidth;
+        return Stack(
+          clipBehavior: Clip.none,
+          children: <Widget>[
+            Positioned(
+              top: h * 0.29,
+              left: w * 0.17,
+              right: w * 0.28,
+              child: const _DashedLink(width: 190),
+            ),
+            Positioned(
+              top: h * 0.49,
+              left: w * 0.18,
+              right: w * 0.18,
+              child: const _DashedLink(width: 230),
+            ),
+            Positioned(
+              top: h * 0.13,
+              right: 0,
+              width: w.clamp(360.0, 430.0),
+              child: const _OperatorPreviewCard(),
+            ),
+            Positioned(
+              top: h * 0.43,
+              left: 0,
+              width: w.clamp(280.0, 340.0),
+              child: const _RequestPreviewCard(),
+            ),
+            Positioned(top: h * 0.63, right: 48, child: const _MatchedChip()),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _OperatorPreviewCard extends StatelessWidget {
+  const _OperatorPreviewCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE6EEF8)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.10),
+            blurRadius: 34,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF4FF),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                child: const Center(
+                  child: Text(
+                    't',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF5C93E8),
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      '운용자',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.star_rounded,
+                          size: 14,
+                          color: Color(0xFF19C37D),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          '★ 4.9 · 인증 · 항공촬영 전문',
+                          style: TextStyle(
+                            fontFamily: 'Pretendard',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE9FFF5),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: const Color(0xFF8FE8BE)),
+                ),
+                child: const Text(
+                  '인증',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF08A561),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: List<Widget>.generate(
+              3,
+              (index) => Expanded(
+                child: Container(
+                  height: 98,
+                  margin: EdgeInsets.only(left: index == 0 ? 0 : 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(9),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: <Color>[
+                        const Color(0xFFEAF4FF),
+                        Color.lerp(
+                          const Color(0xFFD7E9FF),
+                          const Color(0xFFC8DDF8),
+                          index / 2,
+                        )!,
+                      ],
+                    ),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: <Widget>[
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    '2분 전',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF7B8794),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 38,
+                child: ElevatedButton(
+                  onPressed: null,
+                  style: ElevatedButton.styleFrom(
+                    disabledBackgroundColor: DC.primary,
+                    disabledForegroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                  ),
+                  child: const Text(
+                    '견적 확인',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RequestPreviewCard extends StatelessWidget {
+  const _RequestPreviewCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE6EEF8)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.11),
+            blurRadius: 28,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF3FF),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Text(
+                  'NEW',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: DC.primary,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.more_horiz_rounded,
+                  size: 18,
+                  color: Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '서울 마포',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 5),
+          const Text(
+            '항공촬영',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 23,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF111827),
+              height: 1.05,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '견적 준비 · 6월 5일',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF7B8794),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: <Widget>[
+              _InfoPill(label: '4K'),
+              const SizedBox(width: 6),
+              _InfoPill(label: '반일 촬영'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Pretendard',
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF475569),
+        ),
+      ),
+    );
+  }
+}
+
+class _MatchedChip extends StatelessWidget {
+  const _MatchedChip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 11),
+      decoration: BoxDecoration(
+        color: DC.primary,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: DC.primary.withValues(alpha: 0.32),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(Icons.check_circle_rounded, size: 18, color: Colors.white),
+          SizedBox(width: 8),
+          Text(
+            '매칭 완료 — 2분 만에',
+            style: TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _DashedLink extends StatelessWidget {
+  const _DashedLink({required this.width});
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(size: Size(width, 1), painter: _DashedLinePainter());
+  }
+}
+
+class _DashedLinePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = DC.primary.withValues(alpha: 0.28)
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round;
+
+    var x = 0.0;
+    while (x < size.width) {
+      canvas.drawLine(Offset(x, 0), Offset(x + 7, 0), paint);
+      x += 14;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ── Services ──────────────────────────────────────────────────────────────────
