@@ -531,9 +531,14 @@ class DrameStore extends ChangeNotifier {
 
   Future<void> submitOperatorQuote(
     PilotWorkRequest request,
-    String message,
-  ) async {
-    await _api.submitQuoteForRequest(request, message);
+    String message, {
+    int? proposedPrice,
+  }) async {
+    await _api.submitQuoteForRequest(
+      request,
+      message,
+      proposedPrice: proposedPrice,
+    );
     await load();
   }
 

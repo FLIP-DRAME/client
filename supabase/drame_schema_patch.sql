@@ -193,9 +193,26 @@ create table if not exists public.notifications (
   kind text not null default 'general',
   title text not null,
   body text not null default '',
+  source_table text,
+  source_id uuid,
+  dedupe_key text,
   read_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+alter table public.operator_profiles
+  alter column status set default 'pending_review';
+
+alter table public.notifications
+  add column if not exists source_table text,
+  add column if not exists source_id uuid,
+  add column if not exists dedupe_key text;
+
+create unique index if not exists notifications_dedupe_key_idx
+on public.notifications (dedupe_key);
+
+create index if not exists notifications_recipient_unread_idx
+on public.notifications (recipient_id, read_at, created_at desc);
 
 alter table public.notifications enable row level security;
 
@@ -214,6 +231,136 @@ drop policy if exists "participants create notifications" on public.notification
 create policy "participants create notifications" on public.notifications
 for insert to authenticated
 with check (true);
+
+create or replace function public.notify_operator_on_job_request()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  operator_user_id uuid;
+  category_label text;
+begin
+  if new.preferred_operator_id is null then
+    return new;
+  end if;
+
+  select op.user_id into operator_user_id
+  from public.operator_profiles op
+  where op.id = new.preferred_operator_id;
+
+  if operator_user_id is null then
+    return new;
+  end if;
+
+  select sc.label into category_label
+  from public.service_categories sc
+  where sc.id = new.category_id;
+
+  insert into public.notifications (
+    recipient_id,
+    kind,
+    title,
+    body,
+    source_table,
+    source_id,
+    dedupe_key
+  ) values (
+    operator_user_id,
+    'quote_request',
+    '새 견적 요청이 도착했습니다',
+    concat_ws(' ', coalesce(new.location_label, '요청'), coalesce(category_label, '드론 작업')) || ' 요청을 확인해 주세요.',
+    'job_requests',
+    new.id,
+    'job_request:' || new.id::text || ':operator_request'
+  )
+  on conflict (dedupe_key) do nothing;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists job_requests_notify_operator on public.job_requests;
+create trigger job_requests_notify_operator
+after insert on public.job_requests
+for each row execute function public.notify_operator_on_job_request();
+
+create or replace function public.notify_quote_status_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  client_user_id uuid;
+  operator_user_id uuid;
+  request_label text;
+begin
+  select jr.client_id, coalesce(jr.location_label, jr.title, '요청')
+  into client_user_id, request_label
+  from public.job_requests jr
+  where jr.id = new.job_request_id;
+
+  if new.status = 'submitted'
+     and (tg_op = 'INSERT' or (tg_op = 'UPDATE' and old.status is distinct from new.status))
+     and client_user_id is not null then
+    insert into public.notifications (
+      recipient_id,
+      kind,
+      title,
+      body,
+      source_table,
+      source_id,
+      dedupe_key
+    ) values (
+      client_user_id,
+      'quote_received',
+      '견적을 받았습니다',
+      request_label || ' 견적이 도착했습니다.',
+      'quotes',
+      new.job_request_id,
+      'job_request:' || new.job_request_id::text || ':client_quote_received'
+    )
+    on conflict (dedupe_key) do nothing;
+  end if;
+
+  if new.status = 'accepted'
+     and (tg_op = 'INSERT' or (tg_op = 'UPDATE' and old.status is distinct from new.status)) then
+    select op.user_id into operator_user_id
+    from public.operator_profiles op
+    where op.id = new.operator_id;
+
+    if operator_user_id is not null then
+      insert into public.notifications (
+        recipient_id,
+        kind,
+        title,
+        body,
+        source_table,
+        source_id,
+        dedupe_key
+      ) values (
+        operator_user_id,
+        'quote_accepted',
+        '견적이 확정되었습니다',
+        request_label || ' 요청의 견적이 확정되었습니다.',
+        'quotes',
+        new.id,
+        'quote:' || new.id::text || ':operator_accepted'
+      )
+      on conflict (dedupe_key) do nothing;
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists quotes_notify_status_change on public.quotes;
+create trigger quotes_notify_status_change
+after insert or update of status on public.quotes
+for each row execute function public.notify_quote_status_change();
 
 insert into public.operator_categories (operator_id, category_id)
 select op.id, sc.id

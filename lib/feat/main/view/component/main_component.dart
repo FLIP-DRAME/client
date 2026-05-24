@@ -2162,10 +2162,11 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                   _RequestReviewDetail(
                                     request: current,
                                     isCompleted: currentCompleted,
-                                    onComplete: (message) async {
+                                    onComplete: (message, proposedPrice) async {
                                       await store.submitOperatorQuote(
                                         current,
                                         message,
+                                        proposedPrice: proposedPrice,
                                       );
                                       if (!mounted) return;
                                       setState(
@@ -2205,10 +2206,14 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                     child: _RequestReviewDetail(
                                       request: current,
                                       isCompleted: currentCompleted,
-                                      onComplete: (message) async {
+                                      onComplete: (
+                                        message,
+                                        proposedPrice,
+                                      ) async {
                                         await store.submitOperatorQuote(
                                           current,
                                           message,
+                                          proposedPrice: proposedPrice,
                                         );
                                         if (!mounted) return;
                                         setState(
@@ -2440,7 +2445,7 @@ class _RequestReviewDetail extends StatelessWidget {
 
   final PilotWorkRequest request;
   final bool isCompleted;
-  final Future<void> Function(String message) onComplete;
+  final Future<void> Function(String message, int? proposedPrice) onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -4837,13 +4842,13 @@ class _HowItWorksSection extends StatelessWidget {
                   _HowItWorksStep(
                     number: '02',
                     title: '기사 매칭',
-                    description: '지역과 조건에 맞는 인증 드론 기사를 확인하고 포트폴리오를 검토하세요.',
+                    description: '요청부터 일정 조율까지 한 흐름으로 맞는 운용자와 연결됩니다.',
                   ),
                   SizedBox(height: 24),
                   _HowItWorksStep(
                     number: '03',
                     title: '견적 확정',
-                    description: '견적을 요청하고 안전 결제 후 기사 연락처를 받아 작업을 진행하세요.',
+                    description: '자격증과 포트폴리오를 보고 검증된 운용자를 선택해 작업을 진행하세요.',
                   ),
                 ],
               )
@@ -4863,7 +4868,7 @@ class _HowItWorksSection extends StatelessWidget {
                     child: _HowItWorksStep(
                       number: '02',
                       title: '기사 매칭',
-                      description: '지역과 조건에 맞는 인증 드론 기사를 확인하고 포트폴리오를 검토하세요.',
+                      description: '요청부터 일정 조율까지 한 흐름으로 맞는 운용자와 연결됩니다.',
                     ),
                   ),
                   SizedBox(width: 24),
@@ -4871,7 +4876,7 @@ class _HowItWorksSection extends StatelessWidget {
                     child: _HowItWorksStep(
                       number: '03',
                       title: '견적 확정',
-                      description: '견적을 요청하고 안전 결제 후 기사 연락처를 받아 작업을 진행하세요.',
+                      description: '자격증과 포트폴리오를 보고 검증된 운용자를 선택해 작업을 진행하세요.',
                     ),
                   ),
                 ],
@@ -5473,7 +5478,7 @@ class _QuoteSubmitSection extends StatefulWidget {
   });
 
   final bool isCompleted;
-  final Future<void> Function(String message) onComplete;
+  final Future<void> Function(String message, int? proposedPrice) onComplete;
 
   @override
   State<_QuoteSubmitSection> createState() => _QuoteSubmitSectionState();
@@ -5481,18 +5486,22 @@ class _QuoteSubmitSection extends StatefulWidget {
 
 class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
   bool _submitting = false;
+  late final TextEditingController _priceController;
   late final TextEditingController _messageController;
 
   @override
   void initState() {
     super.initState();
+    _priceController = TextEditingController();
     _messageController = TextEditingController(
-      text: '요청 내용을 확인했습니다. 일정과 세부 작업 범위는 결제 후 공개되는 연락처로 조율해 주세요.',
+      text:
+          '안녕하세요. 요청 내용 기준으로 작업 가능합니다. 포함 범위, 가능 일정, 연락 가능한 전화번호나 카카오 채널을 함께 남깁니다.',
     );
   }
 
   @override
   void dispose() {
+    _priceController.dispose();
     _messageController.dispose();
     super.dispose();
   }
@@ -5531,12 +5540,37 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
         const Text('요청 내용을 확인한 뒤 이용자에게 견적을 보냅니다.', style: AppText.cardSubtitle),
         const SizedBox(height: 20),
         TextField(
+          controller: _priceController,
+          keyboardType: TextInputType.number,
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10),
+          ],
+          decoration: InputDecoration(
+            labelText: '제안가격',
+            hintText: '예: 450000',
+            suffixText: '원',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _line),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: _focus, width: 1.2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
           controller: _messageController,
           minLines: 4,
           maxLines: 6,
           decoration: InputDecoration(
             labelText: '견적 확정 메시지',
-            hintText: '별도 연락처 대신 결제 후 연락처가 공개된다는 안내를 남겨주세요.',
+            hintText: '예: 촬영 범위, 포함 산출물, 가능 일정, 연락 가능한 전화번호/카카오 채널을 적어주세요.',
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -5561,6 +5595,9 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
                     ? null
                     : () async {
                       final message = _messageController.text.trim();
+                      final proposedPrice = int.tryParse(
+                        _priceController.text.trim().replaceAll(',', ''),
+                      );
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder:
@@ -5568,8 +5605,8 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
                               title: const Text('견적을 확정할까요?'),
                               content: Text(
                                 message.isEmpty
-                                    ? '기본 안내 메시지로 견적을 보냅니다.'
-                                    : '아래 메시지로 견적 확정 메시지를 보내겠습니까?\n\n$message',
+                                    ? '제안가격 입력값 또는 요청 예산 기준으로 견적을 보냅니다.'
+                                    : '아래 메시지로 견적을 보내겠습니까?\n\n$message',
                               ),
                               actions: <Widget>[
                                 TextButton(
@@ -5588,7 +5625,7 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
                       if (confirmed != true) return;
                       setState(() => _submitting = true);
                       try {
-                        await widget.onComplete(message);
+                        await widget.onComplete(message, proposedPrice);
                       } catch (error) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

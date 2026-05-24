@@ -76,7 +76,7 @@ class _LandingPageState extends State<LandingPage> {
                     icon: Icons.verified_outlined,
                     title: '운용자 확정',
                     description: '도착한 견적을 비교하고 가장 적합한\n검증된 운용자를 선택하세요.',
-                    highlight: '자격증·보험 검증 필수 · 작업 완료 후 리뷰',
+                    highlight: '자격증·포트폴리오 확인 · 작업 완료 후 리뷰',
                     visual: const _OperatorCompareVisual(),
                     background: const Color(0xFFF0F5FF),
                     compact: compact,
@@ -123,16 +123,16 @@ class _MobileAppEntryFlowState extends State<_MobileAppEntryFlow> {
       body: '항공촬영부터 측량까지, 카테고리 선택 한 번이면 인증된 운용자가 견적을 보내드려요.',
     ),
     _OnboardingItem(
-      step: '02 · SAFE PAY',
+      step: '02 · MATCH FLOW',
       asset: 'assets/onboarding/onboarding_safe_pay.png',
-      title: '안전 결제로\n시작부터 끝까지',
-      body: '에스크로 방식으로 결제 후 작업 완료 확인이 끝나야 운용자에게 정산됩니다.',
+      title: '요청부터 일정 조율까지\n한 흐름으로 매칭',
+      body: '필요한 작업을 올리면 조건에 맞는 운용자와 연결되고, 견적 확인 후 바로 일정과 범위를 조율할 수 있어요.',
     ),
     _OnboardingItem(
       step: '03 · VERIFIED',
       asset: 'assets/onboarding/onboarding_verified.png',
-      title: '자격증과 보험까지\n검증된 운용자만',
-      body: '국토부 자격증 확인, 보험 가입 여부, 작업 이력까지 확인된 기사만 등록할 수 있어요.',
+      title: '자격증과 포트폴리오를 보고\n검증된 운용자 선택',
+      body: '운용자 자격 정보, 작업 포트폴리오, 리뷰를 확인하고 내 작업에 맞는 전문가를 선택하세요.',
     ),
   ];
 
@@ -1428,13 +1428,17 @@ class _WhyDrameSection extends StatelessWidget {
   final ScrollController scrollController;
 
   static const _features = [
-    (Icons.verified_outlined, '검증된 전문가', '자격증·보험·실적 검증을 거친 전문 운용자만 등록됩니다'),
+    (Icons.verified_outlined, '검증된 전문가', '자격증·포트폴리오·실적을 확인한 전문 운용자를 비교하세요'),
     (
       Icons.receipt_long_outlined,
       '투명한 견적 비교',
       '복수의 운용자에게 견적을 받아 최적의 조건을 선택하세요',
     ),
-    (Icons.security_outlined, '안전 보험 필수', '모든 작업에 배상 책임 보험이 적용됩니다'),
+    (
+      Icons.photo_library_outlined,
+      '포트폴리오 확인',
+      '실제 작업 사진과 소개를 보고 내 작업에 맞는 운용자를 고르세요',
+    ),
     (Icons.timeline_outlined, '실시간 진행 추적', '요청부터 작업 완료까지 전 과정을 투명하게 확인하세요'),
   ];
 

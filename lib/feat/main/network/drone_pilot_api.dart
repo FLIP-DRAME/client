@@ -26,7 +26,11 @@ abstract class DronePilotApi {
     required String budgetRange,
     required String contactWindow,
   });
-  Future<void> submitQuoteForRequest(PilotWorkRequest request, String message);
+  Future<void> submitQuoteForRequest(
+    PilotWorkRequest request,
+    String message, {
+    int? proposedPrice,
+  });
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
   Future<void> updateOperatorProfile({
     required String intro,
@@ -896,8 +900,9 @@ class SupabaseDronePilotApi implements DronePilotApi {
   @override
   Future<void> submitQuoteForRequest(
     PilotWorkRequest request,
-    String message,
-  ) async {
+    String message, {
+    int? proposedPrice,
+  }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
       throw StateError('로그인이 필요합니다.');
@@ -923,7 +928,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
       'job_request_id': request.id,
       'operator_id': operatorId,
       'status': 'submitted',
-      'proposed_price': _proposedPriceFromBudget(request.budget),
+      'proposed_price':
+          proposedPrice ?? _proposedPriceFromBudget(request.budget),
       'estimated_time_label': '일정 협의 후 진행',
       'message':
           message.trim().isEmpty
@@ -959,6 +965,9 @@ class SupabaseDronePilotApi implements DronePilotApi {
       'kind': 'quote_received',
       'title': '견적을 받았습니다',
       'body': '${row['location_label'] ?? '요청'} 견적이 도착했습니다.',
+      'source_table': 'quotes',
+      'source_id': jobRequestId,
+      'dedupe_key': 'job_request:$jobRequestId:client_quote_received',
     });
   }
 

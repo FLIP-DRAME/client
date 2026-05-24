@@ -239,14 +239,14 @@ class _UserHomeTabState extends State<_UserHomeTab> {
                             _HowItWorksStepCard(
                               step: '02',
                               title: '기사 매칭',
-                              body: '인증 기사 확인하고 포트폴리오 비교',
+                              body: '요청부터 일정 조율까지 연결',
                               width: cardW,
                             ),
                             const SizedBox(width: 10),
                             _HowItWorksStepCard(
                               step: '03',
                               title: '견적 확정',
-                              body: '연락처 공개 후 직접 일정 조율',
+                              body: '자격증과 포트폴리오 보고 선택',
                               width: cardW,
                             ),
                           ],
@@ -2805,7 +2805,8 @@ class _OperatorRequestSheet extends StatefulWidget {
 class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _memoController = TextEditingController(
-    text: '요청 내용을 확인했습니다. 일정과 세부 작업 범위는 결제 후 공개되는 연락처로 조율해 주세요.',
+    text:
+        '안녕하세요. 요청 내용 기준으로 작업 가능합니다. 포함 범위, 가능 일정, 연락 가능한 전화번호나 카카오 채널을 함께 남깁니다.',
   );
   bool _submitting = false;
   bool _submitted = false;
@@ -2820,10 +2821,14 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
   Future<void> _submit() async {
     final amount = _amountController.text.trim();
     final memo = _memoController.text.trim();
-    final message = amount.isNotEmpty ? '제안 금액: $amount원\n$memo' : memo;
+    final proposedPrice = int.tryParse(amount.replaceAll(',', ''));
     setState(() => _submitting = true);
     try {
-      await widget.store.submitOperatorQuote(widget.request, message);
+      await widget.store.submitOperatorQuote(
+        widget.request,
+        memo,
+        proposedPrice: proposedPrice,
+      );
       if (!mounted) return;
       setState(() {
         _submitting = false;
@@ -3169,7 +3174,7 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                               fontSize: 15,
                               color: Color(0xFF7C828A),
                             ),
-                            hintText: '0',
+                            hintText: '예: 450000',
                             hintStyle: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
@@ -3223,6 +3228,8 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                             height: 1.55,
                           ),
                           decoration: InputDecoration(
+                            hintText:
+                                '예: 촬영 범위, 포함 산출물, 가능 일정, 연락 가능한 전화번호/카카오 채널을 적어주세요.',
                             filled: true,
                             fillColor: Colors.white,
                             contentPadding: const EdgeInsets.all(14),

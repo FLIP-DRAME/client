@@ -41,6 +41,7 @@ class SupabaseQuoteApi implements QuoteApi {
             .select('id')
             .single();
     await _tryInsertOperatorNotification(
+      jobRequestId: job['id'].toString(),
       operatorId: request.pilot.id,
       area: request.area,
       category: request.category,
@@ -58,6 +59,7 @@ class SupabaseQuoteApi implements QuoteApi {
   }
 
   Future<void> _tryInsertOperatorNotification({
+    required String jobRequestId,
     required String operatorId,
     required String area,
     required String category,
@@ -74,6 +76,9 @@ class SupabaseQuoteApi implements QuoteApi {
         'kind': 'quote_request',
         'title': '새 견적 요청이 도착했습니다',
         'body': '$area $category 요청을 확인해 주세요.',
+        'source_table': 'job_requests',
+        'source_id': jobRequestId,
+        'dedupe_key': 'job_request:$jobRequestId:operator_request',
       });
     } on PostgrestException {
       return;
