@@ -1130,17 +1130,14 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
 
     final all = store.myQuotes;
     final received = all.where((q) => q.isQuoteReceived).toList();
-    final inProgress = all.where((q) => q.isInProgress).toList();
     final pending = all.where((q) => q.isPending).toList();
     final completed = all.where((q) => q.isCompleted).toList();
     final filtered =
         _filter == 1
-            ? inProgress
-            : _filter == 2
             ? received
-            : _filter == 3
+            : _filter == 2
             ? pending
-            : _filter == 4
+            : _filter == 3
             ? completed
             : all;
 
@@ -1177,28 +1174,22 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
                       ),
                       const SizedBox(width: 8),
                       _QuoteFilterTab(
-                        label: '진행중 ${inProgress.length}',
+                        label: '견적받음 ${received.length}',
                         selected: _filter == 1,
                         onTap: () => setState(() => _filter = 1),
                       ),
                       const SizedBox(width: 8),
                       _QuoteFilterTab(
-                        label: '견적받음 ${received.length}',
+                        label: '대기중 ${pending.length}',
                         selected: _filter == 2,
                         onTap: () => setState(() => _filter = 2),
-                      ),
-                      const SizedBox(width: 8),
-                      _QuoteFilterTab(
-                        label: '대기중 ${pending.length}',
-                        selected: _filter == 3,
-                        onTap: () => setState(() => _filter = 3),
                       ),
                       if (completed.isNotEmpty) ...<Widget>[
                         const SizedBox(width: 8),
                         _QuoteFilterTab(
                           label: '완료 ${completed.length}',
-                          selected: _filter == 4,
-                          onTap: () => setState(() => _filter = 4),
+                          selected: _filter == 3,
+                          onTap: () => setState(() => _filter = 3),
                         ),
                       ],
                     ],

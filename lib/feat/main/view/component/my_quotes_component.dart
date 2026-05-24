@@ -41,8 +41,6 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
         final quotes = store.myQuotes;
         final receivedQuotes =
             quotes.where((quote) => quote.isQuoteReceived).toList();
-        final inProgressQuotes =
-            quotes.where((quote) => quote.isInProgress).toList();
         final pendingQuotes =
             quotes.where((quote) => quote.isPending).toList();
         final completedQuotes =
@@ -104,16 +102,6 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                                 quotes: receivedQuotes,
                                 compact: compact,
                                 emptyText: '아직 받은 견적이 없습니다.',
-                                onTap:
-                                    (quote) =>
-                                        _openQuoteFromList(context, quote),
-                              ),
-                              const SizedBox(height: 24),
-                              _QuoteSection(
-                                title: '진행중',
-                                quotes: inProgressQuotes,
-                                compact: compact,
-                                emptyText: '진행중인 작업이 없습니다.',
                                 onTap:
                                     (quote) =>
                                         _openQuoteFromList(context, quote),
