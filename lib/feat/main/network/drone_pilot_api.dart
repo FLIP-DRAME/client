@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/app_defaults.dart';
 import '../model/main_models.dart';
 import '../model/drone_pilot_model.dart';
+import 'quote_status.dart';
 
 abstract class DronePilotApi {
   Future<List<DronePilot>> fetchPilots({
@@ -98,6 +99,7 @@ class UserQuoteSummary {
   bool get isQuoteReceived => status == '견적 받음';
   bool get isInProgress => status == '진행중';
   bool get isCompleted => status == '완료';
+  bool get isPending => status == '요청 보냄';
 }
 
 class PilotRegistrationPayload {
@@ -1002,23 +1004,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
     return _jobStatusLabel(status);
   }
 
-  String _quoteStatusLabel(String status, {required bool hasQuote}) {
-    if (status == 'quoted') {
-      return hasQuote ? '견적 받음' : '요청 보냄';
-    }
-    return switch (status) {
-      'submitted' => '견적 받음',
-      'accepted' ||
-      'paid' ||
-      'confirmed' ||
-      'contact_opened' ||
-      'in_progress' ||
-      'completed' => '진행중',
-      'rejected' => '거절',
-      'expired' => '만료',
-      _ => '요청 보냄',
-    };
-  }
+  String _quoteStatusLabel(String status, {required bool hasQuote}) =>
+      QuoteStatusHelper.clientLabel(status, hasQuote: hasQuote);
 
   Map<String, dynamic> _preferredQuoteForClient(List<Object?> quoteRows) {
     final quotes =
@@ -1028,39 +1015,21 @@ class SupabaseDronePilotApi implements DronePilotApi {
             .toList();
     if (quotes.isEmpty) return const <String, Object?>{};
     quotes.sort((a, b) {
-      final aRank = _quoteStatusRank((a['status'] ?? '').toString());
-      final bRank = _quoteStatusRank((b['status'] ?? '').toString());
+      final aRank = QuoteStatusHelper.quoteRank((a['status'] ?? '').toString());
+      final bRank = QuoteStatusHelper.quoteRank((b['status'] ?? '').toString());
       return bRank.compareTo(aRank);
     });
     return quotes.first;
   }
 
-  int _quoteStatusRank(String status) => switch (status) {
-    'completed' => 50,
-    'contact_opened' ||
-    'in_progress' ||
-    'paid' ||
-    'confirmed' ||
-    'accepted' => 40,
-    'submitted' || 'quoted' => 30,
-    'expired' || 'rejected' => 20,
-    _ => 0,
-  };
-
   String _effectiveClientQuoteStatus({
     required String jobStatus,
     required String quoteStatus,
-  }) {
-    return switch (jobStatus) {
-      'completed' ||
-      'contact_opened' ||
-      'in_progress' ||
-      'paid' ||
-      'confirmed' ||
-      'accepted' => jobStatus,
-      _ => quoteStatus.isEmpty ? jobStatus : quoteStatus,
-    };
-  }
+  }) =>
+      QuoteStatusHelper.effectiveClientStatus(
+        jobStatus: jobStatus,
+        quoteStatus: quoteStatus,
+      );
 
   int _proposedPriceFromBudget(String budget) {
     final numbers =

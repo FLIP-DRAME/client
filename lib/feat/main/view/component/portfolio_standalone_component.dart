@@ -13,7 +13,9 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final store = context.read<DrameStore>();
+      if (store.isSessionRestoring) return;
       if (!store.isLoggedIn) {
         context.go('/login');
         return;
@@ -26,7 +28,13 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
+        if (store.isSessionRestoring) {
+          return const Scaffold(backgroundColor: DC.canvas);
+        }
         if (!store.isLoggedIn) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) context.go('/login');
+          });
           return const Scaffold(backgroundColor: DC.canvas);
         }
         final nickname =

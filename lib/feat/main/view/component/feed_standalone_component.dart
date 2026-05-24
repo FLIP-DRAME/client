@@ -39,7 +39,9 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!context.read<DrameStore>().isLoggedIn) {
+      if (!mounted) return;
+      final store = context.read<DrameStore>();
+      if (!store.isSessionRestoring && !store.isLoggedIn) {
         context.go('/login');
       }
     });
@@ -49,7 +51,13 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
+        if (store.isSessionRestoring) {
+          return const Scaffold(backgroundColor: DC.canvas);
+        }
         if (!store.isLoggedIn) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) context.go('/login');
+          });
           return const Scaffold(backgroundColor: DC.canvas);
         }
         final compact = MediaQuery.sizeOf(context).width < 760;

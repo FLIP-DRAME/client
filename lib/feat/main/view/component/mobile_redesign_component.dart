@@ -1131,11 +1131,17 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
     final all = store.myQuotes;
     final received = all.where((q) => q.isQuoteReceived).toList();
     final inProgress = all.where((q) => q.isInProgress).toList();
+    final pending = all.where((q) => q.isPending).toList();
+    final completed = all.where((q) => q.isCompleted).toList();
     final filtered =
         _filter == 1
             ? inProgress
             : _filter == 2
             ? received
+            : _filter == 3
+            ? pending
+            : _filter == 4
+            ? completed
             : all;
 
     return ColoredBox(
@@ -1181,6 +1187,20 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
                         selected: _filter == 2,
                         onTap: () => setState(() => _filter = 2),
                       ),
+                      const SizedBox(width: 8),
+                      _QuoteFilterTab(
+                        label: '대기중 ${pending.length}',
+                        selected: _filter == 3,
+                        onTap: () => setState(() => _filter = 3),
+                      ),
+                      if (completed.isNotEmpty) ...<Widget>[
+                        const SizedBox(width: 8),
+                        _QuoteFilterTab(
+                          label: '완료 ${completed.length}',
+                          selected: _filter == 4,
+                          onTap: () => setState(() => _filter = 4),
+                        ),
+                      ],
                     ],
                   ),
                 ),

@@ -49,6 +49,7 @@ class DrameStore extends ChangeNotifier {
   bool isPilotMode = false;
   bool isLoggedIn = false;
   bool isPilotOnboarding = false;
+  bool isSessionRestoring = true;
   bool operatorRegistrationCompleted = false;
   String operatorReviewStatus = 'none';
   bool registrationJustCompleted = false;
@@ -307,7 +308,11 @@ class DrameStore extends ChangeNotifier {
 
   Future<void> restoreSession() async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      isSessionRestoring = false;
+      notifyListeners();
+      return;
+    }
     final metadata = user.userMetadata ?? const <String, dynamic>{};
     final role = metadata['role'] == 'operator' ? '운용자' : '이용자';
     final myOperator = await _api.fetchMyOperatorProfile();
@@ -322,6 +327,8 @@ class DrameStore extends ChangeNotifier {
       operatorReviewStatus = myOperator.operatorStatus;
     }
     submitAuth();
+    isSessionRestoring = false;
+    notifyListeners();
   }
 
   void goToPilotOnboardingStep(int step) {

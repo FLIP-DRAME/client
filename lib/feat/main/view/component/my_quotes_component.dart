@@ -1,15 +1,33 @@
 part of '../pages/main_page.dart';
 
-class MyQuotesPage extends StatelessWidget {
+class MyQuotesPage extends StatefulWidget {
   const MyQuotesPage({super.key});
+
+  @override
+  State<MyQuotesPage> createState() => _MyQuotesPageState();
+}
+
+class _MyQuotesPageState extends State<MyQuotesPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final store = context.read<DrameStore>();
+      if (store.isLoggedIn) store.load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
+        if (store.isSessionRestoring) {
+          return const Scaffold(backgroundColor: DC.canvas);
+        }
         if (!store.isLoggedIn) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.go('/login');
+            if (mounted) context.go('/login');
           });
           return const Scaffold(backgroundColor: DC.canvas);
         }
@@ -25,6 +43,10 @@ class MyQuotesPage extends StatelessWidget {
             quotes.where((quote) => quote.isQuoteReceived).toList();
         final inProgressQuotes =
             quotes.where((quote) => quote.isInProgress).toList();
+        final pendingQuotes =
+            quotes.where((quote) => quote.isPending).toList();
+        final completedQuotes =
+            quotes.where((quote) => quote.isCompleted).toList();
 
         return Scaffold(
           backgroundColor: DC.canvas,
@@ -96,6 +118,28 @@ class MyQuotesPage extends StatelessWidget {
                                     (quote) =>
                                         _openQuoteFromList(context, quote),
                               ),
+                              const SizedBox(height: 24),
+                              _QuoteSection(
+                                title: '견적 대기중',
+                                quotes: pendingQuotes,
+                                compact: compact,
+                                emptyText: '대기중인 견적 요청이 없습니다.',
+                                onTap:
+                                    (quote) =>
+                                        _openQuoteFromList(context, quote),
+                              ),
+                              if (completedQuotes.isNotEmpty) ...<Widget>[
+                                const SizedBox(height: 24),
+                                _QuoteSection(
+                                  title: '완료',
+                                  quotes: completedQuotes,
+                                  compact: compact,
+                                  emptyText: '',
+                                  onTap:
+                                      (quote) =>
+                                          _openQuoteFromList(context, quote),
+                                ),
+                              ],
                             ],
                             const SizedBox(height: 72),
                           ],
@@ -319,6 +363,7 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
   ) async {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
     try {
       await store.updateMyQuoteRequest(
         requestId: quote.id,
@@ -330,7 +375,7 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
       );
       if (!mounted) return;
       messenger.showSnackBar(const SnackBar(content: Text('견적 요청을 수정했습니다.')));
-      context.go('/my/quotes');
+      router.go('/my/quotes');
     } catch (error) {
       if (!mounted) return;
       messenger.showSnackBar(

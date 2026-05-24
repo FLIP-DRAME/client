@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app_providers.dart';
 import 'app_router.dart';
 import 'common/drame_text_styles.dart';
 
@@ -89,8 +90,25 @@ Future<void> _setupForegroundMessaging() async {
   });
 }
 
-class DrameApp extends StatelessWidget {
+class DrameApp extends ConsumerStatefulWidget {
   const DrameApp({super.key});
+
+  @override
+  ConsumerState<DrameApp> createState() => _DrameAppState();
+}
+
+class _DrameAppState extends ConsumerState<DrameApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final store = ref.read(drameStoreProvider);
+      store.restoreSession().then((_) {
+        if (!mounted) return;
+        if (store.isLoggedIn) store.load(initial: true);
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
