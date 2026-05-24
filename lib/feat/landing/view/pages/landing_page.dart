@@ -565,7 +565,7 @@ class _HeroSection extends StatelessWidget {
             // ── Hero body fills remaining viewport height ──────────────
             Expanded(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: compact ? 24 : 80),
+                padding: EdgeInsets.symmetric(horizontal: compact ? 24 : 96),
                 child:
                     compact
                         ? _buildCompactHero(context)
@@ -605,103 +605,107 @@ class _HeroSection extends StatelessWidget {
       children: <Widget>[
         // ── Left: text content ─────────────────────────────────────────
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Headline with blue accent
-              RichText(
-                text: const TextSpan(
+          flex: 11,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                // Headline with blue accent
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 64,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF0F172A),
+                      height: 1.12,
+                      letterSpacing: -2,
+                    ),
+                    children: <TextSpan>[
+                      TextSpan(text: '필요한 드론 작업,\n'),
+                      TextSpan(
+                        text: '2분 만에 매칭.',
+                        style: TextStyle(color: DC.primary),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                // Subtitle
+                const Text(
+                  '항공 촬영, 방제, 점검, 측량까지 — 자격증과 보험까지\n검증된 드론 가사와 안전 고객로 바로 연결됩니다.',
                   style: TextStyle(
                     fontFamily: 'Pretendard',
-                    fontSize: 56,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF0F172A),
-                    height: 1.15,
-                    letterSpacing: -2,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF6B7280),
+                    height: 1.62,
                   ),
-                  children: <TextSpan>[
-                    TextSpan(text: '필요한 드론 작업,\n'),
-                    TextSpan(
-                      text: '2분 만에 매칭.',
-                      style: TextStyle(color: DC.primary),
+                ),
+                const SizedBox(height: 38),
+                // CTA buttons
+                Row(
+                  children: <Widget>[
+                    ElevatedButton(
+                      onPressed: () => context.go('/login'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: DC.primary,
+                        foregroundColor: Colors.white,
+                        textStyle: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 17,
+                        ),
+                        minimumSize: const Size(0, 58),
+                        elevation: 0,
+                      ),
+                      child: const Text('촬영자 찾기  →'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () => context.go('/pilot/register'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: DC.ink,
+                        textStyle: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        side: const BorderSide(
+                          color: Color(0xFFE5E7EB),
+                          width: 1.5,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 17,
+                        ),
+                        minimumSize: const Size(0, 58),
+                        elevation: 0,
+                      ),
+                      child: const Text('운용자로 등록'),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              // Subtitle
-              const Text(
-                '항공 촬영, 방제, 점검, 측량까지 — 자격증과 보험까지\n검증된 드론 가사와 안전 고객로 바로 연결됩니다.',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 17,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF6B7280),
-                  height: 1.65,
-                ),
-              ),
-              const SizedBox(height: 36),
-              // CTA buttons
-              Row(
-                children: <Widget>[
-                  ElevatedButton(
-                    onPressed: () => context.go('/login'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: DC.primary,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
-                        vertical: 16,
-                      ),
-                      minimumSize: const Size(0, 54),
-                      elevation: 0,
-                    ),
-                    child: const Text('촬영자 찾기  →'),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () => context.go('/pilot/register'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: DC.ink,
-                      textStyle: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      side: const BorderSide(
-                        color: Color(0xFFE5E7EB),
-                        width: 1.5,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 28,
-                        vertical: 16,
-                      ),
-                      minimumSize: const Size(0, 54),
-                      elevation: 0,
-                    ),
-                    child: const Text('운용자로 등록'),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 60),
+        const SizedBox(width: 36),
         // ── Right: app mockup ──────────────────────────────────────────
-        const Expanded(child: _AppMockupVisual()),
+        const Expanded(flex: 10, child: _AppMockupVisual()),
       ],
     );
   }

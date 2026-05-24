@@ -1,11 +1,11 @@
 {
-    "name": "모드",
-    "short_name": "모드",
+    "name": "모두의 드론",
+    "short_name": "모두의 드론",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#0A5CFF",
+    "description": "필요한 드론작업, 2분만에 매칭",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
