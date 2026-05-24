@@ -1010,7 +1010,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
     'in_progress' => '진행중',
     'rejected' => '거절',
     'expired' => '만료',
-    'completed' => '완료',
+    'completed' => '진행중',
     _ => '요청 보냄',
   };
 

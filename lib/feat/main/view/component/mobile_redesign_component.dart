@@ -736,7 +736,6 @@ class _UserMyPageTab extends StatelessWidget {
     final email = store.accountEmail;
     final received = store.myQuotes.where((q) => q.isQuoteReceived).length;
     final inProgress = store.myQuotes.where((q) => q.isInProgress).length;
-    final completed = store.myQuotes.where((q) => q.isCompleted).length;
 
     return ColoredBox(
       color: _bgBeige,
@@ -833,7 +832,7 @@ class _UserMyPageTab extends StatelessWidget {
                   const SizedBox(width: 8),
                   _UserStatBox(value: '$inProgress', label: '진행중'),
                   const SizedBox(width: 8),
-                  _UserStatBox(value: '$completed', label: '완료'),
+                  const _UserStatBox(value: '0', label: '관심'),
                 ],
               ),
             ),
@@ -1132,14 +1131,11 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
     final all = store.myQuotes;
     final received = all.where((q) => q.isQuoteReceived).toList();
     final inProgress = all.where((q) => q.isInProgress).toList();
-    final completed = all.where((q) => q.isCompleted).toList();
     final filtered =
         _filter == 1
-            ? received
-            : _filter == 2
             ? inProgress
-            : _filter == 3
-            ? completed
+            : _filter == 2
+            ? received
             : all;
 
     return ColoredBox(
@@ -1175,21 +1171,15 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
                       ),
                       const SizedBox(width: 8),
                       _QuoteFilterTab(
-                        label: '견적 받음 ${received.length}',
+                        label: '진행중 ${inProgress.length}',
                         selected: _filter == 1,
                         onTap: () => setState(() => _filter = 1),
                       ),
                       const SizedBox(width: 8),
                       _QuoteFilterTab(
-                        label: '진행중 ${inProgress.length}',
+                        label: '견적받음 ${received.length}',
                         selected: _filter == 2,
                         onTap: () => setState(() => _filter = 2),
-                      ),
-                      const SizedBox(width: 8),
-                      _QuoteFilterTab(
-                        label: '완료 ${completed.length}',
-                        selected: _filter == 3,
-                        onTap: () => setState(() => _filter = 3),
                       ),
                     ],
                   ),
@@ -1262,17 +1252,6 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         builder: (_) => _QuoteEstimateSheet(quote: quote),
-      );
-      return;
-    }
-    if (quote.isCompleted) {
-      showModalBottomSheet<void>(
-        context: context,
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (_) => _CompletedQuoteSheet(quote: quote),
       );
       return;
     }
@@ -1487,83 +1466,9 @@ class _MobileQuoteStatusCard extends StatelessWidget {
         return (const Color(0xFF0052FF), const Color(0xFFEEF4FF));
       case '진행중':
         return (const Color(0xFF05B169), const Color(0xFFE8F9F1));
-      case '완료':
-        return (const Color(0xFF64748B), const Color(0xFFF1F5F9));
       default:
         return (const Color(0xFF7C828A), const Color(0xFFF7F8FA));
     }
-  }
-}
-
-class _CompletedQuoteSheet extends StatelessWidget {
-  const _CompletedQuoteSheet({required this.quote});
-
-  final UserQuoteSummary quote;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const Expanded(
-                child: Text(
-                  '완료된 작업',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0A0B0D),
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded, size: 22),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _SheetInfoRow(label: '서비스', value: quote.category),
-          _SheetInfoRow(label: '지역', value: quote.area),
-          if (quote.pilotName.isNotEmpty)
-            _SheetInfoRow(label: '운용자', value: quote.pilotName),
-          if (quote.price.isNotEmpty && quote.price != '0')
-            _SheetInfoRow(
-              label: '견적 금액',
-              value: quote.price,
-              isHighlight: true,
-            ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                textStyle: const TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              child: const Text('확인'),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
