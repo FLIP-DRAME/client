@@ -826,6 +826,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
       final price = (quote['proposed_price'] as num?)?.toInt();
       final jobStatus = (map['status'] ?? '').toString();
       final quoteStatus = (quote['status'] ?? '').toString();
+      final hasQuote = quote.isNotEmpty;
       final status = _effectiveClientQuoteStatus(
         jobStatus: jobStatus,
         quoteStatus: quoteStatus,
@@ -843,7 +844,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
                 .toString(),
         area: (map['location_label'] ?? '지역 미정').toString(),
         date: _dateOnly(map['preferred_start_at'] ?? map['created_at']),
-        status: _quoteStatusLabel(status),
+        status: _quoteStatusLabel(status, hasQuote: hasQuote),
         price: price == null ? '-' : '${(price / 10000).round()}만원',
         detail: (map['detail'] ?? '').toString(),
         budgetRange: _budgetLabel(map['budget_min'], map['budget_max']),
@@ -1001,18 +1002,23 @@ class SupabaseDronePilotApi implements DronePilotApi {
     return _jobStatusLabel(status);
   }
 
-  String _quoteStatusLabel(String status) => switch (status) {
-    'submitted' || 'quoted' => '견적 받음',
-    'accepted' ||
-    'paid' ||
-    'confirmed' ||
-    'contact_opened' ||
-    'in_progress' => '진행중',
-    'rejected' => '거절',
-    'expired' => '만료',
-    'completed' => '진행중',
-    _ => '요청 보냄',
-  };
+  String _quoteStatusLabel(String status, {required bool hasQuote}) {
+    if (status == 'quoted') {
+      return hasQuote ? '견적 받음' : '요청 보냄';
+    }
+    return switch (status) {
+      'submitted' => '견적 받음',
+      'accepted' ||
+      'paid' ||
+      'confirmed' ||
+      'contact_opened' ||
+      'in_progress' ||
+      'completed' => '진행중',
+      'rejected' => '거절',
+      'expired' => '만료',
+      _ => '요청 보냄',
+    };
+  }
 
   Map<String, dynamic> _preferredQuoteForClient(List<Object?> quoteRows) {
     final quotes =

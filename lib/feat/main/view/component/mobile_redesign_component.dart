@@ -1139,7 +1139,7 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
             : all;
 
     return ColoredBox(
-      color: _bgBeige,
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -1188,55 +1188,58 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
             ),
           ),
           Expanded(
-            child:
-                filtered.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          const Icon(
-                            Icons.description_outlined,
-                            size: 48,
-                            color: Color(0xFFA8ACB3),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            '견적 내역이 없습니다',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF7C828A),
+            child: ColoredBox(
+              color: Colors.white,
+              child:
+                  filtered.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            const Icon(
+                              Icons.description_outlined,
+                              size: 48,
+                              color: Color(0xFFA8ACB3),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              foregroundColor: _primary,
-                              textStyle: const TextStyle(
+                            const SizedBox(height: 12),
+                            const Text(
+                              '견적 내역이 없습니다',
+                              style: TextStyle(
                                 fontFamily: 'Pretendard',
-                                fontSize: 14,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
+                                color: Color(0xFF7C828A),
                               ),
                             ),
-                            child: const Text('운용자 찾기'),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: () {},
+                              style: TextButton.styleFrom(
+                                foregroundColor: _primary,
+                                textStyle: const TextStyle(
+                                  fontFamily: 'Pretendard',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              child: const Text('운용자 찾기'),
+                            ),
+                          ],
+                        ),
+                      )
+                      : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final q = filtered[index];
+                          return _MobileQuoteStatusCard(
+                            quote: q,
+                            onTap: () => _onQuoteTap(context, q),
+                          );
+                        },
                       ),
-                    )
-                    : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final q = filtered[index];
-                        return _MobileQuoteStatusCard(
-                          quote: q,
-                          onTap: () => _onQuoteTap(context, q),
-                        );
-                      },
-                    ),
+            ),
           ),
         ],
       ),
@@ -1846,7 +1849,7 @@ class _OperatorDashboardTab extends StatelessWidget {
                     child: _OpStatCard(
                       label: '받은 요청',
                       value: '${requests.length}',
-                      sub: newCount > 0 ? '신규 ${newCount}건' : null,
+                      sub: newCount > 0 ? '신규 $newCount건' : null,
                       subColor: _primary,
                     ),
                   ),

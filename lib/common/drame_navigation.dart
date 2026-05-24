@@ -165,11 +165,6 @@ class DrameTopNavigation extends StatelessWidget {
                     child: const Text('시작하기'),
                   ),
                 ] else if (isOperator) ...<Widget>[
-                  _NotificationButton(
-                    count: notificationCount,
-                    onTap: onNotificationTap,
-                  ),
-                  const SizedBox(width: 6),
                   if (!compact) ...<Widget>[
                     TextButton(
                       onPressed: onRequestsTap,
@@ -204,11 +199,6 @@ class DrameTopNavigation extends StatelessWidget {
                     onOperatorTap: onSwitchToOperator ?? () {},
                   ),
                 ] else ...<Widget>[
-                  _NotificationButton(
-                    count: notificationCount,
-                    onTap: onNotificationTap,
-                  ),
-                  const SizedBox(width: 6),
                   _ModeToggle(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
@@ -284,51 +274,6 @@ class _Logo extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: const DrameLogo(size: 40, showText: false),
-    );
-  }
-}
-
-class _NotificationButton extends StatelessWidget {
-  const _NotificationButton({required this.count, this.onTap});
-
-  final int count;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      tooltip: '알림',
-      icon: Stack(
-        clipBehavior: Clip.none,
-        children: <Widget>[
-          const Icon(Icons.notifications_none_rounded, size: 22),
-          if (count > 0)
-            Positioned(
-              right: -6,
-              top: -6,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: const BoxDecoration(
-                  color: DC.primary,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    count > 9 ? '9+' : '$count',
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }
