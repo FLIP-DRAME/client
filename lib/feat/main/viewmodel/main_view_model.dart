@@ -684,6 +684,9 @@ class DrameStore extends ChangeNotifier {
       progress: '견적 응답 대기',
       remaining: data.remaining,
       mapLabel: '${data.location} 지도',
+      myQuoteId: data.myQuoteId,
+      myQuoteMessage: data.myQuoteMessage,
+      myQuotePrice: data.myQuotePrice,
     );
   }
 

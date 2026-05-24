@@ -54,6 +54,9 @@ class PilotWorkRequestData {
     required this.client,
     required this.summary,
     required this.remaining,
+    this.myQuoteId,
+    this.myQuoteMessage,
+    this.myQuotePrice,
   });
 
   final String id;
@@ -65,6 +68,9 @@ class PilotWorkRequestData {
   final String client;
   final String summary;
   final String remaining;
+  final String? myQuoteId;
+  final String? myQuoteMessage;
+  final int? myQuotePrice;
 }
 
 class UserQuoteSummary {
@@ -740,6 +746,17 @@ class SupabaseDronePilotApi implements DronePilotApi {
 
   @override
   Future<List<PilotWorkRequestData>> fetchOperatorRequests() async {
+    final userId = _client.auth.currentUser?.id;
+    final profile =
+        userId == null
+            ? null
+            : await _client
+                .from('operator_profiles')
+                .select('id')
+                .eq('user_id', userId)
+                .maybeSingle();
+    final operatorId = profile?['id']?.toString();
+
     final rows = await _client
         .from('job_requests')
         .select('''
@@ -756,12 +773,24 @@ class SupabaseDronePilotApi implements DronePilotApi {
           client_display_name,
           operator_viewed_at,
           created_at,
-          service_categories(label)
+          service_categories(label),
+          quotes(id, message, proposed_price, operator_id)
         ''')
         .order('created_at', ascending: false);
 
     return rows.map<PilotWorkRequestData>((row) {
       final map = Map<String, dynamic>.from(row as Map);
+      final quotes =
+          (map['quotes'] as List? ?? const [])
+              .whereType<Map>()
+              .map((q) => Map<String, dynamic>.from(q))
+              .toList();
+      final myQuote =
+          operatorId == null
+              ? null
+              : quotes
+                  .where((q) => q['operator_id']?.toString() == operatorId)
+                  .firstOrNull;
       return PilotWorkRequestData(
         id: map['id'].toString(),
         category:
@@ -770,6 +799,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
         status: _operatorRequestStatus(
           (map['status'] ?? '').toString(),
           map['operator_viewed_at'],
+          hasMyQuote: myQuote != null,
         ),
         location: (map['location_label'] ?? '지역 미정').toString(),
         dateRange: _dateRange(
@@ -780,6 +810,9 @@ class SupabaseDronePilotApi implements DronePilotApi {
         client: (map['client_display_name'] ?? '고객').toString(),
         summary: (map['detail'] ?? map['title'] ?? '').toString(),
         remaining: '확인 필요',
+        myQuoteId: myQuote?['id']?.toString(),
+        myQuoteMessage: myQuote?['message']?.toString(),
+        myQuotePrice: (myQuote?['proposed_price'] as num?)?.toInt(),
       );
     }).toList();
   }
@@ -997,7 +1030,12 @@ class SupabaseDronePilotApi implements DronePilotApi {
     _ => '요청 도착',
   };
 
-  String _operatorRequestStatus(String status, Object? viewedAt) {
+  String _operatorRequestStatus(
+    String status,
+    Object? viewedAt, {
+    bool hasMyQuote = false,
+  }) {
+    if (hasMyQuote) return '견적 보냄';
     if (status == 'open') {
       return viewedAt == null ? '신규' : '확인 중';
     }

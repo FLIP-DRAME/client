@@ -2852,13 +2852,25 @@ class _OperatorRequestSheet extends StatefulWidget {
 }
 
 class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _memoController = TextEditingController(
-    text:
-        '안녕하세요. 요청 내용 기준으로 작업 가능합니다. 포함 범위, 가능 일정, 연락 가능한 전화번호나 카카오 채널을 함께 남깁니다.',
-  );
+  late final TextEditingController _amountController;
+  late final TextEditingController _memoController;
   bool _submitting = false;
   bool _submitted = false;
+  bool _editing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final req = widget.request;
+    _amountController = TextEditingController(
+      text: req.myQuotePrice != null ? req.myQuotePrice.toString() : '',
+    );
+    _memoController = TextEditingController(
+      text:
+          req.myQuoteMessage ??
+          '안녕하세요. 요청 내용 기준으로 작업 가능합니다. 포함 범위, 가능 일정, 연락 가능한 전화번호나 카카오 채널을 함께 남깁니다.',
+    );
+  }
 
   @override
   void dispose() {
@@ -2882,6 +2894,7 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
       setState(() {
         _submitting = false;
         _submitted = true;
+        _editing = false;
       });
     } catch (error) {
       if (!mounted) return;
@@ -3146,32 +3159,72 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                 const SizedBox(height: 12),
 
                 // ── Quote response section ─────────────────────────────────
-                if (_submitted)
+                if ((_submitted || widget.request.myQuoteMessage != null) &&
+                    !_editing)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE8FFF2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Icon(
-                          Icons.check_circle_rounded,
-                          color: Color(0xFF22C58B),
-                          size: 20,
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            '견적을 보냈습니다. 이용자 내 견적에 반영됩니다.',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF0A0B0D),
+                        Row(
+                          children: <Widget>[
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF22C58B),
+                              size: 20,
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Text(
+                                '견적을 보냈습니다.',
+                                style: TextStyle(
+                                  fontFamily: 'Pretendard',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF0A0B0D),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => setState(() => _editing = true),
+                              child: const Text(
+                                '편집하기',
+                                style: TextStyle(
+                                  fontFamily: 'Pretendard',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF3B7EF6),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                        if (widget.request.myQuotePrice != null ||
+                            (widget.request.myQuoteMessage != null &&
+                                widget.request.myQuoteMessage!.isNotEmpty)) ...<Widget>[
+                          const SizedBox(height: 10),
+                          const Divider(color: Color(0xFFB8F0D8), height: 1),
+                          const SizedBox(height: 10),
+                          if (widget.request.myQuotePrice != null)
+                            _SentQuoteRow(
+                              label: '제안가격',
+                              value:
+                                  '${(widget.request.myQuotePrice! / 10000).round()}만원',
+                            ),
+                          if (widget.request.myQuoteMessage != null &&
+                              widget.request.myQuoteMessage!.isNotEmpty) ...<Widget>[
+                            const SizedBox(height: 4),
+                            _SentQuoteRow(
+                              label: '메시지',
+                              value: widget.request.myQuoteMessage!,
+                              multiLine: true,
+                            ),
+                          ],
+                        ],
                       ],
                     ),
                   )
@@ -3355,6 +3408,52 @@ class _ReqMetaRow extends StatelessWidget {
             fontFamily: 'Pretendard',
             fontSize: 12,
             color: Color(0xFF5B616E),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SentQuoteRow extends StatelessWidget {
+  const _SentQuoteRow({
+    required this.label,
+    required this.value,
+    this.multiLine = false,
+  });
+
+  final String label;
+  final String value;
+  final bool multiLine;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment:
+          multiLine ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      children: <Widget>[
+        SizedBox(
+          width: 56,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF3A3F47),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 12,
+              color: Color(0xFF3A3F47),
+              height: 1.5,
+            ),
           ),
         ),
       ],

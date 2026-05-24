@@ -2512,7 +2512,12 @@ class _RequestReviewDetail extends StatelessWidget {
           const SizedBox(height: 18),
           const Divider(color: _line),
           const SizedBox(height: 18),
-          _QuoteSubmitSection(isCompleted: isCompleted, onComplete: onComplete),
+          _QuoteSubmitSection(
+            isCompleted: isCompleted,
+            onComplete: onComplete,
+            initialMessage: request.myQuoteMessage,
+            initialPrice: request.myQuotePrice,
+          ),
         ],
       ),
     );
@@ -2533,6 +2538,39 @@ class _RequestMeta extends StatelessWidget {
         Icon(icon, size: 15, color: const Color(0xFF8BA0B8)),
         const SizedBox(width: 5),
         Text(text, style: AppText.cardSubtitle),
+      ],
+    );
+  }
+}
+
+class _QuoteSentRow extends StatelessWidget {
+  const _QuoteSentRow({
+    required this.label,
+    required this.value,
+    this.multiLine = false,
+  });
+
+  final String label;
+  final String value;
+  final bool multiLine;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment:
+          multiLine ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      children: <Widget>[
+        SizedBox(
+          width: 64,
+          child: Text(
+            label,
+            style: AppText.metricLabel,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(value, style: AppText.cardSubtitle),
+        ),
       ],
     );
   }
@@ -5475,10 +5513,14 @@ class _QuoteSubmitSection extends StatefulWidget {
   const _QuoteSubmitSection({
     required this.isCompleted,
     required this.onComplete,
+    this.initialMessage,
+    this.initialPrice,
   });
 
   final bool isCompleted;
   final Future<void> Function(String message, int? proposedPrice) onComplete;
+  final String? initialMessage;
+  final int? initialPrice;
 
   @override
   State<_QuoteSubmitSection> createState() => _QuoteSubmitSectionState();
@@ -5486,15 +5528,19 @@ class _QuoteSubmitSection extends StatefulWidget {
 
 class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
   bool _submitting = false;
+  bool _editing = false;
   late final TextEditingController _priceController;
   late final TextEditingController _messageController;
 
   @override
   void initState() {
     super.initState();
-    _priceController = TextEditingController();
+    _priceController = TextEditingController(
+      text: widget.initialPrice != null ? widget.initialPrice.toString() : '',
+    );
     _messageController = TextEditingController(
       text:
+          widget.initialMessage ??
           '안녕하세요. 요청 내용 기준으로 작업 가능합니다. 포함 범위, 가능 일정, 연락 가능한 전화번호나 카카오 채널을 함께 남깁니다.',
     );
   }
@@ -5508,7 +5554,11 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isCompleted) {
+    if (widget.isCompleted && !_editing) {
+      final priceText =
+          widget.initialPrice != null
+              ? '${(widget.initialPrice! / 10000).round()}만원'
+              : null;
       return Container(
         width: double.infinity,
         padding: const EdgeInsets.all(18),
@@ -5517,16 +5567,38 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: _line),
         ),
-        child: const Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.check_circle_outline, color: _mint, size: 20),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '견적을 보냈습니다. 이용자의 내 견적에 견적 받음으로 표시됩니다.',
-                style: AppText.smallStrong,
-              ),
+            Row(
+              children: <Widget>[
+                const Icon(Icons.check_circle_outline, color: _mint, size: 20),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text('견적을 보냈습니다.', style: AppText.smallStrong),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _editing = true),
+                  child: const Text('편집하기'),
+                ),
+              ],
             ),
+            if (priceText != null || widget.initialMessage != null) ...<Widget>[
+              const SizedBox(height: 12),
+              const Divider(color: _line),
+              const SizedBox(height: 10),
+              if (priceText != null)
+                _QuoteSentRow(label: '제안가격', value: priceText),
+              if (widget.initialMessage != null &&
+                  widget.initialMessage!.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 6),
+                _QuoteSentRow(
+                  label: '메시지',
+                  value: widget.initialMessage!,
+                  multiLine: true,
+                ),
+              ],
+            ],
           ],
         ),
       );
@@ -5626,6 +5698,7 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
                       setState(() => _submitting = true);
                       try {
                         await widget.onComplete(message, proposedPrice);
+                        if (mounted) setState(() => _editing = false);
                       } catch (error) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

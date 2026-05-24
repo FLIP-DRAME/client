@@ -82,6 +82,9 @@ class PilotWorkRequest {
     required this.progress,
     required this.remaining,
     required this.mapLabel,
+    this.myQuoteId,
+    this.myQuoteMessage,
+    this.myQuotePrice,
   });
 
   final String id;
@@ -96,4 +99,7 @@ class PilotWorkRequest {
   final String progress;
   final String remaining;
   final String mapLabel;
+  final String? myQuoteId;
+  final String? myQuoteMessage;
+  final int? myQuotePrice;
 }
