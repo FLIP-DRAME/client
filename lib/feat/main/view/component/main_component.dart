@@ -2238,7 +2238,7 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
   }
 }
 
-class _RequestReviewList extends StatelessWidget {
+class _RequestReviewList extends StatefulWidget {
   const _RequestReviewList({
     required this.requests,
     required this.selected,
@@ -2250,29 +2250,141 @@ class _RequestReviewList extends StatelessWidget {
   final ValueChanged<PilotWorkRequest> onSelected;
 
   @override
+  State<_RequestReviewList> createState() => _RequestReviewListState();
+}
+
+class _RequestReviewListState extends State<_RequestReviewList> {
+  // 0=전체, 1=확인중, 2=견적보냄
+  int _filter = 0;
+
+  List<PilotWorkRequest> get _filtered {
+    return switch (_filter) {
+      1 => widget.requests
+          .where((r) => r.status == '신규' || r.status == '확인 중')
+          .toList(),
+      2 => widget.requests.where((r) => r.status == '견적 보냄').toList(),
+      _ => widget.requests,
+    };
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final filtered = _filtered;
+    final reviewing =
+        widget.requests
+            .where((r) => r.status == '신규' || r.status == '확인 중')
+            .length;
+    final sent =
+        widget.requests.where((r) => r.status == '견적 보냄').length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Row(
           children: <Widget>[
-            Text('견적 요청 ${requests.length}건', style: AppText.portfolioTitle),
+            Text(
+              '견적 요청 ${widget.requests.length}건',
+              style: AppText.portfolioTitle,
+            ),
             const Spacer(),
             _RequestFilterButton(label: '최신순'),
           ],
         ),
-        const SizedBox(height: 16),
-        ...requests.map(
-          (request) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _RequestReviewCard(
-              request: request,
-              selected: selected.id == request.id,
-              onTap: () => onSelected(request),
-            ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: <Widget>[
+              _RequestTabChip(
+                label: '전체 ${widget.requests.length}',
+                selected: _filter == 0,
+                onTap: () => setState(() => _filter = 0),
+              ),
+              const SizedBox(width: 8),
+              _RequestTabChip(
+                label: '확인중 $reviewing',
+                selected: _filter == 1,
+                onTap: () => setState(() => _filter = 1),
+                activeColor: const Color(0xFF05B169),
+                activeBg: const Color(0xFFEBFAF3),
+              ),
+              const SizedBox(width: 8),
+              _RequestTabChip(
+                label: '견적보냄 $sent',
+                selected: _filter == 2,
+                onTap: () => setState(() => _filter = 2),
+              ),
+            ],
           ),
         ),
+        const SizedBox(height: 16),
+        if (filtered.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text('해당 항목이 없습니다.', style: AppText.cardSubtitle),
+            ),
+          )
+        else
+          ...filtered.map(
+            (request) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _RequestReviewCard(
+                request: request,
+                selected: widget.selected.id == request.id,
+                onTap: () => widget.onSelected(request),
+              ),
+            ),
+          ),
       ],
+    );
+  }
+}
+
+class _RequestTabChip extends StatelessWidget {
+  const _RequestTabChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.activeColor,
+    this.activeBg,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color? activeColor;
+  final Color? activeBg;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = selected ? (activeColor ?? _navy) : const Color(0xFF7C828A);
+    final bg =
+        selected
+            ? (activeBg ?? const Color(0xFFF2F3F5))
+            : Colors.transparent;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? fg : const Color(0xFFDEE1E6),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: fg,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -2321,7 +2433,9 @@ class _RequestReviewCard extends StatefulWidget {
 class _RequestReviewCardState extends State<_RequestReviewCard> {
   bool _hovered = false;
 
-  bool get _isNew => widget.request.status == '신규';
+  bool get _isReviewing =>
+      widget.request.status == '신규' || widget.request.status == '확인 중';
+  bool get _isQuoteSent => widget.request.status == '견적 보냄';
 
   @override
   Widget build(BuildContext context) {
@@ -2359,7 +2473,6 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
                 children: <Widget>[
                   _MiniChip(label: widget.request.category),
                   const SizedBox(width: 8),
-                  // 신규 → 색 배지, 그 외 → 기본
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -2367,8 +2480,10 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
                     ),
                     decoration: BoxDecoration(
                       color:
-                          _isNew
+                          _isReviewing
                               ? const Color(0xFFEBFAF3)
+                              : _isQuoteSent
+                              ? const Color(0xFFEEF4FF)
                               : widget.request.status == '마감 임박'
                               ? const Color(0xFFFFF1F0)
                               : const Color(0xFFF7F7F7),
@@ -2381,8 +2496,10 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color:
-                            _isNew
+                            _isReviewing
                                 ? const Color(0xFF05B169)
+                                : _isQuoteSent
+                                ? _navy
                                 : widget.request.status == '마감 임박'
                                 ? const Color(0xFFCF202F)
                                 : const Color(0xFF7C828A),

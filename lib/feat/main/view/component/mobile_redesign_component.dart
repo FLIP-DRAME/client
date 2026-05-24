@@ -1903,12 +1903,7 @@ class _OperatorDashboardTab extends StatelessWidget {
                       ),
                       if (requests.isNotEmpty)
                         GestureDetector(
-                          onTap:
-                              () => _showOperatorRequestSheet(
-                                context,
-                                requests.first,
-                                store,
-                              ),
+                          onTap: () => context.push('/operator/requests'),
                           child: Row(
                             children: <Widget>[
                               Text(
@@ -2052,7 +2047,21 @@ class _RequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNew = request.status == '신규';
+    final isReviewing =
+        request.status == '신규' || request.status == '확인 중';
+    final isQuoteSent = request.status == '견적 보냄';
+    final badgeColor =
+        isReviewing
+            ? const Color(0xFF05B169)
+            : isQuoteSent
+            ? _primary
+            : const Color(0xFF7C828A);
+    final badgeBg =
+        isReviewing
+            ? const Color(0xFFEBFAF3)
+            : isQuoteSent
+            ? const Color(0xFFEEF4FF)
+            : const Color(0xFFF7F7F7);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -2062,8 +2071,8 @@ class _RequestTile extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isNew ? _primary : const Color(0xFFE4EAF2),
-            width: isNew ? 1.5 : 1,
+            color: isReviewing ? _primary : const Color(0xFFE4EAF2),
+            width: isReviewing ? 1.5 : 1,
           ),
         ),
         child: Column(
@@ -2091,26 +2100,25 @@ class _RequestTile extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (isNew)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _primary,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Text(
-                      '신규',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeBg,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    request.status,
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: badgeColor,
                     ),
                   ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -2911,7 +2919,9 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
   @override
   Widget build(BuildContext context) {
     final req = widget.request;
-    final isNew = req.status == '신규';
+    final isReviewing =
+        req.status == '신규' || req.status == '확인 중';
+    final isQuoteSent = req.status == '견적 보냄';
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Column(
@@ -2998,8 +3008,9 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isNew ? _primary : const Color(0xFFE4EAF2),
-                      width: isNew ? 1.5 : 1,
+                      color:
+                          isReviewing ? _primary : const Color(0xFFE4EAF2),
+                      width: isReviewing ? 1.5 : 1,
                     ),
                   ),
                   child: Column(
@@ -3034,8 +3045,10 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                             ),
                             decoration: BoxDecoration(
                               color:
-                                  isNew
+                                  isReviewing
                                       ? const Color(0xFFEBFAF3)
+                                      : isQuoteSent
+                                      ? const Color(0xFFEEF4FF)
                                       : const Color(0xFFF7F7F7),
                               borderRadius: BorderRadius.circular(100),
                             ),
@@ -3046,8 +3059,10 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color:
-                                    isNew
+                                    isReviewing
                                         ? const Color(0xFF05B169)
+                                        : isQuoteSent
+                                        ? _primary
                                         : const Color(0xFF7C828A),
                               ),
                             ),
