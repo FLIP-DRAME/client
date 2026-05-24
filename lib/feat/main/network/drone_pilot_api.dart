@@ -39,6 +39,7 @@ abstract class DronePilotApi {
     required List<String> areaNames,
     required List<String> portfolioImageUrls,
   });
+  Future<void> saveFcmToken(String token);
 }
 
 class PilotWorkRequestData {
@@ -465,6 +466,24 @@ class SupabaseDronePilotApi implements DronePilotApi {
       // The auth trigger normally creates this row. If direct profile upsert is
       // blocked by project RLS, the operator upsert below will surface the real
       // FK/RLS error instead of hiding it here.
+    }
+  }
+
+  @override
+  Future<void> saveFcmToken(String token) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      await _client.from('user_push_tokens').upsert(
+        <String, Object?>{
+          'user_id': userId,
+          'fcm_token': token,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        },
+        onConflict: 'user_id',
+      );
+    } on PostgrestException {
+      return;
     }
   }
 

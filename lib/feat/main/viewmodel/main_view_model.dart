@@ -1,4 +1,7 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_defaults.dart';
@@ -225,6 +228,18 @@ class DrameStore extends ChangeNotifier {
     final role = meta['role'] == 'operator' ? '운용자' : '이용자';
     updateAuth(role: role, email: email, password: password);
     submitAuth();
+    unawaited(_saveFcmToken());
+  }
+
+  Future<void> _saveFcmToken() async {
+    if (kIsWeb) return;
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await _api.saveFcmToken(token);
+        FirebaseMessaging.instance.onTokenRefresh.listen(_api.saveFcmToken);
+      }
+    } catch (_) {}
   }
 
   Future<void> signUp({
