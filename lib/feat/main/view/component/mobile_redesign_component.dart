@@ -1751,48 +1751,76 @@ class _OperatorDashboardTab extends StatelessWidget {
                                         color: Color(0xFF7C828A),
                                       ),
                                     ),
+                                  const SizedBox(height: 6),
+                                  _MobileOperatorStatusChip(store: store),
                                 ],
                               ),
                             ),
-                            TextButton.icon(
-                              onPressed: () => context.go('/operator/mypage'),
-                              icon: const Icon(Icons.edit_outlined, size: 14),
-                              label: const Text('등록 정보'),
-                              style: TextButton.styleFrom(
-                                textStyle: const TextStyle(
-                                  fontFamily: 'Pretendard',
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                foregroundColor: const Color(0xFF5B616E),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
+                            if (store.operatorRegistrationCompleted)
+                              TextButton.icon(
+                                onPressed: () => context.go('/operator/mypage'),
+                                icon: const Icon(Icons.edit_outlined, size: 14),
+                                label: const Text('등록 정보'),
+                                style: TextButton.styleFrom(
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'Pretendard',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  foregroundColor: const Color(0xFF5B616E),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 10),
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () => context.go('/operator/mypage'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF0A0B0D),
-                              side: const BorderSide(color: Color(0xFFE4EAF2)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              textStyle: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            child: const Text('내 소개 편집'),
-                          ),
+                          child: store.operatorRegistrationCompleted
+                              ? OutlinedButton(
+                                  onPressed: () => context.go('/operator/mypage'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF0A0B0D),
+                                    side: const BorderSide(
+                                      color: Color(0xFFE4EAF2),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontFamily: 'Pretendard',
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  child: const Text('내 소개 편집'),
+                                )
+                              : FilledButton(
+                                  onPressed: () =>
+                                      context.push('/pilot/register'),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _primary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontFamily: 'Pretendard',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  child: const Text('운용자 등록하기'),
+                                ),
                         ),
                       ],
                     ),
@@ -2226,6 +2254,8 @@ class _OperatorMyPageMobileTab extends StatelessWidget {
                               color: Color(0xFF7C828A),
                             ),
                           ),
+                        const SizedBox(height: 6),
+                        _MobileOperatorStatusChip(store: store),
                       ],
                     ),
                   ),
@@ -3310,5 +3340,83 @@ class _ReqMetaRow extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+// ─── Operator Status Chip ─────────────────────────────────────────────────────
+
+class _MobileOperatorStatusChip extends StatelessWidget {
+  const _MobileOperatorStatusChip({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, bg, fg, icon) = _chipStyle();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 11, color: fg),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Pretendard',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  (String, Color, Color, IconData) _chipStyle() {
+    if (!store.operatorRegistrationCompleted) {
+      return (
+        '미등록',
+        const Color(0xFFF7F8FA),
+        const Color(0xFF7C828A),
+        Icons.person_outline_rounded,
+      );
+    }
+    return switch (store.operatorReviewStatus) {
+      'approved' => (
+        '인증됨',
+        const Color(0xFFE8F9F1),
+        const Color(0xFF05B169),
+        Icons.verified_rounded,
+      ),
+      'pending_review' => (
+        '확인중',
+        const Color(0xFFFFF7E6),
+        const Color(0xFFD97706),
+        Icons.schedule_rounded,
+      ),
+      'rejected' => (
+        '인증안됨',
+        const Color(0xFFFFF0F0),
+        const Color(0xFFDC2626),
+        Icons.cancel_outlined,
+      ),
+      _ => (
+        '확인중',
+        const Color(0xFFFFF7E6),
+        const Color(0xFFD97706),
+        Icons.schedule_rounded,
+      ),
+    };
   }
 }
