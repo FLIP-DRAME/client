@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "660293305525",
+    "project_id": "mode-18de8",
+    "storage_bucket": "mode-18de8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660293305525:android:a8dc84e7db6e48a2ccaafc",
+        "android_client_info": {
+          "package_name": "com.flip.mode"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4SLWgp72HCCpse_GmaT5qRaArxbTl4wk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
