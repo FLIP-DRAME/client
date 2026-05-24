@@ -1700,40 +1700,7 @@ class _OperatorProfileCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 22),
-          if (!store.operatorRegistrationCompleted)
-            Row(
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0xFFFCD34D)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      const Icon(
-                        Icons.warning_amber_rounded,
-                        size: 14,
-                        color: Color(0xFFD97706),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '운용자 등록 미완료',
-                        style: AppText.chip.copyWith(
-                          color: const Color(0xFFD97706),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          Row(children: <Widget>[_OperatorReviewBadge(store: store)]),
           const SizedBox(height: 4),
           Row(
             children: <Widget>[
@@ -1767,6 +1734,59 @@ class _OperatorProfileCard extends StatelessWidget {
                 ),
               ],
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OperatorReviewBadge extends StatelessWidget {
+  const _OperatorReviewBadge({required this.store});
+
+  final DrameStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final verified = store.operatorVerified;
+    final pending = store.operatorReviewPending;
+    final color =
+        verified
+            ? const Color(0xFF059669)
+            : pending
+            ? _primary
+            : const Color(0xFFD97706);
+    final background =
+        verified
+            ? const Color(0xFFE8F9F1)
+            : pending
+            ? const Color(0xFFEEF4FF)
+            : const Color(0xFFFEF3C7);
+    final icon =
+        verified
+            ? Icons.verified_rounded
+            : pending
+            ? Icons.hourglass_top_rounded
+            : Icons.warning_amber_rounded;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            store.operatorReviewLabel,
+            style: AppText.chip.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -2561,6 +2581,7 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final verified = store.operatorVerified;
     return Container(
       width: double.infinity,
       color: Colors.white,
@@ -2587,17 +2608,24 @@ class _PilotRegistrationDoneSection extends StatelessWidget {
                       color: const Color(0xFFE9F8F2),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(
-                      Icons.verified_user_outlined,
-                      color: _mint,
+                    child: Icon(
+                      verified
+                          ? Icons.verified_user_outlined
+                          : Icons.hourglass_top_rounded,
+                      color: verified ? _mint : _primary,
                       size: 30,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text('운용자 등록이 완료되었습니다', style: AppText.cardTitle),
+                  Text(
+                    verified ? '운용자 검증이 완료되었습니다' : '운용자 인증 확인중입니다',
+                    style: AppText.cardTitle,
+                  ),
                   const SizedBox(height: 10),
-                  const Text(
-                    '이제 받은 요청을 확인하고 등록 정보를 마이페이지에서 수정할 수 있습니다.',
+                  Text(
+                    verified
+                        ? '이제 받은 요청을 확인하고 등록 정보를 마이페이지에서 수정할 수 있습니다.'
+                        : '제출한 인증 정보는 운영팀 확인 후 검증 완료로 전환됩니다.',
                     textAlign: TextAlign.center,
                     style: AppText.cardSubtitle,
                   ),
@@ -5486,7 +5514,7 @@ class _QuoteSubmitSectionState extends State<_QuoteSubmitSection> {
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                '견적을 보냈습니다. 이용자의 내 견적에 견적 도착으로 표시됩니다.',
+                '견적을 보냈습니다. 이용자의 내 견적에 견적 받음으로 표시됩니다.',
                 style: AppText.smallStrong,
               ),
             ),

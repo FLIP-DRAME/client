@@ -167,6 +167,36 @@ $$;
 grant execute on function public.is_operator_profile_owner(uuid) to authenticated;
 grant execute on function public.is_operator_profile_approved(uuid) to anon, authenticated;
 
+-- ─── Notifications ──────────────────────────────────────────
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  recipient_id uuid not null references public.profiles(id) on delete cascade,
+  kind text not null default 'general',
+  title text not null,
+  body text not null default '',
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.notifications enable row level security;
+
+drop policy if exists "users read own notifications" on public.notifications;
+create policy "users read own notifications" on public.notifications
+  for select to authenticated
+  using (recipient_id = auth.uid());
+
+drop policy if exists "users update own notifications" on public.notifications;
+create policy "users update own notifications" on public.notifications
+  for update to authenticated
+  using (recipient_id = auth.uid())
+  with check (recipient_id = auth.uid());
+
+drop policy if exists "participants create notifications" on public.notifications;
+create policy "participants create notifications" on public.notifications
+  for insert to authenticated
+  with check (true);
+
 -- helper macro repeated for each table ──────────────────────
 
 -- operator_licenses

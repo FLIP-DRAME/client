@@ -142,6 +142,46 @@ void _openPilotRequestReviewPage(
   context.push('/operator/requests', extra: initialRequest);
 }
 
+void _showNotifications(BuildContext context, DrameStore store) {
+  showDialog<void>(
+    context: context,
+    builder:
+        (dialogContext) => AlertDialog(
+          title: const Text('알림'),
+          content: SizedBox(
+            width: 360,
+            child:
+                store.notifications.isEmpty
+                    ? const Text('새 알림이 없습니다.')
+                    : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children:
+                          store.notifications
+                              .take(6)
+                              .map(
+                                (item) => ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: const Icon(
+                                    Icons.notifications_active_outlined,
+                                    color: _primary,
+                                  ),
+                                  title: Text(item.title),
+                                  subtitle: Text(item.body),
+                                ),
+                              )
+                              .toList(),
+                    ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('닫기'),
+            ),
+          ],
+        ),
+  );
+}
+
 class PilotRequestReviewPage extends StatelessWidget {
   const PilotRequestReviewPage({super.key, this.initialRequest});
 
@@ -284,6 +324,8 @@ class _OperatorStandaloneShell extends StatelessWidget {
             onRequestsTap: () => context.go('/operator/requests'),
             onMyPageTap: () => context.go('/operator/mypage'),
             onMyQuotesTap: () => context.go('/my/quotes'),
+            notificationCount: store.notificationCount,
+            onNotificationTap: () => _showNotifications(context, store),
             onSwitchToUser: () {
               store.setPilotMode(false);
               context.go('/home');
@@ -509,6 +551,8 @@ class _DrameHomePageState extends State<DrameHomePage> {
                   initialRequest: store.firstPilotWorkRequest,
                 ),
             onMyPageTap: () => context.go('/operator/mypage'),
+            notificationCount: store.notificationCount,
+            onNotificationTap: () => _showNotifications(context, store),
             operatorActiveTab: isOperatorDashboard ? _selectedTabId : null,
             onOperatorTabTap:
                 isOperatorDashboard

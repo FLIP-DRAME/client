@@ -312,22 +312,19 @@ class _UserHomeTabState extends State<_UserHomeTab> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final pilot = filtered[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _MobileOperatorCard(
-                        pilot: pilot,
-                        onTap: () {
-                          store.selectPilot(pilot);
-                          _openPortfolio(context, pilot);
-                        },
-                      ),
-                    );
-                  },
-                  childCount: filtered.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final pilot = filtered[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _MobileOperatorCard(
+                      pilot: pilot,
+                      onTap: () {
+                        store.selectPilot(pilot);
+                        _openPortfolio(context, pilot);
+                      },
+                    ),
+                  );
+                }, childCount: filtered.length),
               ),
             ),
 
@@ -453,14 +450,10 @@ class _HomeCatChip extends StatelessWidget {
         duration: const Duration(milliseconds: 140),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              selected ? const Color(0xFF0A0B0D) : Colors.white,
+          color: selected ? const Color(0xFF0A0B0D) : Colors.white,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color:
-                selected
-                    ? const Color(0xFF0A0B0D)
-                    : const Color(0xFFDEE1E6),
+            color: selected ? const Color(0xFF0A0B0D) : const Color(0xFFDEE1E6),
           ),
         ),
         child: Text(
@@ -741,10 +734,8 @@ class _UserMyPageTab extends StatelessWidget {
             ? store.accountName
             : '이용자';
     final email = store.accountEmail;
-    final inProgress =
-        store.myQuotes.where((q) => q.status != '완료').length;
-    final completed =
-        store.myQuotes.where((q) => q.status == '완료').length;
+    final received = store.myQuotes.where((q) => q.isQuoteReceived).length;
+    final inProgress = store.myQuotes.where((q) => q.isInProgress).length;
 
     return ColoredBox(
       color: _bgBeige,
@@ -837,9 +828,9 @@ class _UserMyPageTab extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: <Widget>[
-                  _UserStatBox(value: '$inProgress', label: '진행중'),
+                  _UserStatBox(value: '$received', label: '견적 받음'),
                   const SizedBox(width: 8),
-                  _UserStatBox(value: '$completed', label: '완료'),
+                  _UserStatBox(value: '$inProgress', label: '진행중'),
                   const SizedBox(width: 8),
                   const _UserStatBox(value: '0', label: '관심'),
                 ],
@@ -1026,8 +1017,10 @@ class _MobileMenuSection extends StatelessWidget {
               children: <Widget>[
                 ListTile(
                   dense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 0,
+                  ),
                   title: Text(
                     item.label,
                     style: const TextStyle(
@@ -1136,13 +1129,13 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
     }
 
     final all = store.myQuotes;
-    final inProgress = all.where((q) => q.status != '완료').toList();
-    final completed = all.where((q) => q.status == '완료').toList();
+    final received = all.where((q) => q.isQuoteReceived).toList();
+    final inProgress = all.where((q) => q.isInProgress).toList();
     final filtered =
         _filter == 1
-            ? inProgress
+            ? received
             : _filter == 2
-            ? completed
+            ? inProgress
             : all;
 
     return ColoredBox(
@@ -1176,13 +1169,13 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
                     ),
                     const SizedBox(width: 8),
                     _QuoteFilterTab(
-                      label: '진행중 ${inProgress.length}',
+                      label: '견적 받음 ${received.length}',
                       selected: _filter == 1,
                       onTap: () => setState(() => _filter = 1),
                     ),
                     const SizedBox(width: 8),
                     _QuoteFilterTab(
-                      label: '완료 ${completed.length}',
+                      label: '진행중 ${inProgress.length}',
                       selected: _filter == 2,
                       onTap: () => setState(() => _filter = 2),
                     ),
@@ -1248,7 +1241,7 @@ class _MobileMyQuotesTabState extends State<_MobileMyQuotesTab> {
   }
 
   void _onQuoteTap(BuildContext context, UserQuoteSummary quote) {
-    if (quote.status == '견적 도착') {
+    if (quote.isQuoteReceived) {
       showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.white,
@@ -1291,16 +1284,10 @@ class _QuoteFilterTab extends StatelessWidget {
         duration: const Duration(milliseconds: 140),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color:
-              selected
-                  ? const Color(0xFF0A0B0D)
-                  : const Color(0xFFF7F8FA),
+          color: selected ? const Color(0xFF0A0B0D) : const Color(0xFFF7F8FA),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color:
-                selected
-                    ? const Color(0xFF0A0B0D)
-                    : const Color(0xFFE4EAF2),
+            color: selected ? const Color(0xFF0A0B0D) : const Color(0xFFE4EAF2),
           ),
         ),
         child: Text(
@@ -1401,10 +1388,7 @@ class _MobileQuoteStatusCard extends StatelessWidget {
                   ),
                 ),
                 if (quote.price.isNotEmpty && quote.price != '0') ...<Widget>[
-                  const Text(
-                    ' · ',
-                    style: TextStyle(color: Color(0xFFA8ACB3)),
-                  ),
+                  const Text(' · ', style: TextStyle(color: Color(0xFFA8ACB3))),
                   Text(
                     quote.price,
                     style: const TextStyle(
@@ -1446,7 +1430,7 @@ class _MobileQuoteStatusCard extends StatelessWidget {
                   child: Text(
                     quote.pilotName.isNotEmpty
                         ? quote.pilotName
-                        : status == '응답 대기'
+                        : status == '요청 보냄'
                         ? '운용자 검토 중'
                         : '',
                     style: TextStyle(
@@ -1454,7 +1438,7 @@ class _MobileQuoteStatusCard extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color:
-                          status == '응답 대기'
+                          status == '요청 보냄'
                               ? _primary
                               : const Color(0xFF0A0B0D),
                     ),
@@ -1475,9 +1459,9 @@ class _MobileQuoteStatusCard extends StatelessWidget {
 
   (Color, Color) _statusStyle(String status) {
     switch (status) {
-      case '견적 도착':
+      case '견적 받음':
         return (const Color(0xFF0052FF), const Color(0xFFEEF4FF));
-      case '완료':
+      case '진행중':
         return (const Color(0xFF05B169), const Color(0xFFE8F9F1));
       default:
         return (const Color(0xFF7C828A), const Color(0xFFF7F8FA));
@@ -1796,15 +1780,11 @@ class _OperatorDashboardTab extends StatelessWidget {
                             onPressed: () => context.go('/operator/mypage'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF0A0B0D),
-                              side: const BorderSide(
-                                color: Color(0xFFE4EAF2),
-                              ),
+                              side: const BorderSide(color: Color(0xFFE4EAF2)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               textStyle: const TextStyle(
                                 fontFamily: 'Pretendard',
                                 fontSize: 13,
@@ -1841,7 +1821,8 @@ class _OperatorDashboardTab extends StatelessWidget {
                   Expanded(
                     child: _OpStatCard(
                       label: '총 수락',
-                      value: '${requests.where((r) => r.status == '수락').length}',
+                      value:
+                          '${requests.where((r) => r.status == '수락').length}',
                       sub: '누적 수락 건수',
                       subColor: const Color(0xFF7C828A),
                     ),
@@ -2216,10 +2197,7 @@ class _OperatorMyPageMobileTab extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: _mint,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white,
-                              width: 1.5,
-                            ),
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                         ),
                       ),
@@ -2336,9 +2314,10 @@ class _MobileQuoteEditSheetState extends ConsumerState<_MobileQuoteEditSheet> {
   Future<void> _save() async {
     setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
-    final effectiveBudget = _amountController.text.trim().isNotEmpty
-        ? _amountController.text.trim()
-        : _budget;
+    final effectiveBudget =
+        _amountController.text.trim().isNotEmpty
+            ? _amountController.text.trim()
+            : _budget;
     try {
       final store = ref.read(drameStoreProvider);
       await store.updateMyQuoteRequest(
@@ -2439,42 +2418,46 @@ class _MobileQuoteEditSheetState extends ConsumerState<_MobileQuoteEditSheet> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: <String>['~30만원', '30~50만원', '50~100만원', '협의']
-                  .map(
-                    (v) => GestureDetector(
-                      onTap: () => setState(() => _budget = v),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 140),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: v == _budget
-                              ? const Color(0xFF0A0B0D)
-                              : const Color(0xFFF7F8FA),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: v == _budget
-                                ? const Color(0xFF0A0B0D)
-                                : const Color(0xFFE4EAF2),
+              children:
+                  <String>['~30만원', '30~50만원', '50~100만원', '협의']
+                      .map(
+                        (v) => GestureDetector(
+                          onTap: () => setState(() => _budget = v),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 140),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  v == _budget
+                                      ? const Color(0xFF0A0B0D)
+                                      : const Color(0xFFF7F8FA),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color:
+                                    v == _budget
+                                        ? const Color(0xFF0A0B0D)
+                                        : const Color(0xFFE4EAF2),
+                              ),
+                            ),
+                            child: Text(
+                              v,
+                              style: TextStyle(
+                                fontFamily: 'Pretendard',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    v == _budget
+                                        ? Colors.white
+                                        : const Color(0xFF5B616E),
+                              ),
+                            ),
                           ),
                         ),
-                        child: Text(
-                          v,
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: v == _budget
-                                ? Colors.white
-                                : const Color(0xFF5B616E),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
+                      )
+                      .toList(),
             ),
             const SizedBox(height: 12),
             _SheetEditField(label: '연락 가능 시간', controller: _contactController),
@@ -2561,10 +2544,11 @@ void _showCategoryAreaSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => SizedBox(
-      height: MediaQuery.sizeOf(context).height * 0.88,
-      child: _CategoryAreaSheet(category: cat, store: store),
-    ),
+    builder:
+        (_) => SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.88,
+          child: _CategoryAreaSheet(category: cat, store: store),
+        ),
   );
 }
 
@@ -2588,17 +2572,14 @@ class _CategoryAreaSheetState extends State<_CategoryAreaSheet> {
             .toList();
     if (_selectedArea != null) {
       list =
-          list
-              .where((p) => p.availableAreas.contains(_selectedArea))
-              .toList();
+          list.where((p) => p.availableAreas.contains(_selectedArea)).toList();
     }
     return list;
   }
 
   @override
   Widget build(BuildContext context) {
-    final areas =
-        defaultServiceAreas.where((a) => a != '전체').toList();
+    final areas = defaultServiceAreas.where((a) => a != '전체').toList();
     final districts =
         _selectedArea != null
             ? (defaultServiceDistricts[_selectedArea] ?? <String>[])
@@ -2803,18 +2784,16 @@ Future<void> _showOperatorRequestSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => SizedBox(
-      height: MediaQuery.sizeOf(context).height * 0.92,
-      child: _OperatorRequestSheet(request: request, store: store),
-    ),
+    builder:
+        (_) => SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.92,
+          child: _OperatorRequestSheet(request: request, store: store),
+        ),
   );
 }
 
 class _OperatorRequestSheet extends StatefulWidget {
-  const _OperatorRequestSheet({
-    required this.request,
-    required this.store,
-  });
+  const _OperatorRequestSheet({required this.request, required this.store});
 
   final PilotWorkRequest request;
   final DrameStore store;

@@ -28,6 +28,7 @@ class DrameStore extends ChangeNotifier {
   List<String> serviceAreas = defaultServiceAreas;
   List<PilotWorkRequest> pilotWorkRequests = const <PilotWorkRequest>[];
   List<UserQuoteSummary> myQuotes = const <UserQuoteSummary>[];
+  List<AppNotification> notifications = const <AppNotification>[];
   DroneCategory? selectedCategory;
   DronePilot? selectedPilot;
   String selectedPortfolioCategory = '전체';
@@ -46,6 +47,7 @@ class DrameStore extends ChangeNotifier {
   bool isLoggedIn = false;
   bool isPilotOnboarding = false;
   bool operatorRegistrationCompleted = false;
+  String operatorReviewStatus = 'none';
   bool registrationJustCompleted = false;
   int pilotOnboardingStep = 0;
   String accountRole = '운용자';
@@ -78,16 +80,17 @@ class DrameStore extends ChangeNotifier {
       myFeedPosts =
           (await _feedApi.fetchMyPosts()).map(_operatorPostFromFeed).toList();
       final myOperator =
-          isLoggedIn &&
-                  (accountRole == '운용자' ||
-                      isPilotMode ||
-                      operatorRegistrationCompleted)
-              ? await _api.fetchMyOperatorProfile()
-              : null;
+          isLoggedIn ? await _api.fetchMyOperatorProfile() : null;
       if (myOperator != null) {
         accountRole = '운용자';
         operatorRegistrationCompleted = true;
+        operatorReviewStatus = myOperator.operatorStatus;
       }
+      notifications = _mergeNotifications(
+        await _api.fetchNotifications(),
+        pilotWorkRequests: pilotWorkRequests,
+        quotes: myQuotes,
+      );
       pilots = nextPilots;
       if (initial) {
         allPilots = nextPilots;
@@ -292,12 +295,17 @@ class DrameStore extends ChangeNotifier {
     if (user == null) return;
     final metadata = user.userMetadata ?? const <String, dynamic>{};
     final role = metadata['role'] == 'operator' ? '운용자' : '이용자';
+    final myOperator = await _api.fetchMyOperatorProfile();
     updateAuth(
-      role: role,
+      role: myOperator == null ? role : '운용자',
       email: user.email ?? '',
       name: (metadata['name'] ?? '').toString(),
       nickname: (metadata['nickname'] ?? '').toString(),
     );
+    if (myOperator != null) {
+      operatorRegistrationCompleted = true;
+      operatorReviewStatus = myOperator.operatorStatus;
+    }
     submitAuth();
   }
 
@@ -339,6 +347,7 @@ class DrameStore extends ChangeNotifier {
       pilotOnboarding.submitted = true;
       accountRole = '운용자';
       operatorRegistrationCompleted = true;
+      operatorReviewStatus = 'pending_review';
       registrationJustCompleted = true;
       isPilotOnboarding = false;
       notifyListeners();
@@ -393,6 +402,20 @@ class DrameStore extends ChangeNotifier {
     registrationJustCompleted = false;
     notifyListeners();
   }
+
+  bool get operatorVerified => operatorReviewStatus == 'approved';
+  bool get operatorReviewPending => operatorReviewStatus == 'pending_review';
+  String get operatorReviewLabel {
+    return switch (operatorReviewStatus) {
+      'approved' => '검증 완료',
+      'pending_review' => '확인중',
+      'rejected' => '반려됨',
+      'suspended' => '중지됨',
+      _ => operatorRegistrationCompleted ? '확인중' : '미등록',
+    };
+  }
+
+  int get notificationCount => notifications.length;
 
   void updatePilotLicense({
     String? type,
@@ -644,5 +667,46 @@ class DrameStore extends ChangeNotifier {
       createdAt: DateTime.now(),
       imageUrl: post.images.isEmpty ? null : post.images.first,
     );
+  }
+
+  List<AppNotification> _mergeNotifications(
+    List<AppNotification> remote, {
+    required List<PilotWorkRequest> pilotWorkRequests,
+    required List<UserQuoteSummary> quotes,
+  }) {
+    final derived = <AppNotification>[
+      if (accountRole == '운용자' || isPilotMode)
+        ...pilotWorkRequests
+            .where((request) => request.status == '신규')
+            .map(
+              (request) => AppNotification(
+                id: 'request-${request.id}',
+                title: '새 견적 요청',
+                body: '${request.location} ${request.category} 요청이 도착했습니다.',
+                createdAt: DateTime.now(),
+                kind: 'quote_request',
+              ),
+            ),
+      if (accountRole != '운용자' || !isPilotMode)
+        ...quotes
+            .where((quote) => quote.isQuoteReceived || quote.isInProgress)
+            .map(
+              (quote) => AppNotification(
+                id: 'quote-${quote.id}-${quote.status}',
+                title: quote.isQuoteReceived ? '견적을 받았습니다' : '작업이 진행중입니다',
+                body: '${quote.pilotName} · ${quote.category} · ${quote.area}',
+                createdAt: DateTime.now(),
+                kind:
+                    quote.isQuoteReceived
+                        ? 'quote_received'
+                        : 'quote_confirmed',
+              ),
+            ),
+    ];
+    final seen = <String>{};
+    return <AppNotification>[
+      ...remote,
+      ...derived,
+    ].where((item) => seen.add(item.id)).toList();
   }
 }

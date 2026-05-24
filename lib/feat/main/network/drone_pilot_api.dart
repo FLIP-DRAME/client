@@ -16,6 +16,7 @@ abstract class DronePilotApi {
   Future<DronePilot?> fetchMyOperatorProfile();
   Future<List<PilotWorkRequestData>> fetchOperatorRequests();
   Future<List<UserQuoteSummary>> fetchMyQuotes();
+  Future<List<AppNotification>> fetchNotifications();
   Future<void> markOperatorRequestSeen(String requestId);
   Future<void> updateMyQuoteRequest({
     required String requestId,
@@ -88,6 +89,10 @@ class UserQuoteSummary {
   final String budgetRange;
   final String contactWindow;
   final String message;
+
+  bool get isQuoteReceived => status == '견적 받음';
+  bool get isInProgress => status == '진행중';
+  bool get isCompleted => status == '완료';
 }
 
 class PilotRegistrationPayload {
@@ -148,6 +153,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .from('operator_profiles')
         .select('''
           id,
+          status,
           display_name,
           business_name,
           location_label,
@@ -204,6 +210,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .from('operator_profiles')
         .select('''
           id,
+          status,
           display_name,
           business_name,
           location_label,
@@ -234,6 +241,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .from('operator_profiles')
         .select('''
           id,
+          status,
           display_name,
           business_name,
           location_label,
@@ -270,7 +278,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
             .from('operator_profiles')
             .upsert(<String, Object?>{
               'user_id': payload.userId,
-              'status': 'approved',
+              'status': 'pending_review',
               'business_name': data.businessName,
               'business_number': data.businessNumber,
               'representative_name': data.representativeName,
@@ -685,6 +693,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
       intro: (row['intro'] ?? '').toString(),
       description: (row['description'] ?? '').toString(),
       quoteOptions: categoryLabels,
+      operatorStatus: (row['status'] ?? 'approved').toString(),
     );
   }
 
@@ -827,6 +836,35 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   @override
+  Future<List<AppNotification>> fetchNotifications() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const <AppNotification>[];
+    try {
+      final rows = await _client
+          .from('notifications')
+          .select('id, title, body, kind, created_at, read_at')
+          .eq('recipient_id', userId)
+          .isFilter('read_at', null)
+          .order('created_at', ascending: false)
+          .limit(20);
+      return rows.map<AppNotification>((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return AppNotification(
+          id: map['id'].toString(),
+          title: (map['title'] ?? '알림').toString(),
+          body: (map['body'] ?? '').toString(),
+          kind: (map['kind'] ?? 'general').toString(),
+          createdAt:
+              DateTime.tryParse((map['created_at'] ?? '').toString()) ??
+              DateTime.now(),
+        );
+      }).toList();
+    } on PostgrestException {
+      return const <AppNotification>[];
+    }
+  }
+
+  @override
   Future<void> updateMyQuoteRequest({
     required String requestId,
     required String area,
@@ -905,6 +943,23 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .from('job_requests')
         .update(<String, Object?>{'status': 'quoted'})
         .eq('id', request.id);
+    await _tryOptionalWrite(() => _insertClientQuoteNotification(request.id));
+  }
+
+  Future<void> _insertClientQuoteNotification(String jobRequestId) async {
+    final rows = await _client
+        .from('job_requests')
+        .select('client_id, title, location_label')
+        .eq('id', jobRequestId)
+        .limit(1);
+    if (rows.isEmpty) return;
+    final row = rows.first;
+    await _client.from('notifications').insert(<String, Object?>{
+      'recipient_id': row['client_id'],
+      'kind': 'quote_received',
+      'title': '견적을 받았습니다',
+      'body': '${row['location_label'] ?? '요청'} 견적이 도착했습니다.',
+    });
   }
 
   String _jobStatusLabel(String status) => switch (status) {
@@ -924,12 +979,15 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   String _quoteStatusLabel(String status) => switch (status) {
-    'submitted' => '견적 도착',
-    'accepted' => '수락 완료',
+    'submitted' || 'quoted' => '견적 받음',
+    'accepted' ||
+    'paid' ||
+    'confirmed' ||
+    'contact_opened' ||
+    'in_progress' => '진행중',
     'rejected' => '거절',
     'expired' => '만료',
-    'paid' || 'confirmed' => '결제 완료',
-    'completed' => '작업 완료',
+    'completed' => '완료',
     _ => '요청 보냄',
   };
 

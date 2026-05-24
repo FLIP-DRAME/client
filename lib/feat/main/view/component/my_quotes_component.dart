@@ -21,6 +21,10 @@ class MyQuotesPage extends StatelessWidget {
                 : store.accountName;
 
         final quotes = store.myQuotes;
+        final receivedQuotes =
+            quotes.where((quote) => quote.isQuoteReceived).toList();
+        final inProgressQuotes =
+            quotes.where((quote) => quote.isInProgress).toList();
 
         return Scaffold(
           backgroundColor: DC.canvas,
@@ -51,6 +55,8 @@ class MyQuotesPage extends StatelessWidget {
                       context,
                       initialRequest: store.firstPilotWorkRequest,
                     ),
+                notificationCount: store.notificationCount,
+                onNotificationTap: () => _showNotifications(context, store),
               ),
               Expanded(
                 child: CustomScrollView(
@@ -70,14 +76,27 @@ class MyQuotesPage extends StatelessWidget {
                             const SizedBox(height: 32),
                             if (quotes.isEmpty)
                               _EmptyQuotes(onFind: () => context.go('/home'))
-                            else
-                              ...quotes.map(
-                                (q) => _QuoteCard(
-                                  quote: q,
-                                  compact: compact,
-                                  onTap: () => _openQuoteFromList(context, q),
-                                ),
+                            else ...<Widget>[
+                              _QuoteSection(
+                                title: '견적 받음',
+                                quotes: receivedQuotes,
+                                compact: compact,
+                                emptyText: '아직 받은 견적이 없습니다.',
+                                onTap:
+                                    (quote) =>
+                                        _openQuoteFromList(context, quote),
                               ),
+                              const SizedBox(height: 24),
+                              _QuoteSection(
+                                title: '진행중',
+                                quotes: inProgressQuotes,
+                                compact: compact,
+                                emptyText: '진행중인 작업이 없습니다.',
+                                onTap:
+                                    (quote) =>
+                                        _openQuoteFromList(context, quote),
+                              ),
+                            ],
                             const SizedBox(height: 72),
                           ],
                         ),
@@ -95,7 +114,7 @@ class MyQuotesPage extends StatelessWidget {
   }
 
   void _openQuoteFromList(BuildContext context, UserQuoteSummary quote) {
-    if (quote.status == '견적 도착') {
+    if (quote.isQuoteReceived) {
       showDialog<void>(
         context: context,
         builder:
@@ -210,6 +229,8 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
                   store.setPilotMode(true);
                   context.go('/operator');
                 },
+                notificationCount: store.notificationCount,
+                onNotificationTap: () => _showNotifications(context, store),
               ),
               Expanded(
                 child: CustomScrollView(
@@ -349,6 +370,58 @@ class _QuoteEditField extends StatelessWidget {
   }
 }
 
+class _QuoteSection extends StatelessWidget {
+  const _QuoteSection({
+    required this.title,
+    required this.quotes,
+    required this.compact,
+    required this.emptyText,
+    required this.onTap,
+  });
+
+  final String title;
+  final List<UserQuoteSummary> quotes;
+  final bool compact;
+  final String emptyText;
+  final ValueChanged<UserQuoteSummary> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Text(title, style: DT.titleSm),
+            const SizedBox(width: 8),
+            _StatusChip(label: '${quotes.length}', color: DC.primary),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (quotes.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(DC.rxLg),
+              border: Border.all(color: DC.hairline),
+            ),
+            child: Text(emptyText, style: DT.bodyMd.copyWith(color: DC.muted)),
+          )
+        else
+          ...quotes.map(
+            (quote) => _QuoteCard(
+              quote: quote,
+              compact: compact,
+              onTap: () => onTap(quote),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _QuoteCard extends StatelessWidget {
   const _QuoteCard({
     required this.quote,
@@ -435,18 +508,16 @@ class _QuoteCard extends StatelessWidget {
   }
 
   Color _statusColor(String status) {
-    if (status == '견적 도착') return DC.primary;
-    if (status == '결제 완료' || status == '수락 완료') {
-      return const Color(0xFF16A34A);
-    }
-    if (status == '작업 완료') return DC.muted;
+    if (status == '견적 받음') return DC.primary;
+    if (status == '진행중') return const Color(0xFF16A34A);
+    if (status == '완료') return DC.muted;
     if (status == '요청 보냄') return const Color(0xFF64748B);
     switch (status) {
-      case '견적 도착':
+      case '견적 받음':
         return DC.primary;
-      case '결제 완료':
+      case '진행중':
         return const Color(0xFF16A34A);
-      case '작업 완료':
+      case '완료':
         return DC.muted;
       default:
         return DC.body;

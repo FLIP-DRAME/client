@@ -17,6 +17,7 @@ class DronePilot {
     required this.intro,
     required this.description,
     required this.quoteOptions,
+    this.operatorStatus = 'approved',
   });
 
   final String id;
@@ -34,12 +35,15 @@ class DronePilot {
   final String intro;
   final String description;
   final List<String> quoteOptions;
+  final String operatorStatus;
 
   bool hasPermitFor(String area) => permittedAreas.contains(area);
   bool hasCategory(String category) =>
       category == '전체' || categories.contains(category);
 
   String get priceLabel => '${(basePrice / 10000).round()}만원부터';
+  bool get isApproved => operatorStatus == 'approved';
+  bool get isPendingReview => operatorStatus == 'pending_review';
 }
 
 class DroneCategory {

@@ -70,6 +70,8 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
                       context,
                       initialRequest: store.firstPilotWorkRequest,
                     ),
+                notificationCount: store.notificationCount,
+                onNotificationTap: () => _showNotifications(context, store),
               ),
               Expanded(
                 child: CustomScrollView(

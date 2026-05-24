@@ -37,6 +37,8 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                 store.setPilotMode(true);
                 context.go('/operator');
               },
+              notificationCount: store.notificationCount,
+              onNotificationTap: () => _showNotifications(context, store),
               operatorActiveTab: 'profile',
               onOperatorTabTap: (id) {
                 if (id == 'dashboard') {
@@ -363,6 +365,7 @@ class _OperatorMyPageProfile extends StatelessWidget {
                     spacing: 12,
                     runSpacing: 8,
                     children: <Widget>[
+                      _OperatorReviewBadge(store: store),
                       Text(
                         '요청수 ${store.pilotWorkRequests.length}',
                         style: AppText.cardSubtitle,

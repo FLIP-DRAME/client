@@ -826,12 +826,14 @@ class _ServiceTickerState extends State<_ServiceTicker>
 
   void _onFrame() {
     if (!_sc.hasClients) return;
-    final max = _sc.position.maxScrollExtent;
-    if (max > 0 && _sc.offset >= max - 500) {
+    final position = _sc.position;
+    if (!position.hasContentDimensions) return;
+    final max = position.maxScrollExtent;
+    if (max > 0 && position.pixels >= max - 500) {
       _sc.jumpTo(0);
       return;
     }
-    _sc.jumpTo(_sc.offset + 0.4);
+    _sc.jumpTo(position.pixels + 0.4);
   }
 
   @override

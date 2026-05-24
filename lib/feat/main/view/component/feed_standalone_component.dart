@@ -87,6 +87,8 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
                       context,
                       initialRequest: store.firstPilotWorkRequest,
                     ),
+                notificationCount: store.notificationCount,
+                onNotificationTap: () => _showNotifications(context, store),
               ),
 
               // ── Filter Bar ─────────────────────────────────────────────────

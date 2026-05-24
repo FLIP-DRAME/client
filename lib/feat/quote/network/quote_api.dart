@@ -40,15 +40,44 @@ class SupabaseQuoteApi implements QuoteApi {
             })
             .select('id')
             .single();
+    await _tryInsertOperatorNotification(
+      operatorId: request.pilot.id,
+      area: request.area,
+      category: request.category,
+    );
 
     return QuoteEstimate(
       request: request,
       proposedPrice: 0,
       estimatedTime: '운용자 검토 대기',
       includedItems: const <String>[],
-      message: '${request.pilot.name}에게 견적 요청을 보냈습니다. 운용자가 확인 후 견적을 보내면 내 견적에서 확인할 수 있습니다.',
+      message:
+          '${request.pilot.name}에게 견적 요청을 보냈습니다. 운용자가 확인 후 견적을 보내면 내 견적에서 확인할 수 있습니다.',
       jobRequestId: job['id'].toString(),
     );
+  }
+
+  Future<void> _tryInsertOperatorNotification({
+    required String operatorId,
+    required String area,
+    required String category,
+  }) async {
+    try {
+      final operatorRows = await _client
+          .from('operator_profiles')
+          .select('user_id')
+          .eq('id', operatorId)
+          .limit(1);
+      if (operatorRows.isEmpty) return;
+      await _client.from('notifications').insert(<String, Object?>{
+        'recipient_id': operatorRows.first['user_id'],
+        'kind': 'quote_request',
+        'title': '새 견적 요청이 도착했습니다',
+        'body': '$area $category 요청을 확인해 주세요.',
+      });
+    } on PostgrestException {
+      return;
+    }
   }
 
   @override
