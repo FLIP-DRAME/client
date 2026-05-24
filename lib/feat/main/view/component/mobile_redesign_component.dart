@@ -1957,10 +1957,9 @@ class _OperatorDashboardTab extends StatelessWidget {
                           return _RequestTile(
                             request: req,
                             onTap:
-                                () => _showOperatorRequestSheet(
-                                  context,
-                                  req,
-                                  store,
+                                () => context.push(
+                                  '/operator/requests',
+                                  extra: req,
                                 ),
                           );
                         },

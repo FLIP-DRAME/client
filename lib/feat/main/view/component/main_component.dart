@@ -2305,8 +2305,6 @@ class _RequestReviewListState extends State<_RequestReviewList> {
                 label: '확인중 $reviewing',
                 selected: _filter == 1,
                 onTap: () => setState(() => _filter = 1),
-                activeColor: const Color(0xFF05B169),
-                activeBg: const Color(0xFFEBFAF3),
               ),
               const SizedBox(width: 8),
               _RequestTabChip(
@@ -2346,23 +2344,16 @@ class _RequestTabChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    this.activeColor,
-    this.activeBg,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  final Color? activeColor;
-  final Color? activeBg;
 
   @override
   Widget build(BuildContext context) {
-    final fg = selected ? (activeColor ?? _navy) : const Color(0xFF7C828A);
-    final bg =
-        selected
-            ? (activeBg ?? const Color(0xFFF2F3F5))
-            : Colors.transparent;
+    final fg = selected ? _navy : const Color(0xFF7C828A);
+    final bg = selected ? const Color(0xFFF2F3F5) : Colors.transparent;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
