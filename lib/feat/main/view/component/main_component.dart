@@ -2254,14 +2254,15 @@ class _RequestReviewList extends StatefulWidget {
 }
 
 class _RequestReviewListState extends State<_RequestReviewList> {
-  // 0=전체, 1=확인중, 2=견적보냄
+  // 0=전체, 1=견적받음, 2=견적보냄
   int _filter = 0;
 
   List<PilotWorkRequest> get _filtered {
     return switch (_filter) {
-      1 => widget.requests
-          .where((r) => r.status == '신규' || r.status == '확인 중')
-          .toList(),
+      1 =>
+        widget.requests
+            .where((r) => r.status == '신규' || r.status == '확인 중')
+            .toList(),
       2 => widget.requests.where((r) => r.status == '견적 보냄').toList(),
       _ => widget.requests,
     };
@@ -2270,26 +2271,16 @@ class _RequestReviewListState extends State<_RequestReviewList> {
   @override
   Widget build(BuildContext context) {
     final filtered = _filtered;
-    final reviewing =
+    final received =
         widget.requests
             .where((r) => r.status == '신규' || r.status == '확인 중')
             .length;
-    final sent =
-        widget.requests.where((r) => r.status == '견적 보냄').length;
+    final sent = widget.requests.where((r) => r.status == '견적 보냄').length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Row(
-          children: <Widget>[
-            Text(
-              '견적 요청 ${widget.requests.length}건',
-              style: AppText.portfolioTitle,
-            ),
-            const Spacer(),
-            _RequestFilterButton(label: '최신순'),
-          ],
-        ),
+        Text('견적 요청 ${widget.requests.length}건', style: AppText.portfolioTitle),
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -2302,7 +2293,7 @@ class _RequestReviewListState extends State<_RequestReviewList> {
               ),
               const SizedBox(width: 8),
               _RequestTabChip(
-                label: '확인중 $reviewing',
+                label: '견적받음 $received',
                 selected: _filter == 1,
                 onTap: () => setState(() => _filter = 1),
               ),
@@ -2362,9 +2353,7 @@ class _RequestTabChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? fg : const Color(0xFFDEE1E6),
-          ),
+          border: Border.all(color: selected ? fg : const Color(0xFFDEE1E6)),
         ),
         child: Text(
           label,
@@ -2375,32 +2364,6 @@ class _RequestTabChip extends StatelessWidget {
             color: fg,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _RequestFilterButton extends StatelessWidget {
-  const _RequestFilterButton({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _line),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(label, style: AppText.metricLabel.copyWith(color: _navy)),
-          const SizedBox(width: 8),
-          const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: _navy),
-        ],
       ),
     );
   }
@@ -2668,17 +2631,9 @@ class _QuoteSentRow extends StatelessWidget {
       crossAxisAlignment:
           multiLine ? CrossAxisAlignment.start : CrossAxisAlignment.center,
       children: <Widget>[
-        SizedBox(
-          width: 64,
-          child: Text(
-            label,
-            style: AppText.metricLabel,
-          ),
-        ),
+        SizedBox(width: 64, child: Text(label, style: AppText.metricLabel)),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(value, style: AppText.cardSubtitle),
-        ),
+        Expanded(child: Text(value, style: AppText.cardSubtitle)),
       ],
     );
   }
@@ -4690,40 +4645,57 @@ class _MobilePilotRequestsPage extends StatefulWidget {
 
 class _MobilePilotRequestsPageState extends State<_MobilePilotRequestsPage> {
   String? _selectedId;
+  int _filter = 0;
+
+  List<PilotWorkRequest> _filtered(List<PilotWorkRequest> requests) {
+    return switch (_filter) {
+      1 =>
+        requests.where((r) => r.status == '신규' || r.status == '확인 중').toList(),
+      2 => requests.where((r) => r.status == '견적 보냄').toList(),
+      _ => requests,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
     final requests = widget.store.pilotWorkRequests;
+    final filtered = _filtered(requests);
+    final received =
+        requests.where((r) => r.status == '신규' || r.status == '확인 중').length;
+    final sent = requests.where((r) => r.status == '견적 보냄').length;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  '받은 요청 · ${requests.length}건',
-                  style: AppText.portfolioTitle,
+          Text('받은 요청 · ${requests.length}건', style: AppText.portfolioTitle),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: <Widget>[
+                _RequestTabChip(
+                  label: '전체 ${requests.length}',
+                  selected: _filter == 0,
+                  onTap: () => setState(() => _filter = 0),
                 ),
-              ),
-              const Text(
-                '최신순',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 13,
-                  color: Color(0xFF7C828A),
+                const SizedBox(width: 8),
+                _RequestTabChip(
+                  label: '견적받음 $received',
+                  selected: _filter == 1,
+                  onTap: () => setState(() => _filter = 1),
                 ),
-              ),
-              const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 18,
-                color: Color(0xFF7C828A),
-              ),
-            ],
+                const SizedBox(width: 8),
+                _RequestTabChip(
+                  label: '견적보냄 $sent',
+                  selected: _filter == 2,
+                  onTap: () => setState(() => _filter = 2),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
-          if (requests.isEmpty)
+          if (filtered.isEmpty)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(32),
@@ -4744,7 +4716,7 @@ class _MobilePilotRequestsPageState extends State<_MobilePilotRequestsPage> {
               ),
             )
           else
-            ...requests.map(
+            ...filtered.map(
               (request) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _RequestReviewCard(

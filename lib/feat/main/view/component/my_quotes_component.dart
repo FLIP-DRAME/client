@@ -41,8 +41,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
         final quotes = store.myQuotes;
         final receivedQuotes =
             quotes.where((quote) => quote.isQuoteReceived).toList();
-        final pendingQuotes =
-            quotes.where((quote) => quote.isPending).toList();
+        final pendingQuotes = quotes.where((quote) => quote.isPending).toList();
         final completedQuotes =
             quotes.where((quote) => quote.isCompleted).toList();
 
@@ -468,6 +467,10 @@ class _QuoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _statusColor(quote.status);
+    final displayPrice =
+        quote.price == '-' && quote.budgetRange.isNotEmpty
+            ? quote.budgetRange
+            : quote.price;
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(DC.rxLg),
@@ -506,7 +509,7 @@ class _QuoteCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        quote.price,
+                        displayPrice,
                         style: DT.titleSm.copyWith(color: DC.primary),
                       ),
                     ],
@@ -528,7 +531,7 @@ class _QuoteCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 16),
                       Text(
-                        quote.price,
+                        displayPrice,
                         style: DT.titleSm.copyWith(color: DC.primary),
                       ),
                       const SizedBox(width: 20),

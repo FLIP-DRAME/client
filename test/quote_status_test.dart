@@ -80,17 +80,11 @@ void main() {
     });
 
     test('quoted + hasQuote → 견적 받음', () {
-      expect(
-        QuoteStatusHelper.clientLabel('quoted', hasQuote: true),
-        '견적 받음',
-      );
+      expect(QuoteStatusHelper.clientLabel('quoted', hasQuote: true), '견적 받음');
     });
 
     test('quoted + no quote → 요청 보냄', () {
-      expect(
-        QuoteStatusHelper.clientLabel('quoted', hasQuote: false),
-        '요청 보냄',
-      );
+      expect(QuoteStatusHelper.clientLabel('quoted', hasQuote: false), '요청 보냄');
     });
 
     test('submitted → 견적 받음', () {
@@ -101,10 +95,7 @@ void main() {
     });
 
     test('accepted → 진행중', () {
-      expect(
-        QuoteStatusHelper.clientLabel('accepted', hasQuote: true),
-        '진행중',
-      );
+      expect(QuoteStatusHelper.clientLabel('accepted', hasQuote: true), '진행중');
     });
 
     test('in_progress → 진행중', () {
@@ -115,24 +106,15 @@ void main() {
     });
 
     test('completed → 완료', () {
-      expect(
-        QuoteStatusHelper.clientLabel('completed', hasQuote: true),
-        '완료',
-      );
+      expect(QuoteStatusHelper.clientLabel('completed', hasQuote: true), '완료');
     });
 
     test('rejected → 거절', () {
-      expect(
-        QuoteStatusHelper.clientLabel('rejected', hasQuote: false),
-        '거절',
-      );
+      expect(QuoteStatusHelper.clientLabel('rejected', hasQuote: false), '거절');
     });
 
     test('expired → 만료', () {
-      expect(
-        QuoteStatusHelper.clientLabel('expired', hasQuote: false),
-        '만료',
-      );
+      expect(QuoteStatusHelper.clientLabel('expired', hasQuote: false), '만료');
     });
   });
 
@@ -196,14 +178,17 @@ void main() {
         jobStatus: jobStatus,
         quoteStatus: quoteStatus,
       );
-      final label = QuoteStatusHelper.clientLabel(effective, hasQuote: hasQuote);
+      final label = QuoteStatusHelper.clientLabel(
+        effective,
+        hasQuote: hasQuote,
+      );
 
       expect(label, '요청 보냄');
 
       final summary = UserQuoteSummary(
         id: 'job-1',
         pilotId: 'pilot-1',
-        pilotName: '견적 대기중',
+        pilotName: '운용자 견적 대기중',
         category: '항공촬영',
         area: '서울',
         date: '2026.05.25',
@@ -215,8 +200,11 @@ void main() {
         message: '',
       );
 
-      expect(summary.isPending, isTrue,
-          reason: '운용자가 아직 견적을 보내지 않은 요청은 isPending이어야 합니다.');
+      expect(
+        summary.isPending,
+        isTrue,
+        reason: '운용자가 아직 견적을 보내지 않은 요청은 isPending이어야 합니다.',
+      );
       expect(summary.isQuoteReceived, isFalse);
       expect(summary.isInProgress, isFalse);
     });
@@ -230,7 +218,10 @@ void main() {
         jobStatus: jobStatus,
         quoteStatus: quoteStatus,
       );
-      final label = QuoteStatusHelper.clientLabel(effective, hasQuote: hasQuote);
+      final label = QuoteStatusHelper.clientLabel(
+        effective,
+        hasQuote: hasQuote,
+      );
 
       expect(label, '견적 받음');
 

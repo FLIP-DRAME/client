@@ -872,7 +872,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
         pilotName:
             (operator?['display_name'] ??
                     operator?['business_name'] ??
-                    '견적 대기중')
+                    '운용자 견적 대기중')
                 .toString(),
         category:
             ((map['service_categories'] as Map?)?['label'] ?? '작업 요청')
@@ -1063,11 +1063,10 @@ class SupabaseDronePilotApi implements DronePilotApi {
   String _effectiveClientQuoteStatus({
     required String jobStatus,
     required String quoteStatus,
-  }) =>
-      QuoteStatusHelper.effectiveClientStatus(
-        jobStatus: jobStatus,
-        quoteStatus: quoteStatus,
-      );
+  }) => QuoteStatusHelper.effectiveClientStatus(
+    jobStatus: jobStatus,
+    quoteStatus: quoteStatus,
+  );
 
   int _proposedPriceFromBudget(String budget) {
     final numbers =

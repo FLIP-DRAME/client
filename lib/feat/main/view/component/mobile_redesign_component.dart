@@ -2046,8 +2046,7 @@ class _RequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isReviewing =
-        request.status == '신규' || request.status == '확인 중';
+    final isReviewing = request.status == '신규' || request.status == '확인 중';
     final isQuoteSent = request.status == '견적 보냄';
     final badgeColor =
         isReviewing
@@ -2918,8 +2917,7 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
   @override
   Widget build(BuildContext context) {
     final req = widget.request;
-    final isReviewing =
-        req.status == '신규' || req.status == '확인 중';
+    final isReviewing = req.status == '신규' || req.status == '확인 중';
     final isQuoteSent = req.status == '견적 보냄';
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
@@ -2961,36 +2959,6 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE4EAF2)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      '최신순',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF5B616E),
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 16,
-                      color: Color(0xFF5B616E),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
@@ -3007,8 +2975,7 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color:
-                          isReviewing ? _primary : const Color(0xFFE4EAF2),
+                      color: isReviewing ? _primary : const Color(0xFFE4EAF2),
                       width: isReviewing ? 1.5 : 1,
                     ),
                   ),
@@ -3219,7 +3186,10 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                         ),
                         if (widget.request.myQuotePrice != null ||
                             (widget.request.myQuoteMessage != null &&
-                                widget.request.myQuoteMessage!.isNotEmpty)) ...<Widget>[
+                                widget
+                                    .request
+                                    .myQuoteMessage!
+                                    .isNotEmpty)) ...<Widget>[
                           const SizedBox(height: 10),
                           const Divider(color: Color(0xFFB8F0D8), height: 1),
                           const SizedBox(height: 10),
@@ -3230,7 +3200,10 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                                   '${(widget.request.myQuotePrice! / 10000).round()}만원',
                             ),
                           if (widget.request.myQuoteMessage != null &&
-                              widget.request.myQuoteMessage!.isNotEmpty) ...<Widget>[
+                              widget
+                                  .request
+                                  .myQuoteMessage!
+                                  .isNotEmpty) ...<Widget>[
                             const SizedBox(height: 4),
                             _SentQuoteRow(
                               label: '메시지',
