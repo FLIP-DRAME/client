@@ -6,6 +6,8 @@ import 'package:mode/feat/main/network/drone_pilot_api.dart';
 import 'app_providers.dart';
 import 'feat/auth/view/pages/login_page.dart';
 import 'feat/auth/view/pages/signup_page.dart';
+import 'feat/chat/view/pages/chat_list_page.dart';
+import 'feat/chat/view/pages/chat_room_page.dart';
 import 'feat/landing/view/pages/landing_page.dart';
 import 'feat/main/model/main_models.dart';
 import 'feat/main/model/drone_pilot_model.dart';
@@ -224,6 +226,28 @@ final GoRouter appRouter = GoRouter(
                 ? state.extra! as PilotWorkRequest
                 : null;
         return PilotRequestReviewPage(initialRequest: initialRequest);
+      },
+    ),
+    GoRoute(
+      path: '/chats',
+      name: 'chats',
+      builder: (context, state) => const ChatListPage(),
+    ),
+    GoRoute(
+      path: '/chat/:roomId',
+      name: 'chat-room',
+      builder: (context, state) {
+        final roomId = state.pathParameters['roomId']!;
+        final extra = state.extra;
+        final otherPartyName =
+            extra is Map<String, String> ? extra['otherPartyName'] ?? '' : '';
+        final category =
+            extra is Map<String, String> ? extra['category'] ?? '' : '';
+        return ChatRoomPage(
+          roomId: roomId,
+          otherPartyName: otherPartyName,
+          category: category,
+        );
       },
     ),
   ],

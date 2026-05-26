@@ -10,6 +10,7 @@ import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../../core/app_defaults.dart';
+import '../../../chat/view/pages/chat_list_page.dart';
 import '../../../feed/view/pages/feed_page.dart';
 import '../../model/main_models.dart';
 import '../../network/drone_pilot_api.dart';
@@ -324,6 +325,7 @@ class _OperatorStandaloneShell extends StatelessWidget {
             onRequestsTap: () => context.go('/operator/requests'),
             onMyPageTap: () => context.go('/operator/mypage'),
             onMyQuotesTap: () => context.go('/my/quotes'),
+            onChatTap: () => context.go('/chats'),
             notificationCount: store.notificationCount,
             onNotificationTap: () => _showNotifications(context, store),
             onSwitchToUser: () {
@@ -535,6 +537,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
             onFeedTap: () => context.go('/feed'),
             onPortfolioTap: () => context.go('/portfolio'),
             onMyQuotesTap: () => context.go('/my/quotes'),
+            onChatTap: () => context.go('/chats'),
             onSwitchToUser: () {
               store.setPilotMode(false);
               setState(() => _selectedTabId = 'all');
@@ -701,6 +704,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
         label: '내견적',
       ),
       BottomNavigationBarItem(
+        icon: Icon(Icons.chat_bubble_outline_rounded),
+        activeIcon: Icon(Icons.chat_bubble_rounded),
+        label: '채팅',
+      ),
+      BottomNavigationBarItem(
         icon: Icon(Icons.person_outline_rounded),
         activeIcon: Icon(Icons.person_rounded),
         label: '내정보',
@@ -722,6 +730,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
         icon: Icon(Icons.photo_library_outlined),
         activeIcon: Icon(Icons.photo_library_rounded),
         label: '피드',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.chat_bubble_outline_rounded),
+        activeIcon: Icon(Icons.chat_bubble_rounded),
+        label: '채팅',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.grid_view_outlined),
@@ -763,6 +776,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
                   ),
                 ),
               ),
+              ChatListPage(onBack: () => setState(() => _tabIndex = 0)),
               SingleChildScrollView(
                 child: _OperatorPortfolioBuilderSection(store: store),
               ),
@@ -774,6 +788,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
                 child: ColoredBox(color: DC.canvas, child: DroneFeedSection()),
               ),
               _MobileMyQuotesTab(store: store),
+              ChatListPage(onBack: () => setState(() => _tabIndex = 0)),
               _UserMyPageTab(store: store),
             ];
 

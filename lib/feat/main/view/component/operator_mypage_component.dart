@@ -29,6 +29,7 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                     initialRequest: store.firstPilotWorkRequest,
                   ),
               onMyPageTap: () {},
+              onChatTap: () => context.go('/chats'),
               onSwitchToUser: () {
                 store.setPilotMode(false);
                 context.go('/home');
