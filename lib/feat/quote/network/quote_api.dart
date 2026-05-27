@@ -197,9 +197,14 @@ class SupabaseQuoteApi implements QuoteApi {
 
   (int?, int?) _parseBudget(String label) {
     return switch (label) {
-      '50만원 이하' => (0, 500000),
+      '0~30만원' => (0, 300000),
+      '~30만원' => (0, 300000),
+      '30~50만원' => (300000, 500000),
       '50~100만원' => (500000, 1000000),
       '100만원 이상' => (1000000, null),
+      '협의' => (null, null),
+      // 구버전 레이블 호환
+      '50만원 이하' => (0, 500000),
       _ => (null, null),
     };
   }

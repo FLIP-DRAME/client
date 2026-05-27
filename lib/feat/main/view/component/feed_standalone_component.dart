@@ -154,6 +154,7 @@ class _FeedFilterBar extends StatelessWidget {
     required this.onRegionChanged,
     required this.onCategoryChanged,
     required this.onSortChanged,
+    this.centered = false,
   });
 
   final bool compact;
@@ -166,59 +167,72 @@ class _FeedFilterBar extends StatelessWidget {
   final ValueChanged<String> onRegionChanged;
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<String> onSortChanged;
+  final bool centered;
 
   @override
   Widget build(BuildContext context) {
+    final row = Row(
+      mainAxisSize: centered ? MainAxisSize.min : MainAxisSize.max,
+      children: <Widget>[
+        _FilterDropdown(
+          icon: Icons.place_outlined,
+          label: '지역',
+          selected: selectedRegion,
+          options: regions,
+          onChanged: onRegionChanged,
+        ),
+        const SizedBox(width: 8),
+        _FilterDropdown(
+          icon: Icons.category_outlined,
+          label: '카테고리',
+          selected: selectedCategory,
+          options: categories,
+          onChanged: onCategoryChanged,
+        ),
+        const SizedBox(width: 16),
+        Container(width: 1, height: 20, color: DC.primary),
+        const SizedBox(width: 16),
+        ...sorts.map(
+          (sort) => Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: _SortChip(
+              label: sort,
+              selected: selectedSort == sort,
+              onTap: () => onSortChanged(sort),
+            ),
+          ),
+        ),
+      ],
+    );
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Color(0xFFDEE1E6))),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 16 : 24,
-          vertical: 12,
-        ),
-        child: Row(
-          children: <Widget>[
-            // 지역 dropdown-style pill
-            _FilterDropdown(
-              icon: Icons.place_outlined,
-              label: '지역',
-              selected: selectedRegion,
-              options: regions,
-              onChanged: onRegionChanged,
-            ),
-            const SizedBox(width: 8),
-
-            // 카테고리 dropdown-style pill
-            _FilterDropdown(
-              icon: Icons.category_outlined,
-              label: '카테고리',
-              selected: selectedCategory,
-              options: categories,
-              onChanged: onCategoryChanged,
-            ),
-
-            const SizedBox(width: 16),
-            Container(width: 1, height: 20, color: DC.primary),
-            const SizedBox(width: 16),
-
-            // 정렬 toggle pills
-            ...sorts.map(
-              (sort) => Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: _SortChip(
-                  label: sort,
-                  selected: selectedSort == sort,
-                  onTap: () => onSortChanged(sort),
+      child:
+          centered
+              ? Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1280),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 16 : 24,
+                      vertical: 12,
+                    ),
+                    child: row,
+                  ),
                 ),
+              )
+              : SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(
+                  horizontal: compact ? 16 : 24,
+                  vertical: 12,
+                ),
+                child: row,
               ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

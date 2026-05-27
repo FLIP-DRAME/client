@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../common/drame_text_styles.dart';
 
@@ -69,6 +70,16 @@ class QuoteScaffold extends StatelessWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/my/quotes');
+            }
+          },
+        ),
         title: Text(title, style: QuoteText.logo),
       ),
       body: child,

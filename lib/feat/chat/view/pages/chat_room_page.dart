@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -359,7 +360,7 @@ class _DateDivider extends StatelessWidget {
 
 // ─── Input Bar ───────────────────────────────────────────────────────────────
 
-class _InputBar extends StatelessWidget {
+class _InputBar extends StatefulWidget {
   const _InputBar({
     required this.controller,
     required this.sending,
@@ -369,6 +370,35 @@ class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
   final VoidCallback onSend;
+
+  @override
+  State<_InputBar> createState() => _InputBarState();
+}
+
+class _InputBarState extends State<_InputBar> {
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode(
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.enter &&
+            !HardwareKeyboard.instance.isShiftPressed) {
+          if (!widget.sending) widget.onSend();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -390,37 +420,38 @@ class _InputBar extends StatelessWidget {
           children: <Widget>[
             Expanded(
               child: TextField(
-                controller: controller,
+                controller: widget.controller,
+                focusNode: _focusNode,
                 minLines: 1,
                 maxLines: 5,
                 textInputAction: TextInputAction.newline,
-                style: const TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
-                  fontSize: DrameTextStyles.bodySize,
-                  color: DC.ink,
-                ),
-                decoration: InputDecoration(
-                  hintText: '메시지를 입력하세요',
-                  hintStyle: const TextStyle(
+                  style: const TextStyle(
                     fontFamily: DrameTextStyles.fontFamily,
                     fontSize: DrameTextStyles.bodySize,
-                    color: DC.mutedSoft,
+                    color: DC.ink,
                   ),
-                  filled: true,
-                  fillColor: DC.surfaceSoft,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: DC.spSm,
-                    vertical: DC.spXs,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(DC.rxPill),
-                    borderSide: BorderSide.none,
+                  decoration: InputDecoration(
+                    hintText: '메시지를 입력하세요',
+                    hintStyle: const TextStyle(
+                      fontFamily: DrameTextStyles.fontFamily,
+                      fontSize: DrameTextStyles.bodySize,
+                      color: DC.mutedSoft,
+                    ),
+                    filled: true,
+                    fillColor: DC.surfaceSoft,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: DC.spSm,
+                      vertical: DC.spXs,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(DC.rxPill),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
               ),
-            ),
             const SizedBox(width: DC.spXs),
-            _SendButton(sending: sending, onTap: onSend),
+            _SendButton(sending: widget.sending, onTap: widget.onSend),
           ],
         ),
       ),

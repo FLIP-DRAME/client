@@ -860,7 +860,7 @@ class SignupWelcomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 22),
                   TextButton(
-                    onPressed: () => context.go('/pilot/register'),
+                    onPressed: () => context.go('/operator'),
                     child: const Text(
                       '운용자로도 등록하기 →',
                       style: TextStyle(

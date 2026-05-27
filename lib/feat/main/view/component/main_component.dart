@@ -663,28 +663,86 @@ class _EmptyOperatorState extends StatelessWidget {
 
 // ── Operator Feed Tab Page ────────────────────────────────────────────────────
 
-class _OperatorFeedTabPage extends StatelessWidget {
+class _OperatorFeedTabPage extends StatefulWidget {
   const _OperatorFeedTabPage({required this.store});
   final DrameStore store;
 
   @override
+  State<_OperatorFeedTabPage> createState() => _OperatorFeedTabPageState();
+}
+
+class _OperatorFeedTabPageState extends State<_OperatorFeedTabPage> {
+  String _selectedRegion = '전체';
+  String _selectedCategory = '전체';
+  String _selectedSort = '인기순';
+
+  static const List<String> _regions = <String>[
+    '전체',
+    '서울',
+    '경기',
+    '인천',
+    '부산',
+    '대구',
+    '광주',
+    '대전',
+  ];
+
+  static const List<String> _categories = <String>[
+    '전체',
+    '항공촬영',
+    '농약방제',
+    '측량·매핑',
+    '시설점검',
+    '부동산',
+    '행사촬영',
+  ];
+
+  static const List<String> _sorts = <String>['인기순', '최신순'];
+
+  @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
     return Container(
       width: double.infinity,
       color: DC.canvas,
-      child: _PageShell(
-        top: 40,
-        bottom: 80,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            _OperatorFeedSection(store: store),
-            const SizedBox(height: 42),
-            const Text('전체피드', style: AppText.cardTitle),
-            const SizedBox(height: 14),
-            const DroneFeedSection(),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _PageShell(
+            top: 40,
+            bottom: 28,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _OperatorFeedSection(store: widget.store),
+                const SizedBox(height: 42),
+                const Text('전체피드', style: AppText.cardTitle),
+              ],
+            ),
+          ),
+          _FeedFilterBar(
+            compact: compact,
+            centered: true,
+            selectedRegion: _selectedRegion,
+            selectedCategory: _selectedCategory,
+            selectedSort: _selectedSort,
+            regions: _regions,
+            categories: _categories,
+            sorts: _sorts,
+            onRegionChanged: (v) => setState(() => _selectedRegion = v),
+            onCategoryChanged: (v) => setState(() => _selectedCategory = v),
+            onSortChanged: (v) => setState(() => _selectedSort = v),
+          ),
+          _PageShell(
+            top: 14,
+            bottom: 80,
+            child: DroneFeedSection(
+              region: _selectedRegion,
+              category: _selectedCategory,
+              sort: _selectedSort,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -134,7 +134,16 @@ class _FeedPost {
 }
 
 class DroneFeedSection extends ConsumerStatefulWidget {
-  const DroneFeedSection({super.key});
+  const DroneFeedSection({
+    super.key,
+    this.region = '전체',
+    this.category = '전체',
+    this.sort = '인기순',
+  });
+
+  final String region;
+  final String category;
+  final String sort;
 
   @override
   ConsumerState<DroneFeedSection> createState() => _DroneFeedSectionState();
@@ -177,13 +186,37 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
   }
 
   @override
+  void didUpdateWidget(DroneFeedSection old) {
+    super.didUpdateWidget(old);
+    if (old.region != widget.region ||
+        old.category != widget.category ||
+        old.sort != widget.sort) {
+      _visibleCount = 9;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_remoteFeed == null) {
       return const _FeedPageShell(
         child: Center(child: CircularProgressIndicator(color: _navy)),
       );
     }
-    final actualFeed = _remoteFeed!;
+
+    var filtered = _remoteFeed!;
+    if (widget.region != '전체') {
+      filtered =
+          filtered.where((p) => p.location.contains(widget.region)).toList();
+    }
+    if (widget.category != '전체') {
+      filtered =
+          filtered.where((p) => p.category == widget.category).toList();
+    }
+    final actualFeed = List<_FeedPost>.from(filtered);
+    if (widget.sort == '인기순') {
+      actualFeed.sort((a, b) => b.likes.compareTo(a.likes));
+    }
+
     if (actualFeed.isEmpty) {
       return const _FeedPageShell(
         child: Text('아직 공개된 피드가 없습니다.', style: FeedText.body),
