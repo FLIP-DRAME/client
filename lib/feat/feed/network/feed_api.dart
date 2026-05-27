@@ -30,6 +30,24 @@ class FeedPost {
   final String? authorAvatarUrl;
 }
 
+class FeedComment {
+  const FeedComment({
+    required this.id,
+    required this.postId,
+    required this.userId,
+    required this.authorName,
+    required this.content,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String postId;
+  final String userId;
+  final String authorName;
+  final String content;
+  final DateTime createdAt;
+}
+
 class FeedApi {
   FeedApi(this._client);
 
@@ -200,6 +218,82 @@ class FeedApi {
               ? null
               : operator?['avatar_url']?.toString(),
     );
+  }
+
+  Future<bool> hasLiked(String postId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return false;
+    final rows = await _client
+        .from('feed_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', userId)
+        .limit(1);
+    return rows.isNotEmpty;
+  }
+
+  /// Returns true if now liked, false if unliked.
+  Future<bool> toggleLike(String postId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return false;
+    final existing = await _client
+        .from('feed_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', userId)
+        .maybeSingle();
+    if (existing != null) {
+      await _client.from('feed_likes').delete().eq('id', existing['id']);
+      return false;
+    } else {
+      await _client.from('feed_likes').insert(<String, Object?>{
+        'post_id': postId,
+        'user_id': userId,
+      });
+      return true;
+    }
+  }
+
+  Future<int> fetchLikeCount(String postId) async {
+    final rows = await _client
+        .from('feed_likes')
+        .select('id')
+        .eq('post_id', postId);
+    return rows.length;
+  }
+
+  Future<List<FeedComment>> fetchComments(String postId) async {
+    final rows = await _client
+        .from('feed_comments')
+        .select('id, post_id, user_id, content, created_at, profiles(nickname, name)')
+        .eq('post_id', postId)
+        .order('created_at', ascending: true);
+    return rows.map<FeedComment>((row) {
+      final map = Map<String, dynamic>.from(row as Map);
+      final profile = map['profiles'] as Map?;
+      final nickname = profile?['nickname']?.toString().trim() ?? '';
+      final name = profile?['name']?.toString().trim() ?? '';
+      final authorName =
+          nickname.isNotEmpty ? nickname : (name.isNotEmpty ? name : '익명');
+      return FeedComment(
+        id: map['id'].toString(),
+        postId: map['post_id'].toString(),
+        userId: map['user_id'].toString(),
+        authorName: authorName,
+        content: map['content'].toString(),
+        createdAt: DateTime.parse(map['created_at'].toString()).toLocal(),
+      );
+    }).toList();
+  }
+
+  Future<void> addComment(String postId, String content) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('로그인이 필요합니다.');
+    await _client.from('feed_comments').insert(<String, Object?>{
+      'post_id': postId,
+      'user_id': userId,
+      'content': content.trim(),
+    });
   }
 
   String _dateOnly(Object? value) {

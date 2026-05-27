@@ -455,22 +455,46 @@ class _FeedCategoryChip extends StatelessWidget {
   }
 }
 
-class _FeedPostDialog extends StatefulWidget {
+class _FeedPostDialog extends ConsumerStatefulWidget {
   const _FeedPostDialog({required this.post, required this.loadPilot});
 
   final _FeedPost post;
   final Future<DronePilot?> Function(String id) loadPilot;
 
   @override
-  State<_FeedPostDialog> createState() => _FeedPostDialogState();
+  ConsumerState<_FeedPostDialog> createState() => _FeedPostDialogState();
 }
 
-class _FeedPostDialogState extends State<_FeedPostDialog> {
+class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
   final TextEditingController _commentController = TextEditingController();
   final PageController _pageController = PageController();
-  final List<String> _comments = <String>[];
+  List<FeedComment> _comments = <FeedComment>[];
   bool _liked = false;
+  int _likeCount = 0;
   int _imageIndex = 0;
+  bool _loadingComments = true;
+  bool _submittingComment = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _likeCount = widget.post.likes;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final api = ref.read(feedApiProvider);
+    final results = await Future.wait(<Future<Object>>[
+      api.hasLiked(widget.post.id),
+      api.fetchComments(widget.post.id),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _liked = results[0] as bool;
+      _comments = results[1] as List<FeedComment>;
+      _loadingComments = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -589,7 +613,6 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
   }
 
   Widget _metaPane() {
-    final likes = widget.post.likes + (_liked ? 1 : 0);
     final avatarUrl = widget.post.authorAvatarUrl;
     final initial = widget.post.authorName.isNotEmpty
         ? widget.post.authorName.substring(0, 1)
@@ -695,10 +718,12 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
               const SizedBox(height: 20),
               const Text('댓글', style: FeedText.dialogTitle),
               const SizedBox(height: 12),
-              if (_comments.isEmpty)
+              if (_loadingComments)
+                const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              else if (_comments.isEmpty)
                 const Text('아직 댓글이 없습니다.', style: FeedText.body)
               else
-                ..._comments.map((comment) => _CommentTile(comment: comment)),
+                ..._comments.map((c) => _CommentTile(comment: c)),
             ],
           ),
         ),
@@ -708,9 +733,13 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
           child: Row(
             children: <Widget>[
               IconButton(
-                onPressed: () {
+                onPressed: () async {
+                  final api = ref.read(feedApiProvider);
+                  final nowLiked = await api.toggleLike(widget.post.id);
+                  if (!mounted) return;
                   setState(() {
-                    _liked = !_liked;
+                    _liked = nowLiked;
+                    _likeCount += nowLiked ? 1 : -1;
                   });
                 },
                 icon: Icon(
@@ -727,7 +756,7 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('좋아요 $likes개', style: FeedText.likeCount),
+            child: Text('좋아요 $_likeCount개', style: FeedText.likeCount),
           ),
         ),
         Padding(
@@ -753,12 +782,18 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
                 ),
               ),
               TextButton(
-                onPressed: _submitComment,
+                onPressed: _submittingComment ? null : _submitComment,
                 style: TextButton.styleFrom(
                   textStyle: FeedText.button,
                   foregroundColor: _navy,
                 ),
-                child: const Text('게시'),
+                child: _submittingComment
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('게시'),
               ),
             ],
           ),
@@ -775,15 +810,23 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
     );
   }
 
-  void _submitComment() {
+  Future<void> _submitComment() async {
     final text = _commentController.text.trim();
-    if (text.isEmpty) {
-      return;
+    if (text.isEmpty || _submittingComment) return;
+    setState(() => _submittingComment = true);
+    try {
+      final api = ref.read(feedApiProvider);
+      await api.addComment(widget.post.id, text);
+      final updated = await api.fetchComments(widget.post.id);
+      if (!mounted) return;
+      setState(() {
+        _comments = updated;
+        _commentController.clear();
+      });
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _submittingComment = false);
     }
-    setState(() {
-      _comments.add(text);
-      _commentController.clear();
-    });
   }
 }
 
@@ -842,7 +885,7 @@ class _PostMetaPill extends StatelessWidget {
 class _CommentTile extends StatelessWidget {
   const _CommentTile({required this.comment});
 
-  final String comment;
+  final FeedComment comment;
 
   @override
   Widget build(BuildContext context) {
@@ -862,11 +905,11 @@ class _CommentTile extends StatelessWidget {
               text: TextSpan(
                 style: const TextStyle(color: _ink, height: 1.45),
                 children: <TextSpan>[
-                  const TextSpan(
-                    text: 'drame_user ',
+                  TextSpan(
+                    text: '${comment.authorName} ',
                     style: FeedText.commentUser,
                   ),
-                  TextSpan(text: comment),
+                  TextSpan(text: comment.content),
                 ],
               ),
             ),
