@@ -1681,10 +1681,15 @@ class _OperatorProfileCard extends StatelessWidget {
               CircleAvatar(
                 radius: 38,
                 backgroundColor: Colors.white,
-                child: Text(
-                  nickname.characters.first,
-                  style: AppText.cardTitle,
-                ),
+                backgroundImage: store.selectedPilot?.avatarUrl != null
+                    ? NetworkImage(store.selectedPilot!.avatarUrl!)
+                    : null,
+                child: store.selectedPilot?.avatarUrl == null
+                    ? Text(
+                        nickname.characters.first,
+                        style: AppText.cardTitle,
+                      )
+                    : null,
               ),
               const SizedBox(width: 18),
               Expanded(
@@ -6226,15 +6231,20 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: const Color(0xFFEEF0F3),
-                    child: Text(
-                      pilot.name.characters.first,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF0A0B0D),
-                      ),
-                    ),
+                    backgroundImage: pilot.avatarUrl != null
+                        ? NetworkImage(pilot.avatarUrl!)
+                        : null,
+                    child: pilot.avatarUrl == null
+                        ? Text(
+                            pilot.name.characters.first,
+                            style: const TextStyle(
+                              fontFamily: 'Pretendard',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0A0B0D),
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 8),
                   Expanded(

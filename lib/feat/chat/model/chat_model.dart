@@ -36,6 +36,7 @@ class ChatRoom {
     this.unreadCount = 0,
     this.otherPartyName = '상대방',
     this.category = '작업',
+    this.otherPartyAvatarUrl,
   });
 
   final String id;
@@ -47,4 +48,5 @@ class ChatRoom {
   final int unreadCount;
   final String otherPartyName;
   final String category;
+  final String? otherPartyAvatarUrl;
 }

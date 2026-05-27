@@ -115,6 +115,7 @@ class _FeedPost {
     required this.likes,
     required this.caption,
     this.operatorId,
+    this.authorAvatarUrl,
   });
 
   final String id;
@@ -127,6 +128,7 @@ class _FeedPost {
   final int likes;
   final String caption;
   final String? operatorId;
+  final String? authorAvatarUrl;
 }
 
 class DroneFeedSection extends ConsumerStatefulWidget {
@@ -161,6 +163,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                     likes: post.likes,
                     caption: post.caption,
                     operatorId: post.operatorId,
+                    authorAvatarUrl: post.authorAvatarUrl,
                   ),
                 )
                 .toList();
@@ -334,6 +337,7 @@ class _FeedTimelineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final initial =
         post.authorName.trim().isEmpty ? '모' : post.authorName.characters.first;
+    final avatarUrl = post.authorAvatarUrl;
     return Material(
       color: Colors.white,
       child: InkWell(
@@ -348,10 +352,14 @@ class _FeedTimelineCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 22,
                     backgroundColor: const Color(0xFFF1F4F8),
-                    child: Text(
-                      initial,
-                      style: FeedText.authorName.copyWith(color: _navy),
-                    ),
+                    backgroundImage:
+                        avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                    child: avatarUrl == null
+                        ? Text(
+                            initial,
+                            style: FeedText.authorName.copyWith(color: _navy),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -582,6 +590,10 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
 
   Widget _metaPane() {
     final likes = widget.post.likes + (_liked ? 1 : 0);
+    final avatarUrl = widget.post.authorAvatarUrl;
+    final initial = widget.post.authorName.isNotEmpty
+        ? widget.post.authorName.substring(0, 1)
+        : '모';
 
     return Column(
       children: <Widget>[
@@ -591,15 +603,19 @@ class _FeedPostDialogState extends State<_FeedPostDialog> {
             children: <Widget>[
               CircleAvatar(
                 backgroundColor: _navy,
-                child: Text(
-                  widget.post.authorName.substring(0, 1),
-                  style: const TextStyle(
-                    fontFamily: DrameTextStyles.fontFamily,
-                    color: Colors.white,
-                    fontSize: DrameTextStyles.bodySize,
-                    fontWeight: DrameTextStyles.semiBold,
-                  ),
-                ),
+                backgroundImage:
+                    avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl == null
+                    ? Text(
+                        initial,
+                        style: const TextStyle(
+                          fontFamily: DrameTextStyles.fontFamily,
+                          color: Colors.white,
+                          fontSize: DrameTextStyles.bodySize,
+                          fontWeight: DrameTextStyles.semiBold,
+                        ),
+                      )
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(

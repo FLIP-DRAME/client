@@ -337,7 +337,7 @@ class _OperatorMyPageBody extends StatelessWidget {
   }
 }
 
-class _OperatorMyPageProfile extends StatelessWidget {
+class _OperatorMyPageProfile extends StatefulWidget {
   const _OperatorMyPageProfile({
     required this.name,
     required this.nickname,
@@ -349,7 +349,76 @@ class _OperatorMyPageProfile extends StatelessWidget {
   final DrameStore store;
 
   @override
+  State<_OperatorMyPageProfile> createState() => _OperatorMyPageProfileState();
+}
+
+class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
+  bool _uploadingPhoto = false;
+
+  Future<void> _pickAndUploadPhoto() async {
+    final input =
+        web.HTMLInputElement()
+          ..type = 'file'
+          ..accept = 'image/*';
+    input.click();
+    await Future.any(<Future<void>>[
+      input.onChange.first.then((_) {}),
+      Future<void>.delayed(const Duration(minutes: 2)),
+    ]);
+    final file = input.files?.item(0);
+    if (file == null) return;
+
+    final reader = web.FileReader();
+    final completer = Completer<Uint8List>();
+    reader.addEventListener(
+      'load',
+      (web.Event e) {
+        final result = reader.result;
+        if (result == null) {
+          completer.completeError('읽기 실패');
+          return;
+        }
+        completer.complete(
+          Uint8List.view((result as JSArrayBuffer).toDart),
+        );
+      }.toJS,
+    );
+    reader.addEventListener(
+      'error',
+      ((web.Event e) => completer.completeError('파일 읽기 오류')).toJS,
+    );
+    reader.readAsArrayBuffer(file);
+
+    final bytes = await completer.future;
+    if (!mounted) return;
+
+    final ext = file.name.contains('.')
+        ? file.name.split('.').last.toLowerCase()
+        : 'jpg';
+
+    setState(() => _uploadingPhoto = true);
+    try {
+      await widget.store.uploadProfilePhoto(bytes, ext);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('사진 업로드 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingPhoto = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final store = widget.store;
+    final nickname = widget.nickname;
+    final name = widget.name;
+    final avatarUrl = store.selectedPilot?.avatarUrl;
     final serviceText =
         store.selectedPilot?.categories.isNotEmpty == true
             ? store.selectedPilot!.categories.join(' · ')
@@ -359,12 +428,49 @@ class _OperatorMyPageProfile extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            CircleAvatar(
-              radius: 44,
-              backgroundColor: Colors.white,
-              child: Text(
-                nickname.characters.first,
-                style: AppText.cardTitle.copyWith(color: _navy),
+            GestureDetector(
+              onTap: _uploadingPhoto ? null : _pickAndUploadPhoto,
+              child: Stack(
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 44,
+                    backgroundColor: const Color(0xFFEEF0F3),
+                    backgroundImage:
+                        avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                    child: avatarUrl == null
+                        ? Text(
+                            nickname.characters.first,
+                            style: AppText.cardTitle.copyWith(color: _navy),
+                          )
+                        : null,
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: _navy,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: _uploadingPhoto
+                          ? const Padding(
+                              padding: EdgeInsets.all(5),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.camera_alt_rounded,
+                              color: Colors.white,
+                              size: 13,
+                            ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 22),

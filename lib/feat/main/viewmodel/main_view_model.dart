@@ -639,6 +639,35 @@ class DrameStore extends ChangeNotifier {
 
   List<OperatorFeedPost> myFeedPosts = <OperatorFeedPost>[];
 
+  Future<String> uploadProfilePhoto(List<int> bytes, String ext) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다.');
+    final url = await _api.uploadProfilePhoto(userId, bytes, ext);
+    if (selectedPilot != null) {
+      selectedPilot = DronePilot(
+        id: selectedPilot!.id,
+        name: selectedPilot!.name,
+        location: selectedPilot!.location,
+        categories: selectedPilot!.categories,
+        availableAreas: selectedPilot!.availableAreas,
+        permittedAreas: selectedPilot!.permittedAreas,
+        basePrice: selectedPilot!.basePrice,
+        contact: selectedPilot!.contact,
+        mapX: selectedPilot!.mapX,
+        mapY: selectedPilot!.mapY,
+        portfolioImages: selectedPilot!.portfolioImages,
+        specialty: selectedPilot!.specialty,
+        intro: selectedPilot!.intro,
+        description: selectedPilot!.description,
+        quoteOptions: selectedPilot!.quoteOptions,
+        operatorStatus: selectedPilot!.operatorStatus,
+        avatarUrl: url,
+      );
+      notifyListeners();
+    }
+    return url;
+  }
+
   Future<void> addFeedPost({
     required String caption,
     List<int>? imageBytes,

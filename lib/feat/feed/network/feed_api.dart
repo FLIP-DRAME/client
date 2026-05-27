@@ -14,6 +14,7 @@ class FeedPost {
     required this.likes,
     required this.caption,
     this.operatorId,
+    this.authorAvatarUrl,
   });
 
   final String id;
@@ -26,6 +27,7 @@ class FeedPost {
   final int likes;
   final String caption;
   final String? operatorId;
+  final String? authorAvatarUrl;
 }
 
 class FeedApi {
@@ -43,7 +45,7 @@ class FeedApi {
           location_label,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty),
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
           assets:feed_post_assets(url, sort_order),
           likes:feed_likes(count)
         ''')
@@ -70,7 +72,7 @@ class FeedApi {
           location_label,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty),
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
           assets:feed_post_assets(url, sort_order),
           likes:feed_likes(count)
         ''')
@@ -123,7 +125,7 @@ class FeedApi {
               location_label,
               created_at,
               category:service_categories(label),
-              operator:operator_profiles(id, display_name, specialty),
+              operator:operator_profiles(id, display_name, specialty, avatar_url),
               assets:feed_post_assets(url, sort_order),
               likes:feed_likes(count)
             ''')
@@ -146,7 +148,7 @@ class FeedApi {
           location_label,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty),
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
           assets:feed_post_assets(url, sort_order),
           likes:feed_likes(count)
         ''')
@@ -193,6 +195,10 @@ class FeedApi {
               : ((likes.first as Map?)?['count'] as num?)?.toInt() ?? 0,
       caption: (map['body'] ?? map['title'] ?? '').toString(),
       operatorId: operator?['id']?.toString(),
+      authorAvatarUrl:
+          (operator?['avatar_url']?.toString().trim().isEmpty ?? true)
+              ? null
+              : operator?['avatar_url']?.toString(),
     );
   }
 
