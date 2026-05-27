@@ -933,6 +933,23 @@ class _UserMyPageTab extends StatelessWidget {
               ],
             ),
 
+            const SizedBox(height: 8),
+
+            // ── Account menu ───────────────────────────────────────────────
+            _MobileMenuSection(
+              title: '계정',
+              items: <_MobileMenuItem>[
+                _MobileMenuItem(
+                  label: '로그아웃',
+                  isDestructive: true,
+                  onTap: () async {
+                    await store.signOut();
+                    if (context.mounted) context.go('/home');
+                  },
+                ),
+              ],
+            ),
+
             const SizedBox(height: 80),
           ],
         ),
@@ -1023,16 +1040,20 @@ class _MobileMenuSection extends StatelessWidget {
                   ),
                   title: Text(
                     item.label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF0A0B0D),
+                      color: item.isDestructive
+                          ? const Color(0xFFE53935)
+                          : const Color(0xFF0A0B0D),
                     ),
                   ),
-                  trailing: const Icon(
+                  trailing: Icon(
                     Icons.chevron_right_rounded,
-                    color: Color(0xFFA8ACB3),
+                    color: item.isDestructive
+                        ? const Color(0xFFE53935).withAlpha(120)
+                        : const Color(0xFFA8ACB3),
                     size: 18,
                   ),
                   onTap: item.onTap,
@@ -1055,10 +1076,15 @@ class _MobileMenuSection extends StatelessWidget {
 }
 
 class _MobileMenuItem {
-  const _MobileMenuItem({required this.label, required this.onTap});
+  const _MobileMenuItem({
+    required this.label,
+    required this.onTap,
+    this.isDestructive = false,
+  });
 
   final String label;
   final VoidCallback onTap;
+  final bool isDestructive;
 }
 
 // ─── Mobile My Quotes Tab (PDF p.4/5 – replaces 채팅) ─────────────────────────
