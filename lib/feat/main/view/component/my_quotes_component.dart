@@ -62,6 +62,10 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                 onPortfolioTap: () => context.go('/portfolio'),
                 onMyQuotesTap: () {},
                 onChatTap: () => context.go('/chats'),
+                onLogoutTap: () async {
+                  await store.signOut();
+                  if (context.mounted) context.go('/login');
+                },
                 onSwitchToUser: () {
                   store.setPilotMode(false);
                   context.go('/home');
@@ -254,6 +258,10 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
                 onPortfolioTap: () => context.go('/portfolio'),
                 onMyQuotesTap: () => context.go('/my/quotes'),
                 onChatTap: () => context.go('/chats'),
+                onLogoutTap: () async {
+                  await store.signOut();
+                  if (context.mounted) context.go('/login');
+                },
                 onSwitchToUser: () {
                   store.setPilotMode(false);
                   context.go('/home');

@@ -37,6 +37,7 @@ class DrameTopNavigation extends StatelessWidget {
     this.onOperatorTabTap,
     this.notificationCount = 0,
     this.onNotificationTap,
+    this.onLogoutTap,
   });
 
   final bool isLoggedIn;
@@ -64,6 +65,7 @@ class DrameTopNavigation extends StatelessWidget {
   final ValueChanged<String>? onOperatorTabTap;
   final int notificationCount;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onLogoutTap;
 
   @override
   Widget build(BuildContext context) {
@@ -179,33 +181,20 @@ class DrameTopNavigation extends StatelessWidget {
                     child: const Text('시작하기'),
                   ),
                 ] else if (isOperator) ...<Widget>[
-                  if (!compact) ...<Widget>[
+                  if (onLogoutTap != null) ...<Widget>[
                     TextButton(
-                      onPressed: onRequestsTap,
+                      onPressed: onLogoutTap,
                       style: TextButton.styleFrom(
-                        foregroundColor: DC.ink,
+                        foregroundColor: const Color(0xFFE53935),
                         textStyle: DT.navLink,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
                         ),
                       ),
-                      child: const Text('요청 관리'),
+                      child: const Text('로그아웃'),
                     ),
-                    const SizedBox(width: 4),
-                    TextButton(
-                      onPressed: onMyPageTap,
-                      style: TextButton.styleFrom(
-                        foregroundColor: DC.ink,
-                        textStyle: DT.navLink,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      child: const Text('내 프로필'),
-                    ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: 8),
                   ],
                   _ModeToggle(
                     isOperator: true,
@@ -213,6 +202,21 @@ class DrameTopNavigation extends StatelessWidget {
                     onOperatorTap: onSwitchToOperator ?? () {},
                   ),
                 ] else ...<Widget>[
+                  if (onLogoutTap != null) ...<Widget>[
+                    TextButton(
+                      onPressed: onLogoutTap,
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFE53935),
+                        textStyle: DT.navLink,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: const Text('로그아웃'),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   _ModeToggle(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
