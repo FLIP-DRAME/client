@@ -2148,8 +2148,59 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
           return Scaffold(
             backgroundColor: Colors.white,
             body: SafeArea(
-              child: Center(
-                child: Text('받은 견적 요청이 없습니다.', style: AppText.portfolioTitle),
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    height: 76,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(bottom: BorderSide(color: _line)),
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1280),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Row(
+                            children: <Widget>[
+                              IconButton(
+                                onPressed:
+                                    () =>
+                                        context.canPop()
+                                            ? context.pop()
+                                            : context.go('/home'),
+                                icon: const Icon(Icons.arrow_back_rounded),
+                                color: _navy,
+                                tooltip: '뒤로가기',
+                              ),
+                              const SizedBox(width: 10),
+                              InkWell(
+                                onTap: () => context.go('/home'),
+                                borderRadius: BorderRadius.circular(8),
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: Text('모두의 드론', style: HomeText.logo),
+                                ),
+                              ),
+                              const SizedBox(width: 18),
+                              Container(width: 1, height: 22, color: _line),
+                              const SizedBox(width: 18),
+                              const Text('받은 요청', style: AppText.cardTitle),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        '받은 견적 요청이 없습니다.',
+                        style: AppText.portfolioTitle,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
