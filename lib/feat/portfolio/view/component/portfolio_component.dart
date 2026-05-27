@@ -1029,7 +1029,7 @@ class _MobileQuoteSheet extends ConsumerStatefulWidget {
 class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
   late String? _category;
   late String? _area;
-  String _budget = '~30만원';
+  String _budget = '0~30만원';
   bool _submitting = false;
 
   final _dateController = TextEditingController();
@@ -1182,7 +1182,7 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
             const _SheetLabel('예산'),
             const SizedBox(height: 8),
             _SheetChipWrap(
-              values: const <String>['~30만원', '30~50만원', '50~100만원', '협의'],
+              values: const <String>['0~30만원', '30~50만원', '50~100만원', '협의'],
               selected: _budget,
               onSelected: (v) => setState(() => _budget = v),
             ),

@@ -2380,7 +2380,7 @@ class _MobileQuoteEditSheetState extends ConsumerState<_MobileQuoteEditSheet> {
     _detailController = TextEditingController(text: q.detail);
     _contactController = TextEditingController(text: q.contactWindow);
     _amountController = TextEditingController();
-    _budget = q.budgetRange.isNotEmpty ? q.budgetRange : '~30만원';
+    _budget = q.budgetRange.isNotEmpty ? q.budgetRange : '0~30만원';
   }
 
   @override
@@ -2500,7 +2500,7 @@ class _MobileQuoteEditSheetState extends ConsumerState<_MobileQuoteEditSheet> {
               spacing: 8,
               runSpacing: 8,
               children:
-                  <String>['~30만원', '30~50만원', '50~100만원', '협의']
+                  <String>['0~30만원', '30~50만원', '50~100만원', '협의']
                       .map(
                         (v) => GestureDetector(
                           onTap: () => setState(() => _budget = v),

@@ -1142,20 +1142,26 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   (int?, int?) _parseBudgetLabel(String label) {
-    if (label.contains('50') && label.contains('100')) {
-      return (500000, 1000000);
-    }
-    if (label.contains('100')) return (1000000, null);
-    if (label.contains('50')) return (0, 500000);
-    return (null, null);
+    return switch (label) {
+      '0~30만원' => (0, 300000),
+      '~30만원' => (0, 300000),
+      '30~50만원' => (300000, 500000),
+      '50~100만원' => (500000, 1000000),
+      '100만원 이상' => (1000000, null),
+      '예산 협의' => (null, null),
+      _ => (null, null),
+    };
   }
 
   String _budgetLabel(Object? min, Object? max) {
     final minValue = (min as num?)?.toInt();
     final maxValue = (max as num?)?.toInt();
     if (minValue == null && maxValue == null) return '예산 협의';
-    if (minValue == null) return '${(maxValue! / 10000).round()}만원 이하';
+    if (minValue == null) return '~${(maxValue! / 10000).round()}만원';
     if (maxValue == null) return '${(minValue / 10000).round()}만원 이상';
+    if (minValue == 0 && maxValue == 300000) return '0~30만원';
+    if (minValue == 0 && maxValue == 500000) return '30~50만원';
+    if (minValue == 0) return '~${(maxValue / 10000).round()}만원';
     return '${(minValue / 10000).round()}~${(maxValue / 10000).round()}만원';
   }
 

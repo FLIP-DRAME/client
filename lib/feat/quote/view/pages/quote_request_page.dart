@@ -162,7 +162,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                   const FieldLabel('예산'),
                   ChoiceWrap(
                     values: const <String>[
-                      '~30만원',
+                      '0~30만원',
                       '30~50만원',
                       '50~100만원',
                       '협의',
