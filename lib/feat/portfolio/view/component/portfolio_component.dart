@@ -43,10 +43,12 @@ class _PortfolioMain extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: ClipOval(
-                child:
-                    pilot.portfolioImages.isEmpty
-                        ? const _EmptyPortfolioImage()
-                        : _NetworkCover(imageUrl: pilot.portfolioImages.first),
+                child: () {
+                  final imageUrl = pilot.avatarUrl ?? (pilot.portfolioImages.isNotEmpty ? pilot.portfolioImages.first : null);
+                  return imageUrl != null
+                      ? _NetworkCover(imageUrl: imageUrl)
+                      : const _EmptyPortfolioImage();
+                }(),
               ),
             ),
             const SizedBox(width: 24),

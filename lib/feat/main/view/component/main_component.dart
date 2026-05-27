@@ -562,9 +562,11 @@ class _OperatorMatchCard extends StatelessWidget {
               height: 190,
               width: double.infinity,
               child:
-                  pilot.portfolioImages.isEmpty
-                      ? const _EmptyOperatorCover()
-                      : _NetworkCover(imageUrl: pilot.portfolioImages.first),
+                  pilot.portfolioImages.isNotEmpty
+                      ? _NetworkCover(imageUrl: pilot.portfolioImages.first)
+                      : pilot.avatarUrl != null
+                      ? _NetworkCover(imageUrl: pilot.avatarUrl!)
+                      : const _EmptyOperatorCover(),
             ),
             Padding(
               padding: const EdgeInsets.all(18),
@@ -925,11 +927,12 @@ class _OperatorPortfolioBuilderSectionState
                     shape: BoxShape.circle,
                     border: Border.all(color: _line),
                   ),
-                  child:
-                      pilot.portfolioImages.isNotEmpty
+                  child: () {
+                      final imageUrl = pilot.avatarUrl ?? (pilot.portfolioImages.isNotEmpty ? pilot.portfolioImages.first : null);
+                      return imageUrl != null
                           ? ClipOval(
                             child: Image.network(
-                              pilot.portfolioImages.first,
+                              imageUrl,
                               fit: BoxFit.cover,
                               errorBuilder:
                                   (_, __, ___) => const Icon(
@@ -945,7 +948,8 @@ class _OperatorPortfolioBuilderSectionState
                               color: _muted,
                               size: 32,
                             ),
-                          ),
+                          );
+                    }(),
                 ),
                 const SizedBox(width: 24),
                 Expanded(
@@ -1093,11 +1097,12 @@ class _OperatorPortfolioBuilderSectionState
                   shape: BoxShape.circle,
                   border: Border.all(color: _line),
                 ),
-                child:
-                    pilot.portfolioImages.isNotEmpty
+                child: () {
+                    final imageUrl = pilot.avatarUrl ?? (pilot.portfolioImages.isNotEmpty ? pilot.portfolioImages.first : null);
+                    return imageUrl != null
                         ? ClipOval(
                           child: Image.network(
-                            pilot.portfolioImages.first,
+                            imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder:
                                 (_, __, ___) => const Icon(
@@ -1113,7 +1118,8 @@ class _OperatorPortfolioBuilderSectionState
                             color: Color(0xFF7C828A),
                             size: 20,
                           ),
-                        ),
+                        );
+                  }(),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -4394,7 +4400,13 @@ class _PilotPortfolioCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Expanded(
-              child: _PortfolioPreviewGrid(images: pilot.portfolioImages),
+              child: _PortfolioPreviewGrid(
+                images: pilot.portfolioImages.isNotEmpty
+                    ? pilot.portfolioImages
+                    : pilot.avatarUrl != null
+                    ? <String>[pilot.avatarUrl!]
+                    : const <String>[],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(18),
@@ -4433,6 +4445,10 @@ class _PortfolioPreviewGrid extends StatelessWidget {
       return const _EmptyOperatorCover();
     }
 
+    if (previewImages.length == 1) {
+      return _NetworkCover(imageUrl: previewImages.first);
+    }
+
     return Row(
       children: <Widget>[
         Expanded(flex: 2, child: _NetworkCover(imageUrl: previewImages.first)),
@@ -4441,22 +4457,14 @@ class _PortfolioPreviewGrid extends StatelessWidget {
           child: Column(
             children: <Widget>[
               Expanded(
-                child: _NetworkCover(
-                  imageUrl:
-                      previewImages.length > 1
-                          ? previewImages[1]
-                          : previewImages.first,
-                ),
+                child: _NetworkCover(imageUrl: previewImages[1]),
               ),
-              const SizedBox(height: 3),
-              Expanded(
-                child: _NetworkCover(
-                  imageUrl:
-                      previewImages.length > 2
-                          ? previewImages[2]
-                          : previewImages.first,
+              if (previewImages.length > 2) ...<Widget>[
+                const SizedBox(height: 3),
+                Expanded(
+                  child: _NetworkCover(imageUrl: previewImages[2]),
                 ),
-              ),
+              ],
             ],
           ),
         ),
