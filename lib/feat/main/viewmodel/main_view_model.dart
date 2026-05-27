@@ -346,6 +346,8 @@ class DrameStore extends ChangeNotifier {
   }
 
   void goToPilotOnboardingStep(int step) {
+    // 이미 완료한 단계(현재 단계 이하)로만 이동 가능
+    if (step > pilotOnboardingStep) return;
     pilotOnboardingStep = step.clamp(0, 4);
     notifyListeners();
   }
@@ -399,6 +401,8 @@ class DrameStore extends ChangeNotifier {
     if (step == 0) {
       if (data.licenseNumber.trim().isEmpty) {
         message = '자격증 번호를 입력해 주세요.';
+      } else if (!RegExp(r'^\d{2}-\d{6}$').hasMatch(data.licenseNumber.trim())) {
+        message = '자격증 번호를 00-000000 형식으로 입력해 주세요.';
       }
     } else if (step == 1) {
       if (data.businessName.trim().isEmpty) {
