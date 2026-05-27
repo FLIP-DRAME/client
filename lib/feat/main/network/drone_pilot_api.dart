@@ -44,6 +44,8 @@ abstract class DronePilotApi {
     required List<String> portfolioImageUrls,
   });
   Future<void> saveFcmToken(String token);
+  Future<bool> isRequestUnlocked(String requestId);
+  Future<void> unlockRequest(String requestId);
 }
 
 class PilotWorkRequestData {
@@ -517,6 +519,35 @@ class SupabaseDronePilotApi implements DronePilotApi {
     } on PostgrestException {
       return;
     }
+  }
+
+  @override
+  Future<bool> isRequestUnlocked(String requestId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return false;
+    try {
+      final rows = await _client
+          .from('operator_request_unlocks')
+          .select('job_request_id')
+          .eq('operator_user_id', userId)
+          .eq('job_request_id', requestId)
+          .limit(1);
+      return rows.isNotEmpty;
+    } on PostgrestException {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> unlockRequest(String requestId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    await _client
+        .from('operator_request_unlocks')
+        .upsert(<String, Object?>{
+          'operator_user_id': userId,
+          'job_request_id': requestId,
+        }, onConflict: 'operator_user_id,job_request_id');
   }
 
   Future<void> _tryOptionalWrite(Future<Object?> Function() write) async {

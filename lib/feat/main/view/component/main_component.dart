@@ -2627,7 +2627,9 @@ class _RequestReviewDetail extends ConsumerWidget {
           const SizedBox(height: 18),
           const Divider(color: _line),
           const SizedBox(height: 18),
-          _QuoteSubmitSection(
+          _QuoteSubmitPaywall(
+            key: ValueKey(request.id),
+            requestId: request.id,
             isCompleted: isCompleted,
             onComplete: onComplete,
             initialMessage: request.myQuoteMessage,
@@ -5670,6 +5672,146 @@ class _KoreaMapPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+// ─── Quote Submit Paywall ────────────────────────────────────────────────────
+
+class _QuoteSubmitPaywall extends ConsumerStatefulWidget {
+  const _QuoteSubmitPaywall({
+    super.key,
+    required this.requestId,
+    required this.isCompleted,
+    required this.onComplete,
+    this.initialMessage,
+    this.initialPrice,
+  });
+
+  final String requestId;
+  final bool isCompleted;
+  final Future<void> Function(String message, int? proposedPrice) onComplete;
+  final String? initialMessage;
+  final int? initialPrice;
+
+  @override
+  ConsumerState<_QuoteSubmitPaywall> createState() =>
+      _QuoteSubmitPaywallState();
+}
+
+class _QuoteSubmitPaywallState extends ConsumerState<_QuoteSubmitPaywall> {
+  bool _unlocked = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUnlocked();
+  }
+
+  Future<void> _checkUnlocked() async {
+    final api = ref.read(dronePilotApiProvider);
+    final unlocked = await api.isRequestUnlocked(widget.requestId);
+    if (mounted) setState(() { _unlocked = unlocked; _loading = false; });
+  }
+
+  Future<void> _onPayTap() async {
+    final api = ref.read(dronePilotApiProvider);
+    await api.unlockRequest(widget.requestId);
+    if (mounted) setState(() => _unlocked = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final section = _QuoteSubmitSection(
+      isCompleted: widget.isCompleted,
+      onComplete: widget.onComplete,
+      initialMessage: widget.initialMessage,
+      initialPrice: widget.initialPrice,
+    );
+
+    if (widget.isCompleted || _unlocked) return section;
+
+    if (_loading) {
+      return Stack(
+        children: <Widget>[
+          section,
+          Positioned.fill(
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Stack(
+      children: <Widget>[
+        section,
+        Positioned.fill(
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: Center(
+            child: InkWell(
+              onTap: _onPayTap,
+              borderRadius: BorderRadius.circular(50),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEE500),
+                  borderRadius: BorderRadius.circular(50),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                      const Text(
+                      '사전등록 혜택 수수료 무료!',
+                      style: TextStyle(
+                        color: Color(0xFF191919),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: DrameTextStyles.fontFamily,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Quote Submit Section ────────────────────────────────────────────────────
 
 class _QuoteSubmitSection extends StatefulWidget {
   const _QuoteSubmitSection({

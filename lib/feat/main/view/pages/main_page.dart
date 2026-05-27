@@ -19,6 +19,7 @@ import '../../viewmodel/main_view_model.dart';
 import 'package:web/web.dart' as web;
 import 'dart:js_interop'; // JSArrayBuffer, .toDart 사용에 필요
 import 'dart:async'; // Completer
+import 'dart:ui';
 
 part '../component/main_component.dart';
 part '../component/operator_mypage_component.dart';
