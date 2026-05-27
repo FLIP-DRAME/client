@@ -131,6 +131,10 @@ class _PortfolioMain extends StatelessWidget {
           ),
           const SizedBox(height: 40),
         ],
+        const Divider(color: _line),
+        const SizedBox(height: 34),
+        _ReviewSection(operatorId: pilot.id),
+        const SizedBox(height: 40),
       ],
     );
   }
@@ -386,6 +390,15 @@ class _MobilePortfolioScaffold extends StatelessWidget {
                 pilot: pilot,
               ),
             ],
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: _ReviewSection(operatorId: pilot.id),
+            ),
           ],
         ),
       ),
@@ -1001,6 +1014,421 @@ class _FeedPostCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Review section ─────────────────────────────────────────────────────────────
+
+class _ReviewSection extends StatefulWidget {
+  const _ReviewSection({required this.operatorId});
+
+  final String operatorId;
+
+  @override
+  State<_ReviewSection> createState() => _ReviewSectionState();
+}
+
+class _ReviewSectionState extends State<_ReviewSection> {
+  bool _loading = true;
+  List<OperatorReview> _reviews = <OperatorReview>[];
+  bool _canLeaveReview = false;
+  bool _hasReviewed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final client = Supabase.instance.client;
+    final userId = client.auth.currentUser?.id;
+
+    // Check quote eligibility independently so a missing reviews table
+    // does not block the "리뷰 남기기" button from appearing.
+    bool canLeaveReview = false;
+    if (userId != null) {
+      try {
+        final quoteRows = await client
+            .from('job_requests')
+            .select('id')
+            .eq('client_id', userId)
+            .eq('preferred_operator_id', widget.operatorId)
+            .limit(1);
+        canLeaveReview = (quoteRows as List).isNotEmpty;
+      } catch (_) {}
+    }
+
+    List<OperatorReview> reviews = <OperatorReview>[];
+    bool hasReviewed = false;
+    try {
+      final rows = await client
+          .from('operator_reviews')
+          .select('id, reviewer_id, reviewer_name, rating, comment, created_at')
+          .eq('operator_id', widget.operatorId)
+          .order('created_at', ascending: false)
+          .limit(20);
+
+      reviews = rows
+          .map<OperatorReview>((row) {
+            final map = Map<String, dynamic>.from(row as Map);
+            return OperatorReview(
+              id: map['id'].toString(),
+              reviewerId: (map['reviewer_id'] ?? '').toString(),
+              reviewerName: (map['reviewer_name'] ?? '익명').toString(),
+              rating: (map['rating'] as num?)?.toInt() ?? 5,
+              comment: (map['comment'] ?? '').toString(),
+              createdAt:
+                  DateTime.tryParse(
+                    (map['created_at'] ?? '').toString(),
+                  ) ??
+                  DateTime.now(),
+            );
+          })
+          .toList();
+
+      if (userId != null) {
+        hasReviewed = reviews.any((r) => r.reviewerId == userId);
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _reviews = reviews;
+        _canLeaveReview = canLeaveReview;
+        _hasReviewed = hasReviewed;
+        _loading = false;
+      });
+    }
+  }
+
+  double get _averageRating {
+    if (_reviews.isEmpty) return 0;
+    return _reviews.fold<int>(0, (sum, r) => sum + r.rating) /
+        _reviews.length;
+  }
+
+  Future<void> _onLeaveReview() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => _LeaveReviewDialog(operatorId: widget.operatorId),
+    );
+    if (result == true) await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            const _SectionTitle('리뷰'),
+            if (_reviews.isNotEmpty) ...<Widget>[
+              const SizedBox(width: 10),
+              const Icon(
+                Icons.star_rounded,
+                color: Color(0xFFFBBC05),
+                size: 18,
+              ),
+              const SizedBox(width: 3),
+              Text(_averageRating.toStringAsFixed(1), style: PortfolioText.rating),
+              const SizedBox(width: 4),
+              Text(
+                '(${_reviews.length})',
+                style: const TextStyle(
+                  fontFamily: DrameTextStyles.fontFamily,
+                  fontSize: 14,
+                  color: _mutedGray,
+                ),
+              ),
+            ],
+            const Spacer(),
+            if (_loading)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else if (_canLeaveReview && !_hasReviewed)
+              OutlinedButton(
+                onPressed: _onLeaveReview,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _primary,
+                  side: const BorderSide(color: _primary),
+                  textStyle: const TextStyle(
+                    fontFamily: DrameTextStyles.fontFamily,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('리뷰 남기기'),
+              )
+            else if (_canLeaveReview && _hasReviewed)
+              const Text(
+                '리뷰 작성 완료',
+                style: TextStyle(
+                  fontFamily: DrameTextStyles.fontFamily,
+                  fontSize: 13,
+                  color: _mutedGray,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (_reviews.isEmpty && !_loading)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _soft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: Text(
+                '아직 리뷰가 없습니다',
+                style: TextStyle(
+                  fontFamily: DrameTextStyles.fontFamily,
+                  fontSize: 14,
+                  color: _mutedGray,
+                ),
+              ),
+            ),
+          )
+        else
+          ..._reviews.map(
+            (review) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ReviewCard(review: review),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  const _ReviewCard({required this.review});
+
+  final OperatorReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _soft,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  review.reviewerName,
+                  style: PortfolioText.reviewName,
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  5,
+                  (i) => Icon(
+                    i < review.rating
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: const Color(0xFFFBBC05),
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (review.comment.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            Text(review.comment, style: PortfolioText.reviewBody),
+          ],
+          const SizedBox(height: 8),
+          Text(
+            '${review.createdAt.year}.${review.createdAt.month.toString().padLeft(2, '0')}.${review.createdAt.day.toString().padLeft(2, '0')}',
+            style: const TextStyle(
+              fontFamily: DrameTextStyles.fontFamily,
+              fontSize: 12,
+              color: _mutedGray,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LeaveReviewDialog extends StatefulWidget {
+  const _LeaveReviewDialog({required this.operatorId});
+
+  final String operatorId;
+
+  @override
+  State<_LeaveReviewDialog> createState() => _LeaveReviewDialogState();
+}
+
+class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
+  int _rating = 5;
+  final _commentCtrl = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _commentCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() => _submitting = true);
+    try {
+      final client = Supabase.instance.client;
+      final userId = client.auth.currentUser?.id;
+      if (userId == null) throw StateError('로그인이 필요합니다.');
+
+      String reviewerName = '익명';
+      final profile = await client
+          .from('profiles')
+          .select('nickname, name')
+          .eq('id', userId)
+          .maybeSingle();
+      if (profile != null) {
+        final nickname = (profile['nickname'] ?? '').toString().trim();
+        final name = (profile['name'] ?? '').toString().trim();
+        if (nickname.isNotEmpty) {
+          reviewerName = nickname;
+        } else if (name.isNotEmpty) {
+          reviewerName = name;
+        }
+      }
+
+      await client.from('operator_reviews').upsert(
+        <String, Object?>{
+          'operator_id': widget.operatorId,
+          'reviewer_id': userId,
+          'reviewer_name': reviewerName,
+          'rating': _rating,
+          'comment': _commentCtrl.text.trim(),
+        },
+        onConflict: 'operator_id,reviewer_id',
+      );
+
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.white,
+      title: const Text(
+        '리뷰 남기기',
+        style: TextStyle(
+          fontFamily: DrameTextStyles.fontFamily,
+          fontWeight: FontWeight.w700,
+          fontSize: 18,
+        ),
+      ),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Text(
+              '별점',
+              style: TextStyle(
+                fontFamily: DrameTextStyles.fontFamily,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: List.generate(
+                5,
+                (i) => GestureDetector(
+                  onTap: () => setState(() => _rating = i + 1),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      i < _rating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: const Color(0xFFFBBC05),
+                      size: 36,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: _commentCtrl,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: '운용자에 대한 리뷰를 작성해주세요.',
+                filled: true,
+                fillColor: _soft,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: _line),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: _line),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: _primary, width: 1.4),
+                ),
+                hintStyle: const TextStyle(
+                  fontFamily: DrameTextStyles.fontFamily,
+                  fontSize: 14,
+                  color: _mutedGray,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.pop(context),
+          child: const Text('취소'),
+        ),
+        FilledButton(
+          onPressed: _submitting ? null : _submit,
+          style: FilledButton.styleFrom(
+            backgroundColor: _primary,
+            foregroundColor: Colors.white,
+          ),
+          child: Text(_submitting ? '제출 중…' : '리뷰 제출'),
+        ),
+      ],
     );
   }
 }
