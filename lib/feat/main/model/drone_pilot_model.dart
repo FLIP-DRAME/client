@@ -48,6 +48,24 @@ class DronePilot {
   bool get isPendingReview => operatorStatus == 'pending_review';
 }
 
+class OperatorReview {
+  const OperatorReview({
+    required this.id,
+    required this.reviewerId,
+    required this.reviewerName,
+    required this.rating,
+    required this.comment,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String reviewerId;
+  final String reviewerName;
+  final int rating;
+  final String comment;
+  final DateTime createdAt;
+}
+
 class DroneCategory {
   const DroneCategory({
     required this.id,
