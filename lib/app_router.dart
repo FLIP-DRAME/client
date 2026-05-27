@@ -25,97 +25,109 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       name: 'landing',
-      builder: (context, state) => const LandingPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: LandingPage()),
     ),
     GoRoute(
       path: '/home',
       name: 'home',
-      builder: (context, state) => const DrameHomePage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: DrameHomePage()),
     ),
     GoRoute(
       path: '/operator',
       name: 'operator',
-      builder: (context, state) => const DrameHomePage(operatorMode: true),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: DrameHomePage(operatorMode: true)),
     ),
     GoRoute(
       path: '/login',
       name: 'login',
-      builder: (context, state) => const LoginPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: LoginPage()),
     ),
     GoRoute(
       path: '/signup',
       name: 'signup',
-      builder: (context, state) => const SignupPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: SignupPage()),
     ),
     GoRoute(
       path: '/signup/done',
       name: 'signup-done',
-      builder: (context, state) => const SignupWelcomePage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: SignupWelcomePage()),
     ),
     GoRoute(
       path: '/feed',
       name: 'feed',
-      builder: (context, state) => const FeedStandalonePage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: FeedStandalonePage()),
     ),
     GoRoute(
       path: '/portfolio',
       name: 'portfolio-home',
-      builder: (context, state) => const PortfolioStandalonePage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: PortfolioStandalonePage()),
     ),
     GoRoute(
       path: '/portfolio/:pilotId',
       name: 'portfolio',
-      builder: (context, state) {
-        return _PilotResolverPage(
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: _PilotResolverPage(
           pilotId: state.pathParameters['pilotId'],
           extra: state.extra,
           builder: (pilot) => PilotPortfolioPage(pilot: pilot),
-        );
-      },
+        ),
+      ),
     ),
     GoRoute(
       path: '/quote/request/:pilotId/edit/:requestId',
       name: 'quote-request-edit',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final initialQuote =
             state.extra is UserQuoteSummary
                 ? state.extra! as UserQuoteSummary
                 : null;
-        return _PilotResolverPage(
-          pilotId: state.pathParameters['pilotId'],
-          extra: null,
-          builder:
-              (pilot) =>
-                  QuoteRequestPage(pilot: pilot, initialQuote: initialQuote),
+        return NoTransitionPage(
+          child: _PilotResolverPage(
+            pilotId: state.pathParameters['pilotId'],
+            extra: null,
+            builder:
+                (pilot) =>
+                    QuoteRequestPage(pilot: pilot, initialQuote: initialQuote),
+          ),
         );
       },
     ),
     GoRoute(
       path: '/quote/request/:pilotId',
       name: 'quote-request',
-      builder: (context, state) {
-        return _PilotResolverPage(
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: _PilotResolverPage(
           pilotId: state.pathParameters['pilotId'],
           extra: state.extra,
           builder: (pilot) => QuoteRequestPage(pilot: pilot),
-        );
-      },
+        ),
+      ),
     ),
     GoRoute(
       path: '/quote/estimate',
       name: 'quote-estimate',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final estimate =
             state.extra is QuoteEstimate ? state.extra! as QuoteEstimate : null;
-        return estimate == null
-            ? const _MissingRouteDataPage(message: '견적 정보가 없습니다.')
-            : QuoteEstimatePage(estimate: estimate);
+        return NoTransitionPage(
+          child: estimate == null
+              ? const _MissingRouteDataPage(message: '견적 정보가 없습니다.')
+              : QuoteEstimatePage(estimate: estimate),
+        );
       },
     ),
     GoRoute(
       path: '/quote/payment',
       name: 'quote-payment',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final extra = state.extra;
         final estimate =
             extra is Map<String, Object?> && extra['estimate'] is QuoteEstimate
@@ -126,18 +138,20 @@ final GoRouter appRouter = GoRouter(
                     extra['paymentInstruction'] is PaymentInstruction
                 ? extra['paymentInstruction']! as PaymentInstruction
                 : null;
-        return estimate == null || paymentInstruction == null
-            ? const _MissingRouteDataPage(message: '결제 정보가 없습니다.')
-            : PaymentPage(
-              estimate: estimate,
-              paymentInstruction: paymentInstruction,
-            );
+        return NoTransitionPage(
+          child: estimate == null || paymentInstruction == null
+              ? const _MissingRouteDataPage(message: '결제 정보가 없습니다.')
+              : PaymentPage(
+                estimate: estimate,
+                paymentInstruction: paymentInstruction,
+              ),
+        );
       },
     ),
     GoRoute(
       path: '/quote/contact',
       name: 'quote-contact',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final extra = state.extra;
         final estimate =
             extra is Map<String, Object?> && extra['estimate'] is QuoteEstimate
@@ -148,105 +162,122 @@ final GoRouter appRouter = GoRouter(
                     extra['contactAccess'] is ContactAccess
                 ? extra['contactAccess']! as ContactAccess
                 : null;
-        return estimate == null || contactAccess == null
-            ? const _MissingRouteDataPage(message: '연락처 정보가 없습니다.')
-            : ContactAccessPage(
-              estimate: estimate,
-              contactAccess: contactAccess,
-            );
+        return NoTransitionPage(
+          child: estimate == null || contactAccess == null
+              ? const _MissingRouteDataPage(message: '연락처 정보가 없습니다.')
+              : ContactAccessPage(
+                estimate: estimate,
+                contactAccess: contactAccess,
+              ),
+        );
       },
     ),
     GoRoute(
       path: '/my/quotes',
       name: 'my-quotes',
-      builder: (context, state) => const MyQuotesPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: MyQuotesPage()),
     ),
     GoRoute(
       path: '/my/quotes/:requestId',
       name: 'my-quote-detail',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final initialQuote =
             state.extra is UserQuoteSummary
                 ? state.extra! as UserQuoteSummary
                 : null;
         if (initialQuote == null || initialQuote.pilotId.isEmpty) {
-          return const MyQuotesPage();
+          return const NoTransitionPage(child: MyQuotesPage());
         }
-        return _PilotResolverPage(
-          pilotId: initialQuote.pilotId,
-          extra: null,
-          builder:
-              (pilot) =>
-                  QuoteRequestPage(pilot: pilot, initialQuote: initialQuote),
+        return NoTransitionPage(
+          child: _PilotResolverPage(
+            pilotId: initialQuote.pilotId,
+            extra: null,
+            builder:
+                (pilot) =>
+                    QuoteRequestPage(pilot: pilot, initialQuote: initialQuote),
+          ),
         );
       },
     ),
     GoRoute(
       path: '/pilot/register',
       name: 'pilot-register',
-      builder: (context, state) => const PilotRegistrationPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: PilotRegistrationPage()),
     ),
     GoRoute(
       path: '/pilot/mypage',
       name: 'pilot-mypage',
-      builder: (context, state) => const OperatorMyPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: OperatorMyPage()),
     ),
     GoRoute(
       path: '/operator/mypage',
       name: 'operator-mypage',
-      builder: (context, state) => const OperatorMyPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: OperatorMyPage()),
     ),
     GoRoute(
       path: '/operator/feed',
       name: 'operator-feed',
-      builder: (context, state) => const OperatorFeedPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: OperatorFeedPage()),
     ),
     GoRoute(
       path: '/operator/portfolio',
       name: 'operator-portfolio',
-      builder: (context, state) => const OperatorPortfolioPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: OperatorPortfolioPage()),
     ),
     GoRoute(
       path: '/operator/requests',
       name: 'operator-requests',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final initialRequest =
             state.extra is PilotWorkRequest
                 ? state.extra! as PilotWorkRequest
                 : null;
-        return PilotRequestReviewPage(initialRequest: initialRequest);
+        return NoTransitionPage(
+          child: PilotRequestReviewPage(initialRequest: initialRequest),
+        );
       },
     ),
     GoRoute(
       path: '/pilot/requests',
       name: 'pilot-requests',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final initialRequest =
             state.extra is PilotWorkRequest
                 ? state.extra! as PilotWorkRequest
                 : null;
-        return PilotRequestReviewPage(initialRequest: initialRequest);
+        return NoTransitionPage(
+          child: PilotRequestReviewPage(initialRequest: initialRequest),
+        );
       },
     ),
     GoRoute(
       path: '/chats',
       name: 'chats',
-      builder: (context, state) => const ChatListPage(),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: ChatListPage()),
     ),
     GoRoute(
       path: '/chat/:roomId',
       name: 'chat-room',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final roomId = state.pathParameters['roomId']!;
         final extra = state.extra;
         final otherPartyName =
             extra is Map<String, String> ? extra['otherPartyName'] ?? '' : '';
         final category =
             extra is Map<String, String> ? extra['category'] ?? '' : '';
-        return ChatRoomPage(
-          roomId: roomId,
-          otherPartyName: otherPartyName,
-          category: category,
+        return NoTransitionPage(
+          child: ChatRoomPage(
+            roomId: roomId,
+            otherPartyName: otherPartyName,
+            category: category,
+          ),
         );
       },
     ),
