@@ -225,7 +225,7 @@ class FeedApi {
     if (userId == null) return false;
     final rows = await _client
         .from('feed_likes')
-        .select('id')
+        .select('post_id')
         .eq('post_id', postId)
         .eq('user_id', userId)
         .limit(1);
@@ -236,14 +236,13 @@ class FeedApi {
   Future<bool> toggleLike(String postId) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return false;
-    final existing = await _client
-        .from('feed_likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', userId)
-        .maybeSingle();
-    if (existing != null) {
-      await _client.from('feed_likes').delete().eq('id', existing['id']);
+    final already = await hasLiked(postId);
+    if (already) {
+      await _client
+          .from('feed_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', userId);
       return false;
     } else {
       await _client.from('feed_likes').insert(<String, Object?>{
@@ -254,10 +253,22 @@ class FeedApi {
     }
   }
 
+  Future<Set<String>> fetchMyLikedPostIds() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return <String>{};
+    final rows = await _client
+        .from('feed_likes')
+        .select('post_id')
+        .eq('user_id', userId);
+    return rows
+        .map<String>((r) => (r as Map)['post_id'].toString())
+        .toSet();
+  }
+
   Future<int> fetchLikeCount(String postId) async {
     final rows = await _client
         .from('feed_likes')
-        .select('id')
+        .select('post_id')
         .eq('post_id', postId);
     return rows.length;
   }
@@ -265,7 +276,7 @@ class FeedApi {
   Future<List<FeedComment>> fetchComments(String postId) async {
     final rows = await _client
         .from('feed_comments')
-        .select('id, post_id, user_id, content, created_at, profiles(nickname, name)')
+        .select('id, post_id, user_id, body, created_at, profiles(nickname, name)')
         .eq('post_id', postId)
         .order('created_at', ascending: true);
     return rows.map<FeedComment>((row) {
@@ -280,7 +291,7 @@ class FeedApi {
         postId: map['post_id'].toString(),
         userId: map['user_id'].toString(),
         authorName: authorName,
-        content: map['content'].toString(),
+        content: (map['body'] ?? '').toString(),
         createdAt: DateTime.parse(map['created_at'].toString()).toLocal(),
       );
     }).toList();
@@ -292,7 +303,7 @@ class FeedApi {
     await _client.from('feed_comments').insert(<String, Object?>{
       'post_id': postId,
       'user_id': userId,
-      'content': content.trim(),
+      'body': content.trim(),
     });
   }
 

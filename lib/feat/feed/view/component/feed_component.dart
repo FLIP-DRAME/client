@@ -116,6 +116,7 @@ class _FeedPost {
     required this.caption,
     this.operatorId,
     this.authorAvatarUrl,
+    this.likedByMe = false,
   });
 
   final String id;
@@ -129,6 +130,7 @@ class _FeedPost {
   final String caption;
   final String? operatorId;
   final String? authorAvatarUrl;
+  final bool likedByMe;
 }
 
 class DroneFeedSection extends ConsumerStatefulWidget {
@@ -146,7 +148,9 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
   void initState() {
     super.initState();
     Future<void>(() async {
+      final api = ref.read(feedApiProvider);
       final posts = await ref.read(feedViewModelProvider).fetchPosts();
+      final likedIds = await api.fetchMyLikedPostIds();
       if (!mounted) return;
       setState(() {
         _remoteFeed =
@@ -164,6 +168,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                     caption: post.caption,
                     operatorId: post.operatorId,
                     authorAvatarUrl: post.authorAvatarUrl,
+                    likedByMe: likedIds.contains(post.id),
                   ),
                 )
                 .toList();
@@ -395,7 +400,15 @@ class _FeedTimelineCard extends StatelessWidget {
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      const Icon(Icons.favorite_border_rounded, size: 25),
+                      Icon(
+                        post.likedByMe
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        size: 25,
+                        color: post.likedByMe
+                            ? const Color(0xFFE54866)
+                            : null,
+                      ),
                       const SizedBox(width: 14),
                       const Icon(Icons.chat_bubble_outline_rounded, size: 23),
                       const Spacer(),
@@ -483,17 +496,21 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
   }
 
   Future<void> _loadData() async {
-    final api = ref.read(feedApiProvider);
-    final results = await Future.wait(<Future<Object>>[
-      api.hasLiked(widget.post.id),
-      api.fetchComments(widget.post.id),
-    ]);
-    if (!mounted) return;
-    setState(() {
-      _liked = results[0] as bool;
-      _comments = results[1] as List<FeedComment>;
-      _loadingComments = false;
-    });
+    try {
+      final api = ref.read(feedApiProvider);
+      final liked = await api.hasLiked(widget.post.id);
+      final comments = await api.fetchComments(widget.post.id);
+      final likeCount = await api.fetchLikeCount(widget.post.id);
+      if (!mounted) return;
+      setState(() {
+        _liked = liked;
+        _comments = comments;
+        _likeCount = likeCount;
+      });
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loadingComments = false);
+    }
   }
 
   @override
@@ -734,13 +751,20 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
             children: <Widget>[
               IconButton(
                 onPressed: () async {
-                  final api = ref.read(feedApiProvider);
-                  final nowLiked = await api.toggleLike(widget.post.id);
-                  if (!mounted) return;
-                  setState(() {
-                    _liked = nowLiked;
-                    _likeCount += nowLiked ? 1 : -1;
-                  });
+                  try {
+                    final api = ref.read(feedApiProvider);
+                    final nowLiked = await api.toggleLike(widget.post.id);
+                    if (!mounted) return;
+                    setState(() {
+                      _liked = nowLiked;
+                      _likeCount += nowLiked ? 1 : -1;
+                    });
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('좋아요 오류: $e')),
+                    );
+                  }
                 },
                 icon: Icon(
                   _liked
