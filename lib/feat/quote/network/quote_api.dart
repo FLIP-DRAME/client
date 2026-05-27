@@ -20,6 +20,24 @@ class SupabaseQuoteApi implements QuoteApi {
     final regionId = await _findRegionId(request.area);
     final budget = _parseBudget(request.budgetRange);
 
+    String clientDisplayName = _client.auth.currentUser?.email ?? '고객';
+    if (userId != null) {
+      final profile = await _client
+          .from('profiles')
+          .select('nickname, name')
+          .eq('id', userId)
+          .maybeSingle();
+      if (profile != null) {
+        final nickname = profile['nickname']?.toString().trim() ?? '';
+        final name = profile['name']?.toString().trim() ?? '';
+        if (nickname.isNotEmpty) {
+          clientDisplayName = nickname;
+        } else if (name.isNotEmpty) {
+          clientDisplayName = name;
+        }
+      }
+    }
+
     final job =
         await _client
             .from('job_requests')
@@ -35,7 +53,7 @@ class SupabaseQuoteApi implements QuoteApi {
               'budget_min': budget.$1,
               'budget_max': budget.$2,
               'contact_window': request.contactWindow,
-              'client_display_name': _client.auth.currentUser?.email,
+              'client_display_name': clientDisplayName,
             })
             .select('id')
             .single();
