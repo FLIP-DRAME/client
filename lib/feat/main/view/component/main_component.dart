@@ -5791,43 +5791,13 @@ class _QuoteSubmitPaywallState extends ConsumerState<_QuoteSubmitPaywall> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF191919),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'K',
-                        style: TextStyle(
-                          color: Color(0xFFFEE500),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    RichText(
-                      text: const TextSpan(
-                        style: TextStyle(
-                          color: Color(0xFF191919),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: DrameTextStyles.fontFamily,
-                        ),
-                        children: <InlineSpan>[
-                          TextSpan(
-                            text: '3,000원 ',
-                            style: TextStyle(
-                              decoration: TextDecoration.lineThrough,
-                              decorationColor: Color(0xFF191919),
-                              decorationThickness: 1.5,
-                            ),
-                          ),
-                          TextSpan(text: '100원 결제하기'),
-                        ],
+                      const Text(
+                      '사전등록 혜택 수수료 무료!',
+                      style: TextStyle(
+                        color: Color(0xFF191919),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: DrameTextStyles.fontFamily,
                       ),
                     ),
                   ],
