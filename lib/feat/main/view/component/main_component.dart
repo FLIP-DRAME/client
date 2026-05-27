@@ -2627,7 +2627,8 @@ class _RequestReviewDetail extends ConsumerWidget {
           const SizedBox(height: 18),
           const Divider(color: _line),
           const SizedBox(height: 18),
-          _QuoteSubmitSection(
+          _QuoteSubmitPaywall(
+            key: ValueKey(request.id),
             isCompleted: isCompleted,
             onComplete: onComplete,
             initialMessage: request.myQuoteMessage,
@@ -5670,6 +5671,129 @@ class _KoreaMapPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+// ─── Quote Submit Paywall ────────────────────────────────────────────────────
+
+class _QuoteSubmitPaywall extends StatefulWidget {
+  const _QuoteSubmitPaywall({
+    super.key,
+    required this.isCompleted,
+    required this.onComplete,
+    this.initialMessage,
+    this.initialPrice,
+  });
+
+  final bool isCompleted;
+  final Future<void> Function(String message, int? proposedPrice) onComplete;
+  final String? initialMessage;
+  final int? initialPrice;
+
+  @override
+  State<_QuoteSubmitPaywall> createState() => _QuoteSubmitPaywallState();
+}
+
+class _QuoteSubmitPaywallState extends State<_QuoteSubmitPaywall> {
+  bool _unlocked = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final section = _QuoteSubmitSection(
+      isCompleted: widget.isCompleted,
+      onComplete: widget.onComplete,
+      initialMessage: widget.initialMessage,
+      initialPrice: widget.initialPrice,
+    );
+
+    if (widget.isCompleted || _unlocked) return section;
+
+    return Stack(
+      children: <Widget>[
+        section,
+        Positioned.fill(
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: Center(
+            child: InkWell(
+            onTap: () => setState(() => _unlocked = true),
+            borderRadius: BorderRadius.circular(50),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEE500),
+                borderRadius: BorderRadius.circular(50),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF191919),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'K',
+                      style: TextStyle(
+                        color: Color(0xFFFEE500),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  RichText(
+                    text: const TextSpan(
+                      style: TextStyle(
+                        color: Color(0xFF191919),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: DrameTextStyles.fontFamily,
+                      ),
+                      children: <InlineSpan>[
+                        TextSpan(
+                          text: '3,000원 ',
+                          style: TextStyle(
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: Color(0xFF191919),
+                            decorationThickness: 1.5,
+                          ),
+                        ),
+                        TextSpan(text: '100원 결제하기'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Quote Submit Section ────────────────────────────────────────────────────
 
 class _QuoteSubmitSection extends StatefulWidget {
   const _QuoteSubmitSection({
