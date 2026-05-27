@@ -82,6 +82,7 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
                 onFeedTap: () => context.go('/feed'),
                 onPortfolioTap: () => context.go('/portfolio'),
                 onMyQuotesTap: () => context.go('/my/quotes'),
+                onChatTap: () => context.go('/chats'),
                 onSwitchToUser: () {
                   store.setPilotMode(false);
                   context.go('/home');

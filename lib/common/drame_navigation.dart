@@ -30,6 +30,7 @@ class DrameTopNavigation extends StatelessWidget {
     this.onRequestsTap,
     this.onMyPageTap,
     this.onMyQuotesTap,
+    this.onChatTap,
     this.onSwitchToUser,
     this.onSwitchToOperator,
     this.operatorActiveTab,
@@ -54,6 +55,7 @@ class DrameTopNavigation extends StatelessWidget {
   final VoidCallback? onRequestsTap;
   final VoidCallback? onMyPageTap;
   final VoidCallback? onMyQuotesTap;
+  final VoidCallback? onChatTap;
   final VoidCallback? onSwitchToUser;
   final VoidCallback? onSwitchToOperator;
 
@@ -111,6 +113,12 @@ class DrameTopNavigation extends StatelessWidget {
                       onTap: () => onOperatorTabTap?.call('portfolio'),
                       active: operatorActiveTab == 'portfolio',
                     ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '채팅',
+                      onTap: onChatTap ?? () {},
+                      active: activePage == 'chat',
+                    ),
                   ] else if (isLoggedIn && !isOperator) ...<Widget>[
                     _NavLink(
                       label: '운용자 찾기',
@@ -134,6 +142,12 @@ class DrameTopNavigation extends StatelessWidget {
                       label: '내 견적',
                       onTap: onMyQuotesTap ?? () {},
                       active: activePage == 'quotes',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
+                      label: '채팅',
+                      onTap: onChatTap ?? () {},
+                      active: activePage == 'chat',
                     ),
                   ] else ...<Widget>[
                     _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),

@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/supabase/supabase_providers.dart';
 import 'feat/auth/viewmodel/auth_view_model.dart';
+import 'feat/chat/network/chat_api.dart';
+import 'feat/chat/viewmodel/chat_view_model.dart';
 import 'feat/feed/network/feed_api.dart';
 import 'feat/feed/viewmodel/feed_view_model.dart';
 import 'feat/main/network/drone_pilot_api.dart';
@@ -39,4 +41,12 @@ final drameStoreProvider = ChangeNotifierProvider<DrameStore>((ref) {
 
 final authViewModelProvider = Provider<AuthViewModel>((ref) {
   return AuthViewModel(ref.watch(drameStoreProvider));
+});
+
+final chatApiProvider = Provider<ChatApi>((ref) {
+  return ChatApi(ref.watch(supabaseClientProvider));
+});
+
+final chatViewModelProvider = Provider<ChatViewModel>((ref) {
+  return ChatViewModel(ref.watch(chatApiProvider));
 });

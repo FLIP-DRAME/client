@@ -2507,7 +2507,7 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
   }
 }
 
-class _RequestReviewDetail extends StatelessWidget {
+class _RequestReviewDetail extends ConsumerWidget {
   const _RequestReviewDetail({
     required this.request,
     required this.isCompleted,
@@ -2518,8 +2518,24 @@ class _RequestReviewDetail extends StatelessWidget {
   final bool isCompleted;
   final Future<void> Function(String message, int? proposedPrice) onComplete;
 
+  Future<void> _openChat(BuildContext context, WidgetRef ref) async {
+    try {
+      final roomId =
+          await ref.read(chatViewModelProvider).getOrCreateRoom(request.id);
+      if (context.mounted) {
+        context.push(
+          '/chat/$roomId',
+          extra: <String, String>{
+            'otherPartyName': request.client,
+            'category': request.category,
+          },
+        );
+      }
+    } catch (_) {}
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -2580,6 +2596,29 @@ class _RequestReviewDetail extends StatelessWidget {
               ],
             ),
           ),
+          if (isCompleted) ...<Widget>[
+            const SizedBox(height: 18),
+            const Divider(color: _line),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _openChat(context, ref),
+                icon: const Icon(Icons.chat_rounded, size: 16),
+                label: const Text('의뢰자와 채팅하기'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0052FF),
+                  side: const BorderSide(color: Color(0xFF0052FF)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(
+                    fontFamily: DrameTextStyles.fontFamily,
+                    fontSize: DrameTextStyles.labelSize,
+                    fontWeight: DrameTextStyles.semiBold,
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           const Divider(color: _line),
           const SizedBox(height: 18),
