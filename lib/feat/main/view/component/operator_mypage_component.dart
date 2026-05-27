@@ -32,7 +32,7 @@ class _OperatorProfileManagementPage extends StatelessWidget {
               onChatTap: () => context.go('/chats'),
               onLogoutTap: () async {
                 await store.signOut();
-                if (context.mounted) context.go('/home');
+                if (context.mounted) context.go('/login');
               },
               onSwitchToUser: () {
                 store.setPilotMode(false);
@@ -285,7 +285,7 @@ class _OperatorMyPageBody extends StatelessWidget {
               child: TextButton(
                 onPressed: () async {
                   await store.signOut();
-                  if (context.mounted) context.go('/home');
+                  if (context.mounted) context.go('/login');
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFFE53935),

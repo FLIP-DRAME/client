@@ -68,7 +68,7 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
                 onChatTap: () => context.go('/chats'),
                 onLogoutTap: () async {
                   await store.signOut();
-                  if (context.mounted) context.go('/home');
+                  if (context.mounted) context.go('/login');
                 },
                 onSwitchToUser: () {
                   store.setPilotMode(false);

@@ -330,7 +330,7 @@ class _OperatorStandaloneShell extends StatelessWidget {
             onNotificationTap: () => _showNotifications(context, store),
             onLogoutTap: () async {
               await store.signOut();
-              if (context.mounted) context.go('/home');
+              if (context.mounted) context.go('/login');
             },
             onSwitchToUser: () {
               store.setPilotMode(false);
@@ -544,7 +544,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
             onChatTap: () => context.go('/chats'),
             onLogoutTap: () async {
               await store.signOut();
-              if (context.mounted) context.go('/home');
+              if (context.mounted) context.go('/login');
             },
             onSwitchToUser: () {
               store.setPilotMode(false);

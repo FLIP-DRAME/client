@@ -944,7 +944,7 @@ class _UserMyPageTab extends StatelessWidget {
                   isDestructive: true,
                   onTap: () async {
                     await store.signOut();
-                    if (context.mounted) context.go('/home');
+                    if (context.mounted) context.go('/login');
                   },
                 ),
               ],
