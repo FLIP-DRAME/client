@@ -3086,7 +3086,10 @@ class _PilotOnboardingSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             TextButton.icon(
-              onPressed: store.closePilotOnboarding,
+              onPressed: () {
+                store.closePilotOnboarding();
+                context.go('/operator');
+              },
               icon: const Icon(Icons.arrow_back_rounded),
               label: const Text('운용자 메인으로'),
               style: TextButton.styleFrom(
