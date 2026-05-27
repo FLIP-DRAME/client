@@ -18,6 +18,7 @@ class DronePilot {
     required this.description,
     required this.quoteOptions,
     this.operatorStatus = 'approved',
+    this.avatarUrl,
   });
 
   final String id;
@@ -36,6 +37,7 @@ class DronePilot {
   final String description;
   final List<String> quoteOptions;
   final String operatorStatus;
+  final String? avatarUrl;
 
   bool hasPermitFor(String area) => permittedAreas.contains(area);
   bool hasCategory(String category) =>

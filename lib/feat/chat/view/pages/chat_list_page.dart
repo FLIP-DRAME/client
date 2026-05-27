@@ -121,7 +121,7 @@ class _ChatRoomTile extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            _Avatar(name: room.otherPartyName),
+            _Avatar(name: room.otherPartyName, avatarUrl: room.otherPartyAvatarUrl),
             const SizedBox(width: DC.spSm),
             Expanded(
               child: Column(
@@ -221,14 +221,22 @@ class _ChatRoomTile extends StatelessWidget {
 // ─── Avatar ──────────────────────────────────────────────────────────────────
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.name});
+  const _Avatar({required this.name, this.avatarUrl});
 
   final String name;
+  final String? avatarUrl;
 
   @override
   Widget build(BuildContext context) {
     final initial =
         name.isNotEmpty ? name.characters.first.toUpperCase() : '?';
+    if (avatarUrl != null) {
+      return CircleAvatar(
+        radius: 24,
+        backgroundImage: NetworkImage(avatarUrl!),
+        backgroundColor: DC.surfaceStrong,
+      );
+    }
     return Container(
       width: 48,
       height: 48,

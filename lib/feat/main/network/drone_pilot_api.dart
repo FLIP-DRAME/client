@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -33,6 +35,7 @@ abstract class DronePilotApi {
     int? proposedPrice,
   });
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
+  Future<String> uploadProfilePhoto(String userId, List<int> bytes, String ext);
   Future<void> updateOperatorProfile({
     required String intro,
     required String description,
@@ -266,6 +269,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
           phone,
           email,
           kakao_channel,
+          avatar_url,
           operator_categories(service_categories(slug,label)),
           operator_service_areas(permission_type, regions(name)),
           portfolio_assets(url, sort_order),
@@ -275,6 +279,29 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .limit(1);
     if (rows.isEmpty) return null;
     return _pilotFromRow(Map<String, dynamic>.from(rows.first as Map));
+  }
+
+  @override
+  Future<String> uploadProfilePhoto(
+    String userId,
+    List<int> bytes,
+    String ext,
+  ) async {
+    final path = '$userId/profile.$ext';
+    await _client.storage.from('avatars').uploadBinary(
+      path,
+      Uint8List.fromList(bytes),
+      fileOptions: FileOptions(
+        contentType: 'image/$ext',
+        upsert: true,
+      ),
+    );
+    final url = _client.storage.from('avatars').getPublicUrl(path);
+    await _client
+        .from('operator_profiles')
+        .update(<String, Object?>{'avatar_url': url})
+        .eq('user_id', userId);
+    return url;
   }
 
   @override
@@ -702,6 +729,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
             ? specialtyCategories
             : defaultDroneCategories.map((category) => category.label).toList();
 
+    final avatarUrl = row['avatar_url']?.toString();
     return DronePilot(
       id: row['id'].toString(),
       name: (row['display_name'] ?? row['business_name'] ?? '운용자').toString(),
@@ -722,6 +750,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
       description: (row['description'] ?? '').toString(),
       quoteOptions: categoryLabels,
       operatorStatus: (row['status'] ?? 'approved').toString(),
+      avatarUrl: (avatarUrl?.isEmpty ?? true) ? null : avatarUrl,
     );
   }
 

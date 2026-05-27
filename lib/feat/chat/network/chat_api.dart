@@ -91,6 +91,7 @@ class ChatApi {
       final otherPartyUserId = isClient ? operatorId : clientId;
 
       String otherPartyName = '';
+      String? otherPartyAvatarUrl;
       try {
         final pRows = await _client
             .from('profiles')
@@ -109,7 +110,7 @@ class ChatApi {
         try {
           final opRows = await _client
               .from('operator_profiles')
-              .select('display_name, business_name')
+              .select('display_name, business_name, avatar_url')
               .eq('user_id', otherPartyUserId)
               .limit(1);
           if (opRows.isNotEmpty) {
@@ -117,6 +118,8 @@ class ChatApi {
             final d = op['display_name']?.toString().trim() ?? '';
             final b = op['business_name']?.toString().trim() ?? '';
             otherPartyName = d.isNotEmpty ? d : b;
+            final av = op['avatar_url']?.toString().trim() ?? '';
+            if (av.isNotEmpty) otherPartyAvatarUrl = av;
           }
         } catch (_) {}
       }
@@ -173,6 +176,7 @@ class ChatApi {
         unreadCount: unread,
         otherPartyName: otherPartyName,
         category: category,
+        otherPartyAvatarUrl: otherPartyAvatarUrl,
       ));
     }
     return result;
