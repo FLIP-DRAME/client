@@ -776,15 +776,15 @@ class SupabaseDronePilotApi implements DronePilotApi {
   @override
   Future<List<PilotWorkRequestData>> fetchOperatorRequests() async {
     final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const <PilotWorkRequestData>[];
     final profile =
-        userId == null
-            ? null
-            : await _client
-                .from('operator_profiles')
-                .select('id')
-                .eq('user_id', userId)
-                .maybeSingle();
+        await _client
+            .from('operator_profiles')
+            .select('id')
+            .eq('user_id', userId)
+            .maybeSingle();
     final operatorId = profile?['id']?.toString();
+    if (operatorId == null) return const <PilotWorkRequestData>[];
 
     final rows = await _client
         .from('job_requests')
@@ -805,6 +805,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
           service_categories(label),
           quotes(id, message, proposed_price, operator_id)
         ''')
+        .eq('preferred_operator_id', operatorId)
+        .neq('client_id', userId)
         .order('created_at', ascending: false);
 
     return rows.map<PilotWorkRequestData>((row) {
