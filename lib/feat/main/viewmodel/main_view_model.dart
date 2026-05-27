@@ -346,6 +346,8 @@ class DrameStore extends ChangeNotifier {
   }
 
   void goToPilotOnboardingStep(int step) {
+    // 이미 완료한 단계(현재 단계 이하)로만 이동 가능
+    if (step > pilotOnboardingStep) return;
     pilotOnboardingStep = step.clamp(0, 4);
     notifyListeners();
   }

@@ -3149,10 +3149,13 @@ class _PilotStepCard extends StatelessWidget {
           ...steps.asMap().entries.map((entry) {
             final active = entry.key == store.pilotOnboardingStep;
             final completed = entry.key < done;
+            final locked = entry.key > store.pilotOnboardingStep;
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: InkWell(
-                onTap: () => store.goToPilotOnboardingStep(entry.key),
+                onTap: locked
+                    ? null
+                    : () => store.goToPilotOnboardingStep(entry.key),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -3169,31 +3172,46 @@ class _PilotStepCard extends StatelessWidget {
                         radius: 14,
                         backgroundColor:
                             active ? _focus : const Color(0xFFF1F3F5),
-                        child:
-                            completed
+                        child: completed
+                            ? const Icon(
+                                Icons.check_rounded,
+                                color: _ink,
+                                size: 17,
+                              )
+                            : locked
                                 ? const Icon(
-                                  Icons.check_rounded,
-                                  color: _ink,
-                                  size: 17,
-                                )
+                                    Icons.lock_outline_rounded,
+                                    color: Color(0xFFC5CDD8),
+                                    size: 14,
+                                  )
                                 : Text(
-                                  '${entry.key + 1}',
-                                  style: TextStyle(
-                                    color: active ? Colors.white : _muted,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w900,
+                                    '${entry.key + 1}',
+                                    style: TextStyle(
+                                      color: active ? Colors.white : _muted,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                    ),
                                   ),
-                                ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           entry.value,
                           style: AppText.smallStrong.copyWith(
-                            color: active ? _ink : const Color(0xFFA3B0C2),
+                            color: locked
+                                ? const Color(0xFFC5CDD8)
+                                : active
+                                    ? _ink
+                                    : const Color(0xFFA3B0C2),
                           ),
                         ),
                       ),
+                      if (locked)
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 16,
+                          color: Color(0xFFC5CDD8),
+                        ),
                     ],
                   ),
                 ),
