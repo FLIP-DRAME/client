@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app_providers.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../main/model/drone_pilot_model.dart';
+import '../../network/feed_api.dart';
 
 part '../component/feed_component.dart';
 
