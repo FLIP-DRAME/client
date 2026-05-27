@@ -401,6 +401,8 @@ class DrameStore extends ChangeNotifier {
     if (step == 0) {
       if (data.licenseNumber.trim().isEmpty) {
         message = '자격증 번호를 입력해 주세요.';
+      } else if (!RegExp(r'^\d{2}-\d{6}$').hasMatch(data.licenseNumber.trim())) {
+        message = '자격증 번호를 00-000000 형식으로 입력해 주세요.';
       }
     } else if (step == 1) {
       if (data.businessName.trim().isEmpty) {

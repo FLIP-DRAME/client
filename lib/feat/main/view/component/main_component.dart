@@ -3337,6 +3337,24 @@ class _PilotFormCard extends StatelessWidget {
   }
 }
 
+class _LicenseNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limited = digits.length > 8 ? digits.substring(0, 8) : digits;
+    final formatted = limited.length <= 2
+        ? limited
+        : '${limited.substring(0, 2)}-${limited.substring(2)}';
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 class _LicenseStep extends StatelessWidget {
   const _LicenseStep({required this.store});
   final DrameStore store;
@@ -3356,11 +3374,10 @@ class _LicenseStep extends StatelessWidget {
         _PilotTextField(
           label: '자격증 번호 *',
           initialValue: data.licenseNumber,
-          hint: '예: 2024-0001234',
-          keyboardType: TextInputType.text,
+          hint: '예: 24-000123',
+          keyboardType: TextInputType.number,
           inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
-            LengthLimitingTextInputFormatter(32),
+            _LicenseNumberFormatter(),
           ],
           onChanged: (value) => store.updatePilotLicense(number: value),
         ),
