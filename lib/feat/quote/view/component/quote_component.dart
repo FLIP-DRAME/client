@@ -197,6 +197,80 @@ class ChoiceWrap extends StatelessWidget {
   }
 }
 
+class QuoteDateField extends StatelessWidget {
+  const QuoteDateField({
+    super.key,
+    required this.selectedDate,
+    required this.onDateSelected,
+  });
+
+  final DateTime? selectedDate;
+  final ValueChanged<DateTime> onDateSelected;
+
+  String get _formatted {
+    if (selectedDate == null) return '';
+    final y = selectedDate!.year;
+    final m = selectedDate!.month.toString().padLeft(2, '0');
+    final d = selectedDate!.day.toString().padLeft(2, '0');
+    return '$y.$m.$d';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final now = DateTime.now();
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: selectedDate ?? now,
+          firstDate: now,
+          lastDate: DateTime(now.year + 2),
+          locale: const Locale('ko', 'KR'),
+          builder: (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: Theme.of(context).colorScheme.copyWith(
+                surface: Colors.white,
+                surfaceContainerHigh: Colors.white,
+                onSurface: Colors.black,
+                primary: Colors.black,
+                onPrimary: Colors.white,
+              ),
+              dialogTheme: const DialogThemeData(
+                backgroundColor: Colors.white,
+              ),
+            ),
+            child: child!,
+          ),
+        );
+        if (picked != null) onDateSelected(picked);
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: '일정',
+          labelStyle: QuoteText.body,
+          filled: true,
+          fillColor: quoteSoft,
+          suffixIcon: const Icon(
+            Icons.calendar_today_outlined,
+            size: 18,
+            color: Color(0xFF9CA3AF),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: quoteLine),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: quoteLine),
+          ),
+        ),
+        isEmpty: selectedDate == null,
+        child: Text(_formatted, style: QuoteText.body.copyWith(color: quoteInk)),
+      ),
+    );
+  }
+}
+
 class QuoteTextField extends StatelessWidget {
   const QuoteTextField({
     super.key,
