@@ -23,11 +23,13 @@ abstract class DronePilotApi {
   Future<void> markOperatorRequestSeen(String requestId);
   Future<void> updateMyQuoteRequest({
     required String requestId,
+    required String category,
     required String area,
     required String preferredDate,
     required String detail,
     required String budgetRange,
     required String contactWindow,
+    int? proposedAmount,
   });
   Future<void> submitQuoteForRequest(
     PilotWorkRequest request,
@@ -92,6 +94,8 @@ class UserQuoteSummary {
     required this.budgetRange,
     required this.contactWindow,
     required this.message,
+    this.budgetMin,
+    this.budgetMax,
   });
 
   final String id;
@@ -106,11 +110,23 @@ class UserQuoteSummary {
   final String budgetRange;
   final String contactWindow;
   final String message;
+  final int? budgetMin;
+  final int? budgetMax;
 
   bool get isQuoteReceived => status == '견적 받음';
   bool get isInProgress => status == '진행중';
   bool get isCompleted => status == '완료';
   bool get isPending => status == '요청 보냄';
+
+  String get budgetOption {
+    final min = budgetMin;
+    if (min == null) return '협의';
+    if (min == 0) return '0~30만원';
+    if (min == 300000) return '30~50만원';
+    if (min == 500000) return '50~100만원';
+    if (min >= 1000000) return '100만원 이상';
+    return budgetRange;
+  }
 }
 
 class PilotRegistrationPayload {
@@ -850,11 +866,9 @@ class SupabaseDronePilotApi implements DronePilotApi {
               .map((q) => Map<String, dynamic>.from(q))
               .toList();
       final myQuote =
-          operatorId == null
-              ? null
-              : quotes
-                  .where((q) => q['operator_id']?.toString() == operatorId)
-                  .firstOrNull;
+          quotes
+              .where((q) => q['operator_id']?.toString() == operatorId)
+              .firstOrNull;
       return PilotWorkRequestData(
         id: map['id'].toString(),
         category:
@@ -949,6 +963,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
         budgetRange: _budgetLabel(map['budget_min'], map['budget_max']),
         contactWindow: (map['contact_window'] ?? '').toString(),
         message: (quote['message'] ?? '').toString(),
+        budgetMin: (map['budget_min'] as num?)?.toInt(),
+        budgetMax: (map['budget_max'] as num?)?.toInt(),
       );
     }).toList();
   }
@@ -985,30 +1001,53 @@ class SupabaseDronePilotApi implements DronePilotApi {
   @override
   Future<void> updateMyQuoteRequest({
     required String requestId,
+    required String category,
     required String area,
     required String preferredDate,
     required String detail,
     required String budgetRange,
     required String contactWindow,
+    int? proposedAmount,
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
       throw StateError('로그인이 필요합니다.');
     }
     final budget = _parseBudgetLabel(budgetRange);
+    final parsedDate = _parsePreferredDate(preferredDate);
+    final categoryRows = await _client
+        .from('service_categories')
+        .select('id')
+        .eq('label', category)
+        .limit(1);
+    final categoryId =
+        categoryRows.isEmpty ? null : categoryRows.first['id']?.toString();
     await _client
         .from('job_requests')
         .update(<String, Object?>{
           'status': 'open',
           'operator_viewed_at': null,
+          if (categoryId != null) 'category_id': categoryId,
           'location_label': area,
           'detail': detail,
           'budget_min': budget.$1,
-          'budget_max': budget.$2,
+          'budget_max': proposedAmount ?? budget.$2,
           'contact_window': contactWindow,
+          if (parsedDate != null)
+            'preferred_start_at': parsedDate.toUtc().toIso8601String(),
         })
         .eq('id', requestId)
         .eq('client_id', userId);
+  }
+
+  DateTime? _parsePreferredDate(String dateStr) {
+    final parts = dateStr.split('.');
+    if (parts.length != 3) return null;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final day = int.tryParse(parts[2]);
+    if (year == null || month == null || day == null) return null;
+    return DateTime.utc(year, month, day);
   }
 
   @override
