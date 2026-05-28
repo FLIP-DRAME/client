@@ -185,7 +185,11 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                     children: <Widget>[
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: _submitting ? null : () => context.pop(),
+                          onPressed: _submitting
+                              ? null
+                              : () => _isEditing
+                                  ? context.go('/my/quotes')
+                                  : context.pop(),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF5B616E),
                             side: const BorderSide(color: Color(0xFFE4EAF2)),
