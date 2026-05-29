@@ -190,7 +190,7 @@ class _QuoteCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('촬영 요청하기'),
+              child: const Text('견적 요청하기'),
             ),
           ),
         ],
