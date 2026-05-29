@@ -218,7 +218,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                   ),
                   const SizedBox(height: 16),
                   QuoteTextField(
-                    label: '제안 금액 (선택)',
+                    label: '제안 금액 (만원)',
                     controller: _amountController,
                   ),
                   const SizedBox(height: 16),
@@ -231,11 +231,13 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                     children: <Widget>[
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: _submitting
-                              ? null
-                              : () => _isEditing
-                                  ? context.go('/my/quotes')
-                                  : context.pop(),
+                          onPressed:
+                              _submitting
+                                  ? null
+                                  : () =>
+                                      _isEditing
+                                          ? context.go('/my/quotes')
+                                          : context.pop(),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFF5B616E),
                             side: const BorderSide(color: Color(0xFFE4EAF2)),
