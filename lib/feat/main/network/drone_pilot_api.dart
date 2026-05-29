@@ -38,6 +38,8 @@ abstract class DronePilotApi {
   });
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
   Future<String> uploadProfilePhoto(String userId, List<int> bytes, String ext);
+  Future<String> uploadLicensePdf(String userId, List<int> bytes);
+  Future<String> uploadBusinessPdf(String userId, List<int> bytes);
   Future<void> updateOperatorProfile({
     required String intro,
     required String description,
@@ -325,6 +327,40 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   @override
+  Future<String> uploadLicensePdf(String userId, List<int> bytes) async {
+    final path =
+        '$userId/license_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    await _client.storage
+        .from('documents')
+        .uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: const FileOptions(
+            contentType: 'application/pdf',
+            upsert: true,
+          ),
+        );
+    return _client.storage.from('documents').getPublicUrl(path);
+  }
+
+  @override
+  Future<String> uploadBusinessPdf(String userId, List<int> bytes) async {
+    final path =
+        '$userId/business_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    await _client.storage
+        .from('documents')
+        .uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: const FileOptions(
+            contentType: 'application/pdf',
+            upsert: true,
+          ),
+        );
+    return _client.storage.from('documents').getPublicUrl(path);
+  }
+
+  @override
   Future<void> submitOperatorRegistration(
     PilotRegistrationPayload payload,
   ) async {
@@ -351,6 +387,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
               'description': data.portfolioUrl,
               'phone': null,
               'email': payload.email,
+              'license_file_url': data.licenseFileUrl,
+              'business_file_url': data.businessFileUrl,
             }, onConflict: 'user_id')
             .select('id')
             .single();

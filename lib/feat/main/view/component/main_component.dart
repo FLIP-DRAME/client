@@ -3507,6 +3507,27 @@ class _LicenseStep extends StatelessWidget {
           ],
           onChanged: (value) => store.updatePilotLicense(number: value),
         ),
+        const SizedBox(height: 18),
+        _PdfUploadField(
+          label: '자격증 파일 (PDF)',
+          fileName: data.licenseFileName,
+          onPick: (bytes, name) async {
+            try {
+              await store.uploadLicensePdf(bytes, name);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('자격증 파일이 업로드되었습니다.')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('업로드 실패: $e')),
+                );
+              }
+            }
+          },
+        ),
       ],
     );
   }
@@ -3544,6 +3565,143 @@ class _BusinessStep extends StatelessWidget {
           hint: '홍길동',
           onChanged:
               (value) => store.updatePilotBusiness(representative: value),
+        ),
+        const SizedBox(height: 18),
+        _PdfUploadField(
+          label: '사업자등록증 파일 (PDF)',
+          fileName: data.businessFileName,
+          onPick: (bytes, name) async {
+            try {
+              await store.uploadBusinessPdf(bytes, name);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('사업자등록증 파일이 업로드되었습니다.')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('업로드 실패: $e')),
+                );
+              }
+            }
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _PdfUploadField extends StatefulWidget {
+  const _PdfUploadField({
+    required this.label,
+    required this.fileName,
+    required this.onPick,
+  });
+
+  final String label;
+  final String? fileName;
+  final Future<void> Function(List<int> bytes, String fileName) onPick;
+
+  @override
+  State<_PdfUploadField> createState() => _PdfUploadFieldState();
+}
+
+class _PdfUploadFieldState extends State<_PdfUploadField> {
+  bool _uploading = false;
+
+  Future<void> _pickFile() async {
+    final input =
+        web.HTMLInputElement()
+          ..type = 'file'
+          ..accept = 'application/pdf';
+    input.click();
+    await Future.any(<Future<void>>[
+      input.onChange.first.then((_) {}),
+      Future<void>.delayed(const Duration(minutes: 2)),
+    ]);
+    final file = input.files?.item(0);
+    if (file == null) return;
+
+    setState(() => _uploading = true);
+    try {
+      final reader = web.FileReader();
+      final completer = Completer<Uint8List>();
+      reader.addEventListener(
+        'load',
+        (web.Event e) {
+          final result = reader.result;
+          if (result == null) {
+            completer.completeError('파일을 읽을 수 없습니다.');
+            return;
+          }
+          completer.complete(
+            Uint8List.view((result as JSArrayBuffer).toDart),
+          );
+        }.toJS,
+      );
+      reader.addEventListener(
+        'error',
+        ((web.Event e) => completer.completeError('파일 읽기 오류')).toJS,
+      );
+      reader.readAsArrayBuffer(file);
+      final bytes = await completer.future;
+      if (!mounted) return;
+      await widget.onPick(bytes.toList(), file.name);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFile = widget.fileName != null && widget.fileName!.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(widget.label, style: AppText.cardSubtitle),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: _uploading ? null : _pickFile,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: _line),
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+            ),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  hasFile
+                      ? Icons.picture_as_pdf_rounded
+                      : Icons.upload_file_rounded,
+                  size: 20,
+                  color: hasFile ? const Color(0xFFDC2626) : _navy,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _uploading
+                        ? '업로드 중…'
+                        : (hasFile ? widget.fileName! : 'PDF 파일을 선택하세요'),
+                    style: AppText.cardSubtitle.copyWith(
+                      color: hasFile ? _navy : const Color(0xFF7C828A),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (hasFile && !_uploading)
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: Color(0xFF059669),
+                  ),
+              ],
+            ),
+          ),
         ),
       ],
     );

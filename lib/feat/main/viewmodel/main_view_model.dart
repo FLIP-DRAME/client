@@ -643,6 +643,24 @@ class DrameStore extends ChangeNotifier {
 
   List<OperatorFeedPost> myFeedPosts = <OperatorFeedPost>[];
 
+  Future<void> uploadLicensePdf(List<int> bytes, String fileName) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다.');
+    final url = await _api.uploadLicensePdf(userId, bytes);
+    pilotOnboarding.licenseFileUrl = url;
+    pilotOnboarding.licenseFileName = fileName;
+    notifyListeners();
+  }
+
+  Future<void> uploadBusinessPdf(List<int> bytes, String fileName) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다.');
+    final url = await _api.uploadBusinessPdf(userId, bytes);
+    pilotOnboarding.businessFileUrl = url;
+    pilotOnboarding.businessFileName = fileName;
+    notifyListeners();
+  }
+
   Future<String> uploadProfilePhoto(List<int> bytes, String ext) async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다.');
