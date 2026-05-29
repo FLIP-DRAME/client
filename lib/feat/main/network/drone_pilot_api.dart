@@ -431,6 +431,9 @@ class SupabaseDronePilotApi implements DronePilotApi {
           'operator_id': operatorId,
           'company': data.insuranceCompany,
           'policy_number': data.insuranceNumber,
+          'drone_registration': data.insuranceDroneNumber.isEmpty
+              ? null
+              : data.insuranceDroneNumber,
         }),
       );
     }

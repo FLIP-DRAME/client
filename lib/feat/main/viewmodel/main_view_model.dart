@@ -493,10 +493,17 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updatePilotInsurance({String? company, String? number, bool? uploaded}) {
+  void updatePilotInsurance({
+    String? company,
+    String? number,
+    String? droneNumber,
+    bool? uploaded,
+  }) {
     pilotOnboarding.insuranceCompany =
         company ?? pilotOnboarding.insuranceCompany;
     pilotOnboarding.insuranceNumber = number ?? pilotOnboarding.insuranceNumber;
+    pilotOnboarding.insuranceDroneNumber =
+        droneNumber ?? pilotOnboarding.insuranceDroneNumber;
     pilotOnboarding.insuranceUploaded =
         uploaded ?? pilotOnboarding.insuranceUploaded;
     notifyListeners();
