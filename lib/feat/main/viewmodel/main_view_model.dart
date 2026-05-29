@@ -152,7 +152,8 @@ class DrameStore extends ChangeNotifier {
 
   Future<void> selectDistrict(String district) async {
     selectedDistrict = district;
-    selectedArea = district == '전체' ? selectedRegion : district;
+    selectedArea =
+        district == '전체' ? selectedRegion : '$selectedRegion $district';
     await load();
   }
 
@@ -553,6 +554,39 @@ class DrameStore extends ChangeNotifier {
     pilotOnboarding.areas.contains(area)
         ? pilotOnboarding.areas.remove(area)
         : pilotOnboarding.areas.add(area);
+    notifyListeners();
+  }
+
+  void togglePilotRegion(String region) {
+    final areas = pilotOnboarding.areas;
+    final active =
+        areas.contains(region) || areas.any((a) => a.startsWith('$region '));
+    if (active) {
+      areas.remove(region);
+      areas.removeWhere((a) => a.startsWith('$region '));
+    } else {
+      areas.add(region);
+    }
+    notifyListeners();
+  }
+
+  void togglePilotDistrict(String region, String district) {
+    final areas = pilotOnboarding.areas;
+    if (district == '전체') {
+      areas.removeWhere((a) => a.startsWith('$region '));
+      areas.add(region);
+    } else {
+      final key = '$region $district';
+      areas.remove(region);
+      if (areas.contains(key)) {
+        areas.remove(key);
+        if (!areas.any((a) => a.startsWith('$region '))) {
+          areas.add(region);
+        }
+      } else {
+        areas.add(key);
+      }
+    }
     notifyListeners();
   }
 
