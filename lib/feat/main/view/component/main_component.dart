@@ -3611,23 +3611,42 @@ class _PdfUploadFieldState extends State<_PdfUploadField> {
   bool _uploading = false;
 
   Future<void> _pickFile() async {
+    final input =
+        web.HTMLInputElement()
+          ..type = 'file'
+          ..accept = 'application/pdf';
+    input.click();
+    await Future.any(<Future<void>>[
+      input.onChange.first.then((_) {}),
+      Future<void>.delayed(const Duration(minutes: 2)),
+    ]);
+    final file = input.files?.item(0);
+    if (file == null) return;
+
     setState(() => _uploading = true);
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: <String>['pdf'],
-        withData: true,
+      final reader = web.FileReader();
+      final completer = Completer<Uint8List>();
+      reader.addEventListener(
+        'load',
+        (web.Event e) {
+          final result = reader.result;
+          if (result == null) {
+            completer.completeError('파일을 읽을 수 없습니다.');
+            return;
+          }
+          completer.complete(
+            Uint8List.view((result as JSArrayBuffer).toDart),
+          );
+        }.toJS,
       );
-      if (result == null || result.files.isEmpty) {
-        setState(() => _uploading = false);
-        return;
-      }
-      final file = result.files.first;
-      final bytes = file.bytes;
-      if (bytes == null) {
-        setState(() => _uploading = false);
-        return;
-      }
+      reader.addEventListener(
+        'error',
+        ((web.Event e) => completer.completeError('파일 읽기 오류')).toJS,
+      );
+      reader.readAsArrayBuffer(file);
+      final bytes = await completer.future;
+      if (!mounted) return;
       await widget.onPick(bytes.toList(), file.name);
     } finally {
       if (mounted) setState(() => _uploading = false);
