@@ -89,6 +89,10 @@ class DrameStore extends ChangeNotifier {
         accountRole = '운용자';
         operatorRegistrationCompleted = true;
         operatorReviewStatus = myOperator.operatorStatus;
+      } else {
+        // 운용자 등록 정보가 없으면 미등록 상태로 리셋
+        operatorRegistrationCompleted = false;
+        operatorReviewStatus = 'none';
       }
       notifications = _mergeNotifications(
         await _api.fetchNotifications(),
@@ -243,6 +247,8 @@ class DrameStore extends ChangeNotifier {
     accountNickname = '';
     myQuotes = <UserQuoteSummary>[];
     allPilots = <DronePilot>[];
+    operatorRegistrationCompleted = false;
+    operatorReviewStatus = 'none';
     notifyListeners();
   }
 
@@ -339,6 +345,9 @@ class DrameStore extends ChangeNotifier {
     if (myOperator != null) {
       operatorRegistrationCompleted = true;
       operatorReviewStatus = myOperator.operatorStatus;
+    } else {
+      operatorRegistrationCompleted = false;
+      operatorReviewStatus = 'none';
     }
     submitAuth();
     isSessionRestoring = false;
