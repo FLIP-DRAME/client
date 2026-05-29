@@ -165,7 +165,7 @@ class _MobileAppEntryFlowState extends State<_MobileAppEntryFlow> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () => context.go('/login'),
+                          onPressed: () => context.go('/home'),
                           child: const Text(
                             '건너뛰기',
                             textAlign: TextAlign.right,
@@ -213,7 +213,7 @@ class _MobileAppEntryFlowState extends State<_MobileAppEntryFlow> {
                                   child: FilledButton(
                                     onPressed:
                                         _page == _items.length - 1
-                                            ? () => context.go('/login')
+                                            ? () => context.go('/home')
                                             : _next,
                                     style: _entryFilledButtonStyle(),
                                     child: Text(
@@ -526,6 +526,20 @@ class _HeroSection extends StatelessWidget {
                   ],
                   const Spacer(),
                   TextButton(
+                    onPressed: () => context.go('/home'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF374151),
+                      textStyle: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    child: const Text('둘러보기'),
+                  ),
+                  const SizedBox(width: 4),
+                  TextButton(
                     onPressed: () => context.go('/login'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF374151),
@@ -649,7 +663,7 @@ class _HeroSection extends StatelessWidget {
                 Row(
                   children: <Widget>[
                     ElevatedButton(
-                      onPressed: () => context.go('/login'),
+                      onPressed: () => context.go('/home'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: DC.primary,
                         foregroundColor: Colors.white,
@@ -668,7 +682,7 @@ class _HeroSection extends StatelessWidget {
                         minimumSize: const Size(0, 58),
                         elevation: 0,
                       ),
-                      child: const Text('촬영자 찾기  →'),
+                      child: const Text('파일럿 찾기'),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
@@ -748,7 +762,7 @@ class _HeroSection extends StatelessWidget {
           runSpacing: 10,
           children: <Widget>[
             ElevatedButton(
-              onPressed: () => context.go('/login'),
+              onPressed: () => context.go('/home'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: DC.primary,
                 foregroundColor: Colors.white,
@@ -766,7 +780,7 @@ class _HeroSection extends StatelessWidget {
                 ),
                 elevation: 0,
               ),
-              child: const Text('촬영자 찾기  →'),
+              child: const Text('파일럿 찾기'),
             ),
             ElevatedButton(
               onPressed: () => context.go('/pilot/register'),

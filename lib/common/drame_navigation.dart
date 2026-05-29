@@ -175,10 +175,10 @@ class DrameTopNavigation extends StatelessWidget {
                     child: const Text('로그인'),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: onRegisterPilotTap,
-                    style: dPrimaryButtonStyle(),
-                    child: const Text('시작하기'),
+                  _ModeToggle(
+                    isOperator: false,
+                    onUserTap: onSwitchToUser ?? () {},
+                    onOperatorTap: onSwitchToOperator ?? () {},
                   ),
                 ] else if (isOperator) ...<Widget>[
                   if (onLogoutTap != null) ...<Widget>[

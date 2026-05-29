@@ -1434,6 +1434,13 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
 }
 
 void _showMobileQuoteSheet(BuildContext context, DronePilot pilot) {
+  if (Supabase.instance.client.auth.currentUser == null) {
+    showLoginRequiredDialog(
+      context,
+      message: '견적 요청은 로그인 후 이용할 수 있습니다.',
+    );
+    return;
+  }
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

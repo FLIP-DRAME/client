@@ -9,6 +9,7 @@ import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
 import '../../../../common/drame_text_styles.dart';
+import '../../../../common/login_prompt.dart';
 import '../../../../core/app_defaults.dart';
 import '../../../chat/view/pages/chat_list_page.dart';
 import '../../../feed/view/pages/feed_page.dart';
@@ -396,8 +397,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
       final store = context.read<DrameStore>();
       store.restoreSession().then((_) {
         if (!mounted) return;
-        if (!store.isLoggedIn) {
-          context.go('/login');
+        // 비로그인 사용자도 둘러볼 수 있도록 redirect 제거.
+        // 단, /operator 진입은 로그인 + 운용자만 가능.
+        if (widget.operatorMode && !store.isLoggedIn) {
+          context.go('/home');
           return;
         }
         store.setPilotMode(widget.operatorMode);
@@ -539,20 +542,44 @@ class _DrameHomePageState extends State<DrameHomePage> {
               setState(() => _selectedTabId = 'all');
               _scrollToSection(_categorySectionKey);
             },
-            onFeedTap: () => context.go('/feed'),
-            onPortfolioTap: () => context.go('/portfolio'),
-            onMyQuotesTap: () => context.go('/my/quotes'),
-            onChatTap: () => context.go('/chats'),
-            onLogoutTap: () async {
-              await store.signOut();
-              if (context.mounted) context.go('/login');
+            onFeedTap: () {
+              if (!store.isLoggedIn) {
+                showLoginRequiredDialog(context);
+                return;
+              }
+              context.go('/feed');
             },
+            onPortfolioTap: () => context.go('/portfolio'),
+            onMyQuotesTap: () {
+              if (!store.isLoggedIn) {
+                showLoginRequiredDialog(context);
+                return;
+              }
+              context.go('/my/quotes');
+            },
+            onChatTap: () {
+              if (!store.isLoggedIn) {
+                showLoginRequiredDialog(context);
+                return;
+              }
+              context.go('/chats');
+            },
+            onLogoutTap: store.isLoggedIn
+                ? () async {
+                    await store.signOut();
+                    if (context.mounted) context.go('/login');
+                  }
+                : null,
             onSwitchToUser: () {
               store.setPilotMode(false);
               setState(() => _selectedTabId = 'all');
               context.go('/home');
             },
             onSwitchToOperator: () {
+              if (!store.isLoggedIn) {
+                showLoginRequiredDialog(context);
+                return;
+              }
               store.setPilotMode(true);
               setState(() => _selectedTabId = 'dashboard');
               context.go('/operator');
@@ -808,6 +835,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
         onLoginTap: () => context.go('/login'),
         onModeChanged: (value) {
           if (value) {
+            if (!store.isLoggedIn) {
+              showLoginRequiredDialog(context);
+              return;
+            }
             context.go('/operator');
           } else {
             context.go('/home');
@@ -819,7 +850,14 @@ class _DrameHomePageState extends State<DrameHomePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: safeIndex,
-        onTap: (index) => setState(() => _tabIndex = index),
+        onTap: (index) {
+          // 비로그인 사용자가 홈(0)이 아닌 다른 탭 클릭 시 로그인 유도
+          if (!store.isLoggedIn && index != 0 && !store.isPilotMode) {
+            showLoginRequiredDialog(context);
+            return;
+          }
+          setState(() => _tabIndex = index);
+        },
         selectedItemColor: _primary,
         unselectedItemColor: const Color(0xFF8BA0B8),
         backgroundColor: Colors.white,
