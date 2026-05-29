@@ -1900,7 +1900,8 @@ class _IncomingRequestsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final previewRequests = store.pilotWorkRequests.take(3).toList();
+    final allRequests = store.pilotWorkRequests;
+    final previewRequests = allRequests.take(3).toList();
     if (previewRequests.isEmpty) {
       return const _EmptyRequestPanel();
     }
@@ -1917,7 +1918,7 @@ class _IncomingRequestsPanel extends StatelessWidget {
                     initialRequest: previewRequests.first,
                   ),
               icon: Text(
-                '${previewRequests.length}건 대기 중',
+                '${allRequests.length}건 대기 중',
                 style: AppText.cardSubtitle.copyWith(color: _navy),
               ),
               label: const Icon(Icons.chevron_right_rounded, size: 18),
