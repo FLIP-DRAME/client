@@ -3734,6 +3734,27 @@ class _InsuranceStep extends StatelessWidget {
           ],
           onChanged: (value) => store.updatePilotInsurance(number: value),
         ),
+        const SizedBox(height: 18),
+        _PdfUploadField(
+          label: '보험 증권 파일 (PDF)',
+          fileName: data.insuranceFileName,
+          onPick: (bytes, name) async {
+            try {
+              await store.uploadInsurancePdf(bytes, name);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('보험 증권 파일이 업로드되었습니다.')),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('업로드 실패: $e')),
+                );
+              }
+            }
+          },
+        ),
       ],
     );
   }

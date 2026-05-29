@@ -670,6 +670,15 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> uploadInsurancePdf(List<int> bytes, String fileName) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다.');
+    final url = await _api.uploadInsurancePdf(userId, bytes);
+    pilotOnboarding.insuranceFileUrl = url;
+    pilotOnboarding.insuranceFileName = fileName;
+    notifyListeners();
+  }
+
   Future<String> uploadProfilePhoto(List<int> bytes, String ext) async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다.');

@@ -32,6 +32,8 @@ class PilotOnboardingData {
   String insuranceCompany = 'DB손해보험';
   String insuranceNumber = '';
   bool insuranceUploaded = false;
+  String? insuranceFileUrl;
+  String? insuranceFileName;
   List<PilotDroneForm> drones = <PilotDroneForm>[PilotDroneForm()];
   Set<String> areas = <String>{};
   Set<String> portfolioTypes = <String>{};
