@@ -590,6 +590,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
                   initialRequest: store.firstPilotWorkRequest,
                 ),
             onMyPageTap: () => context.go('/operator/mypage'),
+            onAboutServiceTap: () => context.go('/'),
             notificationCount: store.notificationCount,
             onNotificationTap: () => _showNotifications(context, store),
             operatorActiveTab: isOperatorDashboard ? _selectedTabId : null,

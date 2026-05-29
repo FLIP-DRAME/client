@@ -38,6 +38,7 @@ class DrameTopNavigation extends StatelessWidget {
     this.notificationCount = 0,
     this.onNotificationTap,
     this.onLogoutTap,
+    this.onAboutServiceTap,
   });
 
   final bool isLoggedIn;
@@ -66,6 +67,7 @@ class DrameTopNavigation extends StatelessWidget {
   final int notificationCount;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onLogoutTap;
+  final VoidCallback? onAboutServiceTap;
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +156,10 @@ class DrameTopNavigation extends StatelessWidget {
                   ] else ...<Widget>[
                     _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),
                     const SizedBox(width: 24),
-                    _NavLink(label: '서비스 소개', onTap: onFindPilotTap),
+                    _NavLink(
+                      label: '서비스 소개',
+                      onTap: onAboutServiceTap ?? onFindPilotTap,
+                    ),
                   ],
                 ],
 
