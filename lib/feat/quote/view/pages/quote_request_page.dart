@@ -20,14 +20,33 @@ class QuoteRequestPage extends ConsumerStatefulWidget {
 }
 
 class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
-  final _dateController = TextEditingController();
   final _detailController = TextEditingController();
   final _contactController = TextEditingController();
   final _amountController = TextEditingController();
   String? _category;
   String? _area;
   String _budget = '50만원 이하';
+  DateTime? _selectedDate;
   bool _submitting = false;
+
+  String get _formattedDate {
+    if (_selectedDate == null) return '';
+    final y = _selectedDate!.year;
+    final m = _selectedDate!.month.toString().padLeft(2, '0');
+    final d = _selectedDate!.day.toString().padLeft(2, '0');
+    return '$y.$m.$d';
+  }
+
+  DateTime? _parseDateString(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return null;
+    final parts = dateStr.split('.');
+    if (parts.length != 3) return null;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final day = int.tryParse(parts[2]);
+    if (year == null || month == null || day == null) return null;
+    return DateTime(year, month, day);
+  }
 
   @override
   void initState() {
@@ -35,16 +54,40 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
     final quote = widget.initialQuote;
     _category = quote?.category ?? _categoryOptions.first;
     _area = quote?.area ?? _areaOptions.first;
-    _budget = quote?.budgetRange ?? '50만원 이하';
-    _dateController.text = quote?.date ?? '2026.05.20';
+    _budget = _budgetOptionFromMin(quote?.budgetMin) ?? '50만원 이하';
+    _selectedDate = _parseDateString(quote?.date);
     _detailController.text =
         quote?.detail ?? '현장 분위기를 보여주는 항공 촬영과 기본 보정본이 필요합니다.';
     _contactController.text = quote?.contactWindow ?? '평일 오후 2시 이후';
+    _amountController.text = _customAmountFromQuote(quote);
+  }
+
+  String? _budgetOptionFromMin(int? budgetMin) {
+    if (budgetMin == null) return '협의';
+    if (budgetMin == 0) return '0~30만원';
+    if (budgetMin == 300000) return '30~50만원';
+    if (budgetMin == 500000) return '50~100만원';
+    if (budgetMin >= 1000000) return '100만원 이상';
+    return null;
+  }
+
+  String _customAmountFromQuote(UserQuoteSummary? quote) {
+    if (quote == null) return '';
+    final budgetMin = quote.budgetMin;
+    final budgetMax = quote.budgetMax;
+    if (budgetMin == null || budgetMax == null) return '';
+    const standardMaxes = <int, int>{
+      0: 300000,
+      300000: 500000,
+      500000: 1000000,
+    };
+    final standardMax = standardMaxes[budgetMin];
+    if (standardMax == null || budgetMax == standardMax) return '';
+    return '${(budgetMax / 10000).round()}만원';
   }
 
   @override
   void dispose() {
-    _dateController.dispose();
     _detailController.dispose();
     _contactController.dispose();
     _amountController.dispose();
@@ -65,29 +108,29 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
     }
     setState(() => _submitting = true);
     final messenger = ScaffoldMessenger.of(context);
-    final effectiveBudget =
-        _amountController.text.trim().isNotEmpty
-            ? _amountController.text.trim()
-            : _budget;
+    final proposedAmount = _parseAmount(_amountController.text.trim());
     final request = QuoteRequest(
       pilot: widget.pilot,
       category: category,
       area: area,
-      preferredDate: _dateController.text,
+      preferredDate: _formattedDate,
       detail: _detailController.text,
-      budgetRange: effectiveBudget,
+      budgetRange: _budget,
       contactWindow: _contactController.text,
+      proposedAmount: proposedAmount,
     );
     try {
       final store = ref.read(drameStoreProvider);
       if (_isEditing) {
         await store.updateMyQuoteRequest(
           requestId: widget.initialQuote!.id,
+          category: category,
           area: area,
-          preferredDate: _dateController.text,
+          preferredDate: _formattedDate,
           detail: _detailController.text,
-          budgetRange: effectiveBudget,
+          budgetRange: _budget,
           contactWindow: _contactController.text,
+          proposedAmount: proposedAmount,
         );
       } else {
         await store.submitQuoteRequest(request);
@@ -151,7 +194,10 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                     onSelected: (value) => setState(() => _area = value),
                   ),
                   const SizedBox(height: 20),
-                  QuoteTextField(label: '일정', controller: _dateController),
+                  QuoteDateField(
+                    selectedDate: _selectedDate,
+                    onDateSelected: (d) => setState(() => _selectedDate = d),
+                  ),
                   const SizedBox(height: 16),
                   QuoteTextField(
                     label: '요청사항',
@@ -252,8 +298,17 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
             .where((value) => value.isNotEmpty)
             .toSet()
             .toList();
-    if (values.isNotEmpty) return values;
-    return defaultServiceAreas.where((area) => area != '전체').toList();
+    if (values.isEmpty || values.contains('전체')) return defaultServiceAreas;
+    return <String>['전체', ...values];
+  }
+
+  int? _parseAmount(String text) {
+    if (text.isEmpty) return null;
+    final match = RegExp(r'(\d+)').firstMatch(text);
+    if (match == null) return null;
+    final wan = int.tryParse(match.group(1) ?? '');
+    if (wan == null || wan <= 0) return null;
+    return wan * 10000;
   }
 
   bool get _isEditing => widget.initialQuote != null;

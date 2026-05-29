@@ -612,19 +612,23 @@ class DrameStore extends ChangeNotifier {
 
   Future<void> updateMyQuoteRequest({
     required String requestId,
+    required String category,
     required String area,
     required String preferredDate,
     required String detail,
     required String budgetRange,
     required String contactWindow,
+    int? proposedAmount,
   }) async {
     await _api.updateMyQuoteRequest(
       requestId: requestId,
+      category: category,
       area: area,
       preferredDate: preferredDate,
       detail: detail,
       budgetRange: budgetRange,
       contactWindow: contactWindow,
+      proposedAmount: proposedAmount,
     );
     myQuotes = await _api.fetchMyQuotes();
     notifyListeners();

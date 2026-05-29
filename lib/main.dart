@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -115,6 +116,8 @@ class _DrameAppState extends ConsumerState<DrameApp> {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: '모두의 드론',
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: const <Locale>[Locale('ko', 'KR'), Locale('en')],
       routerConfig: appRouter,
       theme: ThemeData(
         fontFamily: DrameTextStyles.fontFamily,

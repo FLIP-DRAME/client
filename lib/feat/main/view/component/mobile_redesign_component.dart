@@ -2403,6 +2403,7 @@ class _MobileQuoteEditSheetState extends ConsumerState<_MobileQuoteEditSheet> {
       final store = ref.read(drameStoreProvider);
       await store.updateMyQuoteRequest(
         requestId: widget.quote.id,
+        category: widget.quote.category,
         area: widget.quote.area,
         preferredDate: _dateController.text.trim(),
         detail: _detailController.text.trim(),

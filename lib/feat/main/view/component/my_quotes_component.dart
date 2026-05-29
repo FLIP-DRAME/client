@@ -364,6 +364,7 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
     try {
       await store.updateMyQuoteRequest(
         requestId: quote.id,
+        category: quote.category,
         area: _areaController.text.trim(),
         preferredDate: quote.date,
         detail: _detailController.text.trim(),
@@ -495,8 +496,8 @@ class _QuoteCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statusColor = _statusColor(quote.status);
     final displayPrice =
-        quote.price == '-' && quote.budgetRange.isNotEmpty
-            ? quote.budgetRange
+        quote.price == '-' && quote.budgetOption.isNotEmpty
+            ? quote.budgetOption
             : quote.price;
     final showChat = quote.isInProgress && quote.pilotId.isNotEmpty;
     return Material(

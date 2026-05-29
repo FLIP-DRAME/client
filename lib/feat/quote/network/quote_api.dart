@@ -38,6 +38,7 @@ class SupabaseQuoteApi implements QuoteApi {
       }
     }
 
+    final preferredDate = _parsePreferredDate(request.preferredDate);
     final job =
         await _client
             .from('job_requests')
@@ -51,9 +52,11 @@ class SupabaseQuoteApi implements QuoteApi {
               'detail': request.detail,
               'location_label': request.area,
               'budget_min': budget.$1,
-              'budget_max': budget.$2,
+              'budget_max': request.proposedAmount ?? budget.$2,
               'contact_window': request.contactWindow,
               'client_display_name': clientDisplayName,
+              if (preferredDate != null)
+                'preferred_start_at': preferredDate.toUtc().toIso8601String(),
             })
             .select('id')
             .single();
@@ -193,6 +196,16 @@ class SupabaseQuoteApi implements QuoteApi {
         .eq('name', name)
         .limit(1);
     return rows.isEmpty ? null : rows.first['id'].toString();
+  }
+
+  DateTime? _parsePreferredDate(String dateStr) {
+    final parts = dateStr.split('.');
+    if (parts.length != 3) return null;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final day = int.tryParse(parts[2]);
+    if (year == null || month == null || day == null) return null;
+    return DateTime.utc(year, month, day);
   }
 
   (int?, int?) _parseBudget(String label) {
