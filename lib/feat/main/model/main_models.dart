@@ -22,9 +22,13 @@ class PilotOnboardingData {
   String licenseNumber = '';
   bool licenseFrontUploaded = false;
   bool licenseBackUploaded = false;
+  String? licenseFileUrl;
+  String? licenseFileName;
   String businessName = '';
   String businessNumber = '';
   String representativeName = '';
+  String? businessFileUrl;
+  String? businessFileName;
   String insuranceCompany = 'DB손해보험';
   String insuranceNumber = '';
   bool insuranceUploaded = false;
