@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/drame_text_styles.dart';
+import '../../../../common/login_prompt.dart';
 import '../../../main/model/drone_pilot_model.dart';
 import '../../../main/model/main_models.dart';
 import '../../../quote/model/quote_model.dart';
@@ -209,5 +210,12 @@ class PilotPortfolioPage extends StatelessWidget {
 }
 
 void _openQuoteRequest(BuildContext context, DronePilot pilot) {
+  if (Supabase.instance.client.auth.currentUser == null) {
+    showLoginRequiredDialog(
+      context,
+      message: '견적 요청은 로그인 후 이용할 수 있습니다.',
+    );
+    return;
+  }
   context.push('/quote/request/${pilot.id}', extra: pilot);
 }
