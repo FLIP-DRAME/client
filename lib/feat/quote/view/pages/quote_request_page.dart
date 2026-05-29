@@ -25,6 +25,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
   final _amountController = TextEditingController();
   String? _category;
   String? _area;
+  String? _district;
   String _budget = '50만원 이하';
   DateTime? _selectedDate;
   bool _submitting = false;
@@ -53,7 +54,17 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
     super.initState();
     final quote = widget.initialQuote;
     _category = quote?.category ?? _categoryOptions.first;
-    _area = quote?.area ?? _areaOptions.first;
+    final savedArea = quote?.area ?? _areaOptions.first;
+    if (quote != null) {
+      final parts = savedArea.split(' ');
+      if (parts.length == 2 &&
+          defaultServiceAreas.contains(parts[0]) &&
+          (defaultServiceDistricts[parts[0]]?.contains(parts[1]) ?? false)) {
+        _area = parts[0];
+        _district = parts[1];
+      }
+    }
+    _area ??= savedArea;
     _budget = _budgetOptionFromMin(quote?.budgetMin) ?? '50만원 이하';
     _selectedDate = _parseDateString(quote?.date);
     _detailController.text =
@@ -96,7 +107,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
 
   Future<void> _submit() async {
     final category = _category;
-    final area = _area;
+    final area = _effectiveArea;
     if (category == null || area == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -164,12 +175,15 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
   Widget build(BuildContext context) {
     final categoryOptions = _categoryOptions;
     final areaOptions = _areaOptions;
+    final districtOptions = _districtOptions;
     final selectedCategory =
         categoryOptions.contains(_category)
             ? _category!
             : categoryOptions.first;
     final selectedArea =
         areaOptions.contains(_area) ? _area! : areaOptions.first;
+    final selectedDistrict =
+        districtOptions.contains(_district) ? _district! : '전체';
     return QuoteScaffold(
       title: _isEditing ? '견적 요청 수정' : '견적 요청',
       child: QuoteShell(
@@ -191,8 +205,19 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                   ChoiceWrap(
                     values: areaOptions,
                     selected: selectedArea,
-                    onSelected: (value) => setState(() => _area = value),
+                    onSelected: (value) => setState(() {
+                      _area = value;
+                      _district = null;
+                    }),
                   ),
+                  if (districtOptions.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 12),
+                    ChoiceWrap(
+                      values: <String>['전체', ...districtOptions],
+                      selected: selectedDistrict,
+                      onSelected: (value) => setState(() => _district = value),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   QuoteDateField(
                     selectedDate: _selectedDate,
@@ -291,6 +316,17 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
             .toList();
     if (values.isNotEmpty) return values;
     return defaultDroneCategories.map((category) => category.label).toList();
+  }
+
+  String? get _effectiveArea {
+    if (_district != null && _district != '전체') return '$_area $_district';
+    return _area;
+  }
+
+  List<String> get _districtOptions {
+    final region = _area;
+    if (region == null || region == '전체') return const <String>[];
+    return defaultServiceDistricts[region] ?? const <String>[];
   }
 
   List<String> get _areaOptions {

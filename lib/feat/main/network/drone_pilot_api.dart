@@ -221,11 +221,19 @@ class SupabaseDronePilotApi implements DronePilotApi {
                   category == null ||
                   category == '전체' ||
                   pilot.hasCategory(category);
+              final parentRegion =
+                  priorityArea != null && priorityArea.contains(' ')
+                      ? priorityArea.split(' ').first
+                      : null;
               final areaMatch =
                   priorityArea == null ||
                   priorityArea == '전체' ||
                   pilot.availableAreas.contains(priorityArea) ||
-                  pilot.permittedAreas.contains(priorityArea);
+                  pilot.permittedAreas.contains(priorityArea) ||
+                  (parentRegion != null &&
+                      pilot.availableAreas.contains(parentRegion)) ||
+                  (parentRegion != null &&
+                      pilot.permittedAreas.contains(parentRegion));
               return categoryMatch && areaMatch;
             })
             .toList();
@@ -806,9 +814,7 @@ class SupabaseDronePilotApi implements DronePilotApi {
         permittedAreas.add(name);
       }
     }
-    if (availableAreas.isEmpty) {
-      availableAreas.addAll(_splitLabels(row['location_label']));
-    }
+    availableAreas.addAll(_splitLabels(row['location_label']));
 
     final assetRows = List<Object?>.from(
       row['portfolio_assets'] as List? ?? const [],

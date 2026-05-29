@@ -3871,27 +3871,55 @@ class _DroneStep extends StatelessWidget {
 class _AreaStep extends StatelessWidget {
   const _AreaStep({required this.store});
   final DrameStore store;
+
+  static const List<String> _regions = <String>[
+    '서울', '경기', '인천', '강원', '충청', '전라', '경상', '제주',
+  ];
+
+  Set<String> _activeRegions(Set<String> areas) => _regions.where((r) {
+    return areas.contains(r) || areas.any((a) => a.startsWith('$r '));
+  }).toSet();
+
+  Set<String> _activeDistricts(String region, Set<String> areas) {
+    final result = <String>{};
+    if (areas.contains(region)) result.add('전체');
+    for (final d in defaultServiceDistricts[region] ?? <String>[]) {
+      if (areas.contains('$region $d')) result.add(d);
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final areas = store.pilotOnboarding.areas;
+    final activeRegions = _activeRegions(areas);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         const Text('주요 활동 지역', style: AppText.smallStrong),
         const SizedBox(height: 10),
         _PilotChipGroup(
-          values: const <String>[
-            '서울',
-            '경기',
-            '인천',
-            '강원',
-            '충청',
-            '전라',
-            '경상',
-            '제주',
-          ],
-          selected: store.pilotOnboarding.areas,
-          onTap: store.togglePilotArea,
+          values: _regions,
+          selected: activeRegions,
+          onTap: store.togglePilotRegion,
         ),
+        for (final region in _regions.where(activeRegions.contains)) ...<Widget>[
+          const SizedBox(height: 14),
+          Text(
+            '$region 세부 지역',
+            style: AppText.smallStrong,
+          ),
+          const SizedBox(height: 8),
+          _PilotChipGroup(
+            values: <String>[
+              '전체',
+              ...defaultServiceDistricts[region] ?? <String>[],
+            ],
+            selected: _activeDistricts(region, areas),
+            onTap: (d) => store.togglePilotDistrict(region, d),
+          ),
+        ],
         const SizedBox(height: 18),
         const _PilotNotice('복수 지역을 선택할 수 있습니다. 선택 지역은 운용자 매칭 노출에 사용됩니다.'),
       ],
@@ -4133,7 +4161,6 @@ class _AreaFilter extends StatefulWidget {
 
 class _AreaFilterState extends State<_AreaFilter> {
   final GlobalKey _districtRowKey = GlobalKey();
-  final GlobalKey _neighborhoodRowKey = GlobalKey();
 
   void _scrollTo(GlobalKey key) {
     final ctx = key.currentContext;
@@ -4153,11 +4180,6 @@ class _AreaFilterState extends State<_AreaFilter> {
         store.selectedRegion == '전체'
             ? const <String>[]
             : defaultServiceDistricts[store.selectedRegion] ?? const <String>[];
-    final neighborhoods =
-        store.selectedDistrict == '전체'
-            ? const <String>[]
-            : defaultServiceNeighborhoods[store.selectedDistrict] ??
-                const <String>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -4171,7 +4193,6 @@ class _AreaFilterState extends State<_AreaFilter> {
                   selected: store.selectedRegion == area,
                   onTap: () {
                     store.selectRegion(area);
-                    // 시·구 선택 행이 나타난 뒤 스크롤
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       if (_districtRowKey.currentContext != null) {
                         _scrollTo(_districtRowKey);
@@ -4201,13 +4222,7 @@ class _AreaFilterState extends State<_AreaFilter> {
                 selected: store.selectedDistrict == '전체',
                 onTap: () {
                   store.selectDistrict('전체');
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (_neighborhoodRowKey.currentContext != null) {
-                      _scrollTo(_neighborhoodRowKey);
-                    } else {
-                      widget.onAreaSelected?.call();
-                    }
-                  });
+                  widget.onAreaSelected?.call();
                 },
                 compact: true,
               ),
@@ -4218,49 +4233,6 @@ class _AreaFilterState extends State<_AreaFilter> {
                   selected: store.selectedDistrict == district,
                   onTap: () {
                     store.selectDistrict(district);
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (_neighborhoodRowKey.currentContext != null) {
-                        _scrollTo(_neighborhoodRowKey);
-                      } else {
-                        widget.onAreaSelected?.call();
-                      }
-                    });
-                  },
-                  compact: true,
-                );
-              }),
-            ],
-          ),
-        ],
-        if (neighborhoods.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 16),
-          KeyedSubtree(
-            key: _neighborhoodRowKey,
-            child: Text(
-              '${store.selectedDistrict} 동 선택',
-              style: AppText.smallStrong.copyWith(color: _navy),
-            ),
-          ),
-          const SizedBox(height: 10),
-          _AreaChipWrap(
-            children: <Widget>[
-              _AreaChip(
-                key: const ValueKey('neighborhood-전체'),
-                label: '전체',
-                selected: store.selectedArea == store.selectedDistrict,
-                onTap: () {
-                  store.selectNeighborhood('전체');
-                  widget.onAreaSelected?.call();
-                },
-                compact: true,
-              ),
-              ...neighborhoods.map((neighborhood) {
-                return _AreaChip(
-                  key: ValueKey('neighborhood-$neighborhood'),
-                  label: neighborhood,
-                  selected: store.selectedArea == neighborhood,
-                  onTap: () {
-                    store.selectNeighborhood(neighborhood);
                     widget.onAreaSelected?.call();
                   },
                   compact: true,
