@@ -3735,6 +3735,18 @@ class _InsuranceStep extends StatelessWidget {
           onChanged: (value) => store.updatePilotInsurance(number: value),
         ),
         const SizedBox(height: 18),
+        _PilotTextField(
+          label: '가입된 기체 번호',
+          initialValue: data.insuranceDroneNumber,
+          hint: '예: D-2024-001',
+          keyboardType: TextInputType.text,
+          inputFormatters: <TextInputFormatter>[
+            LengthLimitingTextInputFormatter(60),
+          ],
+          onChanged:
+              (value) => store.updatePilotInsurance(droneNumber: value),
+        ),
+        const SizedBox(height: 18),
         _PdfUploadField(
           label: '보험 증권 파일 (PDF)',
           fileName: data.insuranceFileName,
