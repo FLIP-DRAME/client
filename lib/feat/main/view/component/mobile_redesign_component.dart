@@ -143,6 +143,14 @@ class _UserHomeTab extends StatefulWidget {
 
 class _UserHomeTabState extends State<_UserHomeTab> {
   String _selectedCat = '전체';
+  final PageController _pilotPageCtrl = PageController();
+  int _pilotPage = 0;
+
+  @override
+  void dispose() {
+    _pilotPageCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -291,42 +299,33 @@ class _UserHomeTabState extends State<_UserHomeTab> {
             ),
           ),
 
-          // ── Operator list ──────────────────────────────────────────────────
-          if (filtered.isEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Center(
-                  child: Text(
-                    '해당 카테고리의 운용자가 없습니다.',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 14,
-                      color: Color(0xFF7C828A),
+          // ── Operator 2-per-page horizontal pager ──────────────────────────
+          SliverToBoxAdapter(
+            child: filtered.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(
+                      child: Text(
+                        '해당 카테고리의 운용자가 없습니다.',
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 14,
+                          color: Color(0xFF7C828A),
+                        ),
+                      ),
                     ),
+                  )
+                : _OperatorPager(
+                    pilots: filtered,
+                    pageCtrl: _pilotPageCtrl,
+                    currentPage: _pilotPage,
+                    onPageChanged: (p) => setState(() => _pilotPage = p),
+                    onTap: (pilot) {
+                      store.selectPilot(pilot);
+                      _openPortfolio(context, pilot);
+                    },
                   ),
-                ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final pilot = filtered[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _MobileOperatorCard(
-                      pilot: pilot,
-                      onTap: () {
-                        store.selectPilot(pilot);
-                        _openPortfolio(context, pilot);
-                      },
-                    ),
-                  );
-                }, childCount: filtered.length),
-              ),
-            ),
+          ),
 
           // ── Category browse section ────────────────────────────────────────
           SliverToBoxAdapter(
@@ -338,7 +337,7 @@ class _UserHomeTabState extends State<_UserHomeTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const Text(
-                    '카테고리별 서비스',
+                    '카테고리/지역별 서비스',
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: 18,
@@ -349,7 +348,7 @@ class _UserHomeTabState extends State<_UserHomeTab> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    '필요한 드론 서비스 분야를 선택하세요.',
+                    '원하는 분야와 지역의 드론 서비스를 찾아보세요.',
                     style: TextStyle(
                       fontFamily: 'Pretendard',
                       fontSize: 13,
@@ -531,6 +530,235 @@ class _HowItWorksStepCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Operator 2-per-page Horizontal Pager ────────────────────────────────────
+
+class _OperatorPager extends StatelessWidget {
+  const _OperatorPager({
+    required this.pilots,
+    required this.pageCtrl,
+    required this.currentPage,
+    required this.onPageChanged,
+    required this.onTap,
+  });
+
+  final List<DronePilot> pilots;
+  final PageController pageCtrl;
+  final int currentPage;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<DronePilot> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final pageCount = (pilots.length / 2).ceil();
+
+    return Column(
+      children: <Widget>[
+        SizedBox(
+          height: 148,
+          child: PageView.builder(
+            controller: pageCtrl,
+            onPageChanged: onPageChanged,
+            itemCount: pageCount,
+            itemBuilder: (context, pageIndex) {
+              final a = pageIndex * 2;
+              final b = a + 1;
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _OperatorCardCompact(
+                        pilot: pilots[a],
+                        onTap: () => onTap(pilots[a]),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (b < pilots.length)
+                      Expanded(
+                        child: _OperatorCardCompact(
+                          pilot: pilots[b],
+                          onTap: () => onTap(pilots[b]),
+                        ),
+                      )
+                    else
+                      const Expanded(child: SizedBox()),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        // Dot indicators
+        if (pageCount > 1) ...<Widget>[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List<Widget>.generate(pageCount, (i) {
+              final active = i == currentPage;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: active ? 16 : 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  color: active ? _primary : const Color(0xFFCDD7E8),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+        ] else
+          const SizedBox(height: 8),
+      ],
+    );
+  }
+}
+
+class _OperatorCardCompact extends StatelessWidget {
+  const _OperatorCardCompact({required this.pilot, required this.onTap});
+
+  final DronePilot pilot;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = pilot.name.isNotEmpty ? pilot.name[0].toUpperCase() : '?';
+    final area = pilot.availableAreas.isNotEmpty
+        ? pilot.availableAreas.first
+        : pilot.location;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE4EAF2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: <Widget>[
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEEF0F3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            fontFamily: 'Pretendard',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF5B616E),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 1,
+                      right: 1,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: _mint,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        pilot.name,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0A0B0D),
+                          letterSpacing: -0.1,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (area.isNotEmpty)
+                        Row(
+                          children: <Widget>[
+                            const Icon(Icons.location_on_outlined, size: 10, color: Color(0xFF7C828A)),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                area,
+                                style: const TextStyle(
+                                  fontFamily: 'Pretendard',
+                                  fontSize: 11,
+                                  color: Color(0xFF5B616E),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: pilot.categories
+                  .take(2)
+                  .map((cat) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF4FF),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          cat,
+                          style: const TextStyle(
+                            fontFamily: 'Pretendard',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: _primary,
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+            const Spacer(),
+            Text(
+              pilot.priceLabel,
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0A0B0D),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -940,12 +1168,21 @@ class _UserMyPageTab extends StatelessWidget {
               title: '계정',
               items: <_MobileMenuItem>[
                 _MobileMenuItem(
+                  label: '개인정보처리방침',
+                  onTap: () => context.push('/privacy'),
+                ),
+                _MobileMenuItem(
                   label: '로그아웃',
                   isDestructive: true,
                   onTap: () async {
                     await store.signOut();
                     if (context.mounted) context.go('/login');
                   },
+                ),
+                _MobileMenuItem(
+                  label: '계정 삭제',
+                  isDestructive: true,
+                  onTap: () => _showAccountDeletionDialog(context, store),
                 ),
               ],
             ),
@@ -1069,6 +1306,120 @@ class _MobileMenuSection extends StatelessWidget {
             );
           }),
           const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+}
+
+void _showAccountDeletionDialog(BuildContext context, DrameStore store) {
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => _AccountDeletionDialog(store: store),
+  );
+}
+
+class _AccountDeletionDialog extends StatefulWidget {
+  const _AccountDeletionDialog({required this.store});
+  final DrameStore store;
+
+  @override
+  State<_AccountDeletionDialog> createState() => _AccountDeletionDialogState();
+}
+
+class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {
+  bool _deleting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text(
+        '계정 삭제',
+        style: TextStyle(fontFamily: 'Pretendard', fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF0A0B0D)),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const <Widget>[
+          Text(
+            '계정을 삭제하면 다음 데이터가 즉시 삭제됩니다.',
+            style: TextStyle(fontFamily: 'Pretendard', fontSize: 13, color: Color(0xFF4B5058), height: 1.5),
+          ),
+          SizedBox(height: 10),
+          _DeletionBullet('프로필, 이미지, 포트폴리오'),
+          _DeletionBullet('피드 게시글 및 댓글'),
+          _DeletionBullet('푸시 알림 토큰'),
+          SizedBox(height: 10),
+          Text(
+            '거래 및 견적 기록은 전자상거래법에 따라 최대 5년 보관 후 파기됩니다. 이 작업은 되돌릴 수 없습니다.',
+            style: TextStyle(fontFamily: 'Pretendard', fontSize: 12, color: Color(0xFF7C828A), height: 1.5),
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _deleting ? null : () => Navigator.of(context).pop(),
+          child: const Text('취소', style: TextStyle(fontFamily: 'Pretendard', color: Color(0xFF7C828A))),
+        ),
+        FilledButton(
+          onPressed: _deleting
+              ? null
+              : () async {
+                  setState(() => _deleting = true);
+                  final nav = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+                  final router = GoRouter.of(context);
+                  try {
+                    await widget.store.deleteAccount();
+                    if (mounted) {
+                      nav.pop();
+                      router.go('/');
+                    }
+                  } catch (e) {
+                    if (!mounted) return;
+                    setState(() => _deleting = false);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.toString().replaceFirst('Exception: ', ''),
+                          style: const TextStyle(fontFamily: 'Pretendard', fontSize: 13),
+                        ),
+                        backgroundColor: const Color(0xFFE53935),
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                },
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFFE53935),
+            textStyle: const TextStyle(fontFamily: 'Pretendard', fontWeight: FontWeight.w600),
+          ),
+          child: _deleting
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Text('계정 삭제'),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeletionBullet extends StatelessWidget {
+  const _DeletionBullet(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 3),
+      child: Row(
+        children: <Widget>[
+          const Text('• ', style: TextStyle(color: Color(0xFFE53935), fontSize: 13)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontFamily: 'Pretendard', fontSize: 13, color: Color(0xFF4B5058), height: 1.5),
+            ),
+          ),
         ],
       ),
     );

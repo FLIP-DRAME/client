@@ -723,32 +723,44 @@ class _SignupPageState extends State<SignupPage> {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(
+            child: Text.rich(
+              TextSpan(
+                style: const TextStyle(
                   fontFamily: 'Pretendard',
                   fontSize: 13,
                   color: DC.body,
                   height: 1.55,
                 ),
                 children: <InlineSpan>[
-                  TextSpan(text: '서비스 '),
-                  TextSpan(
+                  const TextSpan(text: '서비스 '),
+                  const TextSpan(
                     text: '이용약관',
                     style: TextStyle(
                       color: DC.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  TextSpan(text: ' 및 '),
-                  TextSpan(
-                    text: '개인정보처리방침',
-                    style: TextStyle(
-                      color: DC.primary,
-                      fontWeight: FontWeight.w600,
+                  const TextSpan(text: ' 및 '),
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.baseline,
+                    baseline: TextBaseline.alphabetic,
+                    child: GestureDetector(
+                      onTap: () => context.push('/privacy'),
+                      child: const Text(
+                        '개인정보처리방침',
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 13,
+                          color: DC.primary,
+                          fontWeight: FontWeight.w600,
+                          height: 1.55,
+                          decoration: TextDecoration.underline,
+                          decorationColor: DC.primary,
+                        ),
+                      ),
                     ),
                   ),
-                  TextSpan(text: '에 동의합니다'),
+                  const TextSpan(text: '에 동의합니다'),
                 ],
               ),
             ),

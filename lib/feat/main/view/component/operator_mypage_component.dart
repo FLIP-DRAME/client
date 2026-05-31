@@ -1,5 +1,12 @@
 part of '../pages/main_page.dart';
 
+void _showOperatorAccountDeletionDialog(BuildContext context, DrameStore store) {
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => _AccountDeletionDialog(store: store),
+  );
+}
+
 class _OperatorProfileManagementPage extends StatelessWidget {
   const _OperatorProfileManagementPage({required this.store});
 
@@ -280,19 +287,33 @@ class _OperatorMyPageBody extends StatelessWidget {
               },
             ),
             const SizedBox(height: 30),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () async {
-                  await store.signOut();
-                  if (context.mounted) context.go('/login');
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFFE53935),
-                  textStyle: AppText.button,
+            Row(
+              children: <Widget>[
+                TextButton(
+                  onPressed: () async {
+                    await store.signOut();
+                    if (context.mounted) context.go('/login');
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFE53935),
+                    textStyle: AppText.button,
+                  ),
+                  child: const Text('로그아웃'),
                 ),
-                child: const Text('로그아웃'),
-              ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => _showOperatorAccountDeletionDialog(context, store),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFE53935),
+                    textStyle: const TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  child: const Text('계정 삭제'),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Align(

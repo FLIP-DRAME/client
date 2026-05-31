@@ -263,30 +263,44 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const Spacer(flex: 2),
-              const Text.rich(
+              Text.rich(
                 TextSpan(
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFFA3AFBF),
+                    height: 1.5,
+                  ),
                   children: <InlineSpan>[
-                    TextSpan(text: '로그인 시 '),
-                    TextSpan(
+                    const TextSpan(text: '로그인 시 '),
+                    const TextSpan(
                       text: '이용약관',
                       style: TextStyle(decoration: TextDecoration.underline),
                     ),
-                    TextSpan(text: '과 '),
-                    TextSpan(
-                      text: '개인정보처리방침',
-                      style: TextStyle(decoration: TextDecoration.underline),
+                    const TextSpan(text: '과 '),
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.baseline,
+                      baseline: TextBaseline.alphabetic,
+                      child: GestureDetector(
+                        onTap: () => context.push('/privacy'),
+                        child: const Text(
+                          '개인정보처리방침',
+                          style: TextStyle(
+                            fontFamily: 'Pretendard',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFFA3AFBF),
+                            height: 1.5,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                     ),
-                    TextSpan(text: '에 동의하게 됩니다.'),
+                    const TextSpan(text: '에 동의하게 됩니다.'),
                   ],
                 ),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFFA3AFBF),
-                  height: 1.5,
-                ),
               ),
             ],
           ),

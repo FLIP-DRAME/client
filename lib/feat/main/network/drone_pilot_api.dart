@@ -51,6 +51,7 @@ abstract class DronePilotApi {
   Future<void> saveFcmToken(String token);
   Future<bool> isRequestUnlocked(String requestId);
   Future<void> unlockRequest(String requestId);
+  Future<void> deleteMyAccount();
 }
 
 class PilotWorkRequestData {
@@ -635,6 +636,29 @@ class SupabaseDronePilotApi implements DronePilotApi {
           'job_request_id': requestId,
         }, onConflict: 'operator_user_id,job_request_id');
   }
+
+  @override
+  Future<void> deleteMyAccount() async {
+    if (_client.auth.currentUser == null) throw Exception('로그인이 필요합니다.');
+
+    // All data deletion + auth user removal is handled server-side (service role bypasses RLS)
+    final token = _client.auth.currentSession?.accessToken ?? '';
+    final res = await _client.functions.invoke(
+      'delete-user',
+      headers: <String, String>{'Authorization': 'Bearer $token'},
+    );
+
+    // Always sign out regardless of result
+    try { await _client.auth.signOut(); } catch (_) {}
+
+    final status = res.status;
+    if (status != 200) {
+      final body = res.data;
+      final detail = body is Map ? (body['error'] ?? body.toString()) : body?.toString() ?? '';
+      throw Exception('계정 삭제 실패 ($status): $detail');
+    }
+  }
+
 
   Future<void> _tryOptionalWrite(Future<Object?> Function() write) async {
     try {

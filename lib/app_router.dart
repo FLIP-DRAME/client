@@ -6,6 +6,8 @@ import 'package:mode/feat/main/network/drone_pilot_api.dart';
 import 'app_providers.dart';
 import 'feat/auth/view/pages/login_page.dart';
 import 'feat/auth/view/pages/signup_page.dart';
+import 'feat/legal/view/pages/privacy_policy_page.dart';
+import 'feat/legal/view/pages/account_deletion_page.dart';
 import 'feat/chat/view/pages/chat_list_page.dart';
 import 'feat/chat/view/pages/chat_room_page.dart';
 import 'feat/landing/view/pages/landing_page.dart';
@@ -255,6 +257,18 @@ final GoRouter appRouter = GoRouter(
           child: PilotRequestReviewPage(initialRequest: initialRequest),
         );
       },
+    ),
+    GoRoute(
+      path: '/privacy',
+      name: 'privacy',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: PrivacyPolicyPage()),
+    ),
+    GoRoute(
+      path: '/delete-account',
+      name: 'delete-account',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: AccountDeletionPage()),
     ),
     GoRoute(
       path: '/chats',

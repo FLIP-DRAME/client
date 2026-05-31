@@ -237,6 +237,20 @@ class DrameStore extends ChangeNotifier {
     unawaited(_saveFcmToken());
   }
 
+  Future<void> deleteAccount() async {
+    await _api.deleteMyAccount();
+    isLoggedIn = false;
+    isPilotMode = false;
+    isPilotOnboarding = false;
+    accountEmail = '';
+    accountPassword = '';
+    accountName = '';
+    accountNickname = '';
+    myQuotes = <UserQuoteSummary>[];
+    allPilots = <DronePilot>[];
+    notifyListeners();
+  }
+
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
     isLoggedIn = false;
