@@ -1777,6 +1777,24 @@ class _OperatorProfileCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (store.operatorRegistrationCompleted)
+                TextButton.icon(
+                  onPressed: () => context.go('/operator/mypage'),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('등록 정보 수정'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF5B616E),
+                    textStyle: const TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 22),
