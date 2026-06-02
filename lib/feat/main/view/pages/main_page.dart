@@ -840,11 +840,6 @@ class _DrameHomePageState extends State<DrameHomePage> {
         label: '채팅',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.grid_view_outlined),
-        activeIcon: Icon(Icons.grid_view_rounded),
-        label: '포트폴리오',
-      ),
-      BottomNavigationBarItem(
         icon: Icon(Icons.person_outline_rounded),
         activeIcon: Icon(Icons.person_rounded),
         label: '내정보',
@@ -880,9 +875,6 @@ class _DrameHomePageState extends State<DrameHomePage> {
                 ),
               ),
               ChatListPage(onBack: () => setState(() => _tabIndex = 0)),
-              SingleChildScrollView(
-                child: _OperatorPortfolioBuilderSection(store: store),
-              ),
               _OperatorMyPageMobileTab(store: store),
             ]
             : <Widget>[

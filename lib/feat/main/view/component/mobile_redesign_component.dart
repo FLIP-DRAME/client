@@ -1456,7 +1456,7 @@ class _OperatorDashboardTab extends StatelessWidget {
                               store.operatorRegistrationCompleted
                                   ? OutlinedButton(
                                     onPressed:
-                                        () => context.go('/operator/mypage'),
+                                        () => context.go('/operator/portfolio'),
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor: const Color(0xFF0A0B0D),
                                       side: const BorderSide(
@@ -1474,7 +1474,7 @@ class _OperatorDashboardTab extends StatelessWidget {
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    child: const Text('내 소개 편집'),
+                                    child: const Text('포트폴리오 편집하기'),
                                   )
                                   : FilledButton(
                                     onPressed:

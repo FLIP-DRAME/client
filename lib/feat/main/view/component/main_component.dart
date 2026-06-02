@@ -1786,13 +1786,13 @@ class _OperatorProfileCard extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => context.go('/operator/mypage'),
+                  onPressed: () => context.go('/operator/portfolio'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _navy,
                     textStyle: AppText.button,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('내 소개 편집'),
+                  child: const Text('포트폴리오 편집하기'),
                 ),
               ),
               if (!store.operatorRegistrationCompleted) ...<Widget>[
