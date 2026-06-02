@@ -31,6 +31,8 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     try {
       final rooms = await ref.read(chatViewModelProvider).fetchRooms();
       if (mounted) setState(() => _rooms = rooms);
+    } catch (_) {
+      // 비로그인 상태에서는 채팅 목록을 불러올 수 없음
     } finally {
       if (mounted) setState(() => _loading = false);
     }

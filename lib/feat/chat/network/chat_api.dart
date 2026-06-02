@@ -74,6 +74,7 @@ class ChatApi {
   }
 
   Future<List<ChatRoom>> fetchRooms() async {
+    if (_client.auth.currentUser == null) return <ChatRoom>[];
     final userId = _uid;
     final rows = await _client
         .from('chat_rooms')

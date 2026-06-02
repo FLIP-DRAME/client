@@ -230,11 +230,7 @@ class _CategorySelectionSection extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final columns =
-                    constraints.maxWidth >= 1040
-                        ? 3
-                        : constraints.maxWidth >= 600
-                        ? 2
-                        : 1;
+                    constraints.maxWidth >= 1040 ? 3 : 2;
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -325,20 +321,19 @@ class _OperatorListSection extends StatelessWidget {
               LayoutBuilder(
                 builder: (context, constraints) {
                   final columns =
-                      constraints.maxWidth >= 1040
-                          ? 3
-                          : constraints.maxWidth >= 720
-                          ? 2
-                          : 1;
+                      constraints.maxWidth >= 1040 ? 3 : 2;
+                  // 모바일 2열에서는 카드 높이를 줄임 (이미지+텍스트 최적화)
+                  final cardHeight =
+                      columns == 2 && constraints.maxWidth < 760 ? 320 : 430;
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: store.pilots.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: columns,
-                      crossAxisSpacing: 18,
-                      mainAxisSpacing: 18,
-                      mainAxisExtent: 430,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      mainAxisExtent: cardHeight.toDouble(),
                     ),
                     itemBuilder: (context, index) {
                       final pilot = store.pilots[index];
@@ -538,6 +533,10 @@ class _OperatorMatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 760;
+    final imgH = compact ? 120.0 : 190.0;
+    final pad = compact ? 12.0 : 18.0;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
@@ -559,7 +558,7 @@ class _OperatorMatchCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             SizedBox(
-              height: 190,
+              height: imgH,
               width: double.infinity,
               child:
                   pilot.portfolioImages.isNotEmpty
@@ -569,42 +568,54 @@ class _OperatorMatchCard extends StatelessWidget {
                       : const _EmptyOperatorCover(),
             ),
             Padding(
-              padding: const EdgeInsets.all(18),
+              padding: EdgeInsets.all(pad),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  if (priority) const _PriorityBadge(),
-                  const SizedBox(height: 14),
-                  Text(pilot.name, style: AppText.portfolioTitle),
-                  const SizedBox(height: 7),
+                  if (priority) ...<Widget>[
+                    const _PriorityBadge(),
+                    SizedBox(height: compact ? 8 : 14),
+                  ],
+                  Text(
+                    pilot.name,
+                    style:
+                        compact
+                            ? AppText.smallStrong.copyWith(fontSize: 14)
+                            : AppText.portfolioTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: compact ? 4 : 7),
                   Text(
                     pilot.intro,
-                    maxLines: 2,
+                    maxLines: compact ? 1 : 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppText.cardSubtitle,
                   ),
-                  const SizedBox(height: 14),
+                  SizedBox(height: compact ? 8 : 14),
                   Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
+                    spacing: compact ? 4 : 7,
+                    runSpacing: compact ? 4 : 7,
                     children:
-                        pilot.categories.map((category) {
-                          return _MiniChip(label: category);
-                        }).toList(),
+                        pilot.categories
+                            .take(compact ? 2 : pilot.categories.length)
+                            .map((c) => _MiniChip(label: c))
+                            .toList(),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: compact ? 10 : 16),
                   Row(
                     children: <Widget>[
-                      Text(pilot.priceLabel, style: AppText.smallStrong),
-                      const Spacer(),
-                      Text(
-                        '포트폴리오 보기',
-                        style: AppText.smallStrong.copyWith(color: _navy),
+                      Expanded(
+                        child: Text(
+                          pilot.priceLabel,
+                          style: AppText.smallStrong,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const Icon(
                         Icons.chevron_right_rounded,
                         color: _navy,
-                        size: 20,
+                        size: 18,
                       ),
                     ],
                   ),
@@ -2126,6 +2137,7 @@ class _PilotRequestReviewPage extends StatefulWidget {
 class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
   PilotWorkRequest? selectedRequest;
   final Set<String> _completedRequestIds = {};
+  String? _expandedRequestId; // compact 아코디언 전용
 
   @override
   void initState() {
@@ -2272,28 +2284,49 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                   _RequestReviewList(
                                     requests: requests,
                                     selected: current,
+                                    expandedId: _expandedRequestId,
                                     onSelected: (request) {
-                                      setState(() => selectedRequest = request);
-                                      unawaited(
-                                        store.markOperatorRequestSeen(request),
-                                      );
+                                      setState(() {
+                                        if (_expandedRequestId == request.id) {
+                                          // 같은 카드 탭 → 닫기
+                                          _expandedRequestId = null;
+                                        } else {
+                                          // 다른 카드 탭 → 열기
+                                          _expandedRequestId = request.id;
+                                          selectedRequest = request;
+                                          unawaited(
+                                            store.markOperatorRequestSeen(
+                                              request,
+                                            ),
+                                          );
+                                        }
+                                      });
                                     },
-                                  ),
-                                  const SizedBox(height: 18),
-                                  _RequestReviewDetail(
-                                    request: current,
-                                    isCompleted: currentCompleted,
-                                    onComplete: (message, proposedPrice) async {
-                                      await store.submitOperatorQuote(
-                                        current,
-                                        message,
-                                        proposedPrice: proposedPrice,
-                                      );
-                                      if (!mounted) return;
-                                      setState(
-                                        () => _completedRequestIds.add(
-                                          current.id,
-                                        ),
+                                    inlineDetailBuilder: (request) {
+                                      final isCompleted =
+                                          _completedRequestIds.contains(
+                                            request.id,
+                                          ) ||
+                                          request.status == '견적 보냄';
+                                      return _RequestReviewDetail(
+                                        request: request,
+                                        isCompleted: isCompleted,
+                                        onComplete: (
+                                          message,
+                                          proposedPrice,
+                                        ) async {
+                                          await store.submitOperatorQuote(
+                                            request,
+                                            message,
+                                            proposedPrice: proposedPrice,
+                                          );
+                                          if (!mounted) return;
+                                          setState(
+                                            () => _completedRequestIds.add(
+                                              request.id,
+                                            ),
+                                          );
+                                        },
                                       );
                                     },
                                   ),
@@ -2364,11 +2397,16 @@ class _RequestReviewList extends StatefulWidget {
     required this.requests,
     required this.selected,
     required this.onSelected,
+    this.inlineDetailBuilder,
+    this.expandedId,
   });
 
   final List<PilotWorkRequest> requests;
   final PilotWorkRequest selected;
   final ValueChanged<PilotWorkRequest> onSelected;
+  final Widget Function(PilotWorkRequest)? inlineDetailBuilder;
+  /// compact 아코디언용: null이면 인라인 detail 비활성화
+  final String? expandedId;
 
   @override
   State<_RequestReviewList> createState() => _RequestReviewListState();
@@ -2436,16 +2474,28 @@ class _RequestReviewListState extends State<_RequestReviewList> {
             ),
           )
         else
-          ...filtered.map(
-            (request) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _RequestReviewCard(
-                request: request,
-                selected: widget.selected.id == request.id,
-                onTap: () => widget.onSelected(request),
-              ),
-            ),
-          ),
+          ...filtered.map((request) {
+            final isSelected = widget.selected.id == request.id;
+            // expandedId가 제공된 경우에만 사용 (null이면 아무 카드도 열리지 않음)
+            final isExpanded = widget.expandedId == request.id;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _RequestReviewCard(
+                    request: request,
+                    selected: isSelected,
+                    onTap: () => widget.onSelected(request),
+                  ),
+                ),
+                if (isExpanded && widget.inlineDetailBuilder != null) ...<Widget>[
+                  widget.inlineDetailBuilder!(request),
+                  const SizedBox(height: 16),
+                ],
+              ],
+            );
+          }),
       ],
     );
   }

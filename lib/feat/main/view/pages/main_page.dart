@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
 
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
@@ -485,6 +484,72 @@ class _DrameHomePageState extends State<DrameHomePage> {
     }
   }
 
+  PreferredSizeWidget _buildMobileAppBar(
+    BuildContext context,
+    DrameStore store,
+  ) {
+    return AppBar(
+      backgroundColor: DC.canvas,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      automaticallyImplyLeading: false,
+      toolbarHeight: DC.navHeight,
+      titleSpacing: 16,
+      title: GestureDetector(
+        onTap: () {
+          store.clearCategory();
+          store.setPilotMode(false);
+          setState(() => _tabIndex = 0);
+        },
+        child: const DrameLogo(size: 36, showText: false),
+      ),
+      centerTitle: false,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: DC.hairline),
+      ),
+      actions: <Widget>[
+        if (!store.isLoggedIn)
+          TextButton(
+            onPressed: () => context.go('/login'),
+            style: TextButton.styleFrom(
+              foregroundColor: DC.ink,
+              textStyle: DT.navLink,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            child: const Text('로그인'),
+          )
+        else
+          TextButton(
+            onPressed: () async {
+              await store.signOut();
+              if (context.mounted) context.go('/login');
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFE53935),
+              textStyle: DT.navLink,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            child: const Text('로그아웃'),
+          ),
+        const SizedBox(width: 8),
+        _MobileModePill(
+          isOperator: store.isPilotMode,
+          onUserTap: () => context.go('/home'),
+          onOperatorTap: () {
+            if (!store.isLoggedIn) {
+              showLoginRequiredDialog(context);
+              return;
+            }
+            context.go('/operator');
+          },
+        ),
+        const SizedBox(width: 16),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final compact = MediaQuery.sizeOf(context).width < 760;
@@ -564,12 +629,13 @@ class _DrameHomePageState extends State<DrameHomePage> {
               }
               context.go('/chats');
             },
-            onLogoutTap: store.isLoggedIn
-                ? () async {
-                    await store.signOut();
-                    if (context.mounted) context.go('/login');
-                  }
-                : null,
+            onLogoutTap:
+                store.isLoggedIn
+                    ? () async {
+                      await store.signOut();
+                      if (context.mounted) context.go('/login');
+                    }
+                    : null,
             onSwitchToUser: () {
               store.setPilotMode(false);
               setState(() => _selectedTabId = 'all');
@@ -792,9 +858,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
         store.isPilotMode
             ? <Widget>[
               _OperatorDashboardTab(store: store),
-              _MobilePilotRequestsPage(store: store),
+              const SizedBox.shrink(), // /operator/requests 로 라우팅
               ColoredBox(
-                color: _bgBeige,
+                color: DC.canvas,
                 child: SingleChildScrollView(
                   child: Column(
                     children: <Widget>[
@@ -824,37 +890,33 @@ class _DrameHomePageState extends State<DrameHomePage> {
               const SingleChildScrollView(
                 child: ColoredBox(color: DC.canvas, child: DroneFeedSection()),
               ),
-              _MobileMyQuotesTab(store: store),
+              const SizedBox.shrink(), // /my/quotes 로 라우팅
               ChatListPage(onBack: () => setState(() => _tabIndex = 0)),
               _UserMyPageTab(store: store),
             ];
 
     return Scaffold(
-      backgroundColor: _bgBeige,
-      appBar: _MobileNewAppBar(
-        store: store,
-        onLoginTap: () => context.go('/login'),
-        onModeChanged: (value) {
-          if (value) {
-            if (!store.isLoggedIn) {
-              showLoginRequiredDialog(context);
-              return;
-            }
-            context.go('/operator');
-          } else {
-            context.go('/home');
-          }
-        },
-      ),
+      backgroundColor: DC.canvas,
+      appBar: _buildMobileAppBar(context, store),
       body: SafeArea(
+        top: false,
         child: IndexedStack(index: safeIndex, children: tabChildren),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: safeIndex,
         onTap: (index) {
-          // 비로그인 사용자가 홈(0)이 아닌 다른 탭 클릭 시 로그인 유도
           if (!store.isLoggedIn && index != 0 && !store.isPilotMode) {
             showLoginRequiredDialog(context);
+            return;
+          }
+          // 이용자 내견적 → 웹과 동일한 페이지로 이동
+          if (!store.isPilotMode && index == 2) {
+            context.go('/my/quotes');
+            return;
+          }
+          // 운용자 요청확인 → 웹과 동일한 페이지로 이동
+          if (store.isPilotMode && index == 1) {
+            context.go('/operator/requests');
             return;
           }
           setState(() => _tabIndex = index);

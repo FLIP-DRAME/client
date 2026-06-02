@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../app_providers.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../../common/login_prompt.dart';
+import '../../../../core/app_defaults.dart';
 import '../../../main/model/drone_pilot_model.dart';
 import '../../../main/model/main_models.dart';
 import '../../../quote/model/quote_model.dart';
@@ -19,9 +20,7 @@ const _ink = Colors.black;
 const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
-const _bgBeige = Color(0xFFF0F0EB);
 const _primary = Color(0xFF0052FF);
-const _mintGreen = Color(0xFF22C58B);
 const _mutedGray = Color(0xFF7C828A);
 
 class PortfolioText {
