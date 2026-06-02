@@ -131,6 +131,12 @@ class DrameTopNavigation extends StatelessWidget {
                     ),
                     const SizedBox(width: 24),
                     _NavLink(
+                      label: '내 견적',
+                      onTap: onMyQuotesTap ?? () {},
+                      active: activePage == 'quotes',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
                       label: '피드',
                       onTap: onFeedTap ?? () {},
                       active: activePage == 'feed',
@@ -140,12 +146,6 @@ class DrameTopNavigation extends StatelessWidget {
                       label: '포트폴리오',
                       onTap: onPortfolioTap ?? () {},
                       active: activePage == 'portfolio',
-                    ),
-                    const SizedBox(width: 24),
-                    _NavLink(
-                      label: '내 견적',
-                      onTap: onMyQuotesTap ?? () {},
-                      active: activePage == 'quotes',
                     ),
                     const SizedBox(width: 24),
                     _NavLink(
