@@ -797,14 +797,14 @@ class _DrameHomePageState extends State<DrameHomePage> {
         label: '홈',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.photo_library_outlined),
-        activeIcon: Icon(Icons.photo_library_rounded),
-        label: '피드',
-      ),
-      BottomNavigationBarItem(
         icon: Icon(Icons.description_outlined),
         activeIcon: Icon(Icons.description_rounded),
         label: '내견적',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.photo_library_outlined),
+        activeIcon: Icon(Icons.photo_library_rounded),
+        label: '피드',
       ),
       BottomNavigationBarItem(
         icon: Icon(Icons.chat_bubble_outline_rounded),
@@ -879,10 +879,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
             ]
             : <Widget>[
               _UserHomeTab(store: store),
+              const SizedBox.shrink(), // /my/quotes 로 라우팅
               const SingleChildScrollView(
                 child: ColoredBox(color: DC.canvas, child: DroneFeedSection()),
               ),
-              const SizedBox.shrink(), // /my/quotes 로 라우팅
               ChatListPage(onBack: () => setState(() => _tabIndex = 0)),
               _UserMyPageTab(store: store),
             ];
@@ -902,7 +902,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
             return;
           }
           // 이용자 내견적 → 웹과 동일한 페이지로 이동
-          if (!store.isPilotMode && index == 2) {
+          if (!store.isPilotMode && index == 1) {
             context.go('/my/quotes');
             return;
           }
