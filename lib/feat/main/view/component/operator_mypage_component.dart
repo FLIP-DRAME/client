@@ -82,13 +82,34 @@ class _OperatorProfileManagementPage extends StatelessWidget {
   }
 }
 
-class _OperatorMyPageBody extends StatelessWidget {
+class _OperatorMyPageBody extends StatefulWidget {
   const _OperatorMyPageBody({required this.store});
 
   final DrameStore store;
 
   @override
+  State<_OperatorMyPageBody> createState() => _OperatorMyPageBodyState();
+}
+
+class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
+  late Set<String> _selectedCategories;
+  late Set<String> _selectedAreas;
+
+  @override
+  void initState() {
+    super.initState();
+    _resetFromPilot();
+  }
+
+  void _resetFromPilot() {
+    final pilot = widget.store.selectedPilot;
+    _selectedCategories = Set<String>.from(pilot?.categories ?? <String>[]);
+    _selectedAreas = Set<String>.from(pilot?.availableAreas ?? <String>[]);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final store = widget.store;
     final compact = MediaQuery.sizeOf(context).width < 980;
     final name = store.accountName.isEmpty ? '운용자' : store.accountName;
     final nickname =
@@ -163,22 +184,115 @@ class _OperatorMyPageBody extends StatelessWidget {
                             onChanged:
                                 (value) => store.updateAuth(nickname: value),
                           ),
-                          const SizedBox(height: 8),
-                          const Text('활동 지역', style: AppText.smallStrong),
-                          const SizedBox(height: 10),
-                          _PilotChipGroup(
-                            values: const <String>[
-                              '서울',
-                              '경기',
-                              '인천',
-                              '강원',
-                              '충청',
-                              '전라',
-                              '경상',
-                              '제주',
-                            ],
-                            selected: store.pilotOnboarding.areas,
-                            onTap: store.togglePilotArea,
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width:
+                          twoColumns
+                              ? (constraints.maxWidth - 18) / 2
+                              : constraints.maxWidth,
+                      child: _OperatorInfoCard(
+                        title: '전문 분야',
+                        children: <Widget>[
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                                store.categories.map((cat) {
+                                  final selected =
+                                      _selectedCategories.contains(cat.label);
+                                  return FilterChip(
+                                    label: Text(cat.label),
+                                    selected: selected,
+                                    showCheckmark: false,
+                                    onSelected:
+                                        (_) => setState(() {
+                                          if (selected) {
+                                            _selectedCategories.remove(
+                                              cat.label,
+                                            );
+                                          } else {
+                                            _selectedCategories.add(cat.label);
+                                          }
+                                        }),
+                                    selectedColor: _navy,
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(
+                                      color: selected ? _navy : _line,
+                                      width: selected ? 1.5 : 1,
+                                    ),
+                                    labelStyle: AppText.chip.copyWith(
+                                      color:
+                                          selected ? Colors.white : _ink,
+                                      fontWeight:
+                                          selected
+                                              ? FontWeight.w600
+                                              : FontWeight.w400,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width:
+                          twoColumns
+                              ? (constraints.maxWidth - 18) / 2
+                              : constraints.maxWidth,
+                      child: _OperatorInfoCard(
+                        title: '서비스 지역',
+                        children: <Widget>[
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                                store.serviceAreas.map((area) {
+                                  final selected =
+                                      _selectedAreas.contains(area);
+                                  return FilterChip(
+                                    label: Text(area),
+                                    selected: selected,
+                                    showCheckmark: false,
+                                    onSelected:
+                                        (_) => setState(() {
+                                          if (selected) {
+                                            _selectedAreas.remove(area);
+                                          } else {
+                                            _selectedAreas.add(area);
+                                          }
+                                        }),
+                                    selectedColor: _navy,
+                                    backgroundColor: Colors.white,
+                                    side: BorderSide(
+                                      color: selected ? _navy : _line,
+                                      width: selected ? 1.5 : 1,
+                                    ),
+                                    labelStyle: AppText.chip.copyWith(
+                                      color:
+                                          selected ? Colors.white : _ink,
+                                      fontWeight:
+                                          selected
+                                              ? FontWeight.w600
+                                              : FontWeight.w400,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                  );
+                                }).toList(),
                           ),
                         ],
                       ),
@@ -327,9 +441,8 @@ class _OperatorMyPageBody extends StatelessWidget {
                     description:
                         store.selectedPilot?.description ??
                         store.pilotOnboarding.portfolioUrl,
-                    categoryLabels:
-                        store.selectedPilot?.categories ?? const <String>[],
-                    areaNames: store.pilotOnboarding.areas.toList(),
+                    categoryLabels: _selectedCategories.toList(),
+                    areaNames: _selectedAreas.toList(),
                     portfolioImageUrls:
                         store.selectedPilot?.portfolioImages ??
                         const <String>[],
