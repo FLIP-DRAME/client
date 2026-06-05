@@ -106,6 +106,8 @@ class FeedApi {
 
   Future<FeedPost> createPost({
     required String caption,
+    required String categoryLabel,
+    required String locationLabel,
     List<int>? imageBytes,
   }) async {
     final userId = _client.auth.currentUser?.id;
@@ -124,7 +126,16 @@ class FeedApi {
       throw StateError('운용자 등록을 먼저 완료한 뒤 피드를 등록해 주세요.');
     }
 
-    final categoryId = await _primaryCategoryId(operatorId);
+    final categoryId =
+        categoryLabel == '전체'
+            ? await _primaryCategoryId(operatorId)
+            : await _categoryIdByLabel(categoryLabel);
+    final location =
+        locationLabel == '전체'
+            ? (operator?['location_label']?.toString().trim().isNotEmpty == true
+                ? operator!['location_label'].toString()
+                : '지역 미정')
+            : locationLabel;
     final post =
         await _client
             .from('feed_posts')
@@ -133,7 +144,7 @@ class FeedApi {
               'operator_id': operatorId,
               'category_id': categoryId,
               'body': caption,
-              'location_label': operator?['location_label'],
+              'location_label': location,
               'is_published': true,
             })
             .select('''
@@ -187,6 +198,16 @@ class FeedApi {
         .limit(1);
     if (rows.isEmpty) return null;
     return rows.first['category_id']?.toString();
+  }
+
+  Future<String?> _categoryIdByLabel(String label) async {
+    final rows = await _client
+        .from('service_categories')
+        .select('id')
+        .eq('label', label)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return rows.first['id']?.toString();
   }
 
   FeedPost _postFromRow(Map<String, dynamic> map) {
@@ -260,9 +281,7 @@ class FeedApi {
         .from('feed_likes')
         .select('post_id')
         .eq('user_id', userId);
-    return rows
-        .map<String>((r) => (r as Map)['post_id'].toString())
-        .toSet();
+    return rows.map<String>((r) => (r as Map)['post_id'].toString()).toSet();
   }
 
   Future<int> fetchLikeCount(String postId) async {
@@ -276,7 +295,9 @@ class FeedApi {
   Future<List<FeedComment>> fetchComments(String postId) async {
     final rows = await _client
         .from('feed_comments')
-        .select('id, post_id, user_id, body, created_at, profiles(nickname, name)')
+        .select(
+          'id, post_id, user_id, body, created_at, profiles(nickname, name)',
+        )
         .eq('post_id', postId)
         .order('created_at', ascending: true);
     return rows.map<FeedComment>((row) {

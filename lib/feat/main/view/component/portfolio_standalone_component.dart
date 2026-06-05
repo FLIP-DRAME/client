@@ -60,7 +60,10 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
                 activePage: 'portfolio',
                 onLoginTap: () => context.go('/login'),
                 onRegisterPilotTap: () => context.push('/pilot/register'),
-                onLogoTap: () => context.go('/home'),
+                onLogoTap: () {
+                  store.setPilotMode(false);
+                  context.go('/home');
+                },
                 onFindPilotTap: () => context.go('/home'),
                 onFeedTap: () => context.go('/feed'),
                 onPortfolioTap: () => context.go('/portfolio'),
@@ -84,6 +87,7 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
                       initialRequest: store.firstPilotWorkRequest,
                     ),
                 notificationCount: store.notificationCount,
+                chatUnreadCount: store.chatUnreadCount,
                 onNotificationTap: () => _showNotifications(context, store),
               ),
               Expanded(

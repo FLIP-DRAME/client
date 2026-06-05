@@ -36,6 +36,7 @@ class DrameTopNavigation extends StatelessWidget {
     this.operatorActiveTab,
     this.onOperatorTabTap,
     this.notificationCount = 0,
+    this.chatUnreadCount = 0,
     this.onNotificationTap,
     this.onLogoutTap,
     this.onAboutServiceTap,
@@ -65,6 +66,7 @@ class DrameTopNavigation extends StatelessWidget {
   final String? operatorActiveTab;
   final ValueChanged<String>? onOperatorTabTap;
   final int notificationCount;
+  final int chatUnreadCount;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onLogoutTap;
   final VoidCallback? onAboutServiceTap;
@@ -122,6 +124,7 @@ class DrameTopNavigation extends StatelessWidget {
                       label: '채팅',
                       onTap: onChatTap ?? () {},
                       active: activePage == 'chat',
+                      badgeCount: chatUnreadCount,
                     ),
                   ] else if (isLoggedIn && !isOperator) ...<Widget>[
                     _NavLink(
@@ -152,6 +155,7 @@ class DrameTopNavigation extends StatelessWidget {
                       label: '채팅',
                       onTap: onChatTap ?? () {},
                       active: activePage == 'chat',
+                      badgeCount: chatUnreadCount,
                     ),
                   ] else ...<Widget>[
                     _NavLink(label: '촬영자 찾기', onTap: onFindPilotTap),
@@ -307,11 +311,13 @@ class _NavLink extends StatefulWidget {
     required this.label,
     required this.onTap,
     this.active = false,
+    this.badgeCount = 0,
   });
 
   final String label;
   final VoidCallback onTap;
   final bool active;
+  final int badgeCount;
 
   @override
   State<_NavLink> createState() => _NavLinkState();
@@ -344,7 +350,47 @@ class _NavLinkState extends State<_NavLink> {
               color: active ? DC.ink : DC.body,
               fontWeight: widget.active ? FontWeight.w700 : FontWeight.w500,
             ),
-            child: Text(widget.label),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: <Widget>[
+                Text(widget.label),
+                if (widget.badgeCount > 0)
+                  Positioned(
+                    right: -16,
+                    top: -8,
+                    child: _NavBadge(count: widget.badgeCount),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavBadge extends StatelessWidget {
+  const _NavBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      decoration: const BoxDecoration(
+        color: DC.primary,
+        borderRadius: BorderRadius.all(Radius.circular(999)),
+      ),
+      child: Center(
+        child: Text(
+          count > 99 ? '99+' : count.toString(),
+          style: const TextStyle(
+            fontFamily: 'Pretendard',
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

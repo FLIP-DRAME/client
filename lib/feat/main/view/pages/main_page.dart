@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
 
-
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
@@ -77,6 +76,28 @@ const _muted = Colors.black;
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
+
+Future<Uint8List> _readWebFileBytes(web.File file) {
+  final reader = web.FileReader();
+  final completer = Completer<Uint8List>();
+  reader.addEventListener(
+    'load',
+    (web.Event e) {
+      final result = reader.result;
+      if (result == null) {
+        completer.completeError('파일을 읽을 수 없습니다.');
+        return;
+      }
+      completer.complete(Uint8List.view((result as JSArrayBuffer).toDart));
+    }.toJS,
+  );
+  reader.addEventListener(
+    'error',
+    ((web.Event e) => completer.completeError('파일 읽기 오류')).toJS,
+  );
+  reader.readAsArrayBuffer(file);
+  return completer.future;
+}
 
 typedef StoreBuilder =
     Widget Function(BuildContext context, DrameStore store, Widget? child);
@@ -319,7 +340,10 @@ class _OperatorStandaloneShell extends StatelessWidget {
             nickname: nickname,
             onLoginTap: () => context.go('/login'),
             onRegisterPilotTap: () => context.push('/pilot/register'),
-            onLogoTap: () => context.go('/operator'),
+            onLogoTap: () {
+              store.setPilotMode(false);
+              context.go('/home');
+            },
             onFindPilotTap: () => context.go('/home'),
             onFeedTap: () => context.go('/feed'),
             onPortfolioTap: () => context.go('/portfolio'),
@@ -328,6 +352,7 @@ class _OperatorStandaloneShell extends StatelessWidget {
             onMyQuotesTap: () => context.go('/my/quotes'),
             onChatTap: () => context.go('/chats'),
             notificationCount: store.notificationCount,
+            chatUnreadCount: store.chatUnreadCount,
             onNotificationTap: () => _showNotifications(context, store),
             onLogoutTap: () async {
               await store.signOut();
@@ -501,6 +526,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
           store.clearCategory();
           store.setPilotMode(false);
           setState(() => _tabIndex = 0);
+          context.go('/home');
         },
         child: const DrameLogo(size: 36, showText: false),
       ),
@@ -600,6 +626,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
               store.clearCategory();
               store.setPilotMode(false);
               setState(() => _selectedTabId = 'all');
+              context.go('/home');
               _scrollToTop();
             },
             onFindPilotTap: () {
@@ -658,6 +685,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
             onMyPageTap: () => context.go('/operator/mypage'),
             onAboutServiceTap: () => context.go('/'),
             notificationCount: store.notificationCount,
+            chatUnreadCount: store.chatUnreadCount,
             onNotificationTap: () => _showNotifications(context, store),
             operatorActiveTab: isOperatorDashboard ? _selectedTabId : null,
             onOperatorTabTap:
@@ -790,56 +818,68 @@ class _DrameHomePageState extends State<DrameHomePage> {
       );
     }
 
-    const userNav = <BottomNavigationBarItem>[
-      BottomNavigationBarItem(
+    final userNav = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(
         icon: Icon(Icons.home_outlined),
         activeIcon: Icon(Icons.home_rounded),
         label: '홈',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.description_outlined),
         activeIcon: Icon(Icons.description_rounded),
         label: '내견적',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.photo_library_outlined),
         activeIcon: Icon(Icons.photo_library_rounded),
         label: '피드',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.chat_bubble_outline_rounded),
-        activeIcon: Icon(Icons.chat_bubble_rounded),
+        icon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_outline_rounded,
+          count: store.chatUnreadCount,
+        ),
+        activeIcon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_rounded,
+          count: store.chatUnreadCount,
+        ),
         label: '채팅',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.person_outline_rounded),
         activeIcon: Icon(Icons.person_rounded),
         label: '내정보',
       ),
     ];
 
-    const operatorNav = <BottomNavigationBarItem>[
-      BottomNavigationBarItem(
+    final operatorNav = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(
         icon: Icon(Icons.home_outlined),
         activeIcon: Icon(Icons.home_rounded),
         label: '대시보드',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.inbox_outlined),
         activeIcon: Icon(Icons.inbox_rounded),
         label: '요청확인',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.photo_library_outlined),
         activeIcon: Icon(Icons.photo_library_rounded),
         label: '피드',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.chat_bubble_outline_rounded),
-        activeIcon: Icon(Icons.chat_bubble_rounded),
+        icon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_outline_rounded,
+          count: store.chatUnreadCount,
+        ),
+        activeIcon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_rounded,
+          count: store.chatUnreadCount,
+        ),
         label: '채팅',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.person_outline_rounded),
         activeIcon: Icon(Icons.person_rounded),
         label: '내정보',
@@ -930,6 +970,48 @@ class _DrameHomePageState extends State<DrameHomePage> {
         ),
         items: navItems,
       ),
+    );
+  }
+}
+
+class _BottomBadgeIcon extends StatelessWidget {
+  const _BottomBadgeIcon({required this.icon, required this.count});
+
+  final IconData icon;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: <Widget>[
+        Icon(icon),
+        if (count > 0)
+          Positioned(
+            right: -10,
+            top: -7,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              decoration: const BoxDecoration(
+                color: _primary,
+                borderRadius: BorderRadius.all(Radius.circular(999)),
+              ),
+              child: Center(
+                child: Text(
+                  count > 99 ? '99+' : count.toString(),
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

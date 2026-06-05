@@ -38,9 +38,18 @@ abstract class DronePilotApi {
   });
   Future<void> submitOperatorRegistration(PilotRegistrationPayload payload);
   Future<String> uploadProfilePhoto(String userId, List<int> bytes, String ext);
+  Future<String> uploadPortfolioImage(
+    String userId,
+    List<int> bytes,
+    String fileName,
+  );
   Future<String> uploadLicensePdf(String userId, List<int> bytes);
   Future<String> uploadBusinessPdf(String userId, List<int> bytes);
   Future<String> uploadInsurancePdf(String userId, List<int> bytes);
+  Future<void> updateMyProfile({
+    required String name,
+    required String nickname,
+  });
   Future<void> updateOperatorProfile({
     required String intro,
     required String description,
@@ -320,14 +329,13 @@ class SupabaseDronePilotApi implements DronePilotApi {
     String ext,
   ) async {
     final path = '$userId/profile.$ext';
-    await _client.storage.from('avatars').uploadBinary(
-      path,
-      Uint8List.fromList(bytes),
-      fileOptions: FileOptions(
-        contentType: 'image/$ext',
-        upsert: true,
-      ),
-    );
+    await _client.storage
+        .from('avatars')
+        .uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(contentType: 'image/$ext', upsert: true),
+        );
     final url = _client.storage.from('avatars').getPublicUrl(path);
     await _client
         .from('operator_profiles')
@@ -337,9 +345,64 @@ class SupabaseDronePilotApi implements DronePilotApi {
   }
 
   @override
-  Future<String> uploadLicensePdf(String userId, List<int> bytes) async {
+  Future<String> uploadPortfolioImage(
+    String userId,
+    List<int> bytes,
+    String fileName,
+  ) async {
+    final ext = _fileExt(fileName, fallback: 'jpg');
     final path =
-        '$userId/license_${DateTime.now().millisecondsSinceEpoch}.pdf';
+        '$userId/portfolio_${DateTime.now().millisecondsSinceEpoch}.$ext';
+    await _client.storage
+        .from('avatars')
+        .uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(
+            contentType: _imageContentType(ext),
+            upsert: true,
+          ),
+        );
+    return _client.storage.from('avatars').getPublicUrl(path);
+  }
+
+  @override
+  Future<void> updateMyProfile({
+    required String name,
+    required String nickname,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+    final cleanName = name.trim();
+    final cleanNickname = nickname.trim();
+    final nextMetadata = <String, Object?>{
+      ...?user.userMetadata,
+      'name': cleanName,
+      'nickname': cleanNickname,
+    };
+    await _client.auth.updateUser(UserAttributes(data: nextMetadata));
+    await _tryOptionalWrite(
+      () => _client.from('profiles').upsert(<String, Object?>{
+        'id': user.id,
+        'email': user.email,
+        'name': cleanName,
+        'nickname': cleanNickname,
+      }, onConflict: 'id'),
+    );
+    final displayName = cleanNickname.isNotEmpty ? cleanNickname : cleanName;
+    if (displayName.isNotEmpty) {
+      await _tryOptionalWrite(
+        () => _client
+            .from('operator_profiles')
+            .update(<String, Object?>{'display_name': displayName})
+            .eq('user_id', user.id),
+      );
+    }
+  }
+
+  @override
+  Future<String> uploadLicensePdf(String userId, List<int> bytes) async {
+    final path = '$userId/license_${DateTime.now().millisecondsSinceEpoch}.pdf';
     await _client.storage
         .from('documents')
         .uploadBinary(
@@ -440,9 +503,10 @@ class SupabaseDronePilotApi implements DronePilotApi {
           'operator_id': operatorId,
           'company': data.insuranceCompany,
           'policy_number': data.insuranceNumber,
-          'drone_registration': data.insuranceDroneNumber.isEmpty
-              ? null
-              : data.insuranceDroneNumber,
+          'drone_registration':
+              data.insuranceDroneNumber.isEmpty
+                  ? null
+                  : data.insuranceDroneNumber,
         }),
       );
     }
@@ -497,27 +561,42 @@ class SupabaseDronePilotApi implements DronePilotApi {
     );
     await _tryOptionalWrite(() => _syncAreasByNames(operatorId, areaNames));
 
+    await _tryOptionalWrite(
+      () => _client
+          .from('portfolio_assets')
+          .delete()
+          .eq('operator_id', operatorId),
+    );
     await _client
         .from('portfolio_items')
         .delete()
         .eq('operator_id', operatorId);
 
-    for (final url in portfolioImageUrls) {
+    for (var i = 0; i < portfolioImageUrls.length; i += 1) {
+      final url = portfolioImageUrls[i];
       final trimmed = url.trim();
       if (trimmed.isEmpty) continue;
-      await _tryOptionalWrite(
-        () => _client.from('portfolio_items').insert(<String, Object?>{
-          'operator_id': operatorId,
-          'body': trimmed,
-        }),
-      );
+      final item =
+          await _client
+              .from('portfolio_items')
+              .insert(<String, Object?>{
+                'operator_id': operatorId,
+                'title': '포트폴리오 이미지 ${i + 1}',
+                'body': trimmed,
+                'is_published': true,
+              })
+              .select('id')
+              .single();
       if (_isHttpUrl(trimmed)) {
         await _tryOptionalWrite(
-          () => _client.from('portfolio_assets').upsert(<String, Object?>{
+          () => _client.from('portfolio_assets').insert(<String, Object?>{
+            'portfolio_item_id': item['id'],
             'operator_id': operatorId,
+            'kind': 'image',
             'url': trimmed,
-            'sort_order': portfolioImageUrls.indexOf(url),
-          }, onConflict: 'url'),
+            'sort_order': i,
+            'alt_text': '운용자 포트폴리오',
+          }),
         );
       }
     }
@@ -629,12 +708,10 @@ class SupabaseDronePilotApi implements DronePilotApi {
   Future<void> unlockRequest(String requestId) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return;
-    await _client
-        .from('operator_request_unlocks')
-        .upsert(<String, Object?>{
-          'operator_user_id': userId,
-          'job_request_id': requestId,
-        }, onConflict: 'operator_user_id,job_request_id');
+    await _client.from('operator_request_unlocks').upsert(<String, Object?>{
+      'operator_user_id': userId,
+      'job_request_id': requestId,
+    }, onConflict: 'operator_user_id,job_request_id');
   }
 
   @override
@@ -649,16 +726,20 @@ class SupabaseDronePilotApi implements DronePilotApi {
     );
 
     // Always sign out regardless of result
-    try { await _client.auth.signOut(); } catch (_) {}
+    try {
+      await _client.auth.signOut();
+    } catch (_) {}
 
     final status = res.status;
     if (status != 200) {
       final body = res.data;
-      final detail = body is Map ? (body['error'] ?? body.toString()) : body?.toString() ?? '';
+      final detail =
+          body is Map
+              ? (body['error'] ?? body.toString())
+              : body?.toString() ?? '';
       throw Exception('계정 삭제 실패 ($status): $detail');
     }
   }
-
 
   Future<void> _tryOptionalWrite(Future<Object?> Function() write) async {
     try {
@@ -774,6 +855,25 @@ class SupabaseDronePilotApi implements DronePilotApi {
   bool _isHttpUrl(String value) {
     final uri = Uri.tryParse(value);
     return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+  }
+
+  String _fileExt(String fileName, {required String fallback}) {
+    final index = fileName.lastIndexOf('.');
+    if (index < 0 || index == fileName.length - 1) return fallback;
+    final ext = fileName.substring(index + 1).toLowerCase();
+    return ext.replaceAll(RegExp(r'[^a-z0-9]'), '').isEmpty
+        ? fallback
+        : ext.replaceAll(RegExp(r'[^a-z0-9]'), '');
+  }
+
+  String _imageContentType(String ext) {
+    return switch (ext) {
+      'png' => 'image/png',
+      'gif' => 'image/gif',
+      'webp' => 'image/webp',
+      'svg' => 'image/svg+xml',
+      _ => 'image/jpeg',
+    };
   }
 
   Set<String> _serviceLabelsForDroneCategories(Set<String> categories) {
@@ -1020,12 +1120,34 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .eq('client_id', userId)
         .order('created_at', ascending: false);
 
+    final operatorIds =
+        rows
+            .map<String>(
+              (row) => ((row as Map)['preferred_operator_id'] ?? '').toString(),
+            )
+            .where((id) => id.isNotEmpty)
+            .toSet()
+            .toList();
+    final requestedOperators = <String, Map<String, dynamic>>{};
+    if (operatorIds.isNotEmpty) {
+      final operatorRows = await _client
+          .from('operator_profiles')
+          .select('id, display_name, business_name')
+          .inFilter('id', operatorIds);
+      for (final row in operatorRows) {
+        final map = Map<String, dynamic>.from(row as Map);
+        requestedOperators[map['id'].toString()] = map;
+      }
+    }
+
     return rows.map<UserQuoteSummary>((row) {
       final map = Map<String, dynamic>.from(row as Map);
       final quote = _preferredQuoteForClient(
         List<Object?>.from(map['quotes'] as List? ?? const []),
       );
       final operator = quote['operator_profiles'] as Map?;
+      final pilotId = (map['preferred_operator_id'] ?? '').toString();
+      final requestedOperator = requestedOperators[pilotId];
       final price = (quote['proposed_price'] as num?)?.toInt();
       final jobStatus = (map['status'] ?? '').toString();
       final quoteStatus = (quote['status'] ?? '').toString();
@@ -1036,10 +1158,12 @@ class SupabaseDronePilotApi implements DronePilotApi {
       );
       return UserQuoteSummary(
         id: (map['id'] ?? '').toString(),
-        pilotId: (map['preferred_operator_id'] ?? '').toString(),
+        pilotId: pilotId,
         pilotName:
             (operator?['display_name'] ??
                     operator?['business_name'] ??
+                    requestedOperator?['display_name'] ??
+                    requestedOperator?['business_name'] ??
                     '운용자 견적 대기중')
                 .toString(),
         category:

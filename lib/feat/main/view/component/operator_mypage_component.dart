@@ -1,6 +1,9 @@
 part of '../pages/main_page.dart';
 
-void _showOperatorAccountDeletionDialog(BuildContext context, DrameStore store) {
+void _showOperatorAccountDeletionDialog(
+  BuildContext context,
+  DrameStore store,
+) {
   showDialog<void>(
     context: context,
     builder: (ctx) => _AccountDeletionDialog(store: store),
@@ -28,7 +31,10 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                       : store.accountName,
               onLoginTap: () => context.go('/login'),
               onRegisterPilotTap: () => context.push('/pilot/register'),
-              onLogoTap: () => context.go('/operator'),
+              onLogoTap: () {
+                store.setPilotMode(false);
+                context.go('/home');
+              },
               onFindPilotTap: () => context.go('/home'),
               onRequestsTap:
                   () => _openPilotRequestReviewPage(
@@ -50,6 +56,7 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                 context.go('/operator');
               },
               notificationCount: store.notificationCount,
+              chatUnreadCount: store.chatUnreadCount,
               onNotificationTap: () => _showNotifications(context, store),
               operatorActiveTab: 'profile',
               onOperatorTabTap: (id) {
@@ -105,6 +112,24 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
     final pilot = widget.store.selectedPilot;
     _selectedCategories = Set<String>.from(pilot?.categories ?? <String>[]);
     _selectedAreas = Set<String>.from(pilot?.availableAreas ?? <String>[]);
+  }
+
+  void _toggleArea(String area) {
+    setState(() {
+      if (area == '전체') {
+        _selectedAreas
+          ..clear()
+          ..add('전체');
+        return;
+      }
+      _selectedAreas.remove('전체');
+      if (_selectedAreas.contains(area)) {
+        _selectedAreas.remove(area);
+      } else {
+        _selectedAreas.add(area);
+      }
+      if (_selectedAreas.isEmpty) _selectedAreas.add('전체');
+    });
   }
 
   @override
@@ -200,8 +225,9 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
                             runSpacing: 8,
                             children:
                                 store.categories.map((cat) {
-                                  final selected =
-                                      _selectedCategories.contains(cat.label);
+                                  final selected = _selectedCategories.contains(
+                                    cat.label,
+                                  );
                                   return FilterChip(
                                     label: Text(cat.label),
                                     selected: selected,
@@ -223,8 +249,7 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
                                       width: selected ? 1.5 : 1,
                                     ),
                                     labelStyle: AppText.chip.copyWith(
-                                      color:
-                                          selected ? Colors.white : _ink,
+                                      color: selected ? Colors.white : _ink,
                                       fontWeight:
                                           selected
                                               ? FontWeight.w600
@@ -256,20 +281,14 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
                             runSpacing: 8,
                             children:
                                 store.serviceAreas.map((area) {
-                                  final selected =
-                                      _selectedAreas.contains(area);
+                                  final selected = _selectedAreas.contains(
+                                    area,
+                                  );
                                   return FilterChip(
                                     label: Text(area),
                                     selected: selected,
                                     showCheckmark: false,
-                                    onSelected:
-                                        (_) => setState(() {
-                                          if (selected) {
-                                            _selectedAreas.remove(area);
-                                          } else {
-                                            _selectedAreas.add(area);
-                                          }
-                                        }),
+                                    onSelected: (_) => _toggleArea(area),
                                     selectedColor: _navy,
                                     backgroundColor: Colors.white,
                                     side: BorderSide(
@@ -277,8 +296,7 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
                                       width: selected ? 1.5 : 1,
                                     ),
                                     labelStyle: AppText.chip.copyWith(
-                                      color:
-                                          selected ? Colors.white : _ink,
+                                      color: selected ? Colors.white : _ink,
                                       fontWeight:
                                           selected
                                               ? FontWeight.w600
@@ -416,7 +434,8 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
                 ),
                 const SizedBox(width: 8),
                 TextButton(
-                  onPressed: () => _showOperatorAccountDeletionDialog(context, store),
+                  onPressed:
+                      () => _showOperatorAccountDeletionDialog(context, store),
                   style: TextButton.styleFrom(
                     foregroundColor: const Color(0xFFE53935),
                     textStyle: const TextStyle(
@@ -434,6 +453,10 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
               alignment: Alignment.centerRight,
               child: FilledButton(
                 onPressed: () async {
+                  await store.saveMyProfile(
+                    name: store.accountName,
+                    nickname: store.accountNickname,
+                  );
                   await store.updateOperatorProfile(
                     intro:
                         store.selectedPilot?.intro ??
@@ -512,9 +535,7 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
           completer.completeError('읽기 실패');
           return;
         }
-        completer.complete(
-          Uint8List.view((result as JSArrayBuffer).toDart),
-        );
+        completer.complete(Uint8List.view((result as JSArrayBuffer).toDart));
       }.toJS,
     );
     reader.addEventListener(
@@ -526,9 +547,10 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
     final bytes = await completer.future;
     if (!mounted) return;
 
-    final ext = file.name.contains('.')
-        ? file.name.split('.').last.toLowerCase()
-        : 'jpg';
+    final ext =
+        file.name.contains('.')
+            ? file.name.split('.').last.toLowerCase()
+            : 'jpg';
 
     setState(() => _uploadingPhoto = true);
     try {
@@ -536,10 +558,7 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('사진 업로드 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('사진 업로드 실패: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -571,12 +590,13 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
                     backgroundColor: const Color(0xFFEEF0F3),
                     backgroundImage:
                         avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            nickname.characters.first,
-                            style: AppText.cardTitle.copyWith(color: _navy),
-                          )
-                        : null,
+                    child:
+                        avatarUrl == null
+                            ? Text(
+                              nickname.characters.first,
+                              style: AppText.cardTitle.copyWith(color: _navy),
+                            )
+                            : null,
                   ),
                   Positioned(
                     right: 0,
@@ -589,19 +609,20 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
-                      child: _uploadingPhoto
-                          ? const Padding(
-                              padding: EdgeInsets.all(5),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                      child:
+                          _uploadingPhoto
+                              ? const Padding(
+                                padding: EdgeInsets.all(5),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : const Icon(
+                                Icons.camera_alt_rounded,
                                 color: Colors.white,
+                                size: 13,
                               ),
-                            )
-                          : const Icon(
-                              Icons.camera_alt_rounded,
-                              color: Colors.white,
-                              size: 13,
-                            ),
                     ),
                   ),
                 ],
@@ -612,7 +633,11 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(name, style: AppText.cardTitle),
+                  Text(nickname, style: AppText.cardTitle),
+                  if (name != nickname) ...<Widget>[
+                    const SizedBox(height: 4),
+                    Text(name, style: AppText.cardSubtitle),
+                  ],
                   const SizedBox(height: 8),
                   Text(
                     serviceText,
@@ -1001,6 +1026,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   bool _isExpanded = false;
   List<int>? _pendingImageBytes;
   String? _pendingImageName;
+  String? _selectedPostCategory;
+  String? _selectedPostRegion;
 
   @override
   void dispose() {
@@ -1020,26 +1047,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     ]);
     final file = input.files?.item(0);
     if (file == null) return;
-    final reader = web.FileReader();
-    final completer = Completer<Uint8List>();
-    reader.addEventListener(
-      'load',
-      (web.Event e) {
-        final result = reader.result;
-        if (result == null) {
-          completer.completeError('');
-          return;
-        }
-        final bytes = Uint8List.view((result as JSArrayBuffer).toDart);
-        completer.complete(bytes);
-      }.toJS,
-    );
-    reader.addEventListener(
-      'error',
-      ((web.Event e) => completer.completeError('')).toJS,
-    );
-    reader.readAsArrayBuffer(file);
-    final bytes = await completer.future;
+    final bytes = await _readWebFileBytes(file);
     if (!mounted) return;
     setState(() {
       _pendingImageBytes = bytes;
@@ -1047,15 +1055,91 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     });
   }
 
+  List<String> _categoryOptions(DrameStore store) {
+    final labels =
+        <String>{
+          ...?store.selectedPilot?.categories,
+          ...store.categories.map((category) => category.label),
+        }.where((label) => label.trim().isNotEmpty).toList();
+    return labels.isEmpty ? const <String>['전체'] : labels;
+  }
+
+  List<String> _regionOptions(DrameStore store) {
+    final labels =
+        <String>{
+          ...?store.selectedPilot?.availableAreas,
+          ...store.serviceAreas,
+        }.where((label) => label.trim().isNotEmpty).toList();
+    return labels.isEmpty ? const <String>['전체'] : labels;
+  }
+
+  String _selectedOrDefault(String? selected, List<String> options) {
+    if (selected != null && options.contains(selected)) return selected;
+    final nonAll = options.where((option) => option != '전체').firstOrNull;
+    return nonAll ?? options.first;
+  }
+
+  Widget _postDropdown({
+    required String label,
+    required String value,
+    required List<String> options,
+    required ValueChanged<String> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _line),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _line),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _focus, width: 1.2),
+        ),
+      ),
+      items:
+          options
+              .map(
+                (option) => DropdownMenuItem<String>(
+                  value: option,
+                  child: Text(option, overflow: TextOverflow.ellipsis),
+                ),
+              )
+              .toList(),
+      onChanged: (next) {
+        if (next == null) return;
+        onChanged(next);
+      },
+    );
+  }
+
   Future<void> _submit() async {
     final caption = _captionController.text.trim();
     if (caption.isEmpty && _pendingImageBytes == null) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    final categoryOptions = _categoryOptions(widget.store);
+    final regionOptions = _regionOptions(widget.store);
+    final category = _selectedOrDefault(_selectedPostCategory, categoryOptions);
+    final region = _selectedOrDefault(_selectedPostRegion, regionOptions);
 
     try {
       await widget.store.addFeedPost(
         caption: caption,
+        categoryLabel: category,
+        locationLabel: region,
         imageBytes: _pendingImageBytes,
       );
     } catch (error) {
@@ -1085,6 +1169,13 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
 
   @override
   Widget build(BuildContext context) {
+    final categoryOptions = _categoryOptions(widget.store);
+    final regionOptions = _regionOptions(widget.store);
+    final categoryValue = _selectedOrDefault(
+      _selectedPostCategory,
+      categoryOptions,
+    );
+    final regionValue = _selectedOrDefault(_selectedPostRegion, regionOptions);
     return Container(
       width: double.infinity,
       color: DC.canvas,
@@ -1162,6 +1253,48 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                         borderSide: const BorderSide(color: _focus, width: 1.2),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final twoColumns = constraints.maxWidth >= 560;
+                      return Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: <Widget>[
+                          SizedBox(
+                            width:
+                                twoColumns
+                                    ? (constraints.maxWidth - 10) / 2
+                                    : constraints.maxWidth,
+                            child: _postDropdown(
+                              label: '서비스 종류',
+                              value: categoryValue,
+                              options: categoryOptions,
+                              onChanged:
+                                  (value) => setState(
+                                    () => _selectedPostCategory = value,
+                                  ),
+                            ),
+                          ),
+                          SizedBox(
+                            width:
+                                twoColumns
+                                    ? (constraints.maxWidth - 10) / 2
+                                    : constraints.maxWidth,
+                            child: _postDropdown(
+                              label: '지역',
+                              value: regionValue,
+                              options: regionOptions,
+                              onChanged:
+                                  (value) => setState(
+                                    () => _selectedPostRegion = value,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(

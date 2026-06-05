@@ -31,6 +31,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     try {
       final rooms = await ref.read(chatViewModelProvider).fetchRooms();
       if (mounted) setState(() => _rooms = rooms);
+      await ref.read(drameStoreProvider).refreshChatUnreadCount();
     } catch (_) {
       // 비로그인 상태에서는 채팅 목록을 불러올 수 없음
     } finally {
@@ -48,8 +49,11 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: DC.ink, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: DC.ink,
+            size: 20,
+          ),
           onPressed: () {
             if (widget.onBack != null) {
               widget.onBack!();
@@ -70,34 +74,36 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
           ),
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _rooms.isEmpty
+      body:
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _rooms.isEmpty
               ? _EmptyState(onRefresh: _load)
               : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: DC.spXs),
-                    itemCount: _rooms.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1, color: DC.hairlineSoft),
-                    itemBuilder: (context, index) {
-                      return _ChatRoomTile(
-                        room: _rooms[index],
-                        onTap: () async {
-                          await context.push(
-                            '/chat/${_rooms[index].id}',
-                            extra: <String, String>{
-                              'otherPartyName': _rooms[index].otherPartyName,
-                              'category': _rooms[index].category,
-                            },
-                          );
-                          if (mounted) _load();
-                        },
-                      );
-                    },
-                  ),
+                onRefresh: _load,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: DC.spXs),
+                  itemCount: _rooms.length,
+                  separatorBuilder:
+                      (_, __) =>
+                          const Divider(height: 1, color: DC.hairlineSoft),
+                  itemBuilder: (context, index) {
+                    return _ChatRoomTile(
+                      room: _rooms[index],
+                      onTap: () async {
+                        await context.push(
+                          '/chat/${_rooms[index].id}',
+                          extra: <String, String>{
+                            'otherPartyName': _rooms[index].otherPartyName,
+                            'category': _rooms[index].category,
+                          },
+                        );
+                        if (mounted) _load();
+                      },
+                    );
+                  },
                 ),
+              ),
     );
   }
 }
@@ -123,7 +129,10 @@ class _ChatRoomTile extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            _Avatar(name: room.otherPartyName, avatarUrl: room.otherPartyAvatarUrl),
+            _Avatar(
+              name: room.otherPartyName,
+              avatarUrl: room.otherPartyAvatarUrl,
+            ),
             const SizedBox(width: DC.spSm),
             Expanded(
               child: Column(
@@ -137,9 +146,10 @@ class _ChatRoomTile extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: DrameTextStyles.fontFamily,
                             fontSize: DrameTextStyles.bodySize,
-                            fontWeight: hasUnread
-                                ? DrameTextStyles.semiBold
-                                : DrameTextStyles.medium,
+                            fontWeight:
+                                hasUnread
+                                    ? DrameTextStyles.semiBold
+                                    : DrameTextStyles.medium,
                             color: DC.ink,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -156,6 +166,18 @@ class _ChatRoomTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 3),
+                  Text(
+                    '요청: ${room.category}',
+                    style: const TextStyle(
+                      fontFamily: DrameTextStyles.fontFamily,
+                      fontSize: 11,
+                      fontWeight: DrameTextStyles.medium,
+                      color: DC.primary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(height: 3),
                   Row(
                     children: <Widget>[
                       Expanded(
@@ -164,9 +186,10 @@ class _ChatRoomTile extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: DrameTextStyles.fontFamily,
                             fontSize: DrameTextStyles.labelSize,
-                            fontWeight: hasUnread
-                                ? DrameTextStyles.medium
-                                : DrameTextStyles.regular,
+                            fontWeight:
+                                hasUnread
+                                    ? DrameTextStyles.medium
+                                    : DrameTextStyles.regular,
                             color: hasUnread ? DC.body : DC.muted,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -181,8 +204,9 @@ class _ChatRoomTile extends StatelessWidget {
                           ),
                           decoration: const BoxDecoration(
                             color: DC.primary,
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(DC.rxPill)),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(DC.rxPill),
+                            ),
                           ),
                           child: Text(
                             room.unreadCount > 99
@@ -230,8 +254,7 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        name.isNotEmpty ? name.characters.first.toUpperCase() : '?';
+    final initial = name.isNotEmpty ? name.characters.first.toUpperCase() : '?';
     if (avatarUrl != null) {
       return CircleAvatar(
         radius: 24,
@@ -273,8 +296,11 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Icon(Icons.chat_bubble_outline_rounded,
-              size: 48, color: DC.mutedSoft),
+          const Icon(
+            Icons.chat_bubble_outline_rounded,
+            size: 48,
+            color: DC.mutedSoft,
+          ),
           const SizedBox(height: DC.spSm),
           const Text(
             '아직 채팅이 없습니다',
@@ -285,10 +311,7 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: DC.spXs),
-          TextButton(
-            onPressed: onRefresh,
-            child: const Text('새로고침'),
-          ),
+          TextButton(onPressed: onRefresh, child: const Text('새로고침')),
         ],
       ),
     );

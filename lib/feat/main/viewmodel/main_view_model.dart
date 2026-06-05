@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_defaults.dart';
+import '../../chat/network/chat_api.dart';
 import '../../feed/network/feed_api.dart';
 import '../../quote/network/quote_api.dart';
 import '../../quote/model/quote_model.dart';
@@ -17,13 +18,16 @@ class DrameStore extends ChangeNotifier {
     required DronePilotApi api,
     required QuoteApi quoteApi,
     required FeedApi feedApi,
+    required ChatApi chatApi,
   }) : _api = api,
        _quoteApi = quoteApi,
-       _feedApi = feedApi;
+       _feedApi = feedApi,
+       _chatApi = chatApi;
 
   final DronePilotApi _api;
   final QuoteApi _quoteApi;
   final FeedApi _feedApi;
+  final ChatApi _chatApi;
 
   List<DronePilot> pilots = const <DronePilot>[];
   List<DronePilot> allPilots = const <DronePilot>[];
@@ -32,6 +36,7 @@ class DrameStore extends ChangeNotifier {
   List<PilotWorkRequest> pilotWorkRequests = const <PilotWorkRequest>[];
   List<UserQuoteSummary> myQuotes = const <UserQuoteSummary>[];
   List<AppNotification> notifications = const <AppNotification>[];
+  int chatUnreadCount = 0;
   DroneCategory? selectedCategory;
   DronePilot? selectedPilot;
   String selectedPortfolioCategory = '전체';
@@ -81,6 +86,7 @@ class DrameStore extends ChangeNotifier {
               .map(_workRequestFromData)
               .toList();
       myQuotes = await _api.fetchMyQuotes();
+      chatUnreadCount = isLoggedIn ? await _chatApi.fetchUnreadCount() : 0;
       myFeedPosts =
           (await _feedApi.fetchMyPosts()).map(_operatorPostFromFeed).toList();
       final myOperator =
@@ -220,6 +226,21 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> saveMyProfile({
+    required String name,
+    required String nickname,
+  }) async {
+    await _api.updateMyProfile(name: name, nickname: nickname);
+    accountName = name.trim();
+    accountNickname = nickname.trim();
+    await load();
+  }
+
+  Future<void> refreshChatUnreadCount() async {
+    chatUnreadCount = isLoggedIn ? await _chatApi.fetchUnreadCount() : 0;
+    notifyListeners();
+  }
+
   Future<void> signIn({required String email, required String password}) async {
     try {
       await Supabase.instance.client.auth.signInWithPassword(
@@ -247,6 +268,7 @@ class DrameStore extends ChangeNotifier {
     accountName = '';
     accountNickname = '';
     myQuotes = <UserQuoteSummary>[];
+    chatUnreadCount = 0;
     allPilots = <DronePilot>[];
     notifyListeners();
   }
@@ -261,6 +283,7 @@ class DrameStore extends ChangeNotifier {
     accountName = '';
     accountNickname = '';
     myQuotes = <UserQuoteSummary>[];
+    chatUnreadCount = 0;
     allPilots = <DronePilot>[];
     operatorRegistrationCompleted = false;
     operatorReviewStatus = 'none';
@@ -425,7 +448,9 @@ class DrameStore extends ChangeNotifier {
     if (step == 0) {
       if (data.licenseNumber.trim().isEmpty) {
         message = '자격증 번호를 입력해 주세요.';
-      } else if (!RegExp(r'^\d{2}-\d{6}$').hasMatch(data.licenseNumber.trim())) {
+      } else if (!RegExp(
+        r'^\d{2}-\d{6}$',
+      ).hasMatch(data.licenseNumber.trim())) {
         message = '자격증 번호를 00-000000 형식으로 입력해 주세요.';
       }
     } else if (step == 1) {
@@ -763,13 +788,23 @@ class DrameStore extends ChangeNotifier {
     return url;
   }
 
+  Future<String> uploadPortfolioImage(List<int> bytes, String fileName) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다.');
+    return _api.uploadPortfolioImage(userId, bytes, fileName);
+  }
+
   Future<void> addFeedPost({
     required String caption,
+    required String categoryLabel,
+    required String locationLabel,
     List<int>? imageBytes,
   }) async {
     try {
       final post = await _feedApi.createPost(
         caption: caption,
+        categoryLabel: categoryLabel,
+        locationLabel: locationLabel,
         imageBytes: imageBytes,
       );
       myFeedPosts = <OperatorFeedPost>[

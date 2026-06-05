@@ -13,39 +13,43 @@ class ChatApi {
   /// Fetches client_id and operator user_id from the job_request itself,
   /// so this works whether the caller is the client or the operator.
   Future<String> getOrCreateRoom(String jobRequestId) async {
-    final existing = await _client
-        .from('chat_rooms')
-        .select('id')
-        .eq('job_request_id', jobRequestId)
-        .maybeSingle();
+    final existing =
+        await _client
+            .from('chat_rooms')
+            .select('id')
+            .eq('job_request_id', jobRequestId)
+            .maybeSingle();
 
     if (existing != null) return existing['id'].toString();
 
-    final jobRow = await _client
-        .from('job_requests')
-        .select('client_id, preferred_operator_id')
-        .eq('id', jobRequestId)
-        .single();
+    final jobRow =
+        await _client
+            .from('job_requests')
+            .select('client_id, preferred_operator_id')
+            .eq('id', jobRequestId)
+            .single();
 
     final clientUserId = jobRow['client_id'].toString();
     final operatorProfileId = jobRow['preferred_operator_id'].toString();
 
-    final opRow = await _client
-        .from('operator_profiles')
-        .select('user_id')
-        .eq('id', operatorProfileId)
-        .single();
+    final opRow =
+        await _client
+            .from('operator_profiles')
+            .select('user_id')
+            .eq('id', operatorProfileId)
+            .single();
     final operatorUserId = opRow['user_id'].toString();
 
-    final row = await _client
-        .from('chat_rooms')
-        .insert(<String, Object?>{
-          'job_request_id': jobRequestId,
-          'client_id': clientUserId,
-          'operator_id': operatorUserId,
-        })
-        .select('id')
-        .single();
+    final row =
+        await _client
+            .from('chat_rooms')
+            .insert(<String, Object?>{
+              'job_request_id': jobRequestId,
+              'client_id': clientUserId,
+              'operator_id': operatorUserId,
+            })
+            .select('id')
+            .single();
     return row['id'].toString();
   }
 
@@ -67,9 +71,12 @@ class ChatApi {
         .eq('room_id', roomId)
         .order('created_at', ascending: false)
         .map(
-          (rows) => rows
-              .map((r) => ChatMessage.fromJson(Map<String, dynamic>.from(r)))
-              .toList(),
+          (rows) =>
+              rows
+                  .map(
+                    (r) => ChatMessage.fromJson(Map<String, dynamic>.from(r)),
+                  )
+                  .toList(),
         );
   }
 
@@ -137,7 +144,9 @@ class ChatApi {
         if (jRows.isNotEmpty) {
           final j = Map<String, dynamic>.from(jRows.first as Map);
           category =
-              ((j['service_categories'] as Map?)?['label'] ?? j['title'] ?? '작업')
+              ((j['service_categories'] as Map?)?['label'] ??
+                      j['title'] ??
+                      '작업')
                   .toString();
         }
       } catch (_) {}
@@ -166,21 +175,28 @@ class ChatApi {
         unread = uRows.length;
       } catch (_) {}
 
-      result.add(ChatRoom(
-        id: roomId,
-        jobRequestId: map['job_request_id'].toString(),
-        clientId: clientId,
-        operatorId: operatorId,
-        lastMessageAt:
-            DateTime.parse(map['last_message_at'].toString()).toLocal(),
-        lastMessage: lastMsg,
-        unreadCount: unread,
-        otherPartyName: otherPartyName,
-        category: category,
-        otherPartyAvatarUrl: otherPartyAvatarUrl,
-      ));
+      result.add(
+        ChatRoom(
+          id: roomId,
+          jobRequestId: map['job_request_id'].toString(),
+          clientId: clientId,
+          operatorId: operatorId,
+          lastMessageAt:
+              DateTime.parse(map['last_message_at'].toString()).toLocal(),
+          lastMessage: lastMsg,
+          unreadCount: unread,
+          otherPartyName: otherPartyName,
+          category: category,
+          otherPartyAvatarUrl: otherPartyAvatarUrl,
+        ),
+      );
     }
     return result;
+  }
+
+  Future<int> fetchUnreadCount() async {
+    final rooms = await fetchRooms();
+    return rooms.fold<int>(0, (sum, room) => sum + room.unreadCount);
   }
 
   Future<void> markRead(String roomId) async {
