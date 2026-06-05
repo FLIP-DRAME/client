@@ -238,7 +238,7 @@ class DrameTopNavigation extends StatelessWidget {
 }
 
 /// Reusable wordmark. [size] sets icon height; text scales from it.
-/// [onDark] flips colors for dark-background panels.
+/// [onDark] flips text color for dark-background panels.
 /// [showText] controls whether "모드" label is shown (default true).
 class DrameLogo extends StatelessWidget {
   const DrameLogo({
@@ -254,19 +254,20 @@ class DrameLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String assetPath =
+        onDark
+            ? 'assets/logo_not_text_on_dark.svg'
+            : 'assets/logo_not_text.svg';
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
         SvgPicture.asset(
-          'assets/logo_not_text.svg',
+          assetPath,
           height: size,
-          width: size * 1.45,
+          width: size,
           fit: BoxFit.contain,
-          colorFilter: ColorFilter.mode(
-            onDark ? Colors.white : DC.primary,
-            BlendMode.srcIn,
-          ),
         ),
         if (showText) ...<Widget>[
           SizedBox(width: size * 0.25),

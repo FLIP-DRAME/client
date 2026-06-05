@@ -84,6 +84,7 @@ flutter:
   assets:
     - assets/logo.svg
     - assets/logo_not_text.svg
+    - assets/logo_not_text_on_dark.svg
     - assets/onboarding/
     - .env
 
