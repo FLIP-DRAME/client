@@ -134,6 +134,7 @@ void main() {
       budgetRange: '',
       contactWindow: '',
       message: '',
+      createdAt: DateTime(2026, 5, 25),
     );
 
     test('요청 보냄 → isPending=true, 나머지 false', () {
@@ -198,6 +199,7 @@ void main() {
         budgetRange: '50만원 이하',
         contactWindow: '오후',
         message: '',
+        createdAt: DateTime(2026, 5, 25),
       );
 
       expect(
@@ -238,6 +240,7 @@ void main() {
         budgetRange: '',
         contactWindow: '',
         message: '견적을 보냈습니다.',
+        createdAt: DateTime(2026, 5, 25),
       );
 
       expect(summary.isQuoteReceived, isTrue);

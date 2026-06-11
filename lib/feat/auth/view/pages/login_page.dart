@@ -92,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '로그인에 실패했습니다: $error',
+            '로그인에 실패했습니다: ${error.toString().replaceFirst('Exception: ', '')}',
             style: const TextStyle(fontFamily: 'Pretendard'),
           ),
           backgroundColor: DC.ink,
@@ -105,11 +105,39 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _redirectCachedLogin(DrameStore store) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !store.isLoggedIn) return;
+      context.replace(store.isPilotMode ? '/operator' : '/home');
+    });
+  }
+
+  Widget _buildSessionRestoreScaffold() {
+    return const Scaffold(
+      backgroundColor: Color(0xFFE5E7EB),
+      body: Center(
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(color: DC.primary, strokeWidth: 2.4),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, _) {
         final store = ref.watch(drameStoreProvider);
+        if (store.isSessionRestoring) {
+          return _buildSessionRestoreScaffold();
+        }
+        if (store.isLoggedIn) {
+          _redirectCachedLogin(store);
+          return _buildSessionRestoreScaffold();
+        }
+
         final width = MediaQuery.sizeOf(context).width;
         final isDesktop = width >= 768;
 
@@ -144,9 +172,9 @@ class _LoginPageState extends State<LoginPage> {
 
   // ── Mobile Layout ───────────────────────────────────────────────────────────
   Widget _buildMobileLayout(BuildContext context, DrameStore store) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return ColoredBox(
+      color: Colors.white,
+      child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
           child: Column(
@@ -274,25 +302,55 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   children: <InlineSpan>[
                     const TextSpan(text: '로그인 시 '),
-                    const TextSpan(
-                      text: '이용약관',
-                      style: TextStyle(decoration: TextDecoration.underline),
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.baseline,
+                      baseline: TextBaseline.alphabetic,
+                      child: Semantics(
+                        label: '이용약관',
+                        link: true,
+                        button: true,
+                        child: InkWell(
+                          onTap: () => context.push('/terms'),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              '이용약관',
+                              style: TextStyle(
+                                fontFamily: 'Pretendard',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFFA3AFBF),
+                                height: 1.5,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                     const TextSpan(text: '과 '),
                     WidgetSpan(
                       alignment: PlaceholderAlignment.baseline,
                       baseline: TextBaseline.alphabetic,
-                      child: GestureDetector(
-                        onTap: () => context.push('/privacy'),
-                        child: const Text(
-                          '개인정보처리방침',
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFFA3AFBF),
-                            height: 1.5,
-                            decoration: TextDecoration.underline,
+                      child: Semantics(
+                        label: '개인정보처리방침',
+                        link: true,
+                        button: true,
+                        child: InkWell(
+                          onTap: () => context.push('/privacy'),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              '개인정보처리방침',
+                              style: TextStyle(
+                                fontFamily: 'Pretendard',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFFA3AFBF),
+                                height: 1.5,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -450,12 +508,12 @@ class _LoginPageState extends State<LoginPage> {
                         decoration: _inputDec(
                           '비밀번호',
                           prefixIcon: Icons.lock_outline_rounded,
-                          suffix: GestureDetector(
-                            onTap:
+                          suffix: IconButton(
+                            onPressed:
                                 () => setState(
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
-                            child: Icon(
+                            icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_off_outlined
                                   : Icons.visibility_outlined,
@@ -543,8 +601,13 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            GestureDetector(
-                              onTap: () => context.go('/signup'),
+                            TextButton(
+                              onPressed: () => context.go('/signup'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
                               child: const Text(
                                 '회원가입하기',
                                 style: TextStyle(

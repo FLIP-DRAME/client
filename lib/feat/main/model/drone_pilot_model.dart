@@ -46,6 +46,34 @@ class DronePilot {
   String get priceLabel => '${(basePrice / 10000).round()}만원부터';
   bool get isApproved => operatorStatus == 'approved';
   bool get isPendingReview => operatorStatus == 'pending_review';
+  String get displayLocation {
+    final value = location.trim();
+    if (!_isReadableArea(value)) {
+      return '지역 협의';
+    }
+    return value;
+  }
+
+  String get primaryDisplayArea {
+    for (final area in availableAreas) {
+      final value = area.trim();
+      if (_isReadableArea(value) && value != '전체') {
+        return value;
+      }
+    }
+    return displayLocation;
+  }
+
+  String get displaySpecialty {
+    final cleaned = specialty.replaceAll('?', '').replaceAll(',', '').replaceAll(' ', '').trim();
+    if (cleaned.isEmpty) {
+      return categories.isNotEmpty ? categories.join(' · ') : '-';
+    }
+    return specialty;
+  }
+
+  bool _isReadableArea(String value) =>
+      value.isNotEmpty && value != '??' && value != '?' && value != '-';
 }
 
 class OperatorReview {

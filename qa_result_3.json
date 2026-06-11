@@ -1,0 +1,109 @@
+{
+  "cycle": 3,
+  "screenshots": [
+    "01_landing_01_top",
+    "01_landing_02_scroll",
+    "01_landing_03_scroll",
+    "01_landing_04_scroll",
+    "01_landing_tap___CTA",
+    "02_home_01_top",
+    "02_home_02_scroll",
+    "02_home_03_scroll",
+    "02_home_04_scroll",
+    "02_home_05_scroll",
+    "02_home_tap____",
+    "02_home_tap____",
+    "02_home_tap_____dismissed",
+    "03_portfolio_list_01_top",
+    "03_portfolio_list_02_scroll",
+    "03_portfolio_list_03_scroll",
+    "03_portfolio_list_04_scroll",
+    "03_portfolio_list_05_scroll",
+    "03_portfolio_list_tap____",
+    "04_portfolio_detail_01_top",
+    "04_portfolio_detail_02_scroll",
+    "04_portfolio_detail_tap_견적버튼",
+    "05_feed_01_top",
+    "05_feed_02_scroll",
+    "05_feed_03_scroll",
+    "05_feed_04_scroll",
+    "05_feed_05_scroll",
+    "05_feed_06_scroll",
+    "05_feed_tap____",
+    "06_my_quotes_01_top",
+    "06_my_quotes_02_scroll",
+    "06_my_quotes_03_scroll",
+    "06_my_quotes_04_scroll",
+    "07_chats_01_top",
+    "07_chats_02_scroll",
+    "07_chats_03_scroll",
+    "08_operator_home_01_top",
+    "08_operator_home_02_scroll",
+    "08_operator_home_03_scroll",
+    "08_operator_home_04_scroll",
+    "08_operator_home_05_scroll",
+    "08_operator_home_tap______",
+    "09_operator_requests_01_top",
+    "09_operator_requests_02_scroll",
+    "09_operator_requests_03_scroll",
+    "09_operator_requests_04_scroll",
+    "09_operator_requests_tap__ROW__",
+    "09_operator_requests_tap__ROW___dismissed",
+    "10_operator_portfolio_01_top",
+    "10_operator_portfolio_02_scroll",
+    "10_operator_portfolio_03_scroll",
+    "10_operator_portfolio_04_scroll",
+    "11_operator_mypage_01_top",
+    "11_operator_mypage_02_scroll",
+    "11_operator_mypage_03_scroll",
+    "11_operator_mypage_04_scroll"
+  ],
+  "errors": [],
+  "interactions": [
+    {
+      "tap": "시작하기_CTA",
+      "x": 180,
+      "y": 560
+    },
+    {
+      "tap": "파일럿카드_탭",
+      "x": 180,
+      "y": 180
+    },
+    {
+      "tap": "견적요청_탭",
+      "x": 180,
+      "y": 530
+    },
+    {
+      "tap": "카드_탭",
+      "x": 180,
+      "y": 280
+    },
+    {
+      "tap": "포트폴리오_첫카드",
+      "x": 180,
+      "y": 280
+    },
+    {
+      "tap": "견적요청하기_버튼",
+      "x": 180,
+      "y": 590
+    },
+    {
+      "tap": "피드아이템_탭",
+      "x": 180,
+      "y": 220
+    },
+    {
+      "tap": "대시보드_카드_탭",
+      "x": 180,
+      "y": 280
+    },
+    {
+      "tap": "요청ROW_탭",
+      "x": 180,
+      "y": 250
+    }
+  ]
+}

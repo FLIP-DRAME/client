@@ -9,9 +9,9 @@ import '../../network/feed_api.dart';
 
 part '../component/feed_component.dart';
 
-const _navy = Colors.black;
-const _ink = Colors.black;
-const _muted = Colors.black;
+const _navy = Color(0xFF0A0B0D);
+const _ink = Color(0xFF0A0B0D);
+const _muted = Color(0xFF7C828A);
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 

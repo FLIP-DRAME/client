@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/app_defaults.dart';
+import '../../chat/network/chat_api.dart';
 import '../../feed/network/feed_api.dart';
 import '../../quote/network/quote_api.dart';
 import '../../quote/model/quote_model.dart';
@@ -17,13 +18,20 @@ class DrameStore extends ChangeNotifier {
     required DronePilotApi api,
     required QuoteApi quoteApi,
     required FeedApi feedApi,
+    required ChatApi chatApi,
   }) : _api = api,
        _quoteApi = quoteApi,
-       _feedApi = feedApi;
+       _feedApi = feedApi,
+       _chatApi = chatApi;
 
   final DronePilotApi _api;
   final QuoteApi _quoteApi;
   final FeedApi _feedApi;
+  final ChatApi _chatApi;
+  Future<void>? _restoreSessionFuture;
+  Session? _pendingRestoreSession;
+  StreamSubscription<String>? _fcmTokenRefreshSubscription;
+  String? _fcmTokenUserId;
 
   List<DronePilot> pilots = const <DronePilot>[];
   List<DronePilot> allPilots = const <DronePilot>[];
@@ -32,6 +40,7 @@ class DrameStore extends ChangeNotifier {
   List<PilotWorkRequest> pilotWorkRequests = const <PilotWorkRequest>[];
   List<UserQuoteSummary> myQuotes = const <UserQuoteSummary>[];
   List<AppNotification> notifications = const <AppNotification>[];
+  int chatUnreadCount = 0;
   DroneCategory? selectedCategory;
   DronePilot? selectedPilot;
   String selectedPortfolioCategory = '전체';
@@ -59,7 +68,30 @@ class DrameStore extends ChangeNotifier {
   String accountPassword = '';
   String accountName = '';
   String accountNickname = '';
-  final PilotOnboardingData pilotOnboarding = PilotOnboardingData();
+  PilotOnboardingData pilotOnboarding = PilotOnboardingData();
+
+  void clearSessionState({bool notify = true}) {
+    isLoggedIn = false;
+    isPilotMode = false;
+    isPilotOnboarding = false;
+    isSessionRestoring = false;
+    operatorRegistrationCompleted = false;
+    operatorReviewStatus = 'none';
+    registrationJustCompleted = false;
+    pilotOnboardingStep = 0;
+    pilotOnboarding = PilotOnboardingData();
+    accountEmail = '';
+    accountPassword = '';
+    accountName = '';
+    accountNickname = '';
+    myQuotes = const <UserQuoteSummary>[];
+    pilotWorkRequests = const <PilotWorkRequest>[];
+    notifications = const <AppNotification>[];
+    chatUnreadCount = 0;
+    allPilots = const <DronePilot>[];
+    _stopFcmTokenRefresh();
+    if (notify) notifyListeners();
+  }
 
   Future<void> load({bool initial = false}) async {
     if (initial) {
@@ -81,6 +113,7 @@ class DrameStore extends ChangeNotifier {
               .map(_workRequestFromData)
               .toList();
       myQuotes = await _api.fetchMyQuotes();
+      chatUnreadCount = isLoggedIn ? await _chatApi.fetchUnreadCount() : 0;
       myFeedPosts =
           (await _feedApi.fetchMyPosts()).map(_operatorPostFromFeed).toList();
       final myOperator =
@@ -100,7 +133,7 @@ class DrameStore extends ChangeNotifier {
         quotes: myQuotes,
       );
       pilots = nextPilots;
-      if (initial) {
+      if (initial || selectedCategory == null) {
         allPilots = nextPilots;
       }
       selectedPilot = myOperator ?? (pilots.isEmpty ? null : pilots.first);
@@ -108,9 +141,7 @@ class DrameStore extends ChangeNotifier {
     } catch (error) {
       lastError = error.toString();
       pilots = const <DronePilot>[];
-      if (initial) {
-        allPilots = const <DronePilot>[];
-      }
+      allPilots = const <DronePilot>[];
       selectedPilot = null;
     }
     isLoading = false;
@@ -196,13 +227,11 @@ class DrameStore extends ChangeNotifier {
   void updateAuth({
     String? role,
     String? email,
-    String? password,
     String? name,
     String? nickname,
   }) {
     accountRole = role ?? accountRole;
     accountEmail = email ?? accountEmail;
-    accountPassword = password ?? accountPassword;
     accountName = name ?? accountName;
     accountNickname = nickname ?? accountNickname;
     notifyListeners();
@@ -220,62 +249,67 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> saveMyProfile({
+    required String name,
+    required String nickname,
+  }) async {
+    await _api.updateMyProfile(name: name, nickname: nickname);
+    accountName = name.trim();
+    accountNickname = nickname.trim();
+    await load();
+  }
+
+  Future<void> refreshChatUnreadCount() async {
+    chatUnreadCount = isLoggedIn ? await _chatApi.fetchUnreadCount() : 0;
+    notifyListeners();
+  }
+
   Future<void> signIn({required String email, required String password}) async {
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: email,
         password: password,
       );
+      await restoreSession(session: response.session);
     } on AuthException catch (error) {
       throw Exception(_authErrorMessage(error));
     }
-    final user = Supabase.instance.client.auth.currentUser;
-    final meta = user?.userMetadata ?? const <String, dynamic>{};
-    final role = meta['role'] == 'operator' ? '운용자' : '이용자';
-    updateAuth(role: role, email: email, password: password);
-    submitAuth();
-    unawaited(_saveFcmToken());
+    notifyListeners();
   }
 
   Future<void> deleteAccount() async {
     await _api.deleteMyAccount();
-    isLoggedIn = false;
-    isPilotMode = false;
-    isPilotOnboarding = false;
-    accountEmail = '';
-    accountPassword = '';
-    accountName = '';
-    accountNickname = '';
-    myQuotes = <UserQuoteSummary>[];
-    allPilots = <DronePilot>[];
-    notifyListeners();
+    clearSessionState();
   }
 
   Future<void> signOut() async {
     await Supabase.instance.client.auth.signOut();
-    isLoggedIn = false;
-    isPilotMode = false;
-    isPilotOnboarding = false;
-    accountEmail = '';
-    accountPassword = '';
-    accountName = '';
-    accountNickname = '';
-    myQuotes = <UserQuoteSummary>[];
-    allPilots = <DronePilot>[];
-    operatorRegistrationCompleted = false;
-    operatorReviewStatus = 'none';
-    notifyListeners();
+    clearSessionState();
   }
 
   Future<void> _saveFcmToken() async {
     if (kIsWeb) return;
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null || _fcmTokenUserId == userId) return;
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
         await _api.saveFcmToken(token);
-        FirebaseMessaging.instance.onTokenRefresh.listen(_api.saveFcmToken);
+        _fcmTokenUserId = userId;
+        await _fcmTokenRefreshSubscription?.cancel();
+        _fcmTokenRefreshSubscription = FirebaseMessaging.instance.onTokenRefresh
+            .listen(_api.saveFcmToken);
       }
     } catch (_) {}
+  }
+
+  void _stopFcmTokenRefresh() {
+    _fcmTokenUserId = null;
+    final subscription = _fcmTokenRefreshSubscription;
+    _fcmTokenRefreshSubscription = null;
+    if (subscription != null) {
+      unawaited(subscription.cancel());
+    }
   }
 
   Future<void> signUp({
@@ -313,7 +347,6 @@ class DrameStore extends ChangeNotifier {
     updateAuth(
       role: '이용자',
       email: email,
-      password: password,
       name: name,
       nickname: nickname,
     );
@@ -341,22 +374,56 @@ class DrameStore extends ChangeNotifier {
     return error.message;
   }
 
-  Future<void> restoreSession() async {
-    final user = Supabase.instance.client.auth.currentUser;
+  Future<void> restoreSession({Session? session}) {
+    final currentFuture = _restoreSessionFuture;
+    if (currentFuture != null) {
+      if (session != null) {
+        _pendingRestoreSession = session;
+      }
+      return currentFuture;
+    }
+
+    final nextFuture = _restoreSession(session).whenComplete(() {
+      _restoreSessionFuture = null;
+      final pendingSession = _pendingRestoreSession;
+      _pendingRestoreSession = null;
+      if (pendingSession != null) {
+        unawaited(restoreSession(session: pendingSession));
+      }
+    });
+    _restoreSessionFuture = nextFuture;
+    return nextFuture;
+  }
+
+  Future<void> _restoreSession(Session? session) async {
+    final auth = Supabase.instance.client.auth;
+    final user = session?.user ?? auth.currentSession?.user ?? auth.currentUser;
     if (user == null) {
-      isSessionRestoring = false;
+      clearSessionState(notify: false);
       notifyListeners();
       return;
     }
+
+    if (!isLoggedIn && !isSessionRestoring) {
+      isSessionRestoring = true;
+      notifyListeners();
+    }
+
     final metadata = user.userMetadata ?? const <String, dynamic>{};
     final role = metadata['role'] == 'operator' ? '운용자' : '이용자';
-    final myOperator = await _api.fetchMyOperatorProfile();
-    updateAuth(
-      role: myOperator == null ? role : '운용자',
-      email: user.email ?? '',
-      name: (metadata['name'] ?? '').toString(),
-      nickname: (metadata['nickname'] ?? '').toString(),
-    );
+    DronePilot? myOperator;
+    try {
+      myOperator = await _api.fetchMyOperatorProfile();
+    } catch (_) {
+      myOperator = null;
+    }
+    accountRole = myOperator == null ? role : '운용자';
+    accountEmail = user.email ?? '';
+    accountName = (metadata['name'] ?? '').toString();
+    accountNickname = (metadata['nickname'] ?? '').toString();
+    isLoggedIn = true;
+    isPilotMode = accountRole == '운용자';
+    isPilotOnboarding = false;
     if (myOperator != null) {
       operatorRegistrationCompleted = true;
       operatorReviewStatus = myOperator.operatorStatus;
@@ -364,9 +431,17 @@ class DrameStore extends ChangeNotifier {
       operatorRegistrationCompleted = false;
       operatorReviewStatus = 'none';
     }
-    submitAuth();
+    registrationJustCompleted = false;
+    lastError = null;
     isSessionRestoring = false;
     notifyListeners();
+    unawaited(_saveFcmToken());
+  }
+
+  @override
+  void dispose() {
+    _stopFcmTokenRefresh();
+    super.dispose();
   }
 
   void goToPilotOnboardingStep(int step) {
@@ -425,7 +500,9 @@ class DrameStore extends ChangeNotifier {
     if (step == 0) {
       if (data.licenseNumber.trim().isEmpty) {
         message = '자격증 번호를 입력해 주세요.';
-      } else if (!RegExp(r'^\d{2}-\d{6}$').hasMatch(data.licenseNumber.trim())) {
+      } else if (!RegExp(
+        r'^\d{2}-\d{6}$',
+      ).hasMatch(data.licenseNumber.trim())) {
         message = '자격증 번호를 00-000000 형식으로 입력해 주세요.';
       }
     } else if (step == 1) {
@@ -667,6 +744,7 @@ class DrameStore extends ChangeNotifier {
                         progress: item.progress,
                         remaining: item.remaining,
                         mapLabel: item.mapLabel,
+                        createdAt: item.createdAt,
                       )
                       : item,
             )
@@ -763,13 +841,23 @@ class DrameStore extends ChangeNotifier {
     return url;
   }
 
+  Future<String> uploadPortfolioImage(List<int> bytes, String fileName) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다.');
+    return _api.uploadPortfolioImage(userId, bytes, fileName);
+  }
+
   Future<void> addFeedPost({
     required String caption,
+    required String categoryLabel,
+    required String locationLabel,
     List<int>? imageBytes,
   }) async {
     try {
       final post = await _feedApi.createPost(
         caption: caption,
+        categoryLabel: categoryLabel,
+        locationLabel: locationLabel,
         imageBytes: imageBytes,
       );
       myFeedPosts = <OperatorFeedPost>[
@@ -825,7 +913,12 @@ class DrameStore extends ChangeNotifier {
       summary: data.summary,
       progress: '견적 응답 대기',
       remaining: data.remaining,
-      mapLabel: '${data.location} 지도',
+      mapLabel: () {
+        final v = data.location.trim();
+        final clean = (v.isEmpty || v == '??' || v == '?') ? '지역 협의' : v;
+        return '$clean 지도';
+      }(),
+      createdAt: data.createdAt,
       myQuoteId: data.myQuoteId,
       myQuoteMessage: data.myQuoteMessage,
       myQuotePrice: data.myQuotePrice,
@@ -836,7 +929,7 @@ class DrameStore extends ChangeNotifier {
     return OperatorFeedPost(
       id: post.id,
       caption: post.caption,
-      createdAt: DateTime.now(),
+      createdAt: post.createdAt,
       imageUrl: post.images.isEmpty ? null : post.images.first,
     );
   }
@@ -855,7 +948,7 @@ class DrameStore extends ChangeNotifier {
                 id: 'request-${request.id}',
                 title: '새 견적 요청',
                 body: '${request.location} ${request.category} 요청이 도착했습니다.',
-                createdAt: DateTime.now(),
+                createdAt: request.createdAt,
                 kind: 'quote_request',
               ),
             ),
@@ -867,7 +960,7 @@ class DrameStore extends ChangeNotifier {
                 id: 'quote-${quote.id}-${quote.status}',
                 title: quote.isQuoteReceived ? '견적을 받았습니다' : '작업이 진행중입니다',
                 body: '${quote.pilotName} · ${quote.category} · ${quote.area}',
-                createdAt: DateTime.now(),
+                createdAt: quote.createdAt,
                 kind:
                     quote.isQuoteReceived
                         ? 'quote_received'

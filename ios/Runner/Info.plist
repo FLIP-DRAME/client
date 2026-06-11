@@ -50,5 +50,11 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>포트폴리오 및 피드 사진 촬영에 카메라를 사용합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>포트폴리오 및 피드 이미지를 선택하기 위해 앨범 접근을 요청합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>포트폴리오 이미지를 앨범에 저장합니다.</string>
 </dict>
 </plist>

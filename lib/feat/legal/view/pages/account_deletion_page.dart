@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:web/web.dart' as web;
 
 import '../../../../common/d_tokens.dart';
+import '../../../../core/platform/platform_url_launcher.dart';
 
 class AccountDeletionPage extends StatelessWidget {
   const AccountDeletionPage({super.key});
@@ -180,12 +182,11 @@ class AccountDeletionPage extends StatelessWidget {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           onPressed: () {
-                            web.window.open(
+                            unawaited(openPlatformUrl(
                               'mailto:privacy@modeofficial.net'
                               '?subject=%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD'
                               '&body=%EA%B0%80%EC%9E%85%20%EC%9D%B4%EB%A9%94%EC%9D%BC%3A%20%0A%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD%20%EC%82%AC%EC%9C%A0(%EC%84%A0%ED%83%9D)%3A%20',
-                              '_self',
-                            );
+                            ));
                           },
                           icon: const Icon(Icons.mail_outline_rounded, size: 16),
                           label: const Text('privacy@modeofficial.net 으로 요청'),

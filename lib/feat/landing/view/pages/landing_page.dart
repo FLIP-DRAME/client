@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
@@ -12,12 +15,58 @@ class LandingPage extends StatefulWidget {
 }
 
 class _LandingPageState extends State<LandingPage> {
+  static const String _mobileEntrySeenKey = 'mode.mobileEntrySeen.v1';
+
   final ScrollController _scrollController = ScrollController();
+  bool? _mobileEntrySeen;
+  bool _redirectingToHome = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_restoreMobileEntrySeen());
+  }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _restoreMobileEntrySeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      setState(() {
+        _mobileEntrySeen = prefs.getBool(_mobileEntrySeenKey) ?? false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _mobileEntrySeen = false);
+    }
+  }
+
+  void _finishMobileEntry() {
+    unawaited(_markMobileEntrySeenAndEnter());
+  }
+
+  Future<void> _markMobileEntrySeenAndEnter() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_mobileEntrySeenKey, true);
+    } catch (_) {
+      // Storage can fail in private browser modes. Still let the user enter.
+    }
+    if (!mounted) return;
+    context.go('/home');
+  }
+
+  void _redirectToHomeAfterBuild() {
+    if (_redirectingToHome) return;
+    _redirectingToHome = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go('/home');
+    });
   }
 
   @override
@@ -26,7 +75,11 @@ class _LandingPageState extends State<LandingPage> {
     final compact = width < 768;
 
     if (compact) {
-      return const _MobileAppEntryFlow();
+      if (_mobileEntrySeen == true) {
+        _redirectToHomeAfterBuild();
+        return const Scaffold(backgroundColor: DC.primary);
+      }
+      return _MobileAppEntryFlow(onFinish: _finishMobileEntry);
     }
 
     return Scaffold(
@@ -104,7 +157,9 @@ class _LandingPageState extends State<LandingPage> {
 // ── Hero ───────────────────────────────────────────────────────────────────────
 
 class _MobileAppEntryFlow extends StatefulWidget {
-  const _MobileAppEntryFlow();
+  const _MobileAppEntryFlow({required this.onFinish});
+
+  final VoidCallback onFinish;
 
   @override
   State<_MobileAppEntryFlow> createState() => _MobileAppEntryFlowState();
@@ -165,7 +220,7 @@ class _MobileAppEntryFlowState extends State<_MobileAppEntryFlow> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () => context.go('/home'),
+                          onPressed: widget.onFinish,
                           child: const Text(
                             '건너뛰기',
                             textAlign: TextAlign.right,
@@ -213,7 +268,7 @@ class _MobileAppEntryFlowState extends State<_MobileAppEntryFlow> {
                                   child: FilledButton(
                                     onPressed:
                                         _page == _items.length - 1
-                                            ? () => context.go('/home')
+                                            ? widget.onFinish
                                             : _next,
                                     style: _entryFilledButtonStyle(),
                                     child: Text(
@@ -520,10 +575,6 @@ class _HeroSection extends StatelessWidget {
               child: Row(
                 children: <Widget>[
                   const DrameLogo(size: 28, showText: true),
-                  if (!compact) ...<Widget>[
-                    const SizedBox(width: 40),
-                    ..._buildNavLinks(context),
-                  ],
                   const Spacer(),
                   TextButton(
                     onPressed: () => context.go('/home'),
@@ -590,27 +641,6 @@ class _HeroSection extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  List<Widget> _buildNavLinks(BuildContext context) {
-    const links = <String>['서비스', '운용자 찾기', '피드', '고객지원'];
-    return links
-        .map(
-          (label) => TextButton(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF374151),
-              textStyle: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-            ),
-            child: Text(label),
-          ),
-        )
-        .toList();
   }
 
   Widget _buildDesktopHero(BuildContext context) {
@@ -2214,12 +2244,12 @@ class _Footer extends StatelessWidget {
                       const SizedBox(height: DC.spXl),
                       _FooterLinks(
                         title: '서비스',
-                        links: const ['운용자 등록', '촬영자 찾기', '사용 안내'],
+                        links: const ['운용자 등록', '운용자 찾기'],
                       ),
                       const SizedBox(height: DC.spLg),
                       _FooterLinks(
                         title: '회사',
-                        links: const ['회사소개', '공지사항', '이용약관', '개인정보처리방침'],
+                        links: const ['개인정보처리방침', '계정 삭제 안내'],
                       ),
                     ],
                   )
@@ -2231,14 +2261,14 @@ class _Footer extends StatelessWidget {
                       Expanded(
                         child: _FooterLinks(
                           title: '서비스',
-                          links: const ['운용자 등록', '촬영자 찾기', '사용 안내'],
+                          links: const ['운용자 등록', '운용자 찾기'],
                         ),
                       ),
                       const SizedBox(width: DC.spXxl),
                       Expanded(
                         child: _FooterLinks(
                           title: '회사',
-                          links: const ['회사소개', '공지사항', '이용약관', '개인정보처리방침'],
+                          links: const ['개인정보처리방침', '계정 삭제 안내'],
                         ),
                       ),
                     ],
@@ -2288,6 +2318,14 @@ class _FooterLinks extends StatelessWidget {
   final String title;
   final List<String> links;
 
+  static const Map<String, String> _routes = <String, String>{
+    '운용자 등록': '/pilot/register',
+    '운용자 찾기': '/home',
+    '개인정보처리방침': '/privacy',
+    '계정 삭제 안내': '/delete-account',
+    '이용약관': '/terms',
+  };
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -2306,13 +2344,22 @@ class _FooterLinks extends StatelessWidget {
         ...links.map(
           (link) => Padding(
             padding: const EdgeInsets.only(bottom: DC.spSm),
-            child: Text(
-              link,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF6B7280),
+            child: GestureDetector(
+              onTap: () {
+                final route = _routes[link];
+                if (route != null) context.go(route);
+              },
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Text(
+                  link,
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
               ),
             ),
           ),

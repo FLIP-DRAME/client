@@ -1,14 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../../common/login_prompt.dart';
+import '../../../../core/platform/platform_file_picker.dart';
 import '../../../../core/app_defaults.dart';
 import '../../../chat/view/pages/chat_list_page.dart';
 import '../../../feed/view/pages/feed_page.dart';
@@ -16,9 +18,7 @@ import '../../model/main_models.dart';
 import '../../network/drone_pilot_api.dart';
 import '../../model/drone_pilot_model.dart';
 import '../../viewmodel/main_view_model.dart';
-import 'package:web/web.dart' as web;
-import 'dart:js_interop'; // JSArrayBuffer, .toDart 사용에 필요
-import 'dart:async'; // Completer
+import 'dart:async';
 import 'dart:ui';
 
 part '../component/main_component.dart';
@@ -69,11 +69,10 @@ class HomeText {
 }
 
 const _primary = Color(0xFF0052FF);
-const _navy = Colors.black;
-const _toggle = Color(0xFFE5E7EB);
+const _navy = Color(0xFF0A0B0D);
 const _focus = Color(0xFFE5E7EB);
-const _ink = Colors.black;
-const _muted = Colors.black;
+const _ink = Color(0xFF0A0B0D);
+const _muted = Color(0xFF7C828A);
 const _soft = Color(0xFFF7F8FA);
 const _line = Color(0xFFE4EAF2);
 const _mint = Color(0xFF22C58B);
@@ -208,7 +207,7 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      store.restoreSession().then((_) {
+      unawaited(store.restoreSession().then((_) {
         if (!mounted) return;
         if (!store.isLoggedIn) {
           context.go('/login');
@@ -218,7 +217,7 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
             !store.registrationJustCompleted) {
           store.openPilotOnboarding();
         }
-      });
+      }));
     });
   }
 
@@ -319,7 +318,10 @@ class _OperatorStandaloneShell extends StatelessWidget {
             nickname: nickname,
             onLoginTap: () => context.go('/login'),
             onRegisterPilotTap: () => context.push('/pilot/register'),
-            onLogoTap: () => context.go('/operator'),
+            onLogoTap: () {
+              store.setPilotMode(false);
+              context.go('/home');
+            },
             onFindPilotTap: () => context.go('/home'),
             onFeedTap: () => context.go('/feed'),
             onPortfolioTap: () => context.go('/portfolio'),
@@ -328,6 +330,7 @@ class _OperatorStandaloneShell extends StatelessWidget {
             onMyQuotesTap: () => context.go('/my/quotes'),
             onChatTap: () => context.go('/chats'),
             notificationCount: store.notificationCount,
+            chatUnreadCount: store.chatUnreadCount,
             onNotificationTap: () => _showNotifications(context, store),
             onLogoutTap: () async {
               await store.signOut();
@@ -341,6 +344,7 @@ class _OperatorStandaloneShell extends StatelessWidget {
               store.setPilotMode(true);
               context.go('/operator');
             },
+            onAboutServiceTap: () => context.go('/landing'),
             operatorActiveTab: activeTab,
             onOperatorTabTap: (id) {
               switch (id) {
@@ -388,24 +392,43 @@ class _DrameHomePageState extends State<DrameHomePage> {
   String _selectedTabId = 'all';
   // Mobile tab index
   int _tabIndex = 0;
+  // Tracks which tabs have been visited so they are built lazily on first visit.
+  final Set<int> _visitedMobileTabs = <int>{0};
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      store.restoreSession().then((_) {
+      unawaited(store.restoreSession().then((_) {
         if (!mounted) return;
-        // 비로그인 사용자도 둘러볼 수 있도록 redirect 제거.
-        // 단, /operator 진입은 로그인 + 운용자만 가능.
+        // 모바일 첫 실행: 비로그인 상태면 랜딩페이지로 이동
+        if (!kIsWeb && !store.isLoggedIn) {
+          unawaited(_checkFirstLaunchRedirect(store));
+          return;
+        }
+        // /operator 진입은 로그인 + 운용자만 가능.
         if (widget.operatorMode && !store.isLoggedIn) {
           context.go('/home');
           return;
         }
         store.setPilotMode(widget.operatorMode);
-        store.load(initial: true);
-      });
+        unawaited(store.load(initial: true));
+      }));
     });
+  }
+
+  Future<void> _checkFirstLaunchRedirect(DrameStore store) async {
+    final router = GoRouter.of(context);
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    if (!(prefs.getBool('has_launched') ?? false)) {
+      unawaited(prefs.setBool('has_launched', true));
+      router.go('/landing');
+    } else {
+      store.setPilotMode(widget.operatorMode);
+      unawaited(store.load(initial: true));
+    }
   }
 
   @override
@@ -417,6 +440,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
       context.read<DrameStore>().setPilotMode(widget.operatorMode);
       setState(() {
         _selectedTabId = widget.operatorMode ? 'dashboard' : 'all';
+        _tabIndex = 0;
+        _visitedMobileTabs
+          ..clear()
+          ..add(0);
       });
     });
   }
@@ -488,65 +515,22 @@ class _DrameHomePageState extends State<DrameHomePage> {
     BuildContext context,
     DrameStore store,
   ) {
-    return AppBar(
-      backgroundColor: DC.canvas,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      automaticallyImplyLeading: false,
-      toolbarHeight: DC.navHeight,
-      titleSpacing: 16,
-      title: GestureDetector(
-        onTap: () {
-          store.clearCategory();
+    return _MobileNewAppBar(
+      store: store,
+      onLoginTap: () => context.go('/login'),
+      onModeChanged: (isOperator) {
+        if (isOperator) {
+          if (!store.isLoggedIn) {
+            showLoginRequiredDialog(context);
+            return;
+          }
+          store.setPilotMode(true);
+        } else {
           store.setPilotMode(false);
-          setState(() => _tabIndex = 0);
-        },
-        child: const DrameLogo(size: 36, showText: false),
-      ),
-      centerTitle: false,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: DC.hairline),
-      ),
-      actions: <Widget>[
-        if (!store.isLoggedIn)
-          TextButton(
-            onPressed: () => context.go('/login'),
-            style: TextButton.styleFrom(
-              foregroundColor: DC.ink,
-              textStyle: DT.navLink,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            child: const Text('로그인'),
-          )
-        else
-          TextButton(
-            onPressed: () async {
-              await store.signOut();
-              if (context.mounted) context.go('/login');
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFE53935),
-              textStyle: DT.navLink,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            child: const Text('로그아웃'),
-          ),
-        const SizedBox(width: 8),
-        _MobileModePill(
-          isOperator: store.isPilotMode,
-          onUserTap: () => context.go('/home'),
-          onOperatorTap: () {
-            if (!store.isLoggedIn) {
-              showLoginRequiredDialog(context);
-              return;
-            }
-            context.go('/operator');
-          },
-        ),
-        const SizedBox(width: 16),
-      ],
+        }
+        setState(() => _tabIndex = 0);
+        context.go(isOperator ? '/operator' : '/home');
+      },
     );
   }
 
@@ -559,6 +543,60 @@ class _DrameHomePageState extends State<DrameHomePage> {
           return const Scaffold(
             backgroundColor: DC.canvas,
             body: Center(child: CircularProgressIndicator(color: DC.primary)),
+          );
+        }
+        if (!store.isLoading && store.lastError != null && store.pilots.isEmpty) {
+          return Scaffold(
+            backgroundColor: DC.canvas,
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Color(0xFFB0BEC5),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '데이터를 불러오지 못했습니다',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      store.lastError!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 14,
+                        color: Color(0xFF6E7F99),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => unawaited(store.load(initial: true)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: DC.primary,
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: const Text('다시 시도'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           );
         }
         return compact
@@ -600,6 +638,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
               store.clearCategory();
               store.setPilotMode(false);
               setState(() => _selectedTabId = 'all');
+              context.go('/home');
               _scrollToTop();
             },
             onFindPilotTap: () {
@@ -656,8 +695,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
                   initialRequest: store.firstPilotWorkRequest,
                 ),
             onMyPageTap: () => context.go('/operator/mypage'),
-            onAboutServiceTap: () => context.go('/'),
+            onAboutServiceTap: () => context.go('/landing'),
             notificationCount: store.notificationCount,
+            chatUnreadCount: store.chatUnreadCount,
             onNotificationTap: () => _showNotifications(context, store),
             operatorActiveTab: isOperatorDashboard ? _selectedTabId : null,
             onOperatorTabTap:
@@ -729,8 +769,8 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     ),
                   ),
 
-                  // ── Area + operator list (after category selected) ──────────
-                  if (store.selectedCategory != null) ...<Widget>[
+                  // ── Area selection (only when category selected) ────────────
+                  if (store.selectedCategory != null)
                     SliverToBoxAdapter(
                       child: KeyedSubtree(
                         key: _areaSectionKey,
@@ -745,13 +785,14 @@ class _DrameHomePageState extends State<DrameHomePage> {
                         ),
                       ),
                     ),
-                    SliverToBoxAdapter(
-                      child: KeyedSubtree(
-                        key: _operatorSectionKey,
-                        child: _OperatorListSection(store: store),
-                      ),
+
+                  // ── Operator list (always visible) ─────────────────────────
+                  SliverToBoxAdapter(
+                    child: KeyedSubtree(
+                      key: _operatorSectionKey,
+                      child: _OperatorListSection(store: store),
                     ),
-                  ],
+                  ),
 
                   // ── Operator CTA band ──────────────────────────────────────
                   SliverToBoxAdapter(
@@ -773,73 +814,68 @@ class _DrameHomePageState extends State<DrameHomePage> {
   }
 
   Widget _buildMobileLayout(BuildContext context, DrameStore store) {
-    if (store.isPilotMode &&
-        (store.isPilotOnboarding || store.registrationJustCompleted)) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child:
-                store.isPilotOnboarding
-                    ? _PilotOnboardingSection(store: store)
-                    : store.registrationJustCompleted
-                    ? _PilotRegistrationDoneSection(store: store)
-                    : _PilotDashboardSection(store: store),
-          ),
-        ),
-      );
-    }
-
-    const userNav = <BottomNavigationBarItem>[
-      BottomNavigationBarItem(
+    final userNav = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(
         icon: Icon(Icons.home_outlined),
         activeIcon: Icon(Icons.home_rounded),
         label: '홈',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.description_outlined),
         activeIcon: Icon(Icons.description_rounded),
         label: '내견적',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.photo_library_outlined),
         activeIcon: Icon(Icons.photo_library_rounded),
         label: '피드',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.chat_bubble_outline_rounded),
-        activeIcon: Icon(Icons.chat_bubble_rounded),
+        icon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_outline_rounded,
+          count: store.chatUnreadCount,
+        ),
+        activeIcon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_rounded,
+          count: store.chatUnreadCount,
+        ),
         label: '채팅',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.person_outline_rounded),
         activeIcon: Icon(Icons.person_rounded),
         label: '내정보',
       ),
     ];
 
-    const operatorNav = <BottomNavigationBarItem>[
-      BottomNavigationBarItem(
+    final operatorNav = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(
         icon: Icon(Icons.home_outlined),
         activeIcon: Icon(Icons.home_rounded),
         label: '대시보드',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.inbox_outlined),
         activeIcon: Icon(Icons.inbox_rounded),
         label: '요청확인',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.photo_library_outlined),
         activeIcon: Icon(Icons.photo_library_rounded),
         label: '피드',
       ),
       BottomNavigationBarItem(
-        icon: Icon(Icons.chat_bubble_outline_rounded),
-        activeIcon: Icon(Icons.chat_bubble_rounded),
+        icon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_outline_rounded,
+          count: store.chatUnreadCount,
+        ),
+        activeIcon: _BottomBadgeIcon(
+          icon: Icons.chat_bubble_rounded,
+          count: store.chatUnreadCount,
+        ),
         label: '채팅',
       ),
-      BottomNavigationBarItem(
+      const BottomNavigationBarItem(
         icon: Icon(Icons.person_outline_rounded),
         activeIcon: Icon(Icons.person_rounded),
         label: '내정보',
@@ -848,12 +884,22 @@ class _DrameHomePageState extends State<DrameHomePage> {
 
     final navItems = store.isPilotMode ? operatorNav : userNav;
     final safeIndex = _tabIndex.clamp(0, navItems.length - 1);
+    final operatorHomeTab =
+        store.isPilotOnboarding
+            ? SingleChildScrollView(
+              child: _PilotOnboardingSection(store: store),
+            )
+            : store.registrationJustCompleted
+            ? SingleChildScrollView(
+              child: _PilotRegistrationDoneSection(store: store),
+            )
+            : _OperatorDashboardTab(store: store);
 
     final tabChildren =
         store.isPilotMode
             ? <Widget>[
-              _OperatorDashboardTab(store: store),
-              const SizedBox.shrink(), // /operator/requests 로 라우팅
+              operatorHomeTab,
+              _OperatorRequestsMobileTab(store: store),
               ColoredBox(
                 color: DC.canvas,
                 child: SingleChildScrollView(
@@ -879,7 +925,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
             ]
             : <Widget>[
               _UserHomeTab(store: store),
-              const SizedBox.shrink(), // /my/quotes 로 라우팅
+              _MobileMyQuotesTab(store: store),
               const SingleChildScrollView(
                 child: ColoredBox(color: DC.canvas, child: DroneFeedSection()),
               ),
@@ -887,12 +933,29 @@ class _DrameHomePageState extends State<DrameHomePage> {
               _UserMyPageTab(store: store),
             ];
 
-    return Scaffold(
+    return PopScope(
+      canPop: _tabIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _tabIndex = 0);
+      },
+      child: Scaffold(
       backgroundColor: DC.canvas,
       appBar: _buildMobileAppBar(context, store),
       body: SafeArea(
         top: false,
-        child: IndexedStack(index: safeIndex, children: tabChildren),
+        child: Stack(
+          children: <Widget>[
+            for (int i = 0; i < tabChildren.length; i++)
+              if (_visitedMobileTabs.contains(i))
+                Offstage(
+                  offstage: safeIndex != i,
+                  child: TickerMode(
+                    enabled: safeIndex == i,
+                    child: tabChildren[i],
+                  ),
+                ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: safeIndex,
@@ -901,17 +964,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
             showLoginRequiredDialog(context);
             return;
           }
-          // 이용자 내견적 → 웹과 동일한 페이지로 이동
-          if (!store.isPilotMode && index == 1) {
-            context.go('/my/quotes');
-            return;
-          }
-          // 운용자 요청확인 → 웹과 동일한 페이지로 이동
-          if (store.isPilotMode && index == 1) {
-            context.go('/operator/requests');
-            return;
-          }
-          setState(() => _tabIndex = index);
+          setState(() {
+            _tabIndex = index;
+            _visitedMobileTabs.add(index);
+          });
         },
         selectedItemColor: _primary,
         unselectedItemColor: const Color(0xFF8BA0B8),
@@ -930,271 +986,49 @@ class _DrameHomePageState extends State<DrameHomePage> {
         ),
         items: navItems,
       ),
+    ),
     );
   }
 }
 
-// ignore: unused_element
-class _TopNavigation extends StatelessWidget {
-  const _TopNavigation({required this.store});
-
-  final DrameStore store;
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 900;
-
-    return Container(
-      height: 76,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _line)),
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1280),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              children: <Widget>[
-                const Text('모드', style: HomeText.logo),
-                if (!compact) ...const <Widget>[
-                  SizedBox(width: 54),
-                  // _TopSearch(),
-                ],
-                const Spacer(),
-                const SizedBox(width: 22),
-                if (!compact) ...<Widget>[
-                  _ModeToggle(
-                    isPilotMode: store.isPilotMode,
-                    onChanged: store.setPilotMode,
-                  ),
-                  const SizedBox(width: 14),
-                ],
-                TextButton(
-                  onPressed: () => context.go('/login'),
-                  style: TextButton.styleFrom(
-                    textStyle: HomeText.topButton,
-                    foregroundColor: _ink,
-                  ),
-                  child: const Text('로그인 / 회원가입'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ignore: unused_element
-class _ModeToggle extends StatelessWidget {
-  const _ModeToggle({required this.isPilotMode, required this.onChanged});
-
-  final bool isPilotMode;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: _soft,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _line),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          _ModeToggleItem(
-            label: '이용자',
-            selected: !isPilotMode,
-            onTap: () => onChanged(false),
-          ),
-          _ModeToggleItem(
-            label: '운용자',
-            selected: isPilotMode,
-            onTap: () => onChanged(true),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ignore: unused_element
-class _ModeToggleItem extends StatelessWidget {
-  const _ModeToggleItem({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? _toggle : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: HomeText.topButton.copyWith(
-            color: selected ? _ink : _muted,
-            fontWeight: DrameTextStyles.semiBold,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ignore: unused_element
-class _SecondaryNavigation extends StatelessWidget {
-  const _SecondaryNavigation({
-    required this.onFindPilotTap,
-    required this.onPortfolioTap,
-  });
-
-  final VoidCallback onFindPilotTap;
-  final VoidCallback onPortfolioTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 760;
-    final tabs = <({IconData icon, String label, VoidCallback onTap})>[
-      (
-        icon: Icons.person_search_rounded,
-        label: '촬영자 찾기',
-        onTap: onFindPilotTap,
-      ),
-      (icon: Icons.grid_view_rounded, label: '포트폴리오', onTap: onPortfolioTap),
-      (icon: Icons.info_outline_rounded, label: '모드 소개', onTap: () {}),
-      (icon: Icons.map_outlined, label: '비행공역 확인', onTap: () {}),
-    ];
-
-    return Container(
-      height: compact ? 58 : 54,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _line)),
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1280),
-          child: SizedBox(
-            width: double.infinity,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children:
-                    tabs.map((tab) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 34),
-                        child: _SubNavTab(
-                          icon: tab.icon,
-                          label: tab.label,
-                          onTap: tab.onTap,
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ignore: unused_element
-class _SubNavTab extends StatelessWidget {
-  const _SubNavTab({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+class _BottomBadgeIcon extends StatelessWidget {
+  const _BottomBadgeIcon({required this.icon, required this.count});
 
   final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
-    return TextButton.icon(
-      onPressed: onTap,
-      style: TextButton.styleFrom(
-        foregroundColor: const Color(0xFF6E7F99),
-        textStyle: DrameTextStyles.button,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 15),
-      ),
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-    );
-  }
-}
-
-// ignore: unused_element
-class _MapSection extends StatelessWidget {
-  const _MapSection({required this.store});
-
-  final DrameStore store;
-
-  @override
-  Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width >= 980;
-
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFFEAF1F8),
-      child: _PageShell(
-        top: 56,
-        bottom: 66,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const _SectionHeader(
-              eyebrow: '지역 기반 실시간 매칭',
-              title: '지도에서 바로 촬영자 선택',
-              action: '공역 확인',
-            ),
-            const SizedBox(height: 22),
-            _AreaFilter(store: store),
-            const SizedBox(height: 22),
-
-            if (wide)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(flex: 7, child: _MapPanel(store: store)),
-                  const SizedBox(width: 18),
-                  Expanded(flex: 5, child: _PilotPanel(store: store)),
-                ],
-              )
-            else
-              Column(
-                children: <Widget>[
-                  _MapPanel(store: store),
-                  const SizedBox(height: 16),
-                  _PilotPanel(store: store),
-                ],
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: <Widget>[
+        Icon(icon),
+        if (count > 0)
+          Positioned(
+            right: -10,
+            top: -7,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              decoration: const BoxDecoration(
+                color: _primary,
+                borderRadius: BorderRadius.all(Radius.circular(999)),
               ),
-          ],
-        ),
-      ),
+              child: Center(
+                child: Text(
+                  count > 99 ? '99+' : count.toString(),
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

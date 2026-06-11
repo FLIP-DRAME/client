@@ -21,32 +21,6 @@ class _FeedPageShell extends StatelessWidget {
   }
 }
 
-class _FeedSectionHeader extends StatelessWidget {
-  const _FeedSectionHeader({required this.eyebrow, required this.title});
-
-  final String eyebrow;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: <Widget>[
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(eyebrow, style: FeedText.eyebrow),
-              const SizedBox(height: 7),
-              Text(title, style: FeedText.sectionTitle),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _FeedNetworkCover extends StatelessWidget {
   const _FeedNetworkCover({required this.imageUrl});
 

@@ -89,6 +89,7 @@ class PilotWorkRequest {
     required this.progress,
     required this.remaining,
     required this.mapLabel,
+    required this.createdAt,
     this.myQuoteId,
     this.myQuoteMessage,
     this.myQuotePrice,
@@ -106,7 +107,14 @@ class PilotWorkRequest {
   final String progress;
   final String remaining;
   final String mapLabel;
+  final DateTime createdAt;
   final String? myQuoteId;
   final String? myQuoteMessage;
   final int? myQuotePrice;
+
+  String get displayLocation {
+    final v = location.trim();
+    if (v.isEmpty || v == '??' || v == '?') return '지역 협의';
+    return v;
+  }
 }

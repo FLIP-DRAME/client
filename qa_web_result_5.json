@@ -1,0 +1,66 @@
+{
+  "cycle": 5,
+  "screenshots": [
+    "web_landing_01_top",
+    "web_landing_02_scroll",
+    "web_landing_03_scroll",
+    "web_home_01_top",
+    "web_home_02_scroll",
+    "web_home_03_scroll",
+    "web_home_04_scroll",
+    "web_portfolio_01_top",
+    "web_portfolio_02_scroll",
+    "web_portfolio_03_scroll",
+    "web_feed_01_top",
+    "web_feed_02_scroll",
+    "web_feed_03_scroll",
+    "web_my_quotes_01_top",
+    "web_my_quotes_02_scroll",
+    "web_my_quotes_03_scroll",
+    "web_chats_01_top",
+    "web_chats_02_scroll",
+    "web_op_home_01_top",
+    "web_op_home_02_scroll",
+    "web_op_home_03_scroll",
+    "web_op_requests_01_top",
+    "web_op_requests_02_scroll",
+    "web_op_requests_03_scroll",
+    "web_op_portfolio_01_top",
+    "web_op_portfolio_02_scroll",
+    "web_op_portfolio_03_scroll",
+    "web_op_mypage_01_top",
+    "web_op_mypage_02_scroll",
+    "flow1_01_portfolio_list",
+    "flow1_02_portfolio_detail",
+    "flow1_03_portfolio_scrolled",
+    "flow1_04_quote_sheet_open",
+    "flow1_05_sheet_closed",
+    "flow1_06_my_quotes_after",
+    "flow2_01_operator_home_before",
+    "flow2_02_requests_before",
+    "flow2_03_request_tapped",
+    "flow2_04_sheet_scrolled",
+    "flow2_05_sheet_bottom",
+    "flow2_06_after_close_refreshed",
+    "flow2_07_operator_home_after",
+    "flow3_01_op_home",
+    "flow3_02_response_sheet_open",
+    "flow3_03_response_sheet_scrolled",
+    "flow3_04_after_close"
+  ],
+  "errors": [],
+  "flows": [
+    {
+      "flow": "포트폴리오→견적시트→내견적",
+      "screenshots": 6
+    },
+    {
+      "flow": "운용자받은요청→응답시트→새로고침",
+      "screenshots": 7
+    },
+    {
+      "flow": "운용자홈→응답시트→닫기",
+      "screenshots": 4
+    }
+  ]
+}

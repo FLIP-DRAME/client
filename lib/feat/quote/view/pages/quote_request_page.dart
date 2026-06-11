@@ -243,7 +243,7 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                   ),
                   const SizedBox(height: 16),
                   QuoteTextField(
-                    label: '제안 금액 (만원)',
+                    label: '견적 금액 (만원)',
                     controller: _amountController,
                   ),
                   const SizedBox(height: 16),

@@ -1,5 +1,11 @@
 part of '../pages/main_page.dart';
 
+String _cleanArea(String area) {
+  final v = area.trim();
+  if (v.isEmpty || v == '??' || v == '?') return '';
+  return ' · $v';
+}
+
 class MyQuotesPage extends StatefulWidget {
   const MyQuotesPage({super.key});
 
@@ -14,7 +20,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final store = context.read<DrameStore>();
-      if (store.isLoggedIn) store.load();
+      if (store.isLoggedIn) unawaited(store.load());
     });
   }
 
@@ -47,41 +53,59 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
 
         return Scaffold(
           backgroundColor: DC.canvas,
+          appBar: compact
+              ? AppBar(
+                  backgroundColor: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  elevation: 0,
+                  centerTitle: false,
+                  title: const Text('내 견적'),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.go('/home'),
+                  ),
+                )
+              : null,
           body: Column(
             children: <Widget>[
-              DrameTopNavigation(
-                isLoggedIn: true,
-                isOperator: store.isPilotMode,
-                nickname: nickname,
-                activePage: 'quotes',
-                onLoginTap: () => context.go('/login'),
-                onRegisterPilotTap: () => context.push('/pilot/register'),
-                onLogoTap: () => context.go('/home'),
-                onFindPilotTap: () => context.go('/home'),
-                onFeedTap: () => context.go('/feed'),
-                onPortfolioTap: () => context.go('/portfolio'),
-                onMyQuotesTap: () {},
-                onChatTap: () => context.go('/chats'),
-                onLogoutTap: () async {
-                  await store.signOut();
-                  if (context.mounted) context.go('/login');
-                },
-                onSwitchToUser: () {
-                  store.setPilotMode(false);
-                  context.go('/home');
-                },
-                onSwitchToOperator: () {
-                  store.setPilotMode(true);
-                  context.go('/operator');
-                },
-                onRequestsTap:
-                    () => _openPilotRequestReviewPage(
-                      context,
-                      initialRequest: store.firstPilotWorkRequest,
-                    ),
-                notificationCount: store.notificationCount,
-                onNotificationTap: () => _showNotifications(context, store),
-              ),
+              if (!compact)
+                DrameTopNavigation(
+                  isLoggedIn: true,
+                  isOperator: store.isPilotMode,
+                  nickname: nickname,
+                  activePage: 'quotes',
+                  onLoginTap: () => context.go('/login'),
+                  onRegisterPilotTap: () => context.push('/pilot/register'),
+                  onLogoTap: () {
+                    store.setPilotMode(false);
+                    context.go('/home');
+                  },
+                  onFindPilotTap: () => context.go('/home'),
+                  onFeedTap: () => context.go('/feed'),
+                  onPortfolioTap: () => context.go('/portfolio'),
+                  onMyQuotesTap: () {},
+                  onChatTap: () => context.go('/chats'),
+                  onLogoutTap: () async {
+                    await store.signOut();
+                    if (context.mounted) context.go('/login');
+                  },
+                  onSwitchToUser: () {
+                    store.setPilotMode(false);
+                    context.go('/home');
+                  },
+                  onSwitchToOperator: () {
+                    store.setPilotMode(true);
+                    context.go('/operator');
+                  },
+                  onRequestsTap:
+                      () => _openPilotRequestReviewPage(
+                        context,
+                        initialRequest: store.firstPilotWorkRequest,
+                      ),
+                  notificationCount: store.notificationCount,
+                  chatUnreadCount: store.chatUnreadCount,
+                  onNotificationTap: () => _showNotifications(context, store),
+                ),
               Expanded(
                 child: CustomScrollView(
                   slivers: <Widget>[
@@ -90,14 +114,16 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const SizedBox(height: 40),
-                            Text('내 견적', style: DT.titleLg),
-                            const SizedBox(height: 8),
-                            Text(
-                              '요청한 견적의 진행 상황을 확인하세요.',
-                              style: DT.bodyMd.copyWith(color: DC.body),
-                            ),
-                            const SizedBox(height: 32),
+                            SizedBox(height: compact ? 16 : 40),
+                            if (!compact) Text('내 견적', style: DT.titleLg),
+                            if (!compact) const SizedBox(height: 8),
+                            if (!compact)
+                              Text(
+                                '요청한 견적의 진행 상황을 확인하세요.',
+                                style: DT.bodyMd.copyWith(color: DC.body),
+                              ),
+                            if (!compact) const SizedBox(height: 32),
+                            if (compact) const SizedBox(height: 8),
                             if (quotes.isEmpty)
                               _EmptyQuotes(onFind: () => context.go('/home'))
                             else ...<Widget>[
@@ -138,7 +164,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                         ),
                       ),
                     ),
-                    const SliverToBoxAdapter(child: _FooterSection()),
+                    if (!compact) const SliverToBoxAdapter(child: _FooterSection()),
                   ],
                 ),
               ),
@@ -252,7 +278,10 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
                 activePage: 'quotes',
                 onLoginTap: () => context.go('/login'),
                 onRegisterPilotTap: () => context.push('/pilot/register'),
-                onLogoTap: () => context.go('/home'),
+                onLogoTap: () {
+                  store.setPilotMode(false);
+                  context.go('/home');
+                },
                 onFindPilotTap: () => context.go('/home'),
                 onFeedTap: () => context.go('/feed'),
                 onPortfolioTap: () => context.go('/portfolio'),
@@ -271,6 +300,7 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
                   context.go('/operator');
                 },
                 notificationCount: store.notificationCount,
+                chatUnreadCount: store.chatUnreadCount,
                 onNotificationTap: () => _showNotifications(context, store),
               ),
               Expanded(
@@ -478,8 +508,9 @@ class _QuoteCard extends ConsumerWidget {
   Future<void> _openChat(BuildContext context, WidgetRef ref) async {
     if (quote.id.isEmpty) return;
     try {
-      final roomId =
-          await ref.read(chatViewModelProvider).getOrCreateRoom(quote.id);
+      final roomId = await ref
+          .read(chatViewModelProvider)
+          .getOrCreateRoom(quote.id);
       if (context.mounted) {
         context.push(
           '/chat/$roomId',
@@ -489,7 +520,13 @@ class _QuoteCard extends ConsumerWidget {
           },
         );
       }
-    } catch (_) {}
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('채팅방을 열 수 없습니다. 다시 시도해 주세요.')),
+        );
+      }
+    }
   }
 
   @override
@@ -513,93 +550,46 @@ class _QuoteCard extends ConsumerWidget {
             borderRadius: BorderRadius.circular(DC.rxLg),
             border: Border.all(color: DC.hairline),
           ),
-          child: compact
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Text(quote.pilotName, style: DT.titleSm),
-                        ),
-                        _StatusChip(label: quote.status, color: statusColor),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${quote.category} · ${quote.area}',
-                      style: DT.bodyMd.copyWith(color: DC.body),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      quote.date,
-                      style: DT.caption.copyWith(color: DC.muted),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      displayPrice,
-                      style: DT.titleSm.copyWith(color: DC.primary),
-                    ),
-                    if (showChat) ...<Widget>[
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () => _openChat(context, ref),
-                          icon: const Icon(Icons.chat_rounded, size: 16),
-                          label: const Text('채팅하기'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: DC.primary,
-                            side: const BorderSide(color: DC.primary),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            textStyle: const TextStyle(
-                              fontFamily: DrameTextStyles.fontFamily,
-                              fontSize: DrameTextStyles.labelSize,
-                              fontWeight: DrameTextStyles.semiBold,
-                            ),
+          child:
+              compact
+                  ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text(quote.pilotName, style: DT.titleSm),
                           ),
-                        ),
+                          _StatusChip(label: quote.status, color: statusColor),
+                        ],
                       ),
-                    ],
-                  ],
-                )
-              : Column(
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(quote.pilotName, style: DT.titleSm),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${quote.category} · ${quote.area} · ${quote.date}',
-                                style: DT.bodyMd.copyWith(color: DC.body),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          displayPrice,
-                          style: DT.titleSm.copyWith(color: DC.primary),
-                        ),
-                        const SizedBox(width: 20),
-                        _StatusChip(label: quote.status, color: statusColor),
-                        if (showChat) ...<Widget>[
-                          const SizedBox(width: 12),
-                          OutlinedButton.icon(
+                      const SizedBox(height: 8),
+                      Text(
+                        '${quote.category}${_cleanArea(quote.area)}',
+                        style: DT.bodyMd.copyWith(color: DC.body),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        quote.date,
+                        style: DT.caption.copyWith(color: DC.muted),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        displayPrice,
+                        style: DT.titleSm.copyWith(color: DC.primary),
+                      ),
+                      if (showChat) ...<Widget>[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
                             onPressed: () => _openChat(context, ref),
-                            icon: const Icon(Icons.chat_rounded, size: 14),
-                            label: const Text('채팅'),
+                            icon: const Icon(Icons.chat_rounded, size: 16),
+                            label: const Text('채팅하기'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: DC.primary,
                               side: const BorderSide(color: DC.primary),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               textStyle: const TextStyle(
                                 fontFamily: DrameTextStyles.fontFamily,
                                 fontSize: DrameTextStyles.labelSize,
@@ -607,11 +597,59 @@ class _QuoteCard extends ConsumerWidget {
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ],
-                    ),
-                  ],
-                ),
+                    ],
+                  )
+                  : Column(
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(quote.pilotName, style: DT.titleSm),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${quote.category}${_cleanArea(quote.area)} · ${quote.date}',
+                                  style: DT.bodyMd.copyWith(color: DC.body),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Text(
+                            displayPrice,
+                            style: DT.titleSm.copyWith(color: DC.primary),
+                          ),
+                          const SizedBox(width: 20),
+                          _StatusChip(label: quote.status, color: statusColor),
+                          if (showChat) ...<Widget>[
+                            const SizedBox(width: 12),
+                            OutlinedButton.icon(
+                              onPressed: () => _openChat(context, ref),
+                              icon: const Icon(Icons.chat_rounded, size: 14),
+                              label: const Text('채팅'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: DC.primary,
+                                side: const BorderSide(color: DC.primary),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                textStyle: const TextStyle(
+                                  fontFamily: DrameTextStyles.fontFamily,
+                                  fontSize: DrameTextStyles.labelSize,
+                                  fontWeight: DrameTextStyles.semiBold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
         ),
       ),
     );

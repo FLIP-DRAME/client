@@ -12,27 +12,6 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
   String _selectedSort = '인기순';
   String _selectedCategory = '전체';
 
-  static const List<String> _regions = <String>[
-    '전체',
-    '서울',
-    '경기',
-    '인천',
-    '부산',
-    '대구',
-    '광주',
-    '대전',
-  ];
-
-  static const List<String> _categories = <String>[
-    '전체',
-    '항공촬영',
-    '농약방제',
-    '측량·매핑',
-    '시설점검',
-    '부동산',
-    '행사촬영',
-  ];
-
   static const List<String> _sorts = <String>['인기순', '최신순'];
 
   @override
@@ -65,44 +44,67 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
             store.accountNickname.isNotEmpty
                 ? store.accountNickname
                 : store.accountName;
+        final regions = store.serviceAreas;
+        final categories = <String>[
+          '전체',
+          ...store.categories.map((category) => category.label),
+        ];
 
         return Scaffold(
           backgroundColor: DC.canvas,
+          appBar: compact
+              ? AppBar(
+                  backgroundColor: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  elevation: 0,
+                  centerTitle: false,
+                  title: const Text('피드'),
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.go('/home'),
+                  ),
+                )
+              : null,
           body: Column(
             children: <Widget>[
-              DrameTopNavigation(
-                isLoggedIn: true,
-                isOperator: store.isPilotMode,
-                nickname: nickname,
-                activePage: 'feed',
-                onLoginTap: () => context.go('/login'),
-                onRegisterPilotTap: () => context.push('/pilot/register'),
-                onLogoTap: () => context.go('/home'),
-                onFindPilotTap: () => context.go('/home'),
-                onFeedTap: () => context.go('/feed'),
-                onPortfolioTap: () => context.go('/portfolio'),
-                onMyQuotesTap: () => context.go('/my/quotes'),
-                onChatTap: () => context.go('/chats'),
-                onLogoutTap: () async {
-                  await store.signOut();
-                  if (context.mounted) context.go('/login');
-                },
-                onSwitchToUser: () {
-                  store.setPilotMode(false);
-                  context.go('/home');
-                },
-                onSwitchToOperator: () {
-                  store.setPilotMode(true);
-                  context.go('/operator');
-                },
-                onRequestsTap:
-                    () => _openPilotRequestReviewPage(
-                      context,
-                      initialRequest: store.firstPilotWorkRequest,
-                    ),
-                notificationCount: store.notificationCount,
-                onNotificationTap: () => _showNotifications(context, store),
-              ),
+              if (!compact)
+                DrameTopNavigation(
+                  isLoggedIn: true,
+                  isOperator: store.isPilotMode,
+                  nickname: nickname,
+                  activePage: 'feed',
+                  onLoginTap: () => context.go('/login'),
+                  onRegisterPilotTap: () => context.push('/pilot/register'),
+                  onLogoTap: () {
+                    store.setPilotMode(false);
+                    context.go('/home');
+                  },
+                  onFindPilotTap: () => context.go('/home'),
+                  onFeedTap: () => context.go('/feed'),
+                  onPortfolioTap: () => context.go('/portfolio'),
+                  onMyQuotesTap: () => context.go('/my/quotes'),
+                  onChatTap: () => context.go('/chats'),
+                  onLogoutTap: () async {
+                    await store.signOut();
+                    if (context.mounted) context.go('/login');
+                  },
+                  onSwitchToUser: () {
+                    store.setPilotMode(false);
+                    context.go('/home');
+                  },
+                  onSwitchToOperator: () {
+                    store.setPilotMode(true);
+                    context.go('/operator');
+                  },
+                  onRequestsTap:
+                      () => _openPilotRequestReviewPage(
+                        context,
+                        initialRequest: store.firstPilotWorkRequest,
+                      ),
+                  notificationCount: store.notificationCount,
+                  chatUnreadCount: store.chatUnreadCount,
+                  onNotificationTap: () => _showNotifications(context, store),
+                ),
 
               // ── Filter Bar ─────────────────────────────────────────────────
               _FeedFilterBar(
@@ -110,8 +112,8 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
                 selectedRegion: _selectedRegion,
                 selectedCategory: _selectedCategory,
                 selectedSort: _selectedSort,
-                regions: _regions,
-                categories: _categories,
+                regions: regions,
+                categories: categories,
                 sorts: _sorts,
                 onRegionChanged: (v) => setState(() => _selectedRegion = v),
                 onCategoryChanged: (v) => setState(() => _selectedCategory = v),
@@ -121,13 +123,17 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
               Expanded(
                 child: CustomScrollView(
                   slivers: <Widget>[
-                    const SliverToBoxAdapter(
+                    SliverToBoxAdapter(
                       child: ColoredBox(
                         color: DC.canvas,
-                        child: DroneFeedSection(),
+                        child: DroneFeedSection(
+                          region: _selectedRegion,
+                          category: _selectedCategory,
+                          sort: _selectedSort,
+                        ),
                       ),
                     ),
-                    const SliverToBoxAdapter(child: _FooterSection()),
+                    if (!compact) const SliverToBoxAdapter(child: _FooterSection()),
                     const SliverToBoxAdapter(child: SizedBox(height: 72)),
                   ],
                 ),

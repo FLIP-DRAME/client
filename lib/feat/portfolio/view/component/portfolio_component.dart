@@ -66,15 +66,20 @@ class _PortfolioMain extends StatelessWidget {
                       children: <Widget>[
                         _ProfileMeta(
                           icon: Icons.place_outlined,
-                          text: pilot.location,
+                          text: pilot.displayLocation,
                         ),
                         _ProfileMeta(
                           icon: Icons.sell_outlined,
-                          text: pilot.specialty,
+                          text: pilot.displaySpecialty,
                         ),
                         _ProfileMeta(
                           icon: Icons.map_outlined,
-                          text: pilot.availableAreas.join(', '),
+                          text: () {
+                            final v = pilot.availableAreas
+                                .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
+                                .join(', ');
+                            return v.isEmpty ? '지역 협의' : v;
+                          }(),
                         ),
                       ],
                     ),
@@ -88,22 +93,6 @@ class _PortfolioMain extends StatelessWidget {
         ),
         const SizedBox(height: 36),
         const Divider(color: _line),
-        const SizedBox(height: 34),
-        const _SectionTitle('촬영자 정보'),
-        const SizedBox(height: 16),
-        _InfoBlock(
-          rows: <({IconData icon, String text})>[
-            (
-              icon: Icons.verified_user_outlined,
-              text: '허가 지역: ${pilot.permittedAreas.join(', ')}',
-            ),
-            (icon: Icons.call_outlined, text: '연락처: ${pilot.contact}'),
-            (
-              icon: Icons.payments_outlined,
-              text: '기본 제안가: ${pilot.priceLabel}',
-            ),
-          ],
-        ),
         const SizedBox(height: 34),
         const _SectionTitle('서비스 상세설명'),
         const SizedBox(height: 14),
@@ -167,14 +156,18 @@ class _QuoteCard extends StatelessWidget {
           const Text('견적 요청하기', style: PortfolioText.quoteTitle),
           const SizedBox(height: 14),
           Text(
-            '${pilot.name}에게 원하는 촬영 서비스의 견적을 받아보세요.',
+            '${pilot.name}에게 원하는 드론 서비스의 견적을 받아보세요.',
             style: PortfolioText.quoteBody,
           ),
           const SizedBox(height: 22),
-          _QuotePriceRow(label: '촬영가 제안가', value: pilot.priceLabel),
           _QuotePriceRow(
             label: '가능 지역',
-            value: pilot.availableAreas.join(', '),
+            value: () {
+              final v = pilot.availableAreas
+                  .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
+                  .join(', ');
+              return v.isEmpty ? '지역 협의' : v;
+            }(),
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -243,33 +236,6 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-class _InfoBlock extends StatelessWidget {
-  const _InfoBlock({required this.rows});
-
-  final List<({IconData icon, String text})> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children:
-          rows.map((row) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: <Widget>[
-                  Icon(row.icon, color: _navy, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(row.text, style: PortfolioText.infoText),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-    );
-  }
-}
-
 class _QuotePriceRow extends StatelessWidget {
   const _QuotePriceRow({required this.label, required this.value});
 
@@ -333,23 +299,20 @@ class _MobilePortfolioScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _bgBeige,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: _bgBeige,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: _line),
-        ),
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
             size: 20,
             color: Colors.black,
           ),
-          onPressed: () => context.pop(),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/home'),
         ),
         title: const Text(
           '운용자 프로필',
@@ -361,43 +324,29 @@ class _MobilePortfolioScaffold extends StatelessWidget {
             letterSpacing: -0.2,
           ),
         ),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.bookmark_border_rounded,
-              size: 22,
-              color: Colors.black,
-            ),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.ios_share_outlined,
-              size: 22,
-              color: Colors.black,
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
-        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             _MobileProfileCard(pilot: pilot),
             if (pilot.portfolioImages.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               _MobilePortfolioSection(
                 images: pilot.portfolioImages,
                 pilot: pilot,
               ),
             ],
-            const SizedBox(height: 32),
-            const Divider(color: _line),
-            const SizedBox(height: 24),
-            _ReviewSection(operatorId: pilot.id),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: _ReviewSection(operatorId: pilot.id),
+            ),
           ],
         ),
       ),
@@ -414,120 +363,131 @@ class _MobileProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initial = pilot.name.isNotEmpty ? pilot.name[0] : '?';
-    final avatarUrl = pilot.avatarUrl ?? (pilot.portfolioImages.isNotEmpty ? pilot.portfolioImages.first : null);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        // ── 프로필 헤더 ────────────────────────────────────────────────────
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8EEFF),
-                shape: BoxShape.circle,
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: avatarUrl != null
-                  ? _NetworkCover(imageUrl: avatarUrl)
-                  : Center(
-                    child: Text(
-                      initial,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: _primary,
-                      ),
-                    ),
-                  ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Stack(
                 children: <Widget>[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          pilot.name,
-                          style: const TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                            letterSpacing: -0.3,
-                          ),
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE8EEFF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: _primary,
                         ),
                       ),
-                      const _CertBadge(),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    pilot.availableAreas.join(', '),
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 13,
-                      color: _mutedGray,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    pilot.specialty,
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _mutedGray,
+                  Positioned(
+                    bottom: 2,
+                    right: 2,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: _mintGreen,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        const Divider(color: _line),
-        const SizedBox(height: 20),
-
-        // ── 기본 정보 ──────────────────────────────────────────────────────
-        const _MobileSectionLabel('전문 분야'),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children:
-              pilot.categories
-                  .where((c) => c.trim().isNotEmpty)
-                  .map((c) => _SpecChip(label: c))
-                  .toList(),
-        ),
-        const SizedBox(height: 20),
-        const Divider(color: _line),
-        const SizedBox(height: 20),
-
-        // ── 소개 ───────────────────────────────────────────────────────────
-        const _MobileSectionLabel('소개'),
-        const SizedBox(height: 10),
-        Text(
-          pilot.intro.isNotEmpty ? pilot.intro : pilot.description,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF3A3F47),
-            height: 1.65,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Text(
+                            pilot.name,
+                            style: const TextStyle(
+                              fontFamily: 'Pretendard',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ),
+                        const _CertBadge(),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      pilot.displayLocation,
+                      style: const TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: _mutedGray,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      '보통 1시간 이내 응답',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 12,
+                        color: _mutedGray,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-        if (pilot.intro.isNotEmpty && pilot.description.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
+          Row(
+            children: const <Widget>[
+              Expanded(child: _PilotStatBox(label: '완료 작업', value: '24건')),
+              SizedBox(width: 8),
+              Expanded(child: _PilotStatBox(label: '응답률', value: '98%')),
+              SizedBox(width: 8),
+              Expanded(child: _PilotStatBox(label: '활동 기간', value: '2년')),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Divider(color: _line, height: 1),
+          const SizedBox(height: 16),
+          const _MobileSectionLabel('전문 분야'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children:
+                pilot.categories
+                    .where((c) => c.trim().isNotEmpty)
+                    .map((c) => _SpecChip(label: c))
+                    .toList(),
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: _line, height: 1),
+          const SizedBox(height: 16),
+          const _MobileSectionLabel('소개'),
+          const SizedBox(height: 8),
           Text(
-            pilot.description,
+            pilot.intro.isNotEmpty ? pilot.intro : pilot.description,
             style: const TextStyle(
               fontFamily: 'Pretendard',
               fontSize: 14,
@@ -536,76 +496,58 @@ class _MobileProfileCard extends StatelessWidget {
               height: 1.65,
             ),
           ),
+          if (pilot.intro.isNotEmpty &&
+              pilot.description.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              pilot.description,
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF3A3F47),
+                height: 1.65,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          const Divider(color: _line, height: 1),
+          const SizedBox(height: 16),
+          Builder(builder: (context) {
+            final validAreas = pilot.availableAreas
+                .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
+                .toList();
+            if (validAreas.isEmpty) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  _MobileSectionLabel('서비스 가능 지역'),
+                  SizedBox(height: 8),
+                  Text('지역 협의',
+                      style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 14,
+                          color: Color(0xFF7C828A))),
+                  SizedBox(height: 16),
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _MobileSectionLabel('서비스 가능 지역'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: validAreas.map((a) => _AreaChip(label: a)).toList(),
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          }),
         ],
-        const SizedBox(height: 20),
-        const Divider(color: _line),
-        const SizedBox(height: 20),
-
-        // ── 서비스 가능 지역 ───────────────────────────────────────────────
-        const _MobileSectionLabel('서비스 가능 지역'),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children:
-              pilot.availableAreas
-                  .where((a) => a.trim().isNotEmpty)
-                  .map((a) => _AreaChip(label: a))
-                  .toList(),
-        ),
-        const SizedBox(height: 20),
-        const Divider(color: _line),
-        const SizedBox(height: 16),
-
-        // ── 허가 지역 & 기본 제안가 ────────────────────────────────────────
-        Row(
-          children: <Widget>[
-            const Text(
-              '허가 지역',
-              style: TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: _mutedGray,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              pilot.permittedAreas.join(', '),
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: <Widget>[
-            const Text(
-              '기본 제안가',
-              style: TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: _mutedGray,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              pilot.priceLabel,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }
@@ -796,6 +738,46 @@ class _MobilePortfolioBottomBar extends StatelessWidget {
   }
 }
 
+class _PilotStatBox extends StatelessWidget {
+  const _PilotStatBox({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8FA),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: <Widget>[
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Pretendard',
+              fontSize: 11,
+              color: _mutedGray,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _CertBadge extends StatelessWidget {
   const _CertBadge();
@@ -1430,8 +1412,8 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
   late String? _area;
   String _budget = '0~30만원';
   bool _submitting = false;
-  DateTime? _selectedDate;
 
+  final _dateController = TextEditingController();
   final _detailController = TextEditingController();
   final _contactController = TextEditingController();
   final _amountController = TextEditingController();
@@ -1439,55 +1421,30 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
   @override
   void initState() {
     super.initState();
-    _category = _cats.first;
+    final cats =
+        widget.pilot.categories.where((c) => c.trim().isNotEmpty).toList();
+    _category = cats.isNotEmpty ? cats.first : null;
     final areas =
-        widget.pilot.availableAreas.where((a) => a.trim().isNotEmpty).toList();
+        widget.pilot.availableAreas.where((a) => a.trim().isNotEmpty && a != '??' && a != '?').toList();
     _area = areas.isNotEmpty ? areas.first : null;
   }
 
   @override
   void dispose() {
+    _dateController.dispose();
     _detailController.dispose();
     _contactController.dispose();
     _amountController.dispose();
     super.dispose();
   }
 
-  // 운용자 카테고리 + 기본 카테고리 전체
-  List<String> get _cats {
-    final all = defaultDroneCategories.map((c) => c.label).toList();
-    final pilotCats =
-        widget.pilot.categories.where((c) => c.trim().isNotEmpty).toSet();
-    // 운용자 카테고리 우선, 나머지 추가
-    final ordered = <String>[
-      ...all.where((c) => pilotCats.contains(c)),
-      ...all.where((c) => !pilotCats.contains(c)),
-    ];
-    return ordered;
-  }
-
+  List<String> get _cats =>
+      widget.pilot.categories.where((c) => c.trim().isNotEmpty).toList();
   List<String> get _areas =>
-      widget.pilot.availableAreas.where((a) => a.trim().isNotEmpty).toList();
-
-  String get _formattedDate {
-    if (_selectedDate == null) return '';
-    final y = _selectedDate!.year;
-    final m = _selectedDate!.month.toString().padLeft(2, '0');
-    final d = _selectedDate!.day.toString().padLeft(2, '0');
-    return '$y.$m.$d';
-  }
-
-  // "50만원", "50", "500000" → int (won 단위)
-  int? _parseAmount(String text) {
-    final digits = text.trim().replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.isEmpty) return null;
-    final n = int.tryParse(digits);
-    if (n == null) return null;
-    return n < 10000 ? n * 10000 : n;
-  }
+      widget.pilot.availableAreas.where((a) => a.trim().isNotEmpty && a != '??' && a != '?').toList();
 
   Future<void> _submit() async {
-    if (_category == null || _area == null) return;
+    if (_category == null) return;
     setState(() => _submitting = true);
     final messenger = ScaffoldMessenger.of(context);
     try {
@@ -1496,11 +1453,13 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
         QuoteRequest(
           pilot: widget.pilot,
           category: _category!,
-          area: _area!,
-          preferredDate: _formattedDate,
+          area: _area ?? '지역 협의',
+          preferredDate: _dateController.text,
           detail: _detailController.text,
-          budgetRange: _budget, // 칩 선택값 → budget_min/max 정상 저장
-          proposedAmount: _parseAmount(_amountController.text), // 직접 입력 금액
+          budgetRange:
+              _amountController.text.isNotEmpty
+                  ? _amountController.text
+                  : _budget,
           contactWindow: _contactController.text,
         ),
       );
@@ -1587,15 +1546,18 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
               ),
               const SizedBox(height: 16),
             ],
-            _SheetDateField(
-              selectedDate: _selectedDate,
-              onDateSelected: (d) => setState(() => _selectedDate = d),
-            ),
+            _SheetTextField(label: '희망 일정', controller: _dateController),
             const SizedBox(height: 12),
             _SheetTextField(
               label: '요청사항',
               controller: _detailController,
               maxLines: 3,
+            ),
+            const SizedBox(height: 12),
+            _SheetTextField(
+              label: '견적 금액 (선택)',
+              controller: _amountController,
+              hint: '예: 50만원',
             ),
             const SizedBox(height: 12),
             const _SheetLabel('예산'),
@@ -1604,12 +1566,6 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
               values: const <String>['0~30만원', '30~50만원', '50~100만원', '협의'],
               selected: _budget,
               onSelected: (v) => setState(() => _budget = v),
-            ),
-            const SizedBox(height: 12),
-            _SheetTextField(
-              label: '제안 금액 (선택)',
-              controller: _amountController,
-              hint: '예: 50만원',
             ),
             const SizedBox(height: 12),
             _SheetTextField(label: '연락 가능 시간', controller: _contactController),
@@ -1694,84 +1650,6 @@ class _SheetTextField extends StatelessWidget {
           fontFamily: 'Pretendard',
           fontSize: 13,
           color: Color(0xFF7C828A),
-        ),
-      ),
-    );
-  }
-}
-
-class _SheetDateField extends StatelessWidget {
-  const _SheetDateField({
-    required this.selectedDate,
-    required this.onDateSelected,
-  });
-
-  final DateTime? selectedDate;
-  final ValueChanged<DateTime> onDateSelected;
-
-  String get _formatted {
-    if (selectedDate == null) return '';
-    final y = selectedDate!.year;
-    final m = selectedDate!.month.toString().padLeft(2, '0');
-    final d = selectedDate!.day.toString().padLeft(2, '0');
-    return '$y.$m.$d';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        final now = DateTime.now();
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: selectedDate ?? now,
-          firstDate: now,
-          lastDate: DateTime(now.year + 2),
-          locale: const Locale('ko', 'KR'),
-          builder: (context, child) => Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: Theme.of(context).colorScheme.copyWith(
-                surface: Colors.white,
-                surfaceContainerHigh: Colors.white,
-                onSurface: Colors.black,
-                primary: Colors.black,
-                onPrimary: Colors.white,
-              ),
-              dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
-            ),
-            child: child!,
-          ),
-        );
-        if (picked != null) onDateSelected(picked);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7F8FA),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _line),
-        ),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                selectedDate != null ? _formatted : '희망 일정',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 14,
-                  color:
-                      selectedDate != null
-                          ? const Color(0xFF0A0B0D)
-                          : const Color(0xFF9CA3AF),
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.calendar_today_outlined,
-              size: 18,
-              color: Color(0xFF9CA3AF),
-            ),
-          ],
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import 'feat/auth/view/pages/login_page.dart';
 import 'feat/auth/view/pages/signup_page.dart';
 import 'feat/legal/view/pages/privacy_policy_page.dart';
 import 'feat/legal/view/pages/account_deletion_page.dart';
+import 'feat/legal/view/pages/terms_page.dart';
 import 'feat/chat/view/pages/chat_list_page.dart';
 import 'feat/chat/view/pages/chat_room_page.dart';
 import 'feat/landing/view/pages/landing_page.dart';
@@ -26,13 +28,19 @@ final GoRouter appRouter = GoRouter(
   routes: <RouteBase>[
     GoRoute(
       path: '/',
+      name: 'home',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: DrameHomePage()),
+    ),
+    GoRoute(
+      path: '/landing',
       name: 'landing',
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: LandingPage()),
     ),
     GoRoute(
       path: '/home',
-      name: 'home',
+      name: 'home-alias',
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: DrameHomePage()),
     ),
@@ -166,7 +174,7 @@ final GoRouter appRouter = GoRouter(
                 : null;
         return NoTransitionPage(
           child: estimate == null || contactAccess == null
-              ? const _MissingRouteDataPage(message: '연락처 정보가 없습니다.')
+              ? const _MissingRouteDataPage(message: '견적 정보가 없습니다.')
               : ContactAccessPage(
                 estimate: estimate,
                 contactAccess: contactAccess,
@@ -265,6 +273,12 @@ final GoRouter appRouter = GoRouter(
           const NoTransitionPage(child: PrivacyPolicyPage()),
     ),
     GoRoute(
+      path: '/terms',
+      name: 'terms',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: TermsPage()),
+    ),
+    GoRoute(
       path: '/delete-account',
       name: 'delete-account',
       pageBuilder: (context, state) =>
@@ -299,9 +313,24 @@ final GoRouter appRouter = GoRouter(
   errorBuilder:
       (context, state) => Scaffold(
         body: Center(
-          child: TextButton(
-            onPressed: () => context.go('/'),
-            child: const Text('메인으로 돌아가기'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (kDebugMode && state.error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    state.error.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              if (kDebugMode && state.error != null) const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('메인으로 돌아가기'),
+              ),
+            ],
           ),
         ),
       ),
@@ -334,6 +363,11 @@ class _PilotResolverPage extends ConsumerWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
+        if (snapshot.hasError) {
+          return _MissingRouteDataPage(
+            message: '운용자 정보를 불러오지 못했습니다: ${snapshot.error}',
+          );
+        }
         final pilot = snapshot.data;
         if (pilot == null) {
           return const _MissingRouteDataPage(message: '운용자를 찾을 수 없습니다.');
@@ -353,9 +387,16 @@ class _MissingRouteDataPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: TextButton(
-          onPressed: () => context.go('/home'),
-          child: Text(message),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => context.go('/home'),
+              child: const Text('홈으로 이동'),
+            ),
+          ],
         ),
       ),
     );

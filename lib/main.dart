@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -31,17 +35,34 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    if (kDebugMode) debugPrint('FlutterError: ${details.exceptionAsString()}');
+  };
+  if (kIsWeb) {
+    usePathUrlStrategy();
+  }
   await dotenv.load();
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_PUBLISHABLE_KEY']!,
+    authOptions: const FlutterAuthClientOptions(
+      autoRefreshToken: true,
+      detectSessionInUri: true,
+    ),
   );
 
   if (!kIsWeb) {
-    await Firebase.initializeApp();
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    await _setupLocalNotifications();
-    await _setupForegroundMessaging();
+    try {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
+      await _setupLocalNotifications();
+      await _setupForegroundMessaging();
+    } catch (e) {
+      if (kDebugMode) debugPrint('Firebase init failed: $e');
+    }
   }
 
   runApp(const ProviderScope(child: DrameApp()));
@@ -62,8 +83,7 @@ Future<void> _setupLocalNotifications() async {
 }
 
 Future<void> _setupForegroundMessaging() async {
-  await FirebaseMessaging.instance
-      .setForegroundNotificationPresentationOptions(
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true,
     badge: true,
     sound: true,
@@ -99,16 +119,55 @@ class DrameApp extends ConsumerStatefulWidget {
 }
 
 class _DrameAppState extends ConsumerState<DrameApp> {
+  StreamSubscription<AuthState>? _authSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final store = ref.read(drameStoreProvider);
-      store.restoreSession().then((_) {
-        if (!mounted) return;
-        if (store.isLoggedIn) store.load(initial: true);
-      });
+      _attachAuthCache();
+      unawaited(_restoreCachedSession());
     });
+  }
+
+  void _attachAuthCache() {
+    _authSubscription ??= Supabase.instance.client.auth.onAuthStateChange
+        .listen((data) {
+          final store = ref.read(drameStoreProvider);
+          if (data.event == AuthChangeEvent.signedOut) {
+            store.clearSessionState();
+            return;
+          }
+          unawaited(store.restoreSession(session: data.session));
+        });
+  }
+
+  Future<void> _restoreCachedSession() async {
+    final store = ref.read(drameStoreProvider);
+    await store.restoreSession(
+      session: Supabase.instance.client.auth.currentSession,
+    );
+    if (!mounted) return;
+
+    if (!store.isLoggedIn) {
+      final prefs = await SharedPreferences.getInstance();
+      final seen = prefs.getBool('has_seen_landing') ?? false;
+      if (!seen) {
+        await prefs.setBool('has_seen_landing', true);
+        if (mounted) appRouter.go('/landing');
+        return;
+      }
+    }
+
+    if (store.isLoggedIn) {
+      unawaited(store.load(initial: true));
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   @override

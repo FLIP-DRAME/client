@@ -54,4 +54,18 @@ app.*.map.json
 
 # Firebase config (sensitive - never commit)
 android/app/google-services.json
-ios/Runner/GoogleService-Info.plistclient/
+ios/Runner/GoogleService-Info.plist
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+supabase/seed.sql
+
+# Android release signing
+android/key.properties
+android/*.jks
+android/*.keystore
+
+# Release build artifacts (binary)
+release_artifacts/**/*.aab
+release_artifacts/**/*.apk

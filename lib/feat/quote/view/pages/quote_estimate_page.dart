@@ -6,47 +6,63 @@ import '../../../../app_providers.dart';
 import '../../model/quote_model.dart';
 import '../component/quote_component.dart';
 
-class QuoteEstimatePage extends ConsumerWidget {
+class QuoteEstimatePage extends ConsumerStatefulWidget {
   const QuoteEstimatePage({super.key, required this.estimate});
 
   final QuoteEstimate estimate;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuoteEstimatePage> createState() => _QuoteEstimatePageState();
+}
+
+class _QuoteEstimatePageState extends ConsumerState<QuoteEstimatePage> {
+  bool _submitting = false;
+
+  @override
+  Widget build(BuildContext context) {
     return QuoteScaffold(
       title: '견적 확인',
       child: QuoteShell(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            QuoteStepHeader(title: '운용자의 견적이 도착했습니다', body: estimate.message),
+            QuoteStepHeader(
+              title: '운용자의 견적이 도착했습니다',
+              body: widget.estimate.message,
+            ),
             const SizedBox(height: 28),
             QuotePanel(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    estimate.request.pilot.name,
+                    widget.estimate.request.pilot.name,
                     style: QuoteText.sectionTitle,
                   ),
                   const SizedBox(height: 18),
                   QuoteInfoRow(
                     label: '작업 카테고리',
-                    value: estimate.request.category,
+                    value: widget.estimate.request.category,
                   ),
-                  QuoteInfoRow(label: '촬영 지역', value: estimate.request.area),
+                  QuoteInfoRow(
+                    label: '촬영 지역',
+                    value: widget.estimate.request.area,
+                  ),
                   QuoteInfoRow(
                     label: '희망 일정',
-                    value: estimate.request.preferredDate,
+                    value: widget.estimate.request.preferredDate,
                   ),
-                  QuoteInfoRow(label: '제안가', value: estimate.priceLabel),
+                  QuoteInfoRow(
+                    label: '견적 금액',
+                    value: widget.estimate.priceLabel,
+                  ),
                   QuoteInfoRow(
                     label: '예상 작업 시간',
-                    value: estimate.estimatedTime,
+                    value: widget.estimate.estimatedTime,
                   ),
                   const SizedBox(height: 12),
                   const FieldLabel('포함 항목'),
-                  ...estimate.includedItems.map(
+                  ...widget.estimate.includedItems.map(
                     (item) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
@@ -66,21 +82,30 @@ class QuoteEstimatePage extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () async {
-                        final payment = await ref
-                            .read(quoteViewModelProvider)
-                            .createPaymentInstruction(estimate);
-                        if (!context.mounted) return;
-                        context.push(
-                          '/quote/payment',
-                          extra: <String, Object?>{
-                            'estimate': estimate.copyWith(
-                              paymentId: payment.paymentId,
-                            ),
-                            'paymentInstruction': payment,
-                          },
-                        );
-                      },
+                      onPressed: _submitting
+                          ? null
+                          : () async {
+                              setState(() => _submitting = true);
+                              try {
+                                final payment = await ref
+                                    .read(quoteViewModelProvider)
+                                    .createPaymentInstruction(widget.estimate);
+                                if (!context.mounted) return;
+                                context.push(
+                                  '/quote/payment',
+                                  extra: <String, Object?>{
+                                    'estimate': widget.estimate.copyWith(
+                                      paymentId: payment.paymentId,
+                                    ),
+                                    'paymentInstruction': payment,
+                                  },
+                                );
+                              } catch (_) {
+                                if (mounted) {
+                                  setState(() => _submitting = false);
+                                }
+                              }
+                            },
                       style: FilledButton.styleFrom(
                         backgroundColor: quoteNavy,
                         foregroundColor: Colors.white,
@@ -90,7 +115,16 @@ class QuoteEstimatePage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('계좌이체 결제로 진행하기'),
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('계좌이체 결제로 진행하기'),
                     ),
                   ),
                 ],

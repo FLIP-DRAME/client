@@ -129,7 +129,7 @@ class _SignupPageState extends State<SignupPage> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      _showSnack('회원가입에 실패했습니다: $error');
+      _showSnack('회원가입에 실패했습니다: ${error.toString().replaceFirst('Exception: ', '')}');
     }
   }
 
@@ -170,9 +170,9 @@ class _SignupPageState extends State<SignupPage> {
 
   // ── Mobile Layout ───────────────────────────────────────────────────────────
   Widget _buildMobileLayout(BuildContext context, DrameStore store) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
+    return ColoredBox(
+      color: Colors.white,
+      child: SafeArea(
         child: Column(
           children: <Widget>[
             Padding(
@@ -733,11 +733,23 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 children: <InlineSpan>[
                   const TextSpan(text: '서비스 '),
-                  const TextSpan(
-                    text: '이용약관',
-                    style: TextStyle(
-                      color: DC.primary,
-                      fontWeight: FontWeight.w600,
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.baseline,
+                    baseline: TextBaseline.alphabetic,
+                    child: GestureDetector(
+                      onTap: () => context.push('/terms'),
+                      child: const Text(
+                        '이용약관',
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 13,
+                          color: DC.primary,
+                          fontWeight: FontWeight.w600,
+                          height: 1.55,
+                          decoration: TextDecoration.underline,
+                          decorationColor: DC.primary,
+                        ),
+                      ),
                     ),
                   ),
                   const TextSpan(text: ' 및 '),

@@ -39,18 +39,25 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
   void initState() {
     super.initState();
     final vm = ref.read(chatViewModelProvider);
-    vm.markRead(widget.roomId);
+    unawaited(
+      vm
+          .markRead(widget.roomId)
+          .then((_) => ref.read(drameStoreProvider).refreshChatUnreadCount()),
+    );
     _sub = vm.messageStream(widget.roomId).listen((msgs) {
       if (!mounted) return;
       // 확정된 메시지와 내용+발신자가 같은 temp 제거 (중복 방지)
       // 스트림은 내림차순(최신→오래된)이므로 temp도 앞에 추가
       final confirmedKeys =
           msgs.map((m) => '${m.senderId}_${m.content}').toSet();
-      final pendingTemps = _messages
-          .where((m) =>
-              m.id.startsWith('temp_') &&
-              !confirmedKeys.contains('${m.senderId}_${m.content}'))
-          .toList();
+      final pendingTemps =
+          _messages
+              .where(
+                (m) =>
+                    m.id.startsWith('temp_') &&
+                    !confirmedKeys.contains('${m.senderId}_${m.content}'),
+              )
+              .toList();
       setState(() => _messages = [...pendingTemps, ...msgs]);
     });
   }
@@ -81,10 +88,9 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
     setState(() => _messages = [tempMsg, ..._messages]);
 
     try {
-      await ref.read(chatViewModelProvider).sendMessage(
-            roomId: widget.roomId,
-            content: text,
-          );
+      await ref
+          .read(chatViewModelProvider)
+          .sendMessage(roomId: widget.roomId, content: text);
     } catch (e) {
       // 전송 실패 시 낙관적 메시지 제거 후 입력 복원
       if (mounted) {
@@ -93,10 +99,7 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
           _inputController.text = text;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('전송 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('전송 실패: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -141,58 +144,61 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: _messages.isEmpty
-                ? const Center(
-                    child: Text(
-                      '첫 메시지를 보내보세요',
-                      style: TextStyle(
-                        fontFamily: DrameTextStyles.fontFamily,
-                        fontSize: DrameTextStyles.bodySize,
-                        color: DC.muted,
+            child:
+                _messages.isEmpty
+                    ? const Center(
+                      child: Text(
+                        '첫 메시지를 보내보세요',
+                        style: TextStyle(
+                          fontFamily: DrameTextStyles.fontFamily,
+                          fontSize: DrameTextStyles.bodySize,
+                          color: DC.muted,
+                        ),
                       ),
+                    )
+                    : ListView.builder(
+                      reverse: true,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: DC.spBase,
+                        vertical: DC.spBase,
+                      ),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = _messages[index];
+                        final isMine = msg.senderId == _currentUserId;
+                        final isLastOfDay =
+                            index == _messages.length - 1 ||
+                            !_isSameDay(
+                              msg.createdAt,
+                              _messages[index + 1].createdAt,
+                            );
+                        final isFirstFromSender =
+                            index == _messages.length - 1 ||
+                            _messages[index + 1].senderId != msg.senderId;
+                        // 내가 보낸 메시지 중 가장 최근에 읽힌 것에만 '읽음' 표시
+                        final readReceiptIndex = _messages.indexWhere(
+                          (m) =>
+                              m.senderId == _currentUserId &&
+                              m.isRead &&
+                              !m.id.startsWith('temp_'),
+                        );
+                        final showRead = isMine && readReceiptIndex == index;
+                        return Column(
+                          children: <Widget>[
+                            if (isLastOfDay) _DateDivider(date: msg.createdAt),
+                            _MessageBubble(
+                              message: msg,
+                              isMine: isMine,
+                              showRead: showRead,
+                              senderName:
+                                  (!isMine && isFirstFromSender)
+                                      ? widget.otherPartyName
+                                      : null,
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DC.spBase,
-                      vertical: DC.spBase,
-                    ),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = _messages[index];
-                      final isMine = msg.senderId == _currentUserId;
-                      final isLastOfDay = index == _messages.length - 1 ||
-                          !_isSameDay(
-                            msg.createdAt,
-                            _messages[index + 1].createdAt,
-                          );
-                      final isFirstFromSender = index == _messages.length - 1 ||
-                          _messages[index + 1].senderId != msg.senderId;
-                      // 내가 보낸 메시지 중 가장 최근에 읽힌 것에만 '읽음' 표시
-                      final readReceiptIndex = _messages.indexWhere(
-                        (m) =>
-                            m.senderId == _currentUserId &&
-                            m.isRead &&
-                            !m.id.startsWith('temp_'),
-                      );
-                      final showRead =
-                          isMine && readReceiptIndex == index;
-                      return Column(
-                        children: <Widget>[
-                          if (isLastOfDay) _DateDivider(date: msg.createdAt),
-                          _MessageBubble(
-                            message: msg,
-                            isMine: isMine,
-                            showRead: showRead,
-                            senderName: (!isMine && isFirstFromSender)
-                                ? widget.otherPartyName
-                                : null,
-                          ),
-                        ],
-                      );
-                    },
-                  ),
           ),
           _InputBar(
             controller: _inputController,
@@ -251,7 +257,7 @@ class _MessageBubble extends StatelessWidget {
                 ],
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.72,
+                    maxWidth: MediaQuery.sizeOf(context).width * 0.72,
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: DC.spSm,
@@ -425,31 +431,31 @@ class _InputBarState extends State<_InputBar> {
                 minLines: 1,
                 maxLines: 5,
                 textInputAction: TextInputAction.newline,
-                  style: const TextStyle(
+                style: const TextStyle(
+                  fontFamily: DrameTextStyles.fontFamily,
+                  fontSize: DrameTextStyles.bodySize,
+                  color: DC.ink,
+                ),
+                decoration: InputDecoration(
+                  hintText: '메시지를 입력하세요',
+                  hintStyle: const TextStyle(
                     fontFamily: DrameTextStyles.fontFamily,
                     fontSize: DrameTextStyles.bodySize,
-                    color: DC.ink,
+                    color: DC.mutedSoft,
                   ),
-                  decoration: InputDecoration(
-                    hintText: '메시지를 입력하세요',
-                    hintStyle: const TextStyle(
-                      fontFamily: DrameTextStyles.fontFamily,
-                      fontSize: DrameTextStyles.bodySize,
-                      color: DC.mutedSoft,
-                    ),
-                    filled: true,
-                    fillColor: DC.surfaceSoft,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: DC.spSm,
-                      vertical: DC.spXs,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DC.rxPill),
-                      borderSide: BorderSide.none,
-                    ),
+                  filled: true,
+                  fillColor: DC.surfaceSoft,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: DC.spSm,
+                    vertical: DC.spXs,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DC.rxPill),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
+            ),
             const SizedBox(width: DC.spXs),
             _SendButton(sending: widget.sending, onTap: widget.onSend),
           ],
@@ -476,16 +482,20 @@ class _SendButton extends StatelessWidget {
           color: sending ? DC.primaryDisabled : DC.primary,
           shape: BoxShape.circle,
         ),
-        child: sending
-            ? const Padding(
-                padding: EdgeInsets.all(10),
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
+        child:
+            sending
+                ? const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+                : const Icon(
+                  Icons.arrow_upward_rounded,
                   color: Colors.white,
+                  size: 20,
                 ),
-              )
-            : const Icon(Icons.arrow_upward_rounded,
-                color: Colors.white, size: 20),
       ),
     );
   }

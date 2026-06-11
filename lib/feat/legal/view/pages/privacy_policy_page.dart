@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:web/web.dart' as web;
 
 import '../../../../common/d_tokens.dart';
+import '../../../../core/platform/platform_url_launcher.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
@@ -64,7 +66,7 @@ class _PrivacyContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        _Header('모드 개인정보처리방침', subtitle: '시행일: 2026년 5월 29일'),
+        _Header('모드 개인정보처리방침', subtitle: '시행일: 2026년 6월 7일'),
         SizedBox(height: 20),
         _Body(
           '모드(이하 "회사" 또는 "모드")는 「개인정보 보호법」 등 관련 법령을 준수하며, 이용자의 개인정보를 보호하기 위해 최선을 다하고 있습니다. 본 방침은 회사가 제공하는 드론 전문가 매칭 서비스(이하 "서비스")와 관련하여 개인정보를 어떻게 수집·이용·제공·보관하는지 안내합니다.',
@@ -114,7 +116,7 @@ class _PrivacyContent extends StatelessWidget {
           '드론 작업 견적 요청, 견적 응답, 운용자 매칭 및 작업 진행 관리',
           '운용자 등록 심사, 프로필·포트폴리오 공개 및 운영',
           '채팅, 피드, 댓글, 좋아요 등 서비스 내 커뮤니케이션 기능 제공',
-          '푸시 알림, 공지사항 전달 및 고객 문의 대응',
+          '푸시 알림, 서비스 안내 및 고객 문의 대응',
           '결제 상태 확인, 분쟁 대응, 부정 이용 방지 및 보안 강화',
           '서비스 품질 향상을 위한 이용 현황 분석',
         ]),
@@ -127,6 +129,7 @@ class _PrivacyContent extends StatelessWidget {
         ),
         SizedBox(height: 8),
         _BulletList(<String>[
+          '계정 정보, 프로필, 포트폴리오, 피드 게시글, 채팅 메시지: 계정 삭제 요청 시 즉시 파기',
           '전자상거래 등에서의 소비자 보호에 관한 법률: 계약·청약철회 기록 5년, 대금결제·재화 등의 공급 기록 5년, 소비자 불만·분쟁처리 기록 3년',
           '통신비밀보호법: 서비스 이용 접속 로그 3개월',
           '부정 이용 방지 및 분쟁 대응을 위한 내부 정책: 필요한 범위에서 최대 30일',
@@ -151,12 +154,24 @@ class _PrivacyContent extends StatelessWidget {
         _Body('회사는 원활한 서비스 제공을 위해 아래와 같이 개인정보 처리를 위탁하고 있습니다.'),
         SizedBox(height: 8),
         _BulletList(<String>[
-          'Supabase: 회원 인증, 데이터베이스 저장·관리, 파일 저장 — 계정 정보, 견적 요청, 운용자 등록 정보, 채팅·피드·알림 데이터, 업로드 파일',
-          'Firebase Cloud Messaging: 앱 푸시 알림 발송 — FCM 토큰, 알림 제목 및 내용',
+          'Supabase (미국): 회원 인증, 데이터베이스 저장·관리, 파일 저장 — 계정 정보, 견적 요청, 운용자 등록 정보, 채팅·피드·알림 데이터, 업로드 파일',
+          'Firebase Cloud Messaging, Google LLC (미국): 앱 푸시 알림 발송 — FCM 토큰, 알림 제목 및 내용',
         ]),
         SizedBox(height: 32),
 
-        _SectionTitle('6. 이용자의 권리 및 행사 방법'),
+        _SectionTitle('6. 개인정보의 국외 이전'),
+        SizedBox(height: 10),
+        _Body('회사는 서비스 운영을 위해 아래와 같이 개인정보를 국외로 이전합니다.'),
+        SizedBox(height: 8),
+        _BulletList(<String>[
+          '이전받는 자: Supabase, Inc. (미국) | 이전 항목: 계정 정보, 서비스 이용 데이터 전반 | 이전 목적: 데이터베이스·인증·파일 저장 | 보유 기간: 서비스 계약 기간',
+          '이전받는 자: Google LLC (미국, Firebase) | 이전 항목: FCM 토큰, 알림 내용 | 이전 목적: 푸시 알림 발송 | 보유 기간: 서비스 계약 기간',
+        ]),
+        SizedBox(height: 8),
+        _Body('각 수탁사는 업계 표준 보안 조치(TLS 암호화, 접근 제어 등)를 적용하고 있습니다. 이에 동의하지 않으실 경우 서비스 이용이 제한될 수 있습니다.'),
+        SizedBox(height: 32),
+
+        _SectionTitle('7. 이용자의 권리 및 행사 방법'),
         SizedBox(height: 10),
         _Body('이용자는 언제든지 다음의 개인정보 관련 권리를 행사할 수 있습니다.'),
         SizedBox(height: 8),
@@ -164,13 +179,16 @@ class _PrivacyContent extends StatelessWidget {
           '개인정보 열람 요청',
           '개인정보 정정·삭제 요청',
           '개인정보 처리 정지 요청',
+          '개인정보 처리에 대한 동의 철회',
           '계정 및 관련 데이터 삭제 요청',
         ]),
+        SizedBox(height: 8),
+        _Body('권리 행사는 앱 내 마이페이지 또는 아래 개인정보 보호 담당 이메일(privacy@modeofficial.net)로 요청하실 수 있으며, 회사는 영업일 기준 7일 이내 조치합니다.'),
         SizedBox(height: 20),
         _AccountDeletionCard(),
         SizedBox(height: 32),
 
-        _SectionTitle('7. 개인정보 보호 조치'),
+        _SectionTitle('8. 개인정보 보호 조치'),
         SizedBox(height: 10),
         _BulletList(<String>[
           '비밀번호는 인증 서비스의 보안 정책에 따라 암호화되어 저장되며 회사 직원도 복호화할 수 없음',
@@ -181,28 +199,29 @@ class _PrivacyContent extends StatelessWidget {
         ]),
         SizedBox(height: 32),
 
-        _SectionTitle('8. 쿠키, 광고 및 분석 도구'),
+        _SectionTitle('9. 쿠키, 광고 및 분석 도구'),
         SizedBox(height: 10),
         _Body(
           '본 앱은 현재 제3자 광고 SDK 및 Google Analytics를 사용하지 않습니다. 향후 광고 또는 분석 도구를 도입하여 개인정보 처리 방식이 변경되는 경우 본 방침을 개정하고 사전에 안내합니다.',
         ),
         SizedBox(height: 32),
 
-        _SectionTitle('9. 아동 개인정보 보호'),
+        _SectionTitle('10. 아동 개인정보 보호'),
         SizedBox(height: 10),
         _Body(
           '본 서비스는 만 14세 미만 아동을 대상으로 하지 않습니다. 14세 미만 아동의 계정 생성을 허용하지 않으며, 해당 사실이 확인될 경우 지체 없이 계정과 관련 정보를 삭제합니다.',
         ),
         SizedBox(height: 32),
 
-        _SectionTitle('10. 개인정보 보호책임자 및 문의'),
+        _SectionTitle('11. 개인정보 보호책임자 및 문의'),
         SizedBox(height: 10),
-        _Body('개인정보 처리에 관한 문의, 불만 처리, 피해 구제 등은 아래 연락처로 문의해 주세요.'),
+        _Body('개인정보 처리에 관한 문의, 불만 처리, 피해 구제 등은 아래 이메일로 문의해 주세요.'),
         SizedBox(height: 8),
         _BulletList(<String>[
           '앱 이름: 모두의 드론 모드',
           '개발자: modeOfficial',
-          '개인정보 보호 담당 이메일: drame020101@modeofficial.net',
+          '일반 문의 이메일: drame020101@modeofficial.net',
+          '개인정보·계정 삭제 전용 이메일: privacy@modeofficial.net',
           '웹사이트: https://modeofficial.net',
         ]),
         SizedBox(height: 8),
@@ -211,13 +230,13 @@ class _PrivacyContent extends StatelessWidget {
         ),
         SizedBox(height: 32),
 
-        _SectionTitle('11. 개인정보처리방침 변경'),
+        _SectionTitle('12. 개인정보처리방침 변경'),
         SizedBox(height: 10),
         _Body(
-          '본 개인정보처리방침은 법령 변경 또는 서비스 변경에 따라 수정될 수 있습니다. 변경 시 앱 공지사항 또는 이메일 등을 통해 사전 고지합니다.',
+          '본 개인정보처리방침은 법령 변경 또는 서비스 변경에 따라 수정될 수 있습니다. 변경 시 앱 화면 또는 이메일 등을 통해 사전 고지합니다.',
         ),
         SizedBox(height: 12),
-        _Body('공고일: 2026년 5월 29일  |  시행일: 2026년 5월 29일'),
+        _Body('공고일: 2026년 6월 7일  |  시행일: 2026년 6월 7일'),
         SizedBox(height: 48),
       ],
     );
@@ -383,12 +402,11 @@ class _AccountDeletionCard extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
-                web.window.open(
-                  'mailto:drame020101@modeofficial.net'
+                unawaited(openPlatformUrl(
+                  'mailto:privacy@modeofficial.net'
                   '?subject=%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD'
                   '&body=%EC%95%B1%20%EC%9D%B4%EB%A6%84%3A%20%EB%AA%A8%EB%91%90%EC%9D%98%20%EB%93%9C%EB%A1%A0%20%EB%AA%A8%EB%93%9C%0A%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%EB%A5%BC%20%EC%9A%94%EC%B2%AD%ED%95%A9%EB%8B%88%EB%8B%A4.',
-                  '_self',
-                );
+                ));
               },
               icon: const Icon(Icons.mail_outline_rounded, size: 16),
               label: const Text('이메일로 계정 삭제 요청하기'),
@@ -407,7 +425,7 @@ class _AccountDeletionCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           const Text(
-            '요청 이메일: privacy@modeofficial.net',
+            '계정 삭제 요청 이메일: privacy@modeofficial.net',
             style: TextStyle(
               fontFamily: 'Pretendard',
               fontSize: 12,

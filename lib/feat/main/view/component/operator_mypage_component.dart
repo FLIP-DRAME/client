@@ -82,34 +82,13 @@ class _OperatorProfileManagementPage extends StatelessWidget {
   }
 }
 
-class _OperatorMyPageBody extends StatefulWidget {
+class _OperatorMyPageBody extends StatelessWidget {
   const _OperatorMyPageBody({required this.store});
 
   final DrameStore store;
 
   @override
-  State<_OperatorMyPageBody> createState() => _OperatorMyPageBodyState();
-}
-
-class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
-  late Set<String> _selectedCategories;
-  late Set<String> _selectedAreas;
-
-  @override
-  void initState() {
-    super.initState();
-    _resetFromPilot();
-  }
-
-  void _resetFromPilot() {
-    final pilot = widget.store.selectedPilot;
-    _selectedCategories = Set<String>.from(pilot?.categories ?? <String>[]);
-    _selectedAreas = Set<String>.from(pilot?.availableAreas ?? <String>[]);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final store = widget.store;
     final compact = MediaQuery.sizeOf(context).width < 980;
     final name = store.accountName.isEmpty ? '운용자' : store.accountName;
     final nickname =
@@ -184,115 +163,22 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
                             onChanged:
                                 (value) => store.updateAuth(nickname: value),
                           ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      width:
-                          twoColumns
-                              ? (constraints.maxWidth - 18) / 2
-                              : constraints.maxWidth,
-                      child: _OperatorInfoCard(
-                        title: '전문 분야',
-                        children: <Widget>[
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children:
-                                store.categories.map((cat) {
-                                  final selected =
-                                      _selectedCategories.contains(cat.label);
-                                  return FilterChip(
-                                    label: Text(cat.label),
-                                    selected: selected,
-                                    showCheckmark: false,
-                                    onSelected:
-                                        (_) => setState(() {
-                                          if (selected) {
-                                            _selectedCategories.remove(
-                                              cat.label,
-                                            );
-                                          } else {
-                                            _selectedCategories.add(cat.label);
-                                          }
-                                        }),
-                                    selectedColor: _navy,
-                                    backgroundColor: Colors.white,
-                                    side: BorderSide(
-                                      color: selected ? _navy : _line,
-                                      width: selected ? 1.5 : 1,
-                                    ),
-                                    labelStyle: AppText.chip.copyWith(
-                                      color:
-                                          selected ? Colors.white : _ink,
-                                      fontWeight:
-                                          selected
-                                              ? FontWeight.w600
-                                              : FontWeight.w400,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                  );
-                                }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      width:
-                          twoColumns
-                              ? (constraints.maxWidth - 18) / 2
-                              : constraints.maxWidth,
-                      child: _OperatorInfoCard(
-                        title: '서비스 지역',
-                        children: <Widget>[
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children:
-                                store.serviceAreas.map((area) {
-                                  final selected =
-                                      _selectedAreas.contains(area);
-                                  return FilterChip(
-                                    label: Text(area),
-                                    selected: selected,
-                                    showCheckmark: false,
-                                    onSelected:
-                                        (_) => setState(() {
-                                          if (selected) {
-                                            _selectedAreas.remove(area);
-                                          } else {
-                                            _selectedAreas.add(area);
-                                          }
-                                        }),
-                                    selectedColor: _navy,
-                                    backgroundColor: Colors.white,
-                                    side: BorderSide(
-                                      color: selected ? _navy : _line,
-                                      width: selected ? 1.5 : 1,
-                                    ),
-                                    labelStyle: AppText.chip.copyWith(
-                                      color:
-                                          selected ? Colors.white : _ink,
-                                      fontWeight:
-                                          selected
-                                              ? FontWeight.w600
-                                              : FontWeight.w400,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(999),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                  );
-                                }).toList(),
+                          const SizedBox(height: 8),
+                          const Text('활동 지역', style: AppText.smallStrong),
+                          const SizedBox(height: 10),
+                          _PilotChipGroup(
+                            values: const <String>[
+                              '서울',
+                              '경기',
+                              '인천',
+                              '강원',
+                              '충청',
+                              '전라',
+                              '경상',
+                              '제주',
+                            ],
+                            selected: store.pilotOnboarding.areas,
+                            onTap: store.togglePilotArea,
                           ),
                         ],
                       ),
@@ -434,6 +320,10 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
               alignment: Alignment.centerRight,
               child: FilledButton(
                 onPressed: () async {
+                  await store.saveMyProfile(
+                    name: store.accountName,
+                    nickname: store.accountNickname,
+                  );
                   await store.updateOperatorProfile(
                     intro:
                         store.selectedPilot?.intro ??
@@ -441,8 +331,9 @@ class _OperatorMyPageBodyState extends State<_OperatorMyPageBody> {
                     description:
                         store.selectedPilot?.description ??
                         store.pilotOnboarding.portfolioUrl,
-                    categoryLabels: _selectedCategories.toList(),
-                    areaNames: _selectedAreas.toList(),
+                    categoryLabels:
+                        store.selectedPilot?.categories ?? const <String>[],
+                    areaNames: store.pilotOnboarding.areas.toList(),
                     portfolioImageUrls:
                         store.selectedPilot?.portfolioImages ??
                         const <String>[],
@@ -490,49 +381,16 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
   bool _uploadingPhoto = false;
 
   Future<void> _pickAndUploadPhoto() async {
-    final input =
-        web.HTMLInputElement()
-          ..type = 'file'
-          ..accept = 'image/*';
-    input.click();
-    await Future.any(<Future<void>>[
-      input.onChange.first.then((_) {}),
-      Future<void>.delayed(const Duration(minutes: 2)),
-    ]);
-    final file = input.files?.item(0);
+    final file = await pickPlatformFile(accept: 'image/*');
     if (file == null) return;
 
-    final reader = web.FileReader();
-    final completer = Completer<Uint8List>();
-    reader.addEventListener(
-      'load',
-      (web.Event e) {
-        final result = reader.result;
-        if (result == null) {
-          completer.completeError('읽기 실패');
-          return;
-        }
-        completer.complete(
-          Uint8List.view((result as JSArrayBuffer).toDart),
-        );
-      }.toJS,
-    );
-    reader.addEventListener(
-      'error',
-      ((web.Event e) => completer.completeError('파일 읽기 오류')).toJS,
-    );
-    reader.readAsArrayBuffer(file);
-
-    final bytes = await completer.future;
     if (!mounted) return;
 
-    final ext = file.name.contains('.')
-        ? file.name.split('.').last.toLowerCase()
-        : 'jpg';
+    final ext = file.extension.isEmpty ? 'jpg' : file.extension;
 
     setState(() => _uploadingPhoto = true);
     try {
-      await widget.store.uploadProfilePhoto(bytes, ext);
+      await widget.store.uploadProfilePhoto(file.bytes, ext);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -551,7 +409,6 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
   Widget build(BuildContext context) {
     final store = widget.store;
     final nickname = widget.nickname;
-    final name = widget.name;
     final avatarUrl = store.selectedPilot?.avatarUrl;
     final serviceText =
         store.selectedPilot?.categories.isNotEmpty == true
@@ -612,7 +469,7 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(name, style: AppText.cardTitle),
+                  Text(nickname, style: AppText.cardTitle),
                   const SizedBox(height: 8),
                   Text(
                     serviceText,
@@ -629,10 +486,6 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
                       Text(
                         '요청수 ${store.pilotWorkRequests.length}',
                         style: AppText.cardSubtitle,
-                      ),
-                      Text(
-                        '내 활동 분석 >',
-                        style: AppText.cardSubtitle.copyWith(color: _navy),
                       ),
                     ],
                   ),
@@ -699,18 +552,6 @@ class _OperatorMyPageSideCard extends StatelessWidget {
           const Text(
             '서비스를 제공 받은 고객에게 간편하게 리뷰를 요청해 보세요.',
             style: AppText.cardSubtitle,
-          ),
-          const SizedBox(height: 16),
-          TextButton.icon(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              foregroundColor: _navy,
-              textStyle: AppText.button,
-              padding: EdgeInsets.zero,
-            ),
-            label: const Text('자세히 보기'),
-            icon: const Icon(Icons.chevron_right_rounded),
-            iconAlignment: IconAlignment.end,
           ),
         ],
       ),
@@ -977,16 +818,6 @@ InputDecoration _inlineInputDecoration(String hint) {
   );
 }
 
-ButtonStyle _myPageOutlineButtonStyle() {
-  return OutlinedButton.styleFrom(
-    foregroundColor: _ink,
-    textStyle: AppText.button,
-    padding: const EdgeInsets.symmetric(vertical: 15),
-    side: const BorderSide(color: _line),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-  );
-}
-
 class _OperatorFeedSection extends StatefulWidget {
   const _OperatorFeedSection({required this.store});
 
@@ -1001,6 +832,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   bool _isExpanded = false;
   List<int>? _pendingImageBytes;
   String? _pendingImageName;
+  String? _selectedCategory;
+  String? _selectedArea;
 
   @override
   void dispose() {
@@ -1009,40 +842,11 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   }
 
   Future<void> _pickImage() async {
-    final input =
-        web.HTMLInputElement()
-          ..type = 'file'
-          ..accept = 'image/*';
-    input.click();
-    await Future.any(<Future<void>>[
-      input.onChange.first.then((_) {}),
-      Future<void>.delayed(const Duration(minutes: 2)),
-    ]);
-    final file = input.files?.item(0);
+    final file = await pickPlatformFile(accept: 'image/*');
     if (file == null) return;
-    final reader = web.FileReader();
-    final completer = Completer<Uint8List>();
-    reader.addEventListener(
-      'load',
-      (web.Event e) {
-        final result = reader.result;
-        if (result == null) {
-          completer.completeError('');
-          return;
-        }
-        final bytes = Uint8List.view((result as JSArrayBuffer).toDart);
-        completer.complete(bytes);
-      }.toJS,
-    );
-    reader.addEventListener(
-      'error',
-      ((web.Event e) => completer.completeError('')).toJS,
-    );
-    reader.readAsArrayBuffer(file);
-    final bytes = await completer.future;
     if (!mounted) return;
     setState(() {
-      _pendingImageBytes = bytes;
+      _pendingImageBytes = file.bytes;
       _pendingImageName = file.name;
     });
   }
@@ -1057,6 +861,14 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       await widget.store.addFeedPost(
         caption: caption,
         imageBytes: _pendingImageBytes,
+        categoryLabel:
+            _selectedCategory ??
+            widget.store.selectedPilot?.categories.firstOrNull ??
+            '',
+        locationLabel:
+            _selectedArea ??
+            widget.store.selectedPilot?.availableAreas.firstOrNull ??
+            '',
       );
     } catch (error) {
       if (!mounted) return;
@@ -1080,6 +892,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       _isExpanded = false;
       _pendingImageBytes = null;
       _pendingImageName = null;
+      _selectedCategory = null;
+      _selectedArea = null;
     });
   }
 
@@ -1162,6 +976,82 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                         borderSide: const BorderSide(color: _focus, width: 1.2),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          hint: const Text('서비스 종류'),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: _line),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: _line),
+                            ),
+                          ),
+                          items:
+                              (widget.store.selectedPilot?.categories.isNotEmpty == true
+                                      ? widget.store.selectedPilot!.categories
+                                      : defaultDroneCategories
+                                          .map((c) => c.label)
+                                          .toList())
+                                  .map(
+                                    (cat) => DropdownMenuItem<String>(
+                                      value: cat,
+                                      child: Text(cat),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged:
+                              (v) => setState(() => _selectedCategory = v),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedArea,
+                          hint: const Text('지역'),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: _line),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: _line),
+                            ),
+                          ),
+                          items:
+                              defaultServiceAreas
+                                  .where((a) => a != '전체')
+                                  .map(
+                                    (a) => DropdownMenuItem<String>(
+                                      value: a,
+                                      child: Text(a),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (v) => setState(() => _selectedArea = v),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(

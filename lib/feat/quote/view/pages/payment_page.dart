@@ -6,7 +6,7 @@ import '../../../../app_providers.dart';
 import '../../model/quote_model.dart';
 import '../component/quote_component.dart';
 
-class PaymentPage extends ConsumerWidget {
+class PaymentPage extends ConsumerStatefulWidget {
   const PaymentPage({
     super.key,
     required this.estimate,
@@ -17,7 +17,14 @@ class PaymentPage extends ConsumerWidget {
   final PaymentInstruction paymentInstruction;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PaymentPage> createState() => _PaymentPageState();
+}
+
+class _PaymentPageState extends ConsumerState<PaymentPage> {
+  bool _submitting = false;
+
+  @override
+  Widget build(BuildContext context) {
     return QuoteScaffold(
       title: '계좌이체 결제',
       child: QuoteShell(
@@ -35,23 +42,23 @@ class PaymentPage extends ConsumerWidget {
                 children: <Widget>[
                   QuoteInfoRow(
                     label: '입금 은행',
-                    value: paymentInstruction.bankName,
+                    value: widget.paymentInstruction.bankName,
                   ),
                   QuoteInfoRow(
                     label: '예금주',
-                    value: paymentInstruction.accountHolder,
+                    value: widget.paymentInstruction.accountHolder,
                   ),
                   QuoteInfoRow(
                     label: '계좌번호',
-                    value: paymentInstruction.accountNumber,
+                    value: widget.paymentInstruction.accountNumber,
                   ),
                   QuoteInfoRow(
                     label: '입금 금액',
-                    value: paymentInstruction.amountLabel,
+                    value: widget.paymentInstruction.amountLabel,
                   ),
                   QuoteInfoRow(
                     label: '입금자명',
-                    value: paymentInstruction.depositorName,
+                    value: widget.paymentInstruction.depositorName,
                   ),
                   const SizedBox(height: 20),
                   Container(
@@ -71,23 +78,33 @@ class PaymentPage extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () async {
-                        final contact = await ref
-                            .read(quoteViewModelProvider)
-                            .createContactAccess(
-                              estimate.copyWith(
-                                paymentId: paymentInstruction.paymentId,
-                              ),
-                            );
-                        if (!context.mounted) return;
-                        context.push(
-                          '/quote/contact',
-                          extra: <String, Object?>{
-                            'estimate': estimate,
-                            'contactAccess': contact,
-                          },
-                        );
-                      },
+                      onPressed: _submitting
+                          ? null
+                          : () async {
+                              setState(() => _submitting = true);
+                              try {
+                                final contact = await ref
+                                    .read(quoteViewModelProvider)
+                                    .createContactAccess(
+                                      widget.estimate.copyWith(
+                                        paymentId: widget
+                                            .paymentInstruction.paymentId,
+                                      ),
+                                    );
+                                if (!context.mounted) return;
+                                context.push(
+                                  '/quote/contact',
+                                  extra: <String, Object?>{
+                                    'estimate': widget.estimate,
+                                    'contactAccess': contact,
+                                  },
+                                );
+                              } catch (_) {
+                                if (mounted) {
+                                  setState(() => _submitting = false);
+                                }
+                              }
+                            },
                       style: FilledButton.styleFrom(
                         backgroundColor: quoteNavy,
                         foregroundColor: Colors.white,
@@ -97,7 +114,16 @@ class PaymentPage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('입금 확인 완료'),
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('입금 확인 완료'),
                     ),
                   ),
                 ],
