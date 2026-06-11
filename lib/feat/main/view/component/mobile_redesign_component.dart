@@ -2180,7 +2180,8 @@ class _OperatorDashboardTab extends StatelessWidget {
                                       color: Color(0xFF0A0B0D),
                                     ),
                                   ),
-                                  if (pilot != null &&
+                                  if (store.operatorRegistrationCompleted &&
+                                      pilot != null &&
                                       pilot.categories.isNotEmpty)
                                     Text(
                                       pilot.categories.take(3).join(' · '),

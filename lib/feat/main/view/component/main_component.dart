@@ -1808,7 +1808,8 @@ class _OperatorProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final serviceText =
-        store.selectedPilot?.categories.isNotEmpty == true
+        store.operatorRegistrationCompleted &&
+                store.selectedPilot?.categories.isNotEmpty == true
             ? store.selectedPilot!.categories.join(' · ')
             : '운용자 등록을 완료하면 제공 서비스가 표시됩니다.';
     return Container(
