@@ -15,7 +15,7 @@ values (
   'feed-assets',
   'feed-assets',
   true,
-  10485760,
+  52428800,
   array['image/jpeg', 'image/png', 'image/webp']
 )
 on conflict (id) do update
@@ -24,73 +24,31 @@ set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'feed assets are publicly readable'
-  ) then
-    create policy "feed assets are publicly readable"
-      on storage.objects
-      for select
-      using (bucket_id = 'feed-assets');
-  end if;
+drop policy if exists "feed assets are publicly readable" on storage.objects;
+drop policy if exists "users can upload own feed assets" on storage.objects;
+drop policy if exists "users can update own feed assets" on storage.objects;
+drop policy if exists "users can delete own feed assets" on storage.objects;
 
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'users can upload own feed assets'
-  ) then
-    create policy "users can upload own feed assets"
-      on storage.objects
-      for insert
-      to authenticated
-      with check (
-        bucket_id = 'feed-assets'
-        and auth.uid()::text = (storage.foldername(name))[1]
-      );
-  end if;
+create policy "feed assets are publicly readable"
+  on storage.objects
+  for select
+  using (bucket_id = 'feed-assets');
 
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'users can update own feed assets'
-  ) then
-    create policy "users can update own feed assets"
-      on storage.objects
-      for update
-      to authenticated
-      using (
-        bucket_id = 'feed-assets'
-        and auth.uid()::text = (storage.foldername(name))[1]
-      )
-      with check (
-        bucket_id = 'feed-assets'
-        and auth.uid()::text = (storage.foldername(name))[1]
-      );
-  end if;
+create policy "users can upload own feed assets"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (bucket_id = 'feed-assets');
 
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'storage'
-      and tablename = 'objects'
-      and policyname = 'users can delete own feed assets'
-  ) then
-    create policy "users can delete own feed assets"
-      on storage.objects
-      for delete
-      to authenticated
-      using (
-        bucket_id = 'feed-assets'
-        and auth.uid()::text = (storage.foldername(name))[1]
-      );
-  end if;
-end $$;
+create policy "users can update own feed assets"
+  on storage.objects
+  for update
+  to authenticated
+  using (bucket_id = 'feed-assets')
+  with check (bucket_id = 'feed-assets');
+
+create policy "users can delete own feed assets"
+  on storage.objects
+  for delete
+  to authenticated
+  using (bucket_id = 'feed-assets');

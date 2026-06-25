@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:image/image.dart' as img;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FeedPost {
@@ -65,18 +66,13 @@ class FeedApi {
           location_label,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order)
+          operator:operator_profiles(id, display_name, specialty, avatar_url)
         ''')
         .eq('is_published', true)
         .order('created_at', ascending: false)
         .limit(limit);
 
-    return rows
-        .map<FeedPost>(
-          (row) => _postFromRow(Map<String, dynamic>.from(row as Map)),
-        )
-        .toList();
+    return _postsFromRows(rows);
   }
 
   Future<List<FeedPost>> fetchPostsByOperator(
@@ -92,19 +88,14 @@ class FeedApi {
           location_label,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order)
+          operator:operator_profiles(id, display_name, specialty, avatar_url)
         ''')
         .eq('operator_id', operatorId)
         .eq('is_published', true)
         .order('created_at', ascending: false)
         .limit(limit);
 
-    return rows
-        .map<FeedPost>(
-          (row) => _postFromRow(Map<String, dynamic>.from(row as Map)),
-        )
-        .toList();
+    return _postsFromRows(rows);
   }
 
   Future<List<FeedPost>> fetchMyPosts() async {
@@ -120,18 +111,13 @@ class FeedApi {
           location_label,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order)
+          operator:operator_profiles(id, display_name, specialty, avatar_url)
         ''')
         .eq('author_id', userId)
         .order('created_at', ascending: false)
         .limit(50);
 
-    return rows
-        .map<FeedPost>(
-          (row) => _postFromRow(Map<String, dynamic>.from(row as Map)),
-        )
-        .toList();
+    return _postsFromRows(rows);
   }
 
   Future<FeedPost> createPost({
@@ -191,8 +177,7 @@ class FeedApi {
                 location_label,
                 created_at,
                 category:service_categories(label),
-                operator:operator_profiles(id, display_name, specialty, avatar_url),
-                assets:feed_post_assets(url, sort_order)
+                operator:operator_profiles(id, display_name, specialty, avatar_url)
               ''')
               .single();
       postId = post['id']?.toString();
@@ -224,12 +209,12 @@ class FeedApi {
           location_label,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order)
+          operator:operator_profiles(id, display_name, specialty, avatar_url)
         ''')
         .eq('id', postId)
         .limit(1);
-    return _postFromRow(Map<String, dynamic>.from(rows.first as Map));
+    final posts = await _postsFromRows(rows);
+    return posts.first;
   }
 
   Future<void> deletePost(String id) async {
@@ -259,20 +244,47 @@ class FeedApi {
     List<int> bytes,
     String? fileName,
   ) async {
-    final type = _imageType(bytes, fileName);
+    final uploadBytes = _prepareFeedImage(bytes);
+    final type = _imageType(uploadBytes, fileName);
     final path =
         '$userId/${DateTime.now().microsecondsSinceEpoch}.${type.extension}';
     await _client.storage
         .from('feed-assets')
         .uploadBinary(
           path,
-          Uint8List.fromList(bytes),
-          fileOptions: FileOptions(contentType: type.contentType),
+          Uint8List.fromList(uploadBytes),
+          fileOptions: FileOptions(contentType: type.contentType, upsert: true),
         );
     return (
       path: path,
       url: _client.storage.from('feed-assets').getPublicUrl(path),
     );
+  }
+
+  List<int> _prepareFeedImage(List<int> bytes) {
+    const maxBytes = 8 * 1024 * 1024;
+    const maxSide = 1920;
+    if (bytes.length <= maxBytes) return bytes;
+
+    final source = img.decodeImage(Uint8List.fromList(bytes));
+    if (source == null) return bytes;
+
+    final longest = source.width > source.height ? source.width : source.height;
+    final resized =
+        longest > maxSide
+            ? img.copyResize(
+              source,
+              width: source.width >= source.height ? maxSide : null,
+              height: source.height > source.width ? maxSide : null,
+              interpolation: img.Interpolation.average,
+            )
+            : source;
+
+    for (final quality in <int>[82, 74, 66, 58, 50]) {
+      final encoded = img.encodeJpg(resized, quality: quality);
+      if (encoded.length <= maxBytes || quality == 50) return encoded;
+    }
+    return bytes;
   }
 
   Future<void> _tryRemoveUploadedFeedImage(String path) async {
@@ -287,10 +299,6 @@ class FeedApi {
     List<int> bytes,
     String? fileName,
   ) {
-    final extension = _fileExtension(fileName);
-    if (extension != null) {
-      return (extension: extension, contentType: _contentType(extension));
-    }
     if (bytes.length >= 12 &&
         bytes[0] == 0x52 &&
         bytes[1] == 0x49 &&
@@ -314,6 +322,10 @@ class FeedApi {
         bytes[1] == 0xD8 &&
         bytes[2] == 0xFF) {
       return (extension: 'jpg', contentType: 'image/jpeg');
+    }
+    final extension = _fileExtension(fileName);
+    if (extension != null) {
+      return (extension: extension, contentType: _contentType(extension));
     }
     return (extension: 'jpg', contentType: 'image/jpeg');
   }
@@ -363,6 +375,49 @@ class FeedApi {
         .limit(1);
     if (rows.isEmpty) return null;
     return rows.first['id']?.toString();
+  }
+
+  Future<List<FeedPost>> _postsFromRows(List<dynamic> rows) async {
+    final maps =
+        rows.map((row) => Map<String, dynamic>.from(row as Map)).toList();
+    await _attachStorageAssets(maps);
+    return maps.map<FeedPost>(_postFromRow).toList();
+  }
+
+  Future<void> _attachStorageAssets(List<Map<String, dynamic>> posts) async {
+    final ids =
+        posts
+            .map((post) => post['id']?.toString())
+            .whereType<String>()
+            .where((id) => id.isNotEmpty)
+            .toList();
+    if (ids.isEmpty) return;
+
+    final assetsByPostId = <String, List<Map<String, dynamic>>>{};
+    try {
+      final assetRows = await _client
+          .from('feed_post_assets')
+          .select('post_id, url, sort_order')
+          .inFilter('post_id', ids)
+          .not('url', 'like', 'data:%')
+          .order('sort_order', ascending: true);
+      for (final row in assetRows) {
+        final asset = Map<String, dynamic>.from(row as Map);
+        final postId = asset['post_id']?.toString();
+        final url = asset['url']?.toString() ?? '';
+        if (postId == null || postId.isEmpty || url.isEmpty) continue;
+        assetsByPostId.putIfAbsent(postId, () => <Map<String, dynamic>>[]).add({
+          'url': url,
+          'sort_order': asset['sort_order'],
+        });
+      }
+    } catch (_) {
+      return;
+    }
+
+    for (final post in posts) {
+      post['assets'] = assetsByPostId[post['id']?.toString()] ?? const [];
+    }
   }
 
   FeedPost _postFromRow(Map<String, dynamic> map) {
