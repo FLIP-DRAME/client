@@ -132,8 +132,22 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
     super.initState();
     Future<void>(() async {
       final api = ref.read(feedApiProvider);
-      final posts = await ref.read(feedViewModelProvider).fetchPosts();
-      final likedIds = await api.fetchMyLikedPostIds();
+      List<FeedPost> posts = const <FeedPost>[];
+      Set<String> likedIds = <String>{};
+      try {
+        posts = await ref.read(feedViewModelProvider).fetchPosts();
+        likedIds = await api.fetchMyLikedPostIds();
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _remoteFeed = const <_FeedPost>[]);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('피드를 불러오지 못했습니다. 잠시 뒤 다시 시도해 주세요.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
       if (!mounted) return;
       setState(() {
         _remoteFeed =
@@ -183,8 +197,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
           filtered.where((p) => p.location.contains(widget.region)).toList();
     }
     if (widget.category != '전체') {
-      filtered =
-          filtered.where((p) => p.category == widget.category).toList();
+      filtered = filtered.where((p) => p.category == widget.category).toList();
     }
     final actualFeed = List<_FeedPost>.from(filtered);
     if (widget.sort == '인기순') {
@@ -366,12 +379,13 @@ class _FeedTimelineCard extends StatelessWidget {
                     backgroundColor: const Color(0xFFF1F4F8),
                     backgroundImage:
                         avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            initial,
-                            style: FeedText.authorName.copyWith(color: _navy),
-                          )
-                        : null,
+                    child:
+                        avatarUrl == null
+                            ? Text(
+                              initial,
+                              style: FeedText.authorName.copyWith(color: _navy),
+                            )
+                            : null,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -412,9 +426,7 @@ class _FeedTimelineCard extends StatelessWidget {
                             ? Icons.favorite_rounded
                             : Icons.favorite_border_rounded,
                         size: 25,
-                        color: post.likedByMe
-                            ? const Color(0xFFE54866)
-                            : null,
+                        color: post.likedByMe ? const Color(0xFFE54866) : null,
                       ),
                       const SizedBox(width: 14),
                       const Icon(Icons.chat_bubble_outline_rounded, size: 23),
@@ -638,9 +650,10 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
 
   Widget _metaPane() {
     final avatarUrl = widget.post.authorAvatarUrl;
-    final initial = widget.post.authorName.isNotEmpty
-        ? widget.post.authorName.substring(0, 1)
-        : '모';
+    final initial =
+        widget.post.authorName.isNotEmpty
+            ? widget.post.authorName.substring(0, 1)
+            : '모';
 
     return Column(
       children: <Widget>[
@@ -652,17 +665,18 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                 backgroundColor: _navy,
                 backgroundImage:
                     avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                child: avatarUrl == null
-                    ? Text(
-                        initial,
-                        style: const TextStyle(
-                          fontFamily: DrameTextStyles.fontFamily,
-                          color: Colors.white,
-                          fontSize: DrameTextStyles.bodySize,
-                          fontWeight: DrameTextStyles.semiBold,
-                        ),
-                      )
-                    : null,
+                child:
+                    avatarUrl == null
+                        ? Text(
+                          initial,
+                          style: const TextStyle(
+                            fontFamily: DrameTextStyles.fontFamily,
+                            color: Colors.white,
+                            fontSize: DrameTextStyles.bodySize,
+                            fontWeight: DrameTextStyles.semiBold,
+                          ),
+                        )
+                        : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -768,9 +782,9 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                     });
                   } catch (e) {
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('좋아요 오류: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('좋아요 오류: $e')));
                   }
                 },
                 icon: Icon(
@@ -818,13 +832,14 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                   textStyle: FeedText.button,
                   foregroundColor: _navy,
                 ),
-                child: _submittingComment
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('게시'),
+                child:
+                    _submittingComment
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Text('게시'),
               ),
             ],
           ),

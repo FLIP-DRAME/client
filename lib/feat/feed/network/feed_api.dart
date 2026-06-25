@@ -55,7 +55,7 @@ class FeedApi {
 
   final SupabaseClient _client;
 
-  Future<List<FeedPost>> fetchPosts() async {
+  Future<List<FeedPost>> fetchPosts({int limit = 30}) async {
     final rows = await _client
         .from('feed_posts')
         .select('''
@@ -66,11 +66,11 @@ class FeedApi {
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order),
-          likes:feed_likes(count)
+          assets:feed_post_assets(url, sort_order)
         ''')
         .eq('is_published', true)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(limit);
 
     return rows
         .map<FeedPost>(
@@ -93,8 +93,7 @@ class FeedApi {
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order),
-          likes:feed_likes(count)
+          assets:feed_post_assets(url, sort_order)
         ''')
         .eq('operator_id', operatorId)
         .eq('is_published', true)
@@ -122,11 +121,11 @@ class FeedApi {
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order),
-          likes:feed_likes(count)
+          assets:feed_post_assets(url, sort_order)
         ''')
         .eq('author_id', userId)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(50);
 
     return rows
         .map<FeedPost>(
@@ -193,8 +192,7 @@ class FeedApi {
                 created_at,
                 category:service_categories(label),
                 operator:operator_profiles(id, display_name, specialty, avatar_url),
-                assets:feed_post_assets(url, sort_order),
-                likes:feed_likes(count)
+                assets:feed_post_assets(url, sort_order)
               ''')
               .single();
       postId = post['id']?.toString();
@@ -227,8 +225,7 @@ class FeedApi {
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url),
-          assets:feed_post_assets(url, sort_order),
-          likes:feed_likes(count)
+          assets:feed_post_assets(url, sort_order)
         ''')
         .eq('id', postId)
         .limit(1);
