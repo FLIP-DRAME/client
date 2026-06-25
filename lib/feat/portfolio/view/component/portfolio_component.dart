@@ -44,7 +44,11 @@ class _PortfolioMain extends StatelessWidget {
               ),
               child: ClipOval(
                 child: () {
-                  final imageUrl = pilot.avatarUrl ?? (pilot.portfolioImages.isNotEmpty ? pilot.portfolioImages.first : null);
+                  final imageUrl =
+                      pilot.avatarUrl ??
+                      (pilot.portfolioImages.isNotEmpty
+                          ? pilot.portfolioImages.first
+                          : null);
                   return imageUrl != null
                       ? _NetworkCover(imageUrl: imageUrl)
                       : const _EmptyPortfolioImage();
@@ -76,7 +80,12 @@ class _PortfolioMain extends StatelessWidget {
                           icon: Icons.map_outlined,
                           text: () {
                             final v = pilot.availableAreas
-                                .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
+                                .where(
+                                  (a) =>
+                                      a.trim().isNotEmpty &&
+                                      a != '??' &&
+                                      a != '?',
+                                )
                                 .join(', ');
                             return v.isEmpty ? '지역 협의' : v;
                           }(),
@@ -120,6 +129,8 @@ class _PortfolioMain extends StatelessWidget {
           ),
           const SizedBox(height: 40),
         ],
+        _OperatorFeedGridSection(operatorId: pilot.id),
+        const SizedBox(height: 40),
         const Divider(color: _line),
         const SizedBox(height: 34),
         _ReviewSection(operatorId: pilot.id),
@@ -311,8 +322,8 @@ class _MobilePortfolioScaffold extends StatelessWidget {
             size: 20,
             color: Colors.black,
           ),
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/home'),
+          onPressed:
+              () => context.canPop() ? context.pop() : context.go('/home'),
         ),
         title: const Text(
           '운용자 프로필',
@@ -338,6 +349,8 @@ class _MobilePortfolioScaffold extends StatelessWidget {
                 pilot: pilot,
               ),
             ],
+            const SizedBox(height: 16),
+            _OperatorFeedGridSection(operatorId: pilot.id, contained: true),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(20),
@@ -513,39 +526,48 @@ class _MobileProfileCard extends StatelessWidget {
           const SizedBox(height: 16),
           const Divider(color: _line, height: 1),
           const SizedBox(height: 16),
-          Builder(builder: (context) {
-            final validAreas = pilot.availableAreas
-                .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
-                .toList();
-            if (validAreas.isEmpty) {
+          Builder(
+            builder: (context) {
+              final validAreas =
+                  pilot.availableAreas
+                      .where(
+                        (a) => a.trim().isNotEmpty && a != '??' && a != '?',
+                      )
+                      .toList();
+              if (validAreas.isEmpty) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    _MobileSectionLabel('서비스 가능 지역'),
+                    SizedBox(height: 8),
+                    Text(
+                      '지역 협의',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 14,
+                        color: Color(0xFF7C828A),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                );
+              }
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  _MobileSectionLabel('서비스 가능 지역'),
-                  SizedBox(height: 8),
-                  Text('지역 협의',
-                      style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 14,
-                          color: Color(0xFF7C828A))),
-                  SizedBox(height: 16),
+                children: [
+                  const _MobileSectionLabel('서비스 가능 지역'),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children:
+                        validAreas.map((a) => _AreaChip(label: a)).toList(),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _MobileSectionLabel('서비스 가능 지역'),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: validAreas.map((a) => _AreaChip(label: a)).toList(),
-                ),
-                const SizedBox(height: 16),
-              ],
-            );
-          }),
+            },
+          ),
         ],
       ),
     );
@@ -637,7 +659,7 @@ class _MobilePortfolioSection extends StatelessWidget {
             builder: (context, ref, _) {
               final store = ref.watch(drameStoreProvider);
               final posts =
-                  store.selectedPilot?.id == pilot.id
+                  store.selectedPilot?.id == '__portfolio_feed_disabled__'
                       ? store.myFeedPosts
                       : <OperatorFeedPost>[];
               if (posts.isEmpty) return const SizedBox.shrink();
@@ -885,6 +907,168 @@ class _MobileSectionLabel extends StatelessWidget {
 
 // ── Feed post card ─────────────────────────────────────────────────────────────
 
+class _OperatorFeedGridSection extends ConsumerStatefulWidget {
+  const _OperatorFeedGridSection({
+    required this.operatorId,
+    this.contained = false,
+  });
+
+  final String operatorId;
+  final bool contained;
+
+  @override
+  ConsumerState<_OperatorFeedGridSection> createState() =>
+      _OperatorFeedGridSectionState();
+}
+
+class _OperatorFeedGridSectionState
+    extends ConsumerState<_OperatorFeedGridSection> {
+  static const int _collapsedCount = 9;
+
+  late Future<List<OperatorFeedPost>> _future;
+  bool _expanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _loadPosts();
+  }
+
+  @override
+  void didUpdateWidget(covariant _OperatorFeedGridSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.operatorId != widget.operatorId) {
+      _expanded = false;
+      _future = _loadPosts();
+    }
+  }
+
+  Future<List<OperatorFeedPost>> _loadPosts() async {
+    final posts = await ref
+        .read(feedApiProvider)
+        .fetchPostsByOperator(widget.operatorId, limit: 30);
+    return posts
+        .map(
+          (post) => OperatorFeedPost(
+            id: post.id,
+            caption: post.caption,
+            createdAt: post.createdAt,
+            imageUrl: post.images.isEmpty ? null : post.images.first,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<OperatorFeedPost>>(
+      future: _future,
+      builder: (context, snapshot) {
+        final posts = snapshot.data ?? const <OperatorFeedPost>[];
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildFrame(
+            child: const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          );
+        }
+        if (snapshot.hasError || posts.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final visiblePosts =
+            _expanded ? posts : posts.take(_collapsedCount).toList();
+        final canExpand = posts.length > _collapsedCount;
+
+        return _buildFrame(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  const _SectionTitle('운용자 피드'),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${posts.length}',
+                    style: const TextStyle(
+                      fontFamily: DrameTextStyles.fontFamily,
+                      fontSize: 14,
+                      color: _mutedGray,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final spacing = widget.contained ? 8.0 : 12.0;
+                  final cellWidth = (constraints.maxWidth - spacing * 2) / 3;
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: visiblePosts.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing,
+                      mainAxisExtent: cellWidth + 96,
+                    ),
+                    itemBuilder: (context, index) {
+                      return _FeedPostCard(post: visiblePosts[index]);
+                    },
+                  );
+                },
+              ),
+              if (canExpand && !_expanded) ...<Widget>[
+                const SizedBox(height: 16),
+                Center(
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _expanded = true),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _primary,
+                      side: const BorderSide(color: _primary),
+                      textStyle: const TextStyle(
+                        fontFamily: DrameTextStyles.fontFamily,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
+                    ),
+                    child: Text('더보기 ${posts.length - _collapsedCount}개'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFrame({required Widget child}) {
+    if (!widget.contained) return child;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _FeedPostCard extends StatelessWidget {
   const _FeedPostCard({required this.post});
 
@@ -905,33 +1089,36 @@ class _FeedPostCard extends StatelessWidget {
           if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                post.imageUrl!,
-                width: double.infinity,
-                height: 180,
-                fit: BoxFit.cover,
-                errorBuilder:
-                    (_, __, ___) => Container(
-                      height: 180,
-                      color: const Color(0xFFEEF0F3),
-                      child: const Center(
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Color(0xFF8BA0B8),
-                          size: 32,
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Image.network(
+                  post.imageUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, __, ___) => Container(
+                        color: const Color(0xFFEEF0F3),
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            color: Color(0xFF8BA0B8),
+                            size: 32,
+                          ),
                         ),
                       ),
-                    ),
+                ),
               ),
             )
           else if (post.imageBytes != null && post.imageBytes!.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.memory(
-                Uint8List.fromList(post.imageBytes!),
-                width: double.infinity,
-                height: 180,
-                fit: BoxFit.cover,
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Image.memory(
+                  Uint8List.fromList(post.imageBytes!),
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           if ((post.imageUrl != null && post.imageUrl!.isNotEmpty) ||
@@ -940,6 +1127,8 @@ class _FeedPostCard extends StatelessWidget {
           if (post.caption.isNotEmpty)
             Text(
               post.caption,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontFamily: 'Pretendard',
                 fontSize: 13,
@@ -1014,8 +1203,8 @@ class _ReviewSectionState extends State<_ReviewSection> {
           .order('created_at', ascending: false)
           .limit(20);
 
-      reviews = rows
-          .map<OperatorReview>((row) {
+      reviews =
+          rows.map<OperatorReview>((row) {
             final map = Map<String, dynamic>.from(row as Map);
             return OperatorReview(
               id: map['id'].toString(),
@@ -1024,13 +1213,10 @@ class _ReviewSectionState extends State<_ReviewSection> {
               rating: (map['rating'] as num?)?.toInt() ?? 5,
               comment: (map['comment'] ?? '').toString(),
               createdAt:
-                  DateTime.tryParse(
-                    (map['created_at'] ?? '').toString(),
-                  ) ??
+                  DateTime.tryParse((map['created_at'] ?? '').toString()) ??
                   DateTime.now(),
             );
-          })
-          .toList();
+          }).toList();
 
       if (userId != null) {
         hasReviewed = reviews.any((r) => r.reviewerId == userId);
@@ -1049,8 +1235,7 @@ class _ReviewSectionState extends State<_ReviewSection> {
 
   double get _averageRating {
     if (_reviews.isEmpty) return 0;
-    return _reviews.fold<int>(0, (sum, r) => sum + r.rating) /
-        _reviews.length;
+    return _reviews.fold<int>(0, (sum, r) => sum + r.rating) / _reviews.length;
   }
 
   Future<void> _onLeaveReview() async {
@@ -1077,7 +1262,10 @@ class _ReviewSectionState extends State<_ReviewSection> {
                 size: 18,
               ),
               const SizedBox(width: 3),
-              Text(_averageRating.toStringAsFixed(1), style: PortfolioText.rating),
+              Text(
+                _averageRating.toStringAsFixed(1),
+                style: PortfolioText.rating,
+              ),
               const SizedBox(width: 4),
               Text(
                 '(${_reviews.length})',
@@ -1244,11 +1432,12 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
       if (userId == null) throw StateError('로그인이 필요합니다.');
 
       String reviewerName = '익명';
-      final profile = await client
-          .from('profiles')
-          .select('nickname, name')
-          .eq('id', userId)
-          .maybeSingle();
+      final profile =
+          await client
+              .from('profiles')
+              .select('nickname, name')
+              .eq('id', userId)
+              .maybeSingle();
       if (profile != null) {
         final nickname = (profile['nickname'] ?? '').toString().trim();
         final name = (profile['name'] ?? '').toString().trim();
@@ -1259,16 +1448,13 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
         }
       }
 
-      await client.from('operator_reviews').upsert(
-        <String, Object?>{
-          'operator_id': widget.operatorId,
-          'reviewer_id': userId,
-          'reviewer_name': reviewerName,
-          'rating': _rating,
-          'comment': _commentCtrl.text.trim(),
-        },
-        onConflict: 'operator_id,reviewer_id',
-      );
+      await client.from('operator_reviews').upsert(<String, Object?>{
+        'operator_id': widget.operatorId,
+        'reviewer_id': userId,
+        'reviewer_name': reviewerName,
+        'rating': _rating,
+        'comment': _commentCtrl.text.trim(),
+      }, onConflict: 'operator_id,reviewer_id');
 
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -1379,10 +1565,7 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
 
 void _showMobileQuoteSheet(BuildContext context, DronePilot pilot) {
   if (Supabase.instance.client.auth.currentUser == null) {
-    showLoginRequiredDialog(
-      context,
-      message: '견적 요청은 로그인 후 이용할 수 있습니다.',
-    );
+    showLoginRequiredDialog(context, message: '견적 요청은 로그인 후 이용할 수 있습니다.');
     return;
   }
   showModalBottomSheet<void>(
@@ -1425,7 +1608,9 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
         widget.pilot.categories.where((c) => c.trim().isNotEmpty).toList();
     _category = cats.isNotEmpty ? cats.first : null;
     final areas =
-        widget.pilot.availableAreas.where((a) => a.trim().isNotEmpty && a != '??' && a != '?').toList();
+        widget.pilot.availableAreas
+            .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
+            .toList();
     _area = areas.isNotEmpty ? areas.first : null;
   }
 
@@ -1441,7 +1626,9 @@ class _MobileQuoteSheetState extends ConsumerState<_MobileQuoteSheet> {
   List<String> get _cats =>
       widget.pilot.categories.where((c) => c.trim().isNotEmpty).toList();
   List<String> get _areas =>
-      widget.pilot.availableAreas.where((a) => a.trim().isNotEmpty && a != '??' && a != '?').toList();
+      widget.pilot.availableAreas
+          .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
+          .toList();
 
   Future<void> _submit() async {
     if (_category == null) return;

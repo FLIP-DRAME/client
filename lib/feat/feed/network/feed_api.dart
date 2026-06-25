@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -79,6 +79,35 @@ class FeedApi {
         .toList();
   }
 
+  Future<List<FeedPost>> fetchPostsByOperator(
+    String operatorId, {
+    int limit = 30,
+  }) async {
+    final rows = await _client
+        .from('feed_posts')
+        .select('''
+          id,
+          title,
+          body,
+          location_label,
+          created_at,
+          category:service_categories(label),
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
+          assets:feed_post_assets(url, sort_order),
+          likes:feed_likes(count)
+        ''')
+        .eq('operator_id', operatorId)
+        .eq('is_published', true)
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    return rows
+        .map<FeedPost>(
+          (row) => _postFromRow(Map<String, dynamic>.from(row as Map)),
+        )
+        .toList();
+  }
+
   Future<List<FeedPost>> fetchMyPosts() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return const <FeedPost>[];
@@ -111,6 +140,7 @@ class FeedApi {
     required String categoryLabel,
     required String locationLabel,
     List<int>? imageBytes,
+    String? imageFileName,
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
@@ -138,36 +168,53 @@ class FeedApi {
                 ? operator!['location_label'].toString()
                 : '지역 미정')
             : locationLabel;
-    final post =
-        await _client
-            .from('feed_posts')
-            .insert(<String, Object?>{
-              'author_id': userId,
-              'operator_id': operatorId,
-              'category_id': categoryId,
-              'body': caption,
-              'location_label': location,
-              'is_published': true,
-            })
-            .select('''
-              id,
-              title,
-              body,
-              location_label,
-              created_at,
-              category:service_categories(label),
-              operator:operator_profiles(id, display_name, specialty, avatar_url),
-              assets:feed_post_assets(url, sort_order),
-              likes:feed_likes(count)
-            ''')
-            .single();
+    final uploadedImage =
+        imageBytes == null || imageBytes.isEmpty
+            ? null
+            : await _uploadFeedImage(userId, imageBytes, imageFileName);
+    String? postId;
+    try {
+      final post =
+          await _client
+              .from('feed_posts')
+              .insert(<String, Object?>{
+                'author_id': userId,
+                'operator_id': operatorId,
+                'category_id': categoryId,
+                'body': caption,
+                'location_label': location,
+                'is_published': true,
+              })
+              .select('''
+                id,
+                title,
+                body,
+                location_label,
+                created_at,
+                category:service_categories(label),
+                operator:operator_profiles(id, display_name, specialty, avatar_url),
+                assets:feed_post_assets(url, sort_order),
+                likes:feed_likes(count)
+              ''')
+              .single();
+      postId = post['id']?.toString();
 
-    if (imageBytes != null && imageBytes.isNotEmpty) {
-      await _client.from('feed_post_assets').insert(<String, Object?>{
-        'post_id': post['id'],
-        'kind': 'image',
-        'url': 'data:image/jpeg;base64,${base64Encode(imageBytes)}',
-      });
+      if (uploadedImage != null) {
+        await _client.from('feed_post_assets').insert(<String, Object?>{
+          'post_id': postId,
+          'kind': 'image',
+          'url': uploadedImage.url,
+          'sort_order': 0,
+        });
+      }
+    } catch (_) {
+      if (uploadedImage != null) {
+        await _tryRemoveUploadedFeedImage(uploadedImage.path);
+      }
+      rethrow;
+    }
+    if (postId == null) {
+      throw StateError('피드 게시글을 생성하지 못했습니다.');
     }
 
     final rows = await _client
@@ -183,13 +230,122 @@ class FeedApi {
           assets:feed_post_assets(url, sort_order),
           likes:feed_likes(count)
         ''')
-        .eq('id', post['id'])
+        .eq('id', postId)
         .limit(1);
     return _postFromRow(Map<String, dynamic>.from(rows.first as Map));
   }
 
   Future<void> deletePost(String id) async {
+    final rows = await _client
+        .from('feed_post_assets')
+        .select('url')
+        .eq('post_id', id);
+    final paths =
+        rows
+            .map<String?>(
+              (row) => _feedAssetPathFromUrl((row as Map)['url']?.toString()),
+            )
+            .whereType<String>()
+            .toList();
+    if (paths.isNotEmpty) {
+      try {
+        await _client.storage.from('feed-assets').remove(paths);
+      } catch (_) {
+        // Keep post deletion available even if asset cleanup fails.
+      }
+    }
     await _client.from('feed_posts').delete().eq('id', id);
+  }
+
+  Future<({String path, String url})> _uploadFeedImage(
+    String userId,
+    List<int> bytes,
+    String? fileName,
+  ) async {
+    final type = _imageType(bytes, fileName);
+    final path =
+        '$userId/${DateTime.now().microsecondsSinceEpoch}.${type.extension}';
+    await _client.storage
+        .from('feed-assets')
+        .uploadBinary(
+          path,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(contentType: type.contentType),
+        );
+    return (
+      path: path,
+      url: _client.storage.from('feed-assets').getPublicUrl(path),
+    );
+  }
+
+  Future<void> _tryRemoveUploadedFeedImage(String path) async {
+    try {
+      await _client.storage.from('feed-assets').remove(<String>[path]);
+    } catch (_) {
+      // Best-effort cleanup only. The original write error is what matters.
+    }
+  }
+
+  ({String extension, String contentType}) _imageType(
+    List<int> bytes,
+    String? fileName,
+  ) {
+    final extension = _fileExtension(fileName);
+    if (extension != null) {
+      return (extension: extension, contentType: _contentType(extension));
+    }
+    if (bytes.length >= 12 &&
+        bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50) {
+      return (extension: 'webp', contentType: 'image/webp');
+    }
+    if (bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) {
+      return (extension: 'png', contentType: 'image/png');
+    }
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xFF &&
+        bytes[1] == 0xD8 &&
+        bytes[2] == 0xFF) {
+      return (extension: 'jpg', contentType: 'image/jpeg');
+    }
+    return (extension: 'jpg', contentType: 'image/jpeg');
+  }
+
+  String? _fileExtension(String? fileName) {
+    final ext = fileName?.split('.').last.toLowerCase().trim();
+    return switch (ext) {
+      'jpg' || 'jpeg' => 'jpg',
+      'png' => 'png',
+      'webp' => 'webp',
+      _ => null,
+    };
+  }
+
+  String _contentType(String extension) {
+    return switch (extension) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      _ => 'image/jpeg',
+    };
+  }
+
+  String? _feedAssetPathFromUrl(String? url) {
+    if (url == null || url.isEmpty || url.startsWith('data:')) return null;
+    final uri = Uri.tryParse(url);
+    if (uri == null) return null;
+    final index = uri.pathSegments.indexOf('feed-assets');
+    if (index == -1 || index == uri.pathSegments.length - 1) return null;
+    return uri.pathSegments.skip(index + 1).map(Uri.decodeComponent).join('/');
   }
 
   Future<String?> _primaryCategoryId(String operatorId) async {

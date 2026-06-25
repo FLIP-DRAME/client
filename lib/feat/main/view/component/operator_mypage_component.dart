@@ -1,6 +1,9 @@
 part of '../pages/main_page.dart';
 
-void _showOperatorAccountDeletionDialog(BuildContext context, DrameStore store) {
+void _showOperatorAccountDeletionDialog(
+  BuildContext context,
+  DrameStore store,
+) {
   showDialog<void>(
     context: context,
     builder: (ctx) => _AccountDeletionDialog(store: store),
@@ -302,7 +305,8 @@ class _OperatorMyPageBody extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 TextButton(
-                  onPressed: () => _showOperatorAccountDeletionDialog(context, store),
+                  onPressed:
+                      () => _showOperatorAccountDeletionDialog(context, store),
                   style: TextButton.styleFrom(
                     foregroundColor: const Color(0xFFE53935),
                     textStyle: const TextStyle(
@@ -394,10 +398,7 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('사진 업로드 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('사진 업로드 실패: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -428,12 +429,13 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
                     backgroundColor: const Color(0xFFEEF0F3),
                     backgroundImage:
                         avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            nickname.characters.first,
-                            style: AppText.cardTitle.copyWith(color: _navy),
-                          )
-                        : null,
+                    child:
+                        avatarUrl == null
+                            ? Text(
+                              nickname.characters.first,
+                              style: AppText.cardTitle.copyWith(color: _navy),
+                            )
+                            : null,
                   ),
                   Positioned(
                     right: 0,
@@ -446,19 +448,20 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
-                      child: _uploadingPhoto
-                          ? const Padding(
-                              padding: EdgeInsets.all(5),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                      child:
+                          _uploadingPhoto
+                              ? const Padding(
+                                padding: EdgeInsets.all(5),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : const Icon(
+                                Icons.camera_alt_rounded,
                                 color: Colors.white,
+                                size: 13,
                               ),
-                            )
-                          : const Icon(
-                              Icons.camera_alt_rounded,
-                              color: Colors.white,
-                              size: 13,
-                            ),
                     ),
                   ),
                 ],
@@ -830,6 +833,7 @@ class _OperatorFeedSection extends StatefulWidget {
 class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   final TextEditingController _captionController = TextEditingController();
   bool _isExpanded = false;
+  bool _isSubmitting = false;
   List<int>? _pendingImageBytes;
   String? _pendingImageName;
   String? _selectedCategory;
@@ -842,6 +846,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   }
 
   Future<void> _pickImage() async {
+    if (_isSubmitting) return;
     final file = await pickPlatformFile(accept: 'image/*');
     if (file == null) return;
     if (!mounted) return;
@@ -852,15 +857,27 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   }
 
   Future<void> _submit() async {
+    if (_isSubmitting) return;
     final caption = _captionController.text.trim();
     if (caption.isEmpty && _pendingImageBytes == null) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isSubmitting = true);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('피드 등록 대기중입니다. 잠시만 기다려 주세요.'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 30),
+        ),
+      );
 
     try {
       await widget.store.addFeedPost(
         caption: caption,
         imageBytes: _pendingImageBytes,
+        imageFileName: _pendingImageName,
         categoryLabel:
             _selectedCategory ??
             widget.store.selectedPilot?.categories.firstOrNull ??
@@ -872,29 +889,43 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       );
     } catch (error) {
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            error
-                .toString()
-                .replaceFirst('Bad state: ', '')
-                .replaceFirst('Exception: ', ''),
+      setState(() => _isSubmitting = false);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              error
+                  .toString()
+                  .replaceFirst('Bad state: ', '')
+                  .replaceFirst('Exception: ', ''),
+            ),
+            backgroundColor: _ink,
+            behavior: SnackBarBehavior.floating,
           ),
-          backgroundColor: _ink,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        );
       return;
     }
     if (!mounted) return;
     _captionController.clear();
     setState(() {
+      _isSubmitting = false;
       _isExpanded = false;
       _pendingImageBytes = null;
       _pendingImageName = null;
       _selectedCategory = null;
       _selectedArea = null;
     });
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('피드 등록이 완료되었습니다.'),
+          backgroundColor: Color(0xFF0A7F5A),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
   }
 
   @override
@@ -922,7 +953,10 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                 ),
               ),
               FilledButton.icon(
-                onPressed: () => setState(() => _isExpanded = !_isExpanded),
+                onPressed:
+                    _isSubmitting
+                        ? null
+                        : () => setState(() => _isExpanded = !_isExpanded),
                 icon: Icon(
                   _isExpanded ? Icons.close_rounded : Icons.add_rounded,
                 ),
@@ -1001,7 +1035,12 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                             ),
                           ),
                           items:
-                              (widget.store.selectedPilot?.categories.isNotEmpty == true
+                              (widget
+                                              .store
+                                              .selectedPilot
+                                              ?.categories
+                                              .isNotEmpty ==
+                                          true
                                       ? widget.store.selectedPilot!.categories
                                       : defaultDroneCategories
                                           .map((c) => c.label)
@@ -1055,7 +1094,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ),
                   const SizedBox(height: 12),
                   GestureDetector(
-                    onTap: _pickImage,
+                    onTap: _isSubmitting ? null : _pickImage,
                     child: Container(
                       height: 96,
                       decoration: BoxDecoration(
@@ -1105,10 +1144,12 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                         ),
                         GestureDetector(
                           onTap:
-                              () => setState(() {
-                                _pendingImageBytes = null;
-                                _pendingImageName = null;
-                              }),
+                              _isSubmitting
+                                  ? null
+                                  : () => setState(() {
+                                    _pendingImageBytes = null;
+                                    _pendingImageName = null;
+                                  }),
                           child: Icon(
                             Icons.close_rounded,
                             size: 14,
@@ -1119,10 +1160,41 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     ),
                   ],
                   const SizedBox(height: 14),
+                  if (_isSubmitting) ...<Widget>[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAF2FF),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFCFE0FF)),
+                      ),
+                      child: Row(
+                        children: const <Widget>[
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '피드 등록 대기중',
+                              style: AppText.metricLabel,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: _submit,
+                      onPressed: _isSubmitting ? null : _submit,
                       style: FilledButton.styleFrom(
                         backgroundColor: _primary,
                         foregroundColor: Colors.white,

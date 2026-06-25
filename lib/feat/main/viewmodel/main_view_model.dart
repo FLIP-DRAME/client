@@ -344,12 +344,7 @@ class DrameStore extends ChangeNotifier {
         );
       }
     }
-    updateAuth(
-      role: '이용자',
-      email: email,
-      name: name,
-      nickname: nickname,
-    );
+    updateAuth(role: '이용자', email: email, name: name, nickname: nickname);
     submitAuth();
   }
 
@@ -852,6 +847,7 @@ class DrameStore extends ChangeNotifier {
     required String categoryLabel,
     required String locationLabel,
     List<int>? imageBytes,
+    String? imageFileName,
   }) async {
     try {
       final post = await _feedApi.createPost(
@@ -859,6 +855,7 @@ class DrameStore extends ChangeNotifier {
         categoryLabel: categoryLabel,
         locationLabel: locationLabel,
         imageBytes: imageBytes,
+        imageFileName: imageFileName,
       );
       myFeedPosts = <OperatorFeedPost>[
         _operatorPostFromFeed(post),
