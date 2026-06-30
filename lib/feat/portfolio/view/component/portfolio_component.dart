@@ -925,7 +925,7 @@ class _OperatorFeedGridSectionState
     extends ConsumerState<_OperatorFeedGridSection> {
   static const int _collapsedCount = 9;
 
-  late Future<List<OperatorFeedPost>> _future;
+  late Future<List<FeedPost>> _future;
   bool _expanded = false;
 
   @override
@@ -943,28 +943,18 @@ class _OperatorFeedGridSectionState
     }
   }
 
-  Future<List<OperatorFeedPost>> _loadPosts() async {
-    final posts = await ref
+  Future<List<FeedPost>> _loadPosts() {
+    return ref
         .read(feedApiProvider)
         .fetchPostsByOperator(widget.operatorId, limit: 30);
-    return posts
-        .map(
-          (post) => OperatorFeedPost(
-            id: post.id,
-            caption: post.caption,
-            createdAt: post.createdAt,
-            imageUrl: post.images.isEmpty ? null : post.images.first,
-          ),
-        )
-        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<OperatorFeedPost>>(
+    return FutureBuilder<List<FeedPost>>(
       future: _future,
       builder: (context, snapshot) {
-        final posts = snapshot.data ?? const <OperatorFeedPost>[];
+        final posts = snapshot.data ?? const <FeedPost>[];
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildFrame(
             child: const Center(
@@ -1021,7 +1011,22 @@ class _OperatorFeedGridSectionState
                       mainAxisExtent: cellWidth + 96,
                     ),
                     itemBuilder: (context, index) {
-                      return _FeedPostCard(post: visiblePosts[index]);
+                      final post = visiblePosts[index];
+                      return _FeedPostCard(
+                        post: OperatorFeedPost(
+                          id: post.id,
+                          caption: post.caption,
+                          createdAt: post.createdAt,
+                          imageUrl: post.images.isEmpty ? null : post.images.first,
+                        ),
+                        onTap: () => showFeedPostDialog(
+                          context,
+                          post,
+                          loadPilot: (id) => ref
+                              .read(dronePilotApiProvider)
+                              .fetchPilotById(id),
+                        ),
+                      );
                     },
                   );
                 },
@@ -1070,13 +1075,17 @@ class _OperatorFeedGridSectionState
 }
 
 class _FeedPostCard extends StatelessWidget {
-  const _FeedPostCard({required this.post});
+  const _FeedPostCard({required this.post, this.onTap});
 
   final OperatorFeedPost post;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFF7F8FA),
@@ -1147,6 +1156,7 @@ class _FeedPostCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

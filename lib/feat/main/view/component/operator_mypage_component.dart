@@ -382,30 +382,6 @@ class _OperatorMyPageProfile extends StatefulWidget {
 }
 
 class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
-  bool _uploadingPhoto = false;
-
-  Future<void> _pickAndUploadPhoto() async {
-    final file = await pickPlatformFile(accept: 'image/*');
-    if (file == null) return;
-
-    if (!mounted) return;
-
-    final ext = file.extension.isEmpty ? 'jpg' : file.extension;
-
-    setState(() => _uploadingPhoto = true);
-    try {
-      await widget.store.uploadProfilePhoto(file.bytes, ext);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('사진 업로드 실패: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _uploadingPhoto = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final store = widget.store;
@@ -420,52 +396,16 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
       children: <Widget>[
         Row(
           children: <Widget>[
-            GestureDetector(
-              onTap: _uploadingPhoto ? null : _pickAndUploadPhoto,
-              child: Stack(
-                children: <Widget>[
-                  CircleAvatar(
-                    radius: 44,
-                    backgroundColor: const Color(0xFFEEF0F3),
-                    backgroundImage:
-                        avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child:
-                        avatarUrl == null
-                            ? Text(
-                              nickname.characters.first,
-                              style: AppText.cardTitle.copyWith(color: _navy),
-                            )
-                            : null,
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: _navy,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child:
-                          _uploadingPhoto
-                              ? const Padding(
-                                padding: EdgeInsets.all(5),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                              : const Icon(
-                                Icons.camera_alt_rounded,
-                                color: Colors.white,
-                                size: 13,
-                              ),
-                    ),
-                  ),
-                ],
-              ),
+            CircleAvatar(
+              radius: 44,
+              backgroundColor: const Color(0xFFEEF0F3),
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl == null
+                  ? Text(
+                      nickname.characters.first,
+                      style: AppText.cardTitle.copyWith(color: _navy),
+                    )
+                  : null,
             ),
             const SizedBox(width: 22),
             Expanded(

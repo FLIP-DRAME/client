@@ -124,3 +124,18 @@ class FeedText {
 void _openPortfolio(BuildContext context, DronePilot pilot) {
   context.push('/portfolio/${pilot.id}', extra: pilot);
 }
+
+Future<void> showFeedPostDialog(
+  BuildContext context,
+  FeedPost post, {
+  required Future<DronePilot?> Function(String id) loadPilot,
+}) {
+  return showDialog<void>(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.72),
+    builder: (_) => _FeedPostDialog(
+      post: _FeedPost.fromApi(post),
+      loadPilot: loadPilot,
+    ),
+  );
+}

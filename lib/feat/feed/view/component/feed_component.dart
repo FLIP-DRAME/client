@@ -93,6 +93,20 @@ class _FeedPost {
     this.likedByMe = false,
   });
 
+  factory _FeedPost.fromApi(FeedPost post) => _FeedPost(
+    id: post.id,
+    location: post.location,
+    category: post.category,
+    images: post.images,
+    authorName: post.authorName,
+    authorRole: post.authorRole,
+    date: post.date,
+    likes: post.likes,
+    caption: post.caption,
+    operatorId: post.operatorId,
+    authorAvatarUrl: post.authorAvatarUrl,
+  );
+
   final String id;
   final String location;
   final String category;

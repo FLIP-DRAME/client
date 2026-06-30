@@ -10,6 +10,8 @@ import '../../../../common/drame_text_styles.dart';
 import '../../../../common/login_prompt.dart';
 import '../../../main/model/drone_pilot_model.dart';
 import '../../../main/model/main_models.dart';
+import '../../../feed/network/feed_api.dart';
+import '../../../feed/view/pages/feed_page.dart';
 import '../../../quote/model/quote_model.dart';
 
 part '../component/portfolio_component.dart';

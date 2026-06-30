@@ -762,12 +762,11 @@ class _OperatorPortfolioBuilderSectionState
     extends State<_OperatorPortfolioBuilderSection> {
   bool _editing = false;
   bool _saving = false;
-  bool _uploadingImage = false;
+  bool _uploadingPhoto = false;
   int _previewTab = 0;
 
   late TextEditingController _introCtrl;
   late TextEditingController _descCtrl;
-  late List<TextEditingController> _imageUrlCtrls;
   late Set<String> _selectedCategories;
   late Set<String> _selectedAreas;
 
@@ -780,12 +779,6 @@ class _OperatorPortfolioBuilderSectionState
   void _resetFromPilot(DronePilot? p) {
     _introCtrl = TextEditingController(text: p?.intro ?? '');
     _descCtrl = TextEditingController(text: p?.description ?? '');
-    _imageUrlCtrls =
-        (p?.portfolioImages.isNotEmpty == true)
-            ? p!.portfolioImages
-                .map((u) => TextEditingController(text: u))
-                .toList()
-            : <TextEditingController>[TextEditingController()];
     _selectedCategories = Set<String>.from(p?.categories ?? <String>[]);
     _selectedAreas = Set<String>.from(p?.availableAreas ?? <String>[]);
   }
@@ -794,9 +787,6 @@ class _OperatorPortfolioBuilderSectionState
   void dispose() {
     _introCtrl.dispose();
     _descCtrl.dispose();
-    for (final c in _imageUrlCtrls) {
-      c.dispose();
-    }
     super.dispose();
   }
 
@@ -808,7 +798,8 @@ class _OperatorPortfolioBuilderSectionState
         description: _descCtrl.text.trim(),
         categoryLabels: _selectedCategories.toList(),
         areaNames: _selectedAreas.toList(),
-        portfolioImageUrls: _imageUrlCtrls.map((c) => c.text.trim()).toList(),
+        portfolioImageUrls:
+            widget.store.selectedPilot?.portfolioImages ?? const <String>[],
       );
       if (mounted) setState(() => _editing = false);
     } catch (e) {
@@ -826,49 +817,97 @@ class _OperatorPortfolioBuilderSectionState
     }
   }
 
-  Future<void> _pickAndUploadImage() async {
+  Future<void> _pickAndUploadPhoto() async {
     final file = await pickPlatformFile(accept: 'image/*');
     if (file == null) return;
     if (!mounted) return;
-    setState(() => _uploadingImage = true);
+    final ext = file.extension.isEmpty ? 'jpg' : file.extension;
+    setState(() => _uploadingPhoto = true);
     try {
-      final url = await widget.store.uploadPortfolioImage(file.bytes, file.name);
-      setState(() {
-        _imageUrlCtrls.add(TextEditingController(text: url));
-      });
+      await widget.store.uploadProfilePhoto(file.bytes, ext);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('이미지 업로드 실패: $e'),
+            content: Text('프로필 사진 업로드 실패: $e'),
             backgroundColor: _navy,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } finally {
-      if (mounted) setState(() => _uploadingImage = false);
+      if (mounted) setState(() => _uploadingPhoto = false);
     }
   }
 
   void _cancelEdit() {
     final p = widget.store.selectedPilot;
-    for (final c in _imageUrlCtrls) {
-      c.dispose();
-    }
     setState(() {
       _introCtrl.text = p?.intro ?? '';
       _descCtrl.text = p?.description ?? '';
-      _imageUrlCtrls =
-          (p?.portfolioImages.isNotEmpty == true)
-              ? p!.portfolioImages
-                  .map((u) => TextEditingController(text: u))
-                  .toList()
-              : <TextEditingController>[TextEditingController()];
       _selectedCategories = Set<String>.from(p?.categories ?? <String>[]);
       _selectedAreas = Set<String>.from(p?.availableAreas ?? <String>[]);
       _editing = false;
     });
+  }
+
+  Widget _buildEditableProfilePhoto(DronePilot pilot, double size) {
+    final imageUrl = pilot.avatarUrl;
+    return Semantics(
+      button: true,
+      label: '프로필 사진 변경',
+      child: InkWell(
+        onTap: _uploadingPhoto ? null : _pickAndUploadPhoto,
+        customBorder: const CircleBorder(),
+        child: SizedBox.square(
+          dimension: size,
+          child: Stack(
+            children: <Widget>[
+              Positioned.fill(
+                child: CircleAvatar(
+                  backgroundColor: _soft,
+                  backgroundImage:
+                      imageUrl == null ? null : NetworkImage(imageUrl),
+                  child: imageUrl == null
+                      ? Icon(
+                          Icons.flight_takeoff_rounded,
+                          color: _muted,
+                          size: size * 0.32,
+                        )
+                      : null,
+                ),
+              ),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  width: size < 70 ? 22 : 30,
+                  height: size < 70 ? 22 : 30,
+                  decoration: BoxDecoration(
+                    color: _navy,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: _uploadingPhoto
+                      ? const Padding(
+                          padding: EdgeInsets.all(5),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Icon(
+                          Icons.camera_alt_rounded,
+                          color: Colors.white,
+                          size: size < 70 ? 11 : 15,
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -944,38 +983,7 @@ class _OperatorPortfolioBuilderSectionState
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: _soft,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: _line),
-                  ),
-                  child: () {
-                      final imageUrl = pilot.avatarUrl ?? (pilot.portfolioImages.isNotEmpty ? pilot.portfolioImages.first : null);
-                      return imageUrl != null
-                          ? ClipOval(
-                            child: Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) => const Icon(
-                                    Icons.flight_takeoff_rounded,
-                                    color: _muted,
-                                    size: 32,
-                                  ),
-                            ),
-                          )
-                          : const Center(
-                            child: Icon(
-                              Icons.flight_takeoff_rounded,
-                              color: _muted,
-                              size: 32,
-                            ),
-                          );
-                    }(),
-                ),
+                _buildEditableProfilePhoto(pilot, 100),
                 const SizedBox(width: 24),
                 Expanded(
                   child: Column(
@@ -1022,40 +1030,6 @@ class _OperatorPortfolioBuilderSectionState
               pilot.description.isEmpty ? '(설명 없음)' : pilot.description,
               style: AppText.cardSubtitle,
             ),
-            if (pilot.portfolioImages.isNotEmpty) ...<Widget>[
-              const SizedBox(height: 36),
-              const Text('사진 포트폴리오', style: AppText.smallStrong),
-              const SizedBox(height: 16),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: pilot.portfolioImages.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  mainAxisExtent: 200,
-                ),
-                itemBuilder:
-                    (context, index) => ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        pilot.portfolioImages[index],
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (_, __, ___) => Container(
-                              color: _soft,
-                              child: const Center(
-                                child: Icon(
-                                  Icons.broken_image_outlined,
-                                  color: _muted,
-                                ),
-                              ),
-                            ),
-                      ),
-                    ),
-              ),
-            ],
           ],
         ],
       );
@@ -1119,38 +1093,7 @@ class _OperatorPortfolioBuilderSectionState
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: _soft,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: _line),
-                ),
-                child: () {
-                    final imageUrl = pilot.avatarUrl ?? (pilot.portfolioImages.isNotEmpty ? pilot.portfolioImages.first : null);
-                    return imageUrl != null
-                        ? ClipOval(
-                          child: Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (_, __, ___) => const Icon(
-                                  Icons.flight_takeoff_rounded,
-                                  color: Color(0xFF7C828A),
-                                  size: 20,
-                                ),
-                          ),
-                        )
-                        : const Center(
-                          child: Icon(
-                            Icons.flight_takeoff_rounded,
-                            color: Color(0xFF7C828A),
-                            size: 20,
-                          ),
-                        );
-                  }(),
-              ),
+              _buildEditableProfilePhoto(pilot, 56),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1264,49 +1207,8 @@ class _OperatorPortfolioBuilderSectionState
   }
 
   List<Widget> _buildMobilePortfolioTab(DronePilot pilot) {
-    final images = pilot.portfolioImages;
     final feedPosts = widget.store.myFeedPosts;
     return <Widget>[
-      if (images.isNotEmpty)
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: images.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 2,
-            mainAxisSpacing: 2,
-          ),
-          itemBuilder:
-              (context, i) => Image.network(
-                images[i],
-                fit: BoxFit.cover,
-                errorBuilder:
-                    (_, __, ___) => Container(
-                      color: _soft,
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: _muted,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-              ),
-        )
-      else
-        Container(
-          width: double.infinity,
-          height: 100,
-          decoration: BoxDecoration(
-            color: _soft,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Center(
-            child: Text('사진 포트폴리오가 없습니다', style: AppText.metricLabel),
-          ),
-        ),
-      const SizedBox(height: 20),
       const Text('서비스 상세설명', style: AppText.smallStrong),
       const SizedBox(height: 8),
       Text(
@@ -1505,95 +1407,6 @@ class _OperatorPortfolioBuilderSectionState
           hint: '제공하는 서비스, 장비, 경력 등을 자세히 작성해주세요.',
           controller: _descCtrl,
           maxLines: 6,
-        ),
-        const SizedBox(height: 28),
-        Row(
-          children: <Widget>[
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('포트폴리오 이미지', style: AppText.smallStrong),
-                  SizedBox(height: 4),
-                  Text('이미지 파일을 업로드하거나 URL을 직접 입력하세요.', style: AppText.cardSubtitle),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: _uploadingImage ? null : _pickAndUploadImage,
-              icon: _uploadingImage
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: _navy),
-                    )
-                  : const Icon(Icons.upload_rounded, size: 16),
-              label: const Text('파일 업로드'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _navy,
-                textStyle: AppText.button,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                side: const BorderSide(color: _line),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        ..._imageUrlCtrls.asMap().entries.map((entry) {
-          final i = entry.key;
-          final ctrl = entry.value;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: TextFormField(
-                    controller: ctrl,
-                    keyboardType: TextInputType.url,
-                    decoration: InputDecoration(
-                      hintText: 'https://example.com/image.jpg',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _focus, width: 1.4),
-                      ),
-                    ),
-                  ),
-                ),
-                if (_imageUrlCtrls.length > 1) ...<Widget>[
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: () {
-                      ctrl.dispose();
-                      setState(() => _imageUrlCtrls.removeAt(i));
-                    },
-                    icon: const Icon(Icons.remove_circle_outline),
-                    color: _muted,
-                  ),
-                ],
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: 6),
-        TextButton.icon(
-          onPressed: () {
-            setState(() => _imageUrlCtrls.add(TextEditingController()));
-          },
-          icon: const Icon(Icons.add),
-          label: const Text('URL 추가'),
-          style: TextButton.styleFrom(foregroundColor: _navy),
         ),
       ],
     );
