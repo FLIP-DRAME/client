@@ -15,28 +15,10 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
   static const List<String> _sorts = <String>['인기순', '최신순'];
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final store = context.read<DrameStore>();
-      if (!store.isSessionRestoring && !store.isLoggedIn) {
-        context.go('/login');
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
         if (store.isSessionRestoring) {
-          return const Scaffold(backgroundColor: DC.canvas);
-        }
-        if (!store.isLoggedIn) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) context.go('/login');
-          });
           return const Scaffold(backgroundColor: DC.canvas);
         }
         final compact = MediaQuery.sizeOf(context).width < 760;
@@ -69,7 +51,7 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
             children: <Widget>[
               if (!compact)
                 DrameTopNavigation(
-                  isLoggedIn: true,
+                  isLoggedIn: store.isLoggedIn,
                   isOperator: store.isPilotMode,
                   nickname: nickname,
                   activePage: 'feed',

@@ -161,6 +161,12 @@ class DrameTopNavigation extends StatelessWidget {
                     _NavLink(label: '운용자 찾기', onTap: onFindPilotTap),
                     const SizedBox(width: 24),
                     _NavLink(
+                      label: '피드',
+                      onTap: onFeedTap ?? () {},
+                      active: activePage == 'feed',
+                    ),
+                    const SizedBox(width: 24),
+                    _NavLink(
                       label: '서비스 소개',
                       onTap: onAboutServiceTap ?? onFindPilotTap,
                     ),

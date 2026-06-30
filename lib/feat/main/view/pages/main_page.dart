@@ -628,10 +628,6 @@ class _DrameHomePageState extends State<DrameHomePage> {
               _scrollToSection(_categorySectionKey);
             },
             onFeedTap: () {
-              if (!store.isLoggedIn) {
-                showLoginRequiredDialog(context);
-                return;
-              }
               context.go('/feed');
             },
             onPortfolioTap: () => context.go('/portfolio'),
@@ -941,7 +937,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: safeIndex,
         onTap: (index) {
-          if (!store.isLoggedIn && index != 0 && !store.isPilotMode) {
+          if (!store.isLoggedIn &&
+              index != 0 &&
+              index != 2 &&
+              !store.isPilotMode) {
             showLoginRequiredDialog(context);
             return;
           }
