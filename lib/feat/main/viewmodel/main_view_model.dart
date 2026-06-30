@@ -277,6 +277,30 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> signInWithGoogle() async {
+    try {
+      final redirectTo =
+          kIsWeb
+              ? Uri.base
+                  .replace(
+                    path: '/login',
+                    queryParameters: null,
+                    fragment: null,
+                  )
+                  .toString()
+              : 'com.modu.drone://login-callback';
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: redirectTo,
+        queryParams: const <String, String>{'prompt': 'select_account'},
+      );
+    } on AuthException catch (error) {
+      throw Exception(_authErrorMessage(error));
+    } catch (error) {
+      throw Exception(error.toString());
+    }
+  }
+
   Future<void> deleteAccount() async {
     await _api.deleteMyAccount();
     clearSessionState();

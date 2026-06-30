@@ -19,6 +19,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -93,6 +94,31 @@ class _LoginPageState extends State<LoginPage> {
         SnackBar(
           content: Text(
             '로그인에 실패했습니다: ${error.toString().replaceFirst('Exception: ', '')}',
+            style: const TextStyle(fontFamily: 'Pretendard'),
+          ),
+          backgroundColor: DC.ink,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleGoogleLogin(DrameStore store) async {
+    if (_isLoading || _isGoogleLoading) return;
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      await store.signInWithGoogle();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isGoogleLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Google 로그인에 실패했습니다: ${error.toString().replaceFirst('Exception: ', '')}',
             style: const TextStyle(fontFamily: 'Pretendard'),
           ),
           backgroundColor: DC.ink,
@@ -247,7 +273,10 @@ class _LoginPageState extends State<LoginPage> {
                 width: double.infinity,
                 height: 54,
                 child: FilledButton(
-                  onPressed: _isLoading ? null : () => _handleLogin(store),
+                  onPressed:
+                      (_isLoading || _isGoogleLoading)
+                          ? null
+                          : () => _handleLogin(store),
                   style: _mobilePrimaryButtonStyle(),
                   child:
                       _isLoading
@@ -262,6 +291,8 @@ class _LoginPageState extends State<LoginPage> {
                           : const Text('이메일로 로그인'),
                 ),
               ),
+              const SizedBox(height: 12),
+              _buildGoogleButton(store, height: 54, borderRadius: 16),
               const SizedBox(height: 26),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -415,6 +446,57 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // ── Form Panel (shared) ─────────────────────────────────────────────────────
+  Widget _buildGoogleButton(
+    DrameStore store, {
+    required double height,
+    required double borderRadius,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: height,
+      child: OutlinedButton.icon(
+        onPressed:
+            (_isLoading || _isGoogleLoading)
+                ? null
+                : () => _handleGoogleLogin(store),
+        icon:
+            _isGoogleLoading
+                ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    color: DC.ink,
+                    strokeWidth: 2,
+                  ),
+                )
+                : const Text(
+                  'G',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF4285F4),
+                  ),
+                ),
+        label: const Text('Google로 계속하기'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: DC.ink,
+          disabledForegroundColor: DC.muted,
+          side: const BorderSide(color: DC.hairline),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            height: 1.15,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildFormPanel(
     BuildContext context,
     DrameStore store, {
@@ -531,7 +613,9 @@ class _LoginPageState extends State<LoginPage> {
                         height: 52,
                         child: FilledButton(
                           onPressed:
-                              _isLoading ? null : () => _handleLogin(store),
+                              (_isLoading || _isGoogleLoading)
+                                  ? null
+                                  : () => _handleLogin(store),
                           style: FilledButton.styleFrom(
                             backgroundColor: DC.primary,
                             foregroundColor: Colors.white,
@@ -586,6 +670,8 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
+                      _buildGoogleButton(store, height: 52, borderRadius: 12),
+                      const SizedBox(height: 24),
 
                       // Signup link
                       Center(
