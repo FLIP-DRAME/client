@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
@@ -402,11 +401,6 @@ class _DrameHomePageState extends State<DrameHomePage> {
       final store = context.read<DrameStore>();
       unawaited(store.restoreSession().then((_) {
         if (!mounted) return;
-        // 모바일 첫 실행: 비로그인 상태면 랜딩페이지로 이동
-        if (!kIsWeb && !store.isLoggedIn) {
-          unawaited(_checkFirstLaunchRedirect(store));
-          return;
-        }
         // /operator 진입은 로그인 + 운용자만 가능.
         if (widget.operatorMode && !store.isLoggedIn) {
           context.go('/home');
@@ -416,19 +410,6 @@ class _DrameHomePageState extends State<DrameHomePage> {
         unawaited(store.load(initial: true));
       }));
     });
-  }
-
-  Future<void> _checkFirstLaunchRedirect(DrameStore store) async {
-    final router = GoRouter.of(context);
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    if (!(prefs.getBool('has_launched') ?? false)) {
-      unawaited(prefs.setBool('has_launched', true));
-      router.go('/landing');
-    } else {
-      store.setPilotMode(widget.operatorMode);
-      unawaited(store.load(initial: true));
-    }
   }
 
   @override
