@@ -837,23 +837,23 @@ class _MobileOperatorCard extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: <Widget>[
-                Container(
+                SizedBox(
                   width: 46,
                   height: 46,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEEF0F3),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      initial,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF5B616E),
-                      ),
-                    ),
+                  child: ClipOval(
+                    child:
+                        pilot.avatarUrl?.trim().isNotEmpty == true
+                            ? Image.network(
+                              pilot.avatarUrl!,
+                              width: 46,
+                              height: 46,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => _MobileAvatarFallback(
+                                    initial: initial,
+                                  ),
+                            )
+                            : _MobileAvatarFallback(initial: initial),
                   ),
                 ),
                 Positioned(
@@ -949,6 +949,30 @@ class _MobileOperatorCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileAvatarFallback extends StatelessWidget {
+  const _MobileAvatarFallback({required this.initial});
+
+  final String initial;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xFFEEF0F3),
+      child: Center(
+        child: Text(
+          initial,
+          style: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF5B616E),
+          ),
         ),
       ),
     );
