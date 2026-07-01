@@ -2,15 +2,18 @@ import 'package:file_picker/file_picker.dart';
 
 import 'picked_file.dart';
 
-Future<PickedFile?> pickPlatformFileImpl({required String accept}) async {
+Future<List<PickedFile>> pickPlatformFilesImpl({
+  required String accept,
+  required bool allowMultiple,
+}) async {
   final result = await FilePicker.pickFiles(
     type: accept == 'application/pdf' ? FileType.custom : FileType.image,
     allowedExtensions: accept == 'application/pdf' ? <String>['pdf'] : null,
     withData: true,
+    allowMultiple: allowMultiple,
   );
-  final files = result?.files;
-  final file = files == null || files.isEmpty ? null : files.first;
-  final bytes = file?.bytes;
-  if (file == null || bytes == null) return null;
-  return PickedFile(name: file.name, bytes: bytes);
+  return (result?.files ?? const <PlatformFile>[])
+      .where((file) => file.bytes != null)
+      .map((file) => PickedFile(name: file.name, bytes: file.bytes!))
+      .toList();
 }

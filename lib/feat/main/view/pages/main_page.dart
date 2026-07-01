@@ -12,6 +12,7 @@ import '../../../../common/login_prompt.dart';
 import '../../../../core/platform/platform_file_picker.dart';
 import '../../../../core/app_defaults.dart';
 import '../../../chat/view/pages/chat_list_page.dart';
+import '../../../feed/network/feed_api.dart';
 import '../../../feed/view/pages/feed_page.dart';
 import '../../model/main_models.dart';
 import '../../network/drone_pilot_api.dart';

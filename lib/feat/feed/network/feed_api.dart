@@ -51,6 +51,13 @@ class FeedComment {
   final DateTime createdAt;
 }
 
+class FeedImageUpload {
+  const FeedImageUpload({required this.bytes, required this.fileName});
+
+  final List<int> bytes;
+  final String fileName;
+}
+
 class FeedApi {
   FeedApi(this._client);
 
@@ -124,8 +131,7 @@ class FeedApi {
     required String caption,
     required String categoryLabel,
     required String locationLabel,
-    List<int>? imageBytes,
-    String? imageFileName,
+    List<FeedImageUpload> images = const <FeedImageUpload>[],
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
@@ -153,12 +159,14 @@ class FeedApi {
                 ? operator!['location_label'].toString()
                 : '지역 미정')
             : locationLabel;
-    final uploadedImage =
-        imageBytes == null || imageBytes.isEmpty
-            ? null
-            : await _uploadFeedImage(userId, imageBytes, imageFileName);
+    final uploadedImages = <({String path, String url})>[];
     String? postId;
     try {
+      for (final image in images.where((image) => image.bytes.isNotEmpty)) {
+        uploadedImages.add(
+          await _uploadFeedImage(userId, image.bytes, image.fileName),
+        );
+      }
       final post =
           await _client
               .from('feed_posts')
@@ -182,17 +190,30 @@ class FeedApi {
               .single();
       postId = post['id']?.toString();
 
-      if (uploadedImage != null) {
-        await _client.from('feed_post_assets').insert(<String, Object?>{
-          'post_id': postId,
-          'kind': 'image',
-          'url': uploadedImage.url,
-          'sort_order': 0,
-        });
+      if (uploadedImages.isNotEmpty) {
+        await _client.from('feed_post_assets').insert(
+          uploadedImages.indexed
+              .map(
+                (entry) => <String, Object?>{
+                  'post_id': postId,
+                  'kind': 'image',
+                  'url': entry.$2.url,
+                  'sort_order': entry.$1,
+                },
+              )
+              .toList(),
+        );
       }
     } catch (_) {
-      if (uploadedImage != null) {
+      for (final uploadedImage in uploadedImages) {
         await _tryRemoveUploadedFeedImage(uploadedImage.path);
+      }
+      if (postId != null) {
+        try {
+          await _client.from('feed_posts').delete().eq('id', postId);
+        } catch (_) {
+          // Preserve the original write error.
+        }
       }
       rethrow;
     }

@@ -6,24 +6,32 @@ import 'package:web/web.dart' as web;
 
 import 'picked_file.dart';
 
-Future<PickedFile?> pickPlatformFileImpl({required String accept}) async {
+Future<List<PickedFile>> pickPlatformFilesImpl({
+  required String accept,
+  required bool allowMultiple,
+}) async {
   final input =
       web.HTMLInputElement()
         ..type = 'file'
-        ..accept = accept;
+        ..accept = accept
+        ..multiple = allowMultiple;
   input.click();
   await Future.any(<Future<void>>[
     input.onChange.first.then((_) {}),
     Future<void>.delayed(const Duration(minutes: 2)),
   ]);
-  final file = input.files?.item(0);
-  if (file == null) return null;
+  final fileList = input.files;
+  if (fileList == null) return const <PickedFile>[];
 
-  final blob =
-      accept.startsWith('image/') ? await _resizeLargeImage(file) : file;
-  final bytes = await _readBlob(blob);
-
-  return PickedFile(name: file.name, bytes: bytes);
+  final picked = <PickedFile>[];
+  for (var index = 0; index < fileList.length; index += 1) {
+    final file = fileList.item(index);
+    if (file == null) continue;
+    final blob =
+        accept.startsWith('image/') ? await _resizeLargeImage(file) : file;
+    picked.add(PickedFile(name: file.name, bytes: await _readBlob(blob)));
+  }
+  return picked;
 }
 
 Future<web.Blob> _resizeLargeImage(web.File file) async {

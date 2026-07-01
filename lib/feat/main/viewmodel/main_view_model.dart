@@ -875,16 +875,14 @@ class DrameStore extends ChangeNotifier {
     required String caption,
     required String categoryLabel,
     required String locationLabel,
-    List<int>? imageBytes,
-    String? imageFileName,
+    List<FeedImageUpload> images = const <FeedImageUpload>[],
   }) async {
     try {
       final post = await _feedApi.createPost(
         caption: caption,
         categoryLabel: categoryLabel,
         locationLabel: locationLabel,
-        imageBytes: imageBytes,
-        imageFileName: imageFileName,
+        images: images,
       );
       myFeedPosts = <OperatorFeedPost>[
         _operatorPostFromFeed(post),

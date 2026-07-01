@@ -771,11 +771,12 @@ class _OperatorFeedSection extends StatefulWidget {
 }
 
 class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
+  static const int _maxImageCount = 10;
+
   final TextEditingController _captionController = TextEditingController();
   bool _isExpanded = false;
   bool _isSubmitting = false;
-  List<int>? _pendingImageBytes;
-  String? _pendingImageName;
+  final List<PickedFile> _pendingImages = <PickedFile>[];
   String? _selectedCategory;
   String? _selectedArea;
 
@@ -785,21 +786,32 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImages() async {
     if (_isSubmitting) return;
-    final file = await pickPlatformFile(accept: 'image/*');
-    if (file == null) return;
+    final files = await pickPlatformFiles(
+      accept: 'image/*',
+      allowMultiple: true,
+    );
+    if (files.isEmpty) return;
     if (!mounted) return;
+    final remaining = _maxImageCount - _pendingImages.length;
     setState(() {
-      _pendingImageBytes = file.bytes;
-      _pendingImageName = file.name;
+      _pendingImages.addAll(files.take(remaining));
     });
+    if (files.length > remaining) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('사진은 한 게시물에 최대 10장까지 올릴 수 있습니다.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _submit() async {
     if (_isSubmitting) return;
     final caption = _captionController.text.trim();
-    if (caption.isEmpty && _pendingImageBytes == null) return;
+    if (caption.isEmpty && _pendingImages.isEmpty) return;
 
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _isSubmitting = true);
@@ -816,8 +828,15 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     try {
       await widget.store.addFeedPost(
         caption: caption,
-        imageBytes: _pendingImageBytes,
-        imageFileName: _pendingImageName,
+        images:
+            _pendingImages
+                .map(
+                  (image) => FeedImageUpload(
+                    bytes: image.bytes,
+                    fileName: image.name,
+                  ),
+                )
+                .toList(),
         categoryLabel:
             _selectedCategory ??
             widget.store.selectedPilot?.categories.firstOrNull ??
@@ -851,8 +870,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     setState(() {
       _isSubmitting = false;
       _isExpanded = false;
-      _pendingImageBytes = null;
-      _pendingImageName = null;
+      _pendingImages.clear();
       _selectedCategory = null;
       _selectedArea = null;
     });
@@ -1033,43 +1051,35 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: _isSubmitting ? null : _pickImage,
-                    child: Container(
-                      height: 96,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: _line),
+                  if (_pendingImages.isNotEmpty) ...<Widget>[
+                    SizedBox(
+                      height: 104,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount:
+                            _pendingImages.length < _maxImageCount
+                                ? _pendingImages.length + 1
+                                : _pendingImages.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          if (index == _pendingImages.length) {
+                            return _AddFeedImagesButton(
+                              onTap: _isSubmitting ? null : _pickImages,
+                            );
+                          }
+                          return _PendingFeedImage(
+                            image: _pendingImages[index],
+                            index: index,
+                            onRemove:
+                                _isSubmitting
+                                    ? null
+                                    : () => setState(
+                                      () => _pendingImages.removeAt(index),
+                                    ),
+                          );
+                        },
                       ),
-                      child:
-                          _pendingImageBytes != null
-                              ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.memory(
-                                  Uint8List.fromList(_pendingImageBytes!),
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                ),
-                              )
-                              : Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Icon(
-                                    Icons.add_photo_alternate_outlined,
-                                    color: DC.muted,
-                                    size: 26,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    '사진 추가 (선택)',
-                                    style: AppText.metricLabel,
-                                  ),
-                                ],
-                              ),
                     ),
-                  ),
-                  if (_pendingImageName != null) ...<Widget>[
                     const SizedBox(height: 8),
                     Row(
                       children: <Widget>[
@@ -1077,28 +1087,18 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            _pendingImageName!,
+                            '${_pendingImages.length}장 선택됨 · 첫 번째 사진이 대표로 표시됩니다.',
                             style: AppText.metricLabel,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        GestureDetector(
-                          onTap:
-                              _isSubmitting
-                                  ? null
-                                  : () => setState(() {
-                                    _pendingImageBytes = null;
-                                    _pendingImageName = null;
-                                  }),
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 14,
-                            color: DC.muted,
-                          ),
-                        ),
                       ],
                     ),
-                  ],
+                  ] else
+                    _AddFeedImagesButton(
+                      onTap: _isSubmitting ? null : _pickImages,
+                      wide: true,
+                    ),
                   const SizedBox(height: 14),
                   if (_isSubmitting) ...<Widget>[
                     Container(
@@ -1200,6 +1200,109 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                 );
               },
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddFeedImagesButton extends StatelessWidget {
+  const _AddFeedImagesButton({required this.onTap, this.wide = false});
+
+  final VoidCallback? onTap;
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: wide ? double.infinity : 104,
+        height: wide ? 96 : 104,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _line),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              Icons.add_photo_alternate_outlined,
+              color: onTap == null ? DC.muted.withValues(alpha: 0.5) : DC.muted,
+              size: 26,
+            ),
+            const SizedBox(height: 6),
+            Text('사진 여러 장 추가', style: AppText.metricLabel),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PendingFeedImage extends StatelessWidget {
+  const _PendingFeedImage({
+    required this.image,
+    required this.index,
+    required this.onRemove,
+  });
+
+  final PickedFile image;
+  final int index;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: 104,
+      child: Stack(
+        children: <Widget>[
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(
+                Uint8List.fromList(image.bytes),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Positioned(
+            left: 6,
+            bottom: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.68),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                index == 0 ? '대표' : '${index + 1}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 4,
+            top: 4,
+            child: IconButton.filled(
+              onPressed: onRemove,
+              tooltip: '사진 삭제',
+              icon: const Icon(Icons.close_rounded, size: 14),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.black.withValues(alpha: 0.68),
+                foregroundColor: Colors.white,
+                minimumSize: const Size.square(26),
+                maximumSize: const Size.square(26),
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ),
         ],
       ),
     );
