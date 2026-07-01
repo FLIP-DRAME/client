@@ -136,7 +136,9 @@ class DrameStore extends ChangeNotifier {
       if (initial || selectedCategory == null) {
         allPilots = nextPilots;
       }
-      selectedPilot = myOperator ?? (pilots.isEmpty ? null : pilots.first);
+      selectedPilot =
+          myOperator ??
+          (isPilotMode || pilots.isEmpty ? null : pilots.first);
       lastError = null;
     } catch (error) {
       lastError = error.toString();
@@ -207,6 +209,9 @@ class DrameStore extends ChangeNotifier {
   void setPilotMode(bool value) {
     if (isPilotMode == value) return;
     isPilotMode = value;
+    if (value && !operatorRegistrationCompleted) {
+      selectedPilot = null;
+    }
     if (!value) {
       isPilotOnboarding = false;
     }

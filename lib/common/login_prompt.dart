@@ -76,3 +76,59 @@ Future<void> showLoginRequiredDialog(
     },
   );
 }
+
+Future<void> showOperatorApprovalRequiredDialog(
+  BuildContext context, {
+  required bool isRegistered,
+}) async {
+  await showDialog<void>(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.4),
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+        title: Text(
+          isRegistered ? '운용자 승인이 필요합니다' : '운용자 등록이 필요합니다',
+          style: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0A0B0D),
+          ),
+        ),
+        content: Text(
+          isRegistered
+              ? '승인된 운용자만 포트폴리오 관리 기능을 이용할 수 있습니다.'
+              : '이 기능을 이용하려면 먼저 운용자 등록을 완료해 주세요.',
+          style: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 14,
+            color: Color(0xFF5B616E),
+            height: 1.5,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('확인'),
+          ),
+          if (!isRegistered)
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                dialogContext.push('/pilot/register');
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: DC.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('운용자 등록하기'),
+            ),
+        ],
+      );
+    },
+  );
+}

@@ -135,6 +135,27 @@ void _openPortfolio(BuildContext context, DronePilot pilot) {
   context.push('/portfolio/${pilot.id}', extra: pilot);
 }
 
+Future<void> _openOperatorPortfolio(
+  BuildContext context,
+  DrameStore store,
+) async {
+  if (!store.isLoggedIn) {
+    await showLoginRequiredDialog(
+      context,
+      message: '운용자 포트폴리오를 관리하려면 로그인이 필요합니다.',
+    );
+    return;
+  }
+  if (!store.operatorVerified) {
+    await showOperatorApprovalRequiredDialog(
+      context,
+      isRegistered: store.operatorRegistrationCompleted,
+    );
+    return;
+  }
+  if (context.mounted) context.go('/operator/portfolio');
+}
+
 void _openPilotRequestReviewPage(
   BuildContext context, {
   PilotWorkRequest? initialRequest,
@@ -352,7 +373,7 @@ class _OperatorStandaloneShell extends StatelessWidget {
                 case 'feed':
                   context.go('/operator/feed');
                 case 'portfolio':
-                  context.go('/operator/portfolio');
+                  _openOperatorPortfolio(context, store);
                 case 'profile':
                   context.go('/operator/mypage');
                 default:
@@ -484,7 +505,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
     } else if (id == 'feed') {
       ctx.go('/operator/feed');
     } else if (id == 'portfolio') {
-      ctx.go('/operator/portfolio');
+      _openOperatorPortfolio(ctx, store);
     } else if (id == 'profile') {
       ctx.go('/operator/mypage');
     } else {

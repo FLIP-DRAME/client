@@ -2725,7 +2725,7 @@ class _OperatorMyPageMobileTab extends StatelessWidget {
               items: <_MobileMenuItem>[
                 _MobileMenuItem(
                   label: '포트폴리오 편집',
-                  onTap: () => context.go('/operator/portfolio'),
+                  onTap: () => _openOperatorPortfolio(context, store),
                 ),
                 _MobileMenuItem(
                   label: '피드 관리',
