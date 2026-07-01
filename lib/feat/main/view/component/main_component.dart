@@ -851,6 +851,47 @@ class _OperatorPortfolioBuilderSectionState
     });
   }
 
+  bool _isServiceRegionActive(String region) {
+    return _selectedAreas.contains(region) ||
+        _selectedAreas.any((area) => area.startsWith('$region '));
+  }
+
+  Set<String> _selectedDistrictsFor(String region) {
+    if (_selectedAreas.contains(region)) return <String>{'전체'};
+    return _selectedAreas
+        .where((area) => area.startsWith('$region '))
+        .map((area) => area.substring(region.length + 1))
+        .toSet();
+  }
+
+  void _toggleServiceRegion(String region) {
+    setState(() {
+      _selectedAreas.remove('전체');
+      if (_isServiceRegionActive(region)) {
+        _selectedAreas.remove(region);
+        _selectedAreas.removeWhere((area) => area.startsWith('$region '));
+      } else {
+        _selectedAreas.add(region);
+      }
+    });
+  }
+
+  void _toggleServiceDistrict(String region, String district) {
+    setState(() {
+      _selectedAreas.remove('전체');
+      if (district == '전체') {
+        _selectedAreas.removeWhere((area) => area.startsWith('$region '));
+        _selectedAreas.add(region);
+        return;
+      }
+      _selectedAreas.remove(region);
+      final key = '$region $district';
+      if (!_selectedAreas.remove(key)) {
+        _selectedAreas.add(key);
+      }
+    });
+  }
+
   Widget _buildEditableProfilePhoto(DronePilot pilot, double size) {
     final imageUrl = pilot.avatarUrl;
     return Semantics(
@@ -1357,30 +1398,25 @@ class _OperatorPortfolioBuilderSectionState
           runSpacing: 8,
           children:
               widget.store.serviceAreas.map((area) {
-                final selected = _selectedAreas.contains(area);
+                final selected =
+                    area == '전체'
+                        ? _selectedAreas.contains('전체')
+                        : _isServiceRegionActive(area);
                 return FilterChip(
                   label: Text(area),
                   selected: selected,
                   showCheckmark: false,
                   onSelected:
-                      (_) => setState(() {
+                      (_) {
                         if (area == '전체') {
-                          if (selected) {
-                            _selectedAreas.clear();
-                          } else {
-                            _selectedAreas = Set<String>.from(
-                              widget.store.serviceAreas,
-                            );
-                          }
+                          setState(() {
+                            _selectedAreas =
+                                selected ? <String>{} : <String>{'전체'};
+                          });
                         } else {
-                          if (selected) {
-                            _selectedAreas.remove(area);
-                            _selectedAreas.remove('전체');
-                          } else {
-                            _selectedAreas.add(area);
-                          }
+                          _toggleServiceRegion(area);
                         }
-                      }),
+                      },
                   selectedColor: _navy,
                   backgroundColor: Colors.white,
                   side: BorderSide(
@@ -1401,6 +1437,49 @@ class _OperatorPortfolioBuilderSectionState
                 );
               }).toList(),
         ),
+        for (final region in widget.store.serviceAreas.where(
+          (area) =>
+              area != '전체' &&
+              _isServiceRegionActive(area) &&
+              defaultServiceDistricts.containsKey(area),
+        )) ...<Widget>[
+          const SizedBox(height: 16),
+          Text('$region 세부 지역', style: AppText.smallStrong),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children:
+                <String>[
+                  '전체',
+                  ...defaultServiceDistricts[region]!,
+                ].map((district) {
+                  final selected =
+                      _selectedDistrictsFor(region).contains(district);
+                  return FilterChip(
+                    label: Text(district),
+                    selected: selected,
+                    showCheckmark: false,
+                    onSelected:
+                        (_) => _toggleServiceDistrict(region, district),
+                    selectedColor: const Color(0xFFEAF2FF),
+                    backgroundColor: Colors.white,
+                    side: BorderSide(
+                      color: selected ? _primary : _line,
+                      width: selected ? 1.4 : 1,
+                    ),
+                    labelStyle: AppText.chip.copyWith(
+                      color: selected ? _primary : _ink,
+                      fontWeight:
+                          selected ? FontWeight.w700 : FontWeight.w400,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  );
+                }).toList(),
+          ),
+        ],
         const SizedBox(height: 20),
         _EditField(
           label: '서비스 상세설명',
