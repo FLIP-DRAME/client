@@ -390,23 +390,23 @@ class _MobileProfileCard extends StatelessWidget {
             children: <Widget>[
               Stack(
                 children: <Widget>[
-                  Container(
+                  SizedBox(
                     width: 72,
                     height: 72,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFE8EEFF),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: _primary,
-                        ),
-                      ),
+                    child: ClipOval(
+                      child:
+                          pilot.avatarUrl?.trim().isNotEmpty == true
+                              ? Image.network(
+                                pilot.avatarUrl!,
+                                width: 72,
+                                height: 72,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (_, __, ___) => _MobilePilotAvatarFallback(
+                                      initial: initial,
+                                    ),
+                              )
+                              : _MobilePilotAvatarFallback(initial: initial),
                     ),
                   ),
                   Positioned(
@@ -456,28 +456,9 @@ class _MobileProfileCard extends StatelessWidget {
                         color: _mutedGray,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      '보통 1시간 이내 응답',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 12,
-                        color: _mutedGray,
-                      ),
-                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: const <Widget>[
-              Expanded(child: _PilotStatBox(label: '완료 작업', value: '24건')),
-              SizedBox(width: 8),
-              Expanded(child: _PilotStatBox(label: '응답률', value: '98%')),
-              SizedBox(width: 8),
-              Expanded(child: _PilotStatBox(label: '활동 기간', value: '2년')),
             ],
           ),
           const SizedBox(height: 20),
@@ -760,42 +741,25 @@ class _MobilePortfolioBottomBar extends StatelessWidget {
   }
 }
 
-class _PilotStatBox extends StatelessWidget {
-  const _PilotStatBox({required this.label, required this.value});
+class _MobilePilotAvatarFallback extends StatelessWidget {
+  const _MobilePilotAvatarFallback({required this.initial});
 
-  final String label;
-  final String value;
+  final String initial;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F8FA),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: <Widget>[
-          Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-              letterSpacing: -0.3,
-            ),
+    return ColoredBox(
+      color: const Color(0xFFE8EEFF),
+      child: Center(
+        child: Text(
+          initial,
+          style: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            color: _primary,
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 11,
-              color: _mutedGray,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
