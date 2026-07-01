@@ -116,6 +116,17 @@ class DrameStore extends ChangeNotifier {
       chatUnreadCount = isLoggedIn ? await _chatApi.fetchUnreadCount() : 0;
       myFeedPosts =
           (await _feedApi.fetchMyPosts()).map(_operatorPostFromFeed).toList();
+      ({String name, String nickname})? accountProfile;
+      try {
+        accountProfile =
+            isLoggedIn ? await _api.fetchMyAccountProfile() : null;
+      } catch (_) {
+        accountProfile = null;
+      }
+      if (accountProfile != null) {
+        accountName = accountProfile.name;
+        accountNickname = accountProfile.nickname;
+      }
       final myOperator =
           isLoggedIn ? await _api.fetchMyOperatorProfile() : null;
       if (myOperator != null) {
@@ -436,15 +447,24 @@ class DrameStore extends ChangeNotifier {
     final metadata = user.userMetadata ?? const <String, dynamic>{};
     final role = metadata['role'] == 'operator' ? '운용자' : '이용자';
     DronePilot? myOperator;
+    ({String name, String nickname})? accountProfile;
     try {
       myOperator = await _api.fetchMyOperatorProfile();
     } catch (_) {
       myOperator = null;
     }
+    try {
+      accountProfile = await _api.fetchMyAccountProfile();
+    } catch (_) {
+      accountProfile = null;
+    }
     accountRole = myOperator == null ? role : '운용자';
     accountEmail = user.email ?? '';
-    accountName = (metadata['name'] ?? '').toString();
-    accountNickname = (metadata['nickname'] ?? '').toString();
+    accountName =
+        accountProfile?.name ?? (metadata['name'] ?? '').toString().trim();
+    accountNickname =
+        accountProfile?.nickname ??
+        (metadata['nickname'] ?? '').toString().trim();
     isLoggedIn = true;
     isPilotMode = accountRole == '운용자';
     isPilotOnboarding = false;

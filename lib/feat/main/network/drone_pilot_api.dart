@@ -17,6 +17,7 @@ abstract class DronePilotApi {
   Future<List<String>> fetchRegions();
   Future<DronePilot?> fetchPilotById(String id);
   Future<DronePilot?> fetchMyOperatorProfile();
+  Future<({String name, String nickname})?> fetchMyAccountProfile();
   Future<List<PilotWorkRequestData>> fetchOperatorRequests();
   Future<List<UserQuoteSummary>> fetchMyQuotes();
   Future<List<AppNotification>> fetchNotifications();
@@ -327,7 +328,36 @@ class SupabaseDronePilotApi implements DronePilotApi {
         .eq('user_id', userId)
         .limit(1);
     if (rows.isEmpty) return null;
-    return _pilotFromRow(Map<String, dynamic>.from(rows.first as Map));
+    final row = Map<String, dynamic>.from(rows.first as Map);
+    try {
+      final account = await fetchMyAccountProfile();
+      final currentDisplayName =
+          account?.nickname.isNotEmpty == true
+              ? account!.nickname
+              : account?.name ?? '';
+      if (currentDisplayName.isNotEmpty) {
+        row['display_name'] = currentDisplayName;
+      }
+    } catch (_) {
+      // The operator profile remains usable if the account row is unavailable.
+    }
+    return _pilotFromRow(row);
+  }
+
+  @override
+  Future<({String name, String nickname})?> fetchMyAccountProfile() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return null;
+    final row = await _client
+        .from('profiles')
+        .select('name, nickname')
+        .eq('id', userId)
+        .maybeSingle();
+    if (row == null) return null;
+    return (
+      name: (row['name'] ?? '').toString().trim(),
+      nickname: (row['nickname'] ?? '').toString().trim(),
+    );
   }
 
   @override
