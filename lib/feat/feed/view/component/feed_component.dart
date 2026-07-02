@@ -107,6 +107,112 @@ class _FeedPost {
   final bool likedByMe;
 }
 
+class _FeedMapPoint {
+  const _FeedMapPoint({required this.post, required this.position});
+
+  final _FeedPost post;
+  final LatLng position;
+}
+
+const List<_FeedMapPoint> _mockFeedMapPoints = <_FeedMapPoint>[
+  _FeedMapPoint(
+    position: LatLng(37.5259, 126.9285),
+    post: _FeedPost(
+      id: 'mock-han-river-night',
+      location: '서울 한강',
+      category: '항공촬영',
+      images: <String>[
+        'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+      ],
+      authorName: '스카이필름',
+      authorRole: '드론 촬영팀',
+      date: '방금 전',
+      likes: 241,
+      caption: '한강 야간 비행 동선을 따라 촬영한 도심 항공 컷입니다.',
+    ),
+  ),
+  _FeedMapPoint(
+    position: LatLng(35.1587, 129.1604),
+    post: _FeedPost(
+      id: 'mock-busan-coast',
+      location: '부산 해운대',
+      category: '항공촬영',
+      images: <String>[
+        'https://images.unsplash.com/photo-1599239660425-cbe6fa8b47c8?auto=format&fit=crop&w=1200&q=80',
+      ],
+      authorName: '오션드론',
+      authorRole: '해안 촬영',
+      date: '오늘',
+      likes: 198,
+      caption: '해운대 해안선을 따라 저고도 패닝으로 담은 포트폴리오 샘플입니다.',
+    ),
+  ),
+  _FeedMapPoint(
+    position: LatLng(33.4592, 126.9425),
+    post: _FeedPost(
+      id: 'mock-jeju-seongsan',
+      location: '제주 성산',
+      category: '관광홍보',
+      images: <String>[
+        'https://images.unsplash.com/photo-1540202404-a2f29016b523?auto=format&fit=crop&w=1200&q=80',
+      ],
+      authorName: '제주에어뷰',
+      authorRole: '관광 콘텐츠',
+      date: '어제',
+      likes: 313,
+      caption: '성산 일출봉 주변 풍광을 홍보 영상용 구도로 정리했습니다.',
+    ),
+  ),
+  _FeedMapPoint(
+    position: LatLng(37.7519, 128.8761),
+    post: _FeedPost(
+      id: 'mock-gangneung-surf',
+      location: '강원 강릉',
+      category: '항공촬영',
+      images: <String>[
+        'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+      ],
+      authorName: '동해라인',
+      authorRole: '해변 촬영',
+      date: '2일 전',
+      likes: 156,
+      caption: '강릉 해변의 수평선과 파도 라인을 드론 탑뷰로 잡았습니다.',
+    ),
+  ),
+  _FeedMapPoint(
+    position: LatLng(36.3504, 127.3845),
+    post: _FeedPost(
+      id: 'mock-daejeon-inspection',
+      location: '대전 유성',
+      category: '시설점검',
+      images: <String>[
+        'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1200&q=80',
+      ],
+      authorName: '테크스캔',
+      authorRole: '산업 점검',
+      date: '3일 전',
+      likes: 87,
+      caption: '시설 점검 요청 피드와 연결될 수 있도록 점검형 메타데이터로 구성했습니다.',
+    ),
+  ),
+  _FeedMapPoint(
+    position: LatLng(35.8242, 127.148),
+    post: _FeedPost(
+      id: 'mock-jeonju-hanok',
+      location: '전북 전주',
+      category: '관광홍보',
+      images: <String>[
+        'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80',
+      ],
+      authorName: '로컬뷰',
+      authorRole: '지역 홍보',
+      date: '5일 전',
+      likes: 122,
+      caption: '한옥마을 주변 동선과 랜드마크를 중심으로 배치한 mock 피드입니다.',
+    ),
+  ),
+];
+
 class DroneFeedSection extends ConsumerStatefulWidget {
   const DroneFeedSection({
     super.key,
@@ -126,6 +232,8 @@ class DroneFeedSection extends ConsumerStatefulWidget {
 class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
   int _visibleCount = 9;
   List<_FeedPost>? _remoteFeed;
+  bool _showPhotoFeed = false;
+  String? _selectedMapPostId = _mockFeedMapPoints.first.post.id;
 
   @override
   void initState() {
@@ -191,7 +299,8 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
       );
     }
 
-    var filtered = _remoteFeed!;
+    final sourceFeed = _mockFeedMapPoints.map((point) => point.post).toList();
+    var filtered = sourceFeed;
     if (widget.region != '전체') {
       filtered =
           filtered.where((p) => p.location.contains(widget.region)).toList();
@@ -209,6 +318,24 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
         child: Text('아직 공개된 피드가 없습니다.', style: FeedText.body),
       );
     }
+    final mapPoints = _mapPointsFor(actualFeed);
+    if (!_showPhotoFeed) {
+      return _FeedPageShell(
+        top: 10,
+        bottom: 46,
+        child: _FeedMapView(
+          points: mapPoints,
+          selectedPostId: _selectedMapPostId,
+          onSelect:
+              (point) => setState(() {
+                _selectedMapPostId = point.post.id;
+              }),
+          onOpenPost: (post) => _openPostDialog(context, post),
+          onShowPhotos: () => setState(() => _showPhotoFeed = true),
+        ),
+      );
+    }
+
     final visibleItems = actualFeed.take(_visibleCount).toList();
     final hasMore = _visibleCount < actualFeed.length;
 
@@ -218,6 +345,24 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() => _showPhotoFeed = false),
+              icon: const Icon(Icons.map_rounded),
+              label: const Text('지도 보기'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _navy,
+                side: const BorderSide(color: _line),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
+                textStyle: FeedText.button,
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
@@ -276,6 +421,330 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
             loadPilot:
                 (id) => ref.read(dronePilotApiProvider).fetchPilotById(id),
           ),
+    );
+  }
+
+  List<_FeedMapPoint> _mapPointsFor(List<_FeedPost> feed) {
+    final mockById = <String, _FeedMapPoint>{
+      for (final point in _mockFeedMapPoints) point.post.id: point,
+    };
+    final coordinates = <LatLng>[
+      for (final point in _mockFeedMapPoints) point.position,
+    ];
+    return <_FeedMapPoint>[
+      for (var index = 0; index < feed.length; index += 1)
+        _FeedMapPoint(
+          post: feed[index],
+          position:
+              mockById[feed[index].id]?.position ??
+              coordinates[index % coordinates.length],
+        ),
+    ];
+  }
+}
+
+class _FeedMapView extends StatelessWidget {
+  const _FeedMapView({
+    required this.points,
+    required this.selectedPostId,
+    required this.onSelect,
+    required this.onOpenPost,
+    required this.onShowPhotos,
+  });
+
+  final List<_FeedMapPoint> points;
+  final String? selectedPostId;
+  final ValueChanged<_FeedMapPoint> onSelect;
+  final ValueChanged<_FeedPost> onOpenPost;
+  final VoidCallback onShowPhotos;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = points.firstWhere(
+      (point) => point.post.id == selectedPostId,
+      orElse: () => points.first,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('드론 지도', style: FeedText.sectionTitle),
+                  const SizedBox(height: 6),
+                  Text(
+                    '한국 지도에서 촬영 위치를 고르고 바로 사진을 확인하세요.',
+                    style: FeedText.body.copyWith(color: _muted),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            OutlinedButton.icon(
+              onPressed: onShowPhotos,
+              icon: const Icon(Icons.photo_library_rounded),
+              label: const Text('사진으로 보기'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _navy,
+                side: const BorderSide(color: _line),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
+                textStyle: FeedText.button,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 720;
+            return SizedBox(
+              height: compact ? 580 : 640,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Stack(
+                  children: <Widget>[
+                    FlutterMap(
+                      options: const MapOptions(
+                        initialCenter: LatLng(36.35, 127.85),
+                        initialZoom: 6.5,
+                        minZoom: 5,
+                        maxZoom: 17,
+                      ),
+                      children: <Widget>[
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.modu.drame',
+                        ),
+                        MarkerLayer(
+                          markers:
+                              points
+                                  .map(
+                                    (point) => Marker(
+                                      point: point.position,
+                                      width: 58,
+                                      height: 58,
+                                      child: _FeedMapMarker(
+                                        selected:
+                                            point.post.id == selected.post.id,
+                                        onTap: () => onSelect(point),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                        ),
+                      ],
+                    ),
+                    Positioned(
+                      left: 16,
+                      top: 16,
+                      child: _FeedMapLegend(count: points.length),
+                    ),
+                    Positioned(
+                      left: compact ? 12 : null,
+                      right: 12,
+                      bottom: 12,
+                      child: _FeedMapPreview(
+                        point: selected,
+                        compact: compact,
+                        onOpen: () => onOpenPost(selected.post),
+                      ),
+                    ),
+                    Positioned(
+                      right: 12,
+                      top: 12,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 5,
+                          ),
+                          child: Text(
+                            '© OpenStreetMap contributors',
+                            style: FeedText.authorRole.copyWith(fontSize: 11),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _FeedMapMarker extends StatelessWidget {
+  const _FeedMapMarker({required this.selected, required this.onTap});
+
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 160),
+        scale: selected ? 1.12 : 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected ? _navy : Colors.white,
+            border: Border.all(color: _navy, width: 2),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x330A0B0D),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.flight_takeoff_rounded,
+            color: selected ? Colors.white : _navy,
+            size: 25,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeedMapLegend extends StatelessWidget {
+  const _FeedMapLegend({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: _line),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.radar_rounded, color: _navy, size: 18),
+            const SizedBox(width: 8),
+            Text('$count개 촬영 지점', style: FeedText.metaPill),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FeedMapPreview extends StatelessWidget {
+  const _FeedMapPreview({
+    required this.point,
+    required this.compact,
+    required this.onOpen,
+  });
+
+  final _FeedMapPoint point;
+  final bool compact;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final post = point.post;
+    final image = post.images.isEmpty ? null : post.images.first;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: compact ? double.infinity : 390),
+      child: Material(
+        color: Colors.white,
+        elevation: 12,
+        shadowColor: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onOpen,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: SizedBox(
+                    width: compact ? 104 : 128,
+                    height: compact ? 88 : 104,
+                    child:
+                        image == null
+                            ? const _FeedEmptyCover()
+                            : _FeedNetworkCover(imageUrl: image),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        post.location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: FeedText.authorName,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        post.category,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: FeedText.authorRole,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        post.caption,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: FeedText.body.copyWith(fontSize: 13),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: <Widget>[
+                          const Icon(
+                            Icons.favorite_rounded,
+                            color: _navy,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 5),
+                          Text('${post.likes}', style: FeedText.metaPill),
+                          const Spacer(),
+                          const Icon(
+                            Icons.open_in_full_rounded,
+                            color: _muted,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
