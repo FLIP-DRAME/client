@@ -91,6 +91,8 @@ class _FeedPost {
     this.operatorId,
     this.authorAvatarUrl,
     this.likedByMe = false,
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -105,111 +107,113 @@ class _FeedPost {
   final String? operatorId;
   final String? authorAvatarUrl;
   final bool likedByMe;
+
+  /// Shoot location picked by the operator at upload time. Null for posts
+  /// that predate the map feature -- they show in the photo feed only.
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasLocation => latitude != null && longitude != null;
 }
 
 class _FeedMapPoint {
-  const _FeedMapPoint({required this.post, required this.position});
+  const _FeedMapPoint({required this.post});
 
   final _FeedPost post;
-  final LatLng position;
+
+  LatLng get position => LatLng(post.latitude!, post.longitude!);
 }
 
-const List<_FeedMapPoint> _mockFeedMapPoints = <_FeedMapPoint>[
-  _FeedMapPoint(
-    position: LatLng(37.5259, 126.9285),
-    post: _FeedPost(
-      id: 'mock-han-river-night',
-      location: '서울 한강',
-      category: '항공촬영',
-      images: <String>[
-        'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
-      ],
-      authorName: '스카이필름',
-      authorRole: '드론 촬영팀',
-      date: '방금 전',
-      likes: 241,
-      caption: '한강 야간 비행 동선을 따라 촬영한 도심 항공 컷입니다.',
-    ),
+const List<_FeedPost> _mockFeedPosts = <_FeedPost>[
+  _FeedPost(
+    id: 'mock-han-river-night',
+    location: '서울 한강',
+    category: '항공촬영',
+    images: <String>[
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    ],
+    authorName: '스카이필름',
+    authorRole: '드론 촬영팀',
+    date: '방금 전',
+    likes: 241,
+    caption: '한강 야간 비행 동선을 따라 촬영한 도심 항공 컷입니다.',
+    latitude: 37.5259,
+    longitude: 126.9285,
   ),
-  _FeedMapPoint(
-    position: LatLng(35.1587, 129.1604),
-    post: _FeedPost(
-      id: 'mock-busan-coast',
-      location: '부산 해운대',
-      category: '항공촬영',
-      images: <String>[
-        'https://images.unsplash.com/photo-1599239660425-cbe6fa8b47c8?auto=format&fit=crop&w=1200&q=80',
-      ],
-      authorName: '오션드론',
-      authorRole: '해안 촬영',
-      date: '오늘',
-      likes: 198,
-      caption: '해운대 해안선을 따라 저고도 패닝으로 담은 포트폴리오 샘플입니다.',
-    ),
+  _FeedPost(
+    id: 'mock-busan-coast',
+    location: '부산 해운대',
+    category: '항공촬영',
+    images: <String>[
+      'https://images.unsplash.com/photo-1599239660425-cbe6fa8b47c8?auto=format&fit=crop&w=1200&q=80',
+    ],
+    authorName: '오션드론',
+    authorRole: '해안 촬영',
+    date: '오늘',
+    likes: 198,
+    caption: '해운대 해안선을 따라 저고도 패닝으로 담은 포트폴리오 샘플입니다.',
+    latitude: 35.1587,
+    longitude: 129.1604,
   ),
-  _FeedMapPoint(
-    position: LatLng(33.4592, 126.9425),
-    post: _FeedPost(
-      id: 'mock-jeju-seongsan',
-      location: '제주 성산',
-      category: '관광홍보',
-      images: <String>[
-        'https://images.unsplash.com/photo-1540202404-a2f29016b523?auto=format&fit=crop&w=1200&q=80',
-      ],
-      authorName: '제주에어뷰',
-      authorRole: '관광 콘텐츠',
-      date: '어제',
-      likes: 313,
-      caption: '성산 일출봉 주변 풍광을 홍보 영상용 구도로 정리했습니다.',
-    ),
+  _FeedPost(
+    id: 'mock-jeju-seongsan',
+    location: '제주 성산',
+    category: '관광홍보',
+    images: <String>[
+      'https://images.unsplash.com/photo-1540202404-a2f29016b523?auto=format&fit=crop&w=1200&q=80',
+    ],
+    authorName: '제주에어뷰',
+    authorRole: '관광 콘텐츠',
+    date: '어제',
+    likes: 313,
+    caption: '성산 일출봉 주변 풍광을 홍보 영상용 구도로 정리했습니다.',
+    latitude: 33.4592,
+    longitude: 126.9425,
   ),
-  _FeedMapPoint(
-    position: LatLng(37.7519, 128.8761),
-    post: _FeedPost(
-      id: 'mock-gangneung-surf',
-      location: '강원 강릉',
-      category: '항공촬영',
-      images: <String>[
-        'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
-      ],
-      authorName: '동해라인',
-      authorRole: '해변 촬영',
-      date: '2일 전',
-      likes: 156,
-      caption: '강릉 해변의 수평선과 파도 라인을 드론 탑뷰로 잡았습니다.',
-    ),
+  _FeedPost(
+    id: 'mock-gangneung-surf',
+    location: '강원 강릉',
+    category: '항공촬영',
+    images: <String>[
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+    ],
+    authorName: '동해라인',
+    authorRole: '해변 촬영',
+    date: '2일 전',
+    likes: 156,
+    caption: '강릉 해변의 수평선과 파도 라인을 드론 탑뷰로 잡았습니다.',
+    latitude: 37.7519,
+    longitude: 128.8761,
   ),
-  _FeedMapPoint(
-    position: LatLng(36.3504, 127.3845),
-    post: _FeedPost(
-      id: 'mock-daejeon-inspection',
-      location: '대전 유성',
-      category: '시설점검',
-      images: <String>[
-        'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1200&q=80',
-      ],
-      authorName: '테크스캔',
-      authorRole: '산업 점검',
-      date: '3일 전',
-      likes: 87,
-      caption: '시설 점검 요청 피드와 연결될 수 있도록 점검형 메타데이터로 구성했습니다.',
-    ),
+  _FeedPost(
+    id: 'mock-daejeon-inspection',
+    location: '대전 유성',
+    category: '시설점검',
+    images: <String>[
+      'https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1200&q=80',
+    ],
+    authorName: '테크스캔',
+    authorRole: '산업 점검',
+    date: '3일 전',
+    likes: 87,
+    caption: '시설 점검 요청 피드와 연결될 수 있도록 점검형 메타데이터로 구성했습니다.',
+    latitude: 36.3504,
+    longitude: 127.3845,
   ),
-  _FeedMapPoint(
-    position: LatLng(35.8242, 127.148),
-    post: _FeedPost(
-      id: 'mock-jeonju-hanok',
-      location: '전북 전주',
-      category: '관광홍보',
-      images: <String>[
-        'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80',
-      ],
-      authorName: '로컬뷰',
-      authorRole: '지역 홍보',
-      date: '5일 전',
-      likes: 122,
-      caption: '한옥마을 주변 동선과 랜드마크를 중심으로 배치한 mock 피드입니다.',
-    ),
+  _FeedPost(
+    id: 'mock-jeonju-hanok',
+    location: '전북 전주',
+    category: '관광홍보',
+    images: <String>[
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80',
+    ],
+    authorName: '로컬뷰',
+    authorRole: '지역 홍보',
+    date: '5일 전',
+    likes: 122,
+    caption: '한옥마을 주변 동선과 랜드마크를 중심으로 배치한 mock 피드입니다.',
+    latitude: 35.8242,
+    longitude: 127.148,
   ),
 ];
 
@@ -233,7 +237,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
   int _visibleCount = 9;
   List<_FeedPost>? _remoteFeed;
   bool _showPhotoFeed = false;
-  String? _selectedMapPostId = _mockFeedMapPoints.first.post.id;
+  String? _selectedMapPostId;
 
   @override
   void initState() {
@@ -274,6 +278,8 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                     operatorId: post.operatorId,
                     authorAvatarUrl: post.authorAvatarUrl,
                     likedByMe: likedIds.contains(post.id),
+                    latitude: post.latitude,
+                    longitude: post.longitude,
                   ),
                 )
                 .toList();
@@ -299,7 +305,8 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
       );
     }
 
-    final sourceFeed = _mockFeedMapPoints.map((point) => point.post).toList();
+    final remoteFeed = _remoteFeed!;
+    final sourceFeed = remoteFeed.isNotEmpty ? remoteFeed : _mockFeedPosts;
     var filtered = sourceFeed;
     if (widget.region != '전체') {
       filtered =
@@ -320,12 +327,25 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
     }
     final mapPoints = _mapPointsFor(actualFeed);
     if (!_showPhotoFeed) {
+      if (mapPoints.isEmpty) {
+        return _FeedPageShell(
+          top: 10,
+          bottom: 46,
+          child: _FeedMapEmptyState(
+            onShowPhotos: () => setState(() => _showPhotoFeed = true),
+          ),
+        );
+      }
+      final selectedId =
+          mapPoints.any((point) => point.post.id == _selectedMapPostId)
+              ? _selectedMapPostId
+              : mapPoints.first.post.id;
       return _FeedPageShell(
         top: 10,
         bottom: 46,
         child: _FeedMapView(
           points: mapPoints,
-          selectedPostId: _selectedMapPostId,
+          selectedPostId: selectedId,
           onSelect:
               (point) => setState(() {
                 _selectedMapPostId = point.post.id;
@@ -425,21 +445,52 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
   }
 
   List<_FeedMapPoint> _mapPointsFor(List<_FeedPost> feed) {
-    final mockById = <String, _FeedMapPoint>{
-      for (final point in _mockFeedMapPoints) point.post.id: point,
-    };
-    final coordinates = <LatLng>[
-      for (final point in _mockFeedMapPoints) point.position,
-    ];
     return <_FeedMapPoint>[
-      for (var index = 0; index < feed.length; index += 1)
-        _FeedMapPoint(
-          post: feed[index],
-          position:
-              mockById[feed[index].id]?.position ??
-              coordinates[index % coordinates.length],
-        ),
+      for (final post in feed)
+        if (post.hasLocation) _FeedMapPoint(post: post),
     ];
+  }
+}
+
+class _FeedMapEmptyState extends StatelessWidget {
+  const _FeedMapEmptyState({required this.onShowPhotos});
+
+  final VoidCallback onShowPhotos;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 420,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F7FB),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Icon(Icons.map_outlined, color: _muted, size: 36),
+          const SizedBox(height: 12),
+          const Text('아직 위치가 등록된 촬영 게시물이 없습니다.', style: FeedText.body),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: onShowPhotos,
+            icon: const Icon(Icons.photo_library_rounded),
+            label: const Text('사진으로 보기'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _navy,
+              side: const BorderSide(color: _line),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 14,
+              ),
+              textStyle: FeedText.button,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

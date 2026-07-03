@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
@@ -17,6 +19,9 @@ import '../../model/main_models.dart';
 import '../../network/drone_pilot_api.dart';
 import '../../model/drone_pilot_model.dart';
 import '../../viewmodel/main_view_model.dart';
+import '../component/feed_location_picker.dart';
+import '../../../quote/model/quote_model.dart';
+import '../../../quote/view/component/quote_component.dart';
 import 'dart:async';
 import 'dart:ui';
 
@@ -26,6 +31,7 @@ part '../component/feed_standalone_component.dart';
 part '../component/portfolio_standalone_component.dart';
 part '../component/my_quotes_component.dart';
 part '../component/mobile_redesign_component.dart';
+part '../component/job_request_map_component.dart';
 
 class HomeText {
   static const TextStyle logo = TextStyle(
@@ -726,11 +732,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     ),
                   ),
 
-                  // ── Live operators banner ──────────────────────────────────
+                  // ── Job request map ─────────────────────────────────────────
                   SliverToBoxAdapter(
                     child: _RevealOnScroll(
                       scrollController: _scrollController,
-                      child: _LiveOperatorsBannerSection(store: store),
+                      child: _JobRequestMapSection(store: store),
                     ),
                   ),
 
