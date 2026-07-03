@@ -15,28 +15,10 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
   static const List<String> _sorts = <String>['인기순', '최신순'];
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final store = context.read<DrameStore>();
-      if (!store.isSessionRestoring && !store.isLoggedIn) {
-        context.go('/login');
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Consumer<DrameStore>(
       builder: (context, store, _) {
         if (store.isSessionRestoring) {
-          return const Scaffold(backgroundColor: DC.canvas);
-        }
-        if (!store.isLoggedIn) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) context.go('/login');
-          });
           return const Scaffold(backgroundColor: DC.canvas);
         }
         final compact = MediaQuery.sizeOf(context).width < 760;
@@ -52,24 +34,25 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
 
         return Scaffold(
           backgroundColor: DC.canvas,
-          appBar: compact
-              ? AppBar(
-                  backgroundColor: Colors.white,
-                  surfaceTintColor: Colors.white,
-                  elevation: 0,
-                  centerTitle: false,
-                  title: const Text('피드'),
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => context.go('/home'),
-                  ),
-                )
-              : null,
+          appBar:
+              compact
+                  ? AppBar(
+                    backgroundColor: Colors.white,
+                    surfaceTintColor: Colors.white,
+                    elevation: 0,
+                    centerTitle: false,
+                    title: const Text('피드'),
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => context.go('/home'),
+                    ),
+                  )
+                  : null,
           body: Column(
             children: <Widget>[
               if (!compact)
                 DrameTopNavigation(
-                  isLoggedIn: true,
+                  isLoggedIn: store.isLoggedIn,
                   isOperator: store.isPilotMode,
                   nickname: nickname,
                   activePage: 'feed',
@@ -133,7 +116,8 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
                         ),
                       ),
                     ),
-                    if (!compact) const SliverToBoxAdapter(child: _FooterSection()),
+                    if (!compact)
+                      const SliverToBoxAdapter(child: _FooterSection()),
                     const SliverToBoxAdapter(child: SizedBox(height: 72)),
                   ],
                 ),

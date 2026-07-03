@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
@@ -207,17 +206,19 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      unawaited(store.restoreSession().then((_) {
-        if (!mounted) return;
-        if (!store.isLoggedIn) {
-          context.go('/login');
-          return;
-        }
-        if (!store.operatorRegistrationCompleted &&
-            !store.registrationJustCompleted) {
-          store.openPilotOnboarding();
-        }
-      }));
+      unawaited(
+        store.restoreSession().then((_) {
+          if (!mounted) return;
+          if (!store.isLoggedIn) {
+            context.go('/login');
+            return;
+          }
+          if (!store.operatorRegistrationCompleted &&
+              !store.registrationJustCompleted) {
+            store.openPilotOnboarding();
+          }
+        }),
+      );
     });
   }
 
@@ -400,35 +401,19 @@ class _DrameHomePageState extends State<DrameHomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      unawaited(store.restoreSession().then((_) {
-        if (!mounted) return;
-        // 모바일 첫 실행: 비로그인 상태면 랜딩페이지로 이동
-        if (!kIsWeb && !store.isLoggedIn) {
-          unawaited(_checkFirstLaunchRedirect(store));
-          return;
-        }
-        // /operator 진입은 로그인 + 운용자만 가능.
-        if (widget.operatorMode && !store.isLoggedIn) {
-          context.go('/home');
-          return;
-        }
-        store.setPilotMode(widget.operatorMode);
-        unawaited(store.load(initial: true));
-      }));
+      unawaited(
+        store.restoreSession().then((_) {
+          if (!mounted) return;
+          // /operator 진입은 로그인 + 운용자만 가능.
+          if (widget.operatorMode && !store.isLoggedIn) {
+            context.go('/home');
+            return;
+          }
+          store.setPilotMode(widget.operatorMode);
+          unawaited(store.load(initial: true));
+        }),
+      );
     });
-  }
-
-  Future<void> _checkFirstLaunchRedirect(DrameStore store) async {
-    final router = GoRouter.of(context);
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    if (!(prefs.getBool('has_launched') ?? false)) {
-      unawaited(prefs.setBool('has_launched', true));
-      router.go('/landing');
-    } else {
-      store.setPilotMode(widget.operatorMode);
-      unawaited(store.load(initial: true));
-    }
   }
 
   @override
@@ -545,7 +530,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
             body: Center(child: CircularProgressIndicator(color: DC.primary)),
           );
         }
-        if (!store.isLoading && store.lastError != null && store.pilots.isEmpty) {
+        if (!store.isLoading &&
+            store.lastError != null &&
+            store.pilots.isEmpty) {
           return Scaffold(
             backgroundColor: DC.canvas,
             body: Center(
@@ -647,10 +634,6 @@ class _DrameHomePageState extends State<DrameHomePage> {
               _scrollToSection(_categorySectionKey);
             },
             onFeedTap: () {
-              if (!store.isLoggedIn) {
-                showLoginRequiredDialog(context);
-                return;
-              }
               context.go('/feed');
             },
             onPortfolioTap: () => context.go('/portfolio'),
@@ -939,54 +922,57 @@ class _DrameHomePageState extends State<DrameHomePage> {
         if (!didPop) setState(() => _tabIndex = 0);
       },
       child: Scaffold(
-      backgroundColor: DC.canvas,
-      appBar: _buildMobileAppBar(context, store),
-      body: SafeArea(
-        top: false,
-        child: Stack(
-          children: <Widget>[
-            for (int i = 0; i < tabChildren.length; i++)
-              if (_visitedMobileTabs.contains(i))
-                Offstage(
-                  offstage: safeIndex != i,
-                  child: TickerMode(
-                    enabled: safeIndex == i,
-                    child: tabChildren[i],
+        backgroundColor: DC.canvas,
+        appBar: _buildMobileAppBar(context, store),
+        body: SafeArea(
+          top: false,
+          child: Stack(
+            children: <Widget>[
+              for (int i = 0; i < tabChildren.length; i++)
+                if (_visitedMobileTabs.contains(i))
+                  Offstage(
+                    offstage: safeIndex != i,
+                    child: TickerMode(
+                      enabled: safeIndex == i,
+                      child: tabChildren[i],
+                    ),
                   ),
-                ),
-          ],
+            ],
+          ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: safeIndex,
+          onTap: (index) {
+            if (!store.isLoggedIn &&
+                index != 0 &&
+                index != 2 &&
+                !store.isPilotMode) {
+              showLoginRequiredDialog(context);
+              return;
+            }
+            setState(() {
+              _tabIndex = index;
+              _visitedMobileTabs.add(index);
+            });
+          },
+          selectedItemColor: _primary,
+          unselectedItemColor: const Color(0xFF8BA0B8),
+          backgroundColor: Colors.white,
+          elevation: 8,
+          type: BottomNavigationBarType.fixed,
+          selectedLabelStyle: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+          items: navItems,
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: safeIndex,
-        onTap: (index) {
-          if (!store.isLoggedIn && index != 0 && !store.isPilotMode) {
-            showLoginRequiredDialog(context);
-            return;
-          }
-          setState(() {
-            _tabIndex = index;
-            _visitedMobileTabs.add(index);
-          });
-        },
-        selectedItemColor: _primary,
-        unselectedItemColor: const Color(0xFF8BA0B8),
-        backgroundColor: Colors.white,
-        elevation: 8,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-        ),
-        items: navItems,
-      ),
-    ),
     );
   }
 }

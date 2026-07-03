@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -149,19 +148,7 @@ class _DrameAppState extends ConsumerState<DrameApp> {
     );
     if (!mounted) return;
 
-    if (!store.isLoggedIn) {
-      final prefs = await SharedPreferences.getInstance();
-      final seen = prefs.getBool('has_seen_landing') ?? false;
-      if (!seen) {
-        await prefs.setBool('has_seen_landing', true);
-        if (mounted) appRouter.go('/landing');
-        return;
-      }
-    }
-
-    if (store.isLoggedIn) {
-      unawaited(store.load(initial: true));
-    }
+    unawaited(store.load(initial: true));
   }
 
   @override
