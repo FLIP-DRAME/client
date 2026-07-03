@@ -779,11 +779,25 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   final List<PickedFile> _pendingImages = <PickedFile>[];
   String? _selectedCategory;
   String? _selectedArea;
+  LatLng? _pickedLocation;
+  String? _pickedLocationLabel;
 
   @override
   void dispose() {
     _captionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickLocation() async {
+    final result = await showFeedLocationPicker(
+      context,
+      initial: _pickedLocation,
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _pickedLocation = result.position;
+      _pickedLocationLabel = result.label;
+    });
   }
 
   Future<void> _pickImages() async {
@@ -814,6 +828,17 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     if (caption.isEmpty && _pendingImages.isEmpty) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    if (_pickedLocation == null) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('지도에서 촬영 위치를 선택해 주세요.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      return;
+    }
     setState(() => _isSubmitting = true);
     messenger
       ..hideCurrentSnackBar()
@@ -845,6 +870,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
             _selectedArea ??
             widget.store.selectedPilot?.availableAreas.firstOrNull ??
             '',
+        latitude: _pickedLocation!.latitude,
+        longitude: _pickedLocation!.longitude,
       );
     } catch (error) {
       if (!mounted) return;
@@ -873,6 +900,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       _pendingImages.clear();
       _selectedCategory = null;
       _selectedArea = null;
+      _pickedLocation = null;
+      _pickedLocationLabel = null;
     });
     messenger
       ..hideCurrentSnackBar()
@@ -1049,6 +1078,52 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _isSubmitting ? null : _pickLocation,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _pickedLocation == null ? _line : _mint,
+                        ),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Icon(
+                            Icons.map_rounded,
+                            size: 18,
+                            color: _pickedLocation == null ? DC.muted : _mint,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _pickedLocation == null
+                                  ? '촬영 위치를 지도에서 선택 (필수)'
+                                  : (_pickedLocationLabel ??
+                                      '선택됨: ${_pickedLocation!.latitude.toStringAsFixed(5)}, ${_pickedLocation!.longitude.toStringAsFixed(5)}'),
+                              style: AppText.smallStrong.copyWith(
+                                color: _pickedLocation == null ? DC.muted : _ink,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            _pickedLocation == null ? '선택하기' : '변경',
+                            style: AppText.metricLabel.copyWith(color: _mint),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   if (_pendingImages.isNotEmpty) ...<Widget>[

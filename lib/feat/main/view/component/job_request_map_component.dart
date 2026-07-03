@@ -1,0 +1,698 @@
+part of '../pages/main_page.dart';
+
+class _JobRequestMapSection extends ConsumerStatefulWidget {
+  const _JobRequestMapSection({required this.store});
+
+  final DrameStore store;
+
+  @override
+  ConsumerState<_JobRequestMapSection> createState() =>
+      _JobRequestMapSectionState();
+}
+
+class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
+  static const Color _navy = Color(0xFF16305E);
+
+  List<MapJobRequest>? _requests;
+  String? _selectedId;
+  bool _showComposer = false;
+
+  String? _composerCategory;
+  String _composerBudget = '협의';
+  LatLng? _composerLocation;
+  String? _composerLocationLabel;
+  final TextEditingController _composerDetailController =
+      TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_load());
+  }
+
+  @override
+  void dispose() {
+    _composerDetailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    try {
+      final requests = await ref.read(quoteApiProvider).fetchOpenMapRequests();
+      if (!mounted) return;
+      setState(() => _requests = requests);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _requests = const <MapJobRequest>[]);
+    }
+  }
+
+  Future<void> _pickComposerLocation() async {
+    final result = await showFeedLocationPicker(
+      context,
+      initial: _composerLocation,
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _composerLocation = result.position;
+      _composerLocationLabel = result.label;
+    });
+  }
+
+  Future<void> _submitComposer() async {
+    if (_submitting) return;
+    if (!widget.store.isLoggedIn) {
+      showLoginRequiredDialog(
+        context,
+        message: '촬영 요청을 등록하려면 로그인이 필요합니다.',
+      );
+      return;
+    }
+    final category = _composerCategory ?? defaultDroneCategories.first.label;
+    final location = _composerLocation;
+    if (location == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('지도에서 촬영 위치를 선택해 주세요.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    setState(() => _submitting = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final created = await ref
+          .read(quoteApiProvider)
+          .createMapJobRequest(
+            categoryLabel: category,
+            budgetRange: _composerBudget,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            locationLabel: _composerLocationLabel ?? '지도에서 선택한 위치',
+            detail: _composerDetailController.text.trim(),
+          );
+      if (!mounted) return;
+      setState(() {
+        _requests = <MapJobRequest>[created, ...?_requests];
+        _selectedId = created.id;
+        _showComposer = false;
+        _submitting = false;
+        _composerCategory = null;
+        _composerBudget = '협의';
+        _composerLocation = null;
+        _composerLocationLabel = null;
+        _composerDetailController.clear();
+      });
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('촬영 요청을 지도에 등록했습니다.'),
+          backgroundColor: Color(0xFF0A7F5A),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceFirst('Bad state: ', '').replaceFirst(
+              'Exception: ',
+              '',
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _handleRespond(MapJobRequest request) {
+    if (!widget.store.isLoggedIn) {
+      showLoginRequiredDialog(
+        context,
+        message: '요청 상세 확인과 견적 응답은 로그인 후 이용할 수 있습니다.',
+      );
+      return;
+    }
+    final stub = PilotWorkRequest(
+      id: request.id,
+      category: request.category,
+      status: request.isInProgress ? '진행 중' : '신규',
+      location: request.locationLabel,
+      distance: '',
+      dateRange: '',
+      budget: request.budgetLabel,
+      client: '고객',
+      summary: '',
+      progress: '',
+      remaining: '확인 필요',
+      mapLabel: '${request.locationLabel} 지도',
+      createdAt: request.createdAt,
+    );
+    _openPilotRequestReviewPage(context, initialRequest: stub);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final requests = _requests;
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFF7F8FA),
+      child: _PageShell(
+        top: 48,
+        bottom: 52,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Text('촬영 요청 지도', style: AppText.cardTitle),
+                      const SizedBox(height: 6),
+                      Text(
+                        '지도에서 위치를 찍어 촬영 요청을 올리고, 다른 요청도 둘러보세요.',
+                        style: AppText.cardSubtitle,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                FilledButton.icon(
+                  onPressed:
+                      () => setState(() => _showComposer = !_showComposer),
+                  icon: Icon(
+                    _showComposer ? Icons.close_rounded : Icons.add_rounded,
+                  ),
+                  label: Text(_showComposer ? '닫기' : '새 요청 등록'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _navy,
+                    foregroundColor: Colors.white,
+                    textStyle: AppText.button,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (_showComposer) ...<Widget>[
+              _JobRequestComposer(
+                category: _composerCategory,
+                budget: _composerBudget,
+                locationLabel: _composerLocationLabel,
+                detailController: _composerDetailController,
+                submitting: _submitting,
+                onCategoryChanged:
+                    (value) => setState(() => _composerCategory = value),
+                onBudgetChanged:
+                    (value) => setState(() => _composerBudget = value),
+                onPickLocation: _pickComposerLocation,
+                onSubmit: _submitComposer,
+              ),
+              const SizedBox(height: 20),
+            ],
+            if (requests == null)
+              const SizedBox(
+                height: 420,
+                child: Center(child: CircularProgressIndicator(color: _navy)),
+              )
+            else if (requests.isEmpty)
+              _JobRequestMapEmptyState(onNewRequest: () {
+                if (!_showComposer) setState(() => _showComposer = true);
+              })
+            else
+              _JobRequestMap(
+                requests: requests,
+                selectedId: _selectedId,
+                onSelect: (request) => setState(() => _selectedId = request.id),
+                onRespond: _handleRespond,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _JobRequestComposer extends StatelessWidget {
+  const _JobRequestComposer({
+    required this.category,
+    required this.budget,
+    required this.locationLabel,
+    required this.detailController,
+    required this.submitting,
+    required this.onCategoryChanged,
+    required this.onBudgetChanged,
+    required this.onPickLocation,
+    required this.onSubmit,
+  });
+
+  static const Color _navy = Color(0xFF16305E);
+  static const Color _line = Color(0xFFE4EAF2);
+  static const Color _mint = Color(0xFF22C58B);
+
+  final String? category;
+  final String budget;
+  final String? locationLabel;
+  final TextEditingController detailController;
+  final bool submitting;
+  final ValueChanged<String> onCategoryChanged;
+  final ValueChanged<String> onBudgetChanged;
+  final VoidCallback onPickLocation;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryOptions =
+        defaultDroneCategories.map((c) => c.label).toList();
+    final selectedCategory =
+        categoryOptions.contains(category) ? category! : categoryOptions.first;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const FieldLabel('촬영 종류'),
+          ChoiceWrap(
+            values: categoryOptions,
+            selected: selectedCategory,
+            onSelected: onCategoryChanged,
+          ),
+          const SizedBox(height: 18),
+          const FieldLabel('예산'),
+          ChoiceWrap(
+            values: const <String>['0~30만원', '30~50만원', '50~100만원', '협의'],
+            selected: budget,
+            onSelected: onBudgetChanged,
+          ),
+          const SizedBox(height: 18),
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onPickLocation,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFD),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: locationLabel == null ? _line : _mint,
+                ),
+              ),
+              child: Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.map_rounded,
+                    size: 18,
+                    color: locationLabel == null ? const Color(0xFF9CA3AF) : _mint,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      locationLabel ?? '촬영 위치를 지도에서 선택 (필수)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.smallStrong.copyWith(
+                        color:
+                            locationLabel == null
+                                ? const Color(0xFF9CA3AF)
+                                : const Color(0xFF0A0B0D),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    locationLabel == null ? '선택하기' : '변경',
+                    style: AppText.metricLabel.copyWith(color: _mint),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: detailController,
+            maxLines: 3,
+            style: AppText.smallStrong.copyWith(color: const Color(0xFF0A0B0D)),
+            decoration: InputDecoration(
+              hintText: '요청 내용 (선택) - 촬영 목적, 원하는 구도 등을 적어주세요.',
+              filled: true,
+              fillColor: const Color(0xFFF8FAFD),
+              contentPadding: const EdgeInsets.all(14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _line),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: submitting ? null : onSubmit,
+              style: FilledButton.styleFrom(
+                backgroundColor: _navy,
+                foregroundColor: Colors.white,
+                textStyle: AppText.button,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(submitting ? '등록 중...' : '요청 등록'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _JobRequestMapEmptyState extends StatelessWidget {
+  const _JobRequestMapEmptyState({required this.onNewRequest});
+
+  final VoidCallback onNewRequest;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 320,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE4EAF2)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Icon(Icons.map_outlined, color: Color(0xFF9CA3AF), size: 36),
+          const SizedBox(height: 12),
+          const Text('아직 등록된 촬영 요청이 없습니다.', style: AppText.cardSubtitle),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: onNewRequest,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('새 요청 등록'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF16305E),
+              side: const BorderSide(color: Color(0xFFE4EAF2)),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 14,
+              ),
+              textStyle: AppText.button,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _JobRequestMap extends StatelessWidget {
+  const _JobRequestMap({
+    required this.requests,
+    required this.selectedId,
+    required this.onSelect,
+    required this.onRespond,
+  });
+
+  static const Color _navy = Color(0xFF16305E);
+
+  final List<MapJobRequest> requests;
+  final String? selectedId;
+  final ValueChanged<MapJobRequest> onSelect;
+  final ValueChanged<MapJobRequest> onRespond;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = requests.firstWhere(
+      (request) => request.id == selectedId,
+      orElse: () => requests.first,
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 720;
+        return SizedBox(
+          height: compact ? 520 : 560,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              children: <Widget>[
+                FlutterMap(
+                  options: const MapOptions(
+                    initialCenter: LatLng(36.35, 127.85),
+                    initialZoom: 6.5,
+                    minZoom: 5,
+                    maxZoom: 17,
+                  ),
+                  children: <Widget>[
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.modu.drame',
+                    ),
+                    MarkerLayer(
+                      markers:
+                          requests
+                              .map(
+                                (request) => Marker(
+                                  point: LatLng(
+                                    request.latitude,
+                                    request.longitude,
+                                  ),
+                                  width: 54,
+                                  height: 54,
+                                  child: _JobRequestMarker(
+                                    inProgress: request.isInProgress,
+                                    selected: request.id == selected.id,
+                                    onTap: () => onSelect(request),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ],
+                ),
+                Positioned(
+                  left: 16,
+                  top: 16,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFE4EAF2)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          const Icon(
+                            Icons.radar_rounded,
+                            color: _navy,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${requests.length}개 요청 · 진행중 초록 테두리',
+                            style: AppText.metricLabel,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: compact ? 12 : null,
+                  right: 12,
+                  bottom: 12,
+                  child: _JobRequestPreview(
+                    request: selected,
+                    compact: compact,
+                    onRespond: () => onRespond(selected),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  top: 12,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      child: Text(
+                        '© OpenStreetMap contributors',
+                        style: AppText.metricLabel.copyWith(fontSize: 11),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _JobRequestMarker extends StatelessWidget {
+  const _JobRequestMarker({
+    required this.inProgress,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final bool inProgress;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = inProgress ? const Color(0xFF05B169) : const Color(0xFF16305E);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 160),
+        scale: selected ? 1.12 : 1,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: selected ? color : Colors.white,
+            border: Border.all(color: color, width: inProgress ? 3 : 2),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x330A0B0D),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.request_quote_rounded,
+            color: selected ? Colors.white : color,
+            size: 23,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _JobRequestPreview extends StatelessWidget {
+  const _JobRequestPreview({
+    required this.request,
+    required this.compact,
+    required this.onRespond,
+  });
+
+  static const Color _navy = Color(0xFF16305E);
+  static const Color _inProgress = Color(0xFF05B169);
+
+  final MapJobRequest request;
+  final bool compact;
+  final VoidCallback onRespond;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = request.isInProgress ? _inProgress : _navy;
+    final statusLabel = request.isInProgress ? '진행중' : '요청 대기중';
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: compact ? double.infinity : 360),
+      child: Material(
+        color: Colors.white,
+        elevation: 12,
+        shadowColor: Colors.black.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      request.category,
+                      style: AppText.smallStrong.copyWith(fontSize: 15),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: AppText.metricLabel.copyWith(color: statusColor),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${request.locationLabel} · ${request.budgetLabel}',
+                style: AppText.cardSubtitle,
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: onRespond,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _navy,
+                    foregroundColor: Colors.white,
+                    textStyle: AppText.button,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('견적 응답하기'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -6,6 +6,21 @@ abstract class QuoteApi {
   Future<QuoteEstimate> createEstimate(QuoteRequest request);
   Future<PaymentInstruction> createPaymentInstruction(QuoteEstimate estimate);
   Future<ContactAccess> createContactAccess(QuoteEstimate estimate);
+
+  /// Open, geotagged broadcast requests for the job-request map.
+  Future<List<MapJobRequest>> fetchOpenMapRequests({int limit = 100});
+
+  /// Posts a new broadcast request (no preferred operator) pinned at the
+  /// given map location.
+  Future<MapJobRequest> createMapJobRequest({
+    required String categoryLabel,
+    required String budgetRange,
+    required double latitude,
+    required double longitude,
+    required String locationLabel,
+    String detail = '',
+    int? proposedAmount,
+  });
 }
 
 class SupabaseQuoteApi implements QuoteApi {
@@ -220,5 +235,126 @@ class SupabaseQuoteApi implements QuoteApi {
       '50만원 이하' => (0, 500000),
       _ => (null, null),
     };
+  }
+
+  String _budgetLabelFromRange(Object? min, Object? max) {
+    final minValue = (min as num?)?.toInt();
+    final maxValue = (max as num?)?.toInt();
+    if (minValue == null && maxValue == null) return '예산 협의';
+    if (maxValue == null) return '${((minValue ?? 0) / 10000).round()}만원 이상';
+    if (minValue == null || minValue == 0) {
+      return '${(maxValue / 10000).round()}만원 이하';
+    }
+    return '${(minValue / 10000).round()}~${(maxValue / 10000).round()}만원';
+  }
+
+  @override
+  Future<List<MapJobRequest>> fetchOpenMapRequests({int limit = 100}) async {
+    final rows = await _client
+        .from('job_requests_map_public')
+        .select('''
+          id,
+          status,
+          budget_min,
+          budget_max,
+          latitude,
+          longitude,
+          location_label,
+          created_at,
+          category_label
+        ''')
+        .order('created_at', ascending: false)
+        .limit(limit);
+
+    return rows.map<MapJobRequest>((row) {
+      final map = Map<String, dynamic>.from(row as Map);
+      return MapJobRequest(
+        id: map['id'].toString(),
+        status: (map['status'] ?? 'open').toString(),
+        category: (map['category_label'] ?? '드론 작업').toString(),
+        budgetLabel: _budgetLabelFromRange(
+          map['budget_min'],
+          map['budget_max'],
+        ),
+        locationLabel: (map['location_label'] ?? '지역 미정').toString(),
+        latitude: (map['latitude'] as num).toDouble(),
+        longitude: (map['longitude'] as num).toDouble(),
+        createdAt:
+            DateTime.tryParse((map['created_at'] ?? '').toString()) ??
+            DateTime.now(),
+      );
+    }).toList();
+  }
+
+  @override
+  Future<MapJobRequest> createMapJobRequest({
+    required String categoryLabel,
+    required String budgetRange,
+    required double latitude,
+    required double longitude,
+    required String locationLabel,
+    String detail = '',
+    int? proposedAmount,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('로그인이 필요합니다.');
+    }
+    final categoryId = await _findCategoryId(categoryLabel);
+    final budget = _parseBudget(budgetRange);
+
+    String clientDisplayName = _client.auth.currentUser?.email ?? '고객';
+    final profile =
+        await _client
+            .from('profiles')
+            .select('nickname, name')
+            .eq('id', userId)
+            .maybeSingle();
+    if (profile != null) {
+      final nickname = profile['nickname']?.toString().trim() ?? '';
+      final name = profile['name']?.toString().trim() ?? '';
+      if (nickname.isNotEmpty) {
+        clientDisplayName = nickname;
+      } else if (name.isNotEmpty) {
+        clientDisplayName = name;
+      }
+    }
+
+    final row =
+        await _client
+            .from('job_requests')
+            .insert(<String, Object?>{
+              'client_id': userId,
+              'category_id': categoryId,
+              'preferred_operator_id': null,
+              'status': 'open',
+              'title': '$locationLabel $categoryLabel 요청',
+              'detail': detail,
+              'location_label': locationLabel,
+              'latitude': latitude,
+              'longitude': longitude,
+              'budget_min': budget.$1,
+              'budget_max': proposedAmount ?? budget.$2,
+              'contact_window': '앱 내 채팅 우선',
+              'client_display_name': clientDisplayName,
+            })
+            .select('id, status, budget_min, budget_max, created_at')
+            .single();
+
+    return MapJobRequest(
+      id: row['id'].toString(),
+      status: (row['status'] ?? 'open').toString(),
+      category: categoryLabel,
+      budgetLabel: _budgetLabelFromRange(
+        row['budget_min'],
+        row['budget_max'],
+      ),
+      locationLabel: locationLabel,
+      latitude: latitude,
+      longitude: longitude,
+      createdAt:
+          DateTime.tryParse((row['created_at'] ?? '').toString()) ??
+          DateTime.now(),
+    );
   }
 }

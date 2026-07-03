@@ -17,6 +17,8 @@ class FeedPost {
     required this.caption,
     this.operatorId,
     this.authorAvatarUrl,
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -31,6 +33,11 @@ class FeedPost {
   final String caption;
   final String? operatorId;
   final String? authorAvatarUrl;
+
+  /// Shoot location of the photo, picked by the operator on a map at
+  /// upload time -- null for posts created before this field existed.
+  final double? latitude;
+  final double? longitude;
 }
 
 class FeedComment {
@@ -71,6 +78,8 @@ class FeedApi {
           title,
           body,
           location_label,
+          latitude,
+          longitude,
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url)
@@ -93,6 +102,8 @@ class FeedApi {
           title,
           body,
           location_label,
+          latitude,
+          longitude,
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url)
@@ -116,6 +127,8 @@ class FeedApi {
           title,
           body,
           location_label,
+          latitude,
+          longitude,
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url)
@@ -131,6 +144,8 @@ class FeedApi {
     required String caption,
     required String categoryLabel,
     required String locationLabel,
+    double? latitude,
+    double? longitude,
     List<FeedImageUpload> images = const <FeedImageUpload>[],
   }) async {
     final userId = _client.auth.currentUser?.id;
@@ -176,6 +191,8 @@ class FeedApi {
                 'category_id': categoryId,
                 'body': caption,
                 'location_label': location,
+                'latitude': latitude,
+                'longitude': longitude,
                 'is_published': true,
               })
               .select('''
@@ -183,6 +200,8 @@ class FeedApi {
                 title,
                 body,
                 location_label,
+                latitude,
+                longitude,
                 created_at,
                 category:service_categories(label),
                 operator:operator_profiles(id, display_name, specialty, avatar_url)
@@ -228,6 +247,8 @@ class FeedApi {
           title,
           body,
           location_label,
+          latitude,
+          longitude,
           created_at,
           category:service_categories(label),
           operator:operator_profiles(id, display_name, specialty, avatar_url)
@@ -473,6 +494,8 @@ class FeedApi {
           (operator?['avatar_url']?.toString().trim().isEmpty ?? true)
               ? null
               : operator?['avatar_url']?.toString(),
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
     );
   }
 

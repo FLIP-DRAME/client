@@ -34,19 +34,20 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
 
         return Scaffold(
           backgroundColor: DC.canvas,
-          appBar: compact
-              ? AppBar(
-                  backgroundColor: Colors.white,
-                  surfaceTintColor: Colors.white,
-                  elevation: 0,
-                  centerTitle: false,
-                  title: const Text('피드'),
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => context.go('/home'),
-                  ),
-                )
-              : null,
+          appBar:
+              compact
+                  ? AppBar(
+                    backgroundColor: Colors.white,
+                    surfaceTintColor: Colors.white,
+                    elevation: 0,
+                    centerTitle: false,
+                    title: const Text('피드'),
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => context.go('/home'),
+                    ),
+                  )
+                  : null,
           body: Column(
             children: <Widget>[
               if (!compact)
@@ -115,7 +116,8 @@ class _FeedStandalonePageState extends State<FeedStandalonePage> {
                         ),
                       ),
                     ),
-                    if (!compact) const SliverToBoxAdapter(child: _FooterSection()),
+                    if (!compact)
+                      const SliverToBoxAdapter(child: _FooterSection()),
                     const SliverToBoxAdapter(child: SizedBox(height: 72)),
                   ],
                 ),

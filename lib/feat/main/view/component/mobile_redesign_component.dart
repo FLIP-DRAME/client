@@ -278,71 +278,8 @@ class _UserHomeTabState extends State<_UserHomeTab> {
 
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-          // ── Live operators banner ──────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-              child: Row(
-                children: <Widget>[
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: _mint,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '지금 ${allPilots.length}명의 검증된 운용자가 대기 중',
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0A0B0D),
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.refresh,
-                      size: 18,
-                      color: Color(0xFF8BA0B8),
-                    ),
-                    tooltip: '새로고침',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => unawaited(store.load()),
-                  ),
-                  const SizedBox(width: 10),
-                  Semantics(
-                    button: true,
-                    label: '전체 운용자 보기',
-                    child: GestureDetector(
-                      onTap: () => context.go('/portfolio'),
-                      child: Container(
-                        constraints: const BoxConstraints(
-                          minWidth: 44,
-                          minHeight: 44,
-                        ),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          '전체 보기 >',
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // ── Job request map ─────────────────────────────────────────────────
+          SliverToBoxAdapter(child: _JobRequestMapSection(store: store)),
 
           // ── Operator 2-per-page horizontal pager ──────────────────────────
           SliverToBoxAdapter(

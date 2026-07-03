@@ -83,6 +83,39 @@ class PaymentInstruction {
   String get amountLabel => '${(amount / 10000).round()}만원';
 }
 
+/// A broadcast job request pinned on the map (no preferred operator) --
+/// only carries the safe, public subset of a job_requests row.
+class MapJobRequest {
+  const MapJobRequest({
+    required this.id,
+    required this.status,
+    required this.category,
+    required this.budgetLabel,
+    required this.locationLabel,
+    required this.latitude,
+    required this.longitude,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String status;
+  final String category;
+  final String budgetLabel;
+  final String locationLabel;
+  final double latitude;
+  final double longitude;
+  final DateTime createdAt;
+
+  static const _inProgressStatuses = <String>{
+    'accepted',
+    'paid',
+    'contact_opened',
+    'in_progress',
+  };
+
+  bool get isInProgress => _inProgressStatuses.contains(status);
+}
+
 class ContactAccess {
   const ContactAccess({
     required this.phone,

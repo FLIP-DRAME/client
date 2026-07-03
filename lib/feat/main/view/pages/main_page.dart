@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
@@ -18,6 +20,9 @@ import '../../model/main_models.dart';
 import '../../network/drone_pilot_api.dart';
 import '../../model/drone_pilot_model.dart';
 import '../../viewmodel/main_view_model.dart';
+import '../component/feed_location_picker.dart';
+import '../../../quote/model/quote_model.dart';
+import '../../../quote/view/component/quote_component.dart';
 import 'dart:async';
 import 'dart:ui';
 
@@ -27,6 +32,7 @@ part '../component/feed_standalone_component.dart';
 part '../component/portfolio_standalone_component.dart';
 part '../component/my_quotes_component.dart';
 part '../component/mobile_redesign_component.dart';
+part '../component/job_request_map_component.dart';
 
 class HomeText {
   static const TextStyle logo = TextStyle(
@@ -228,17 +234,19 @@ class _PilotRegistrationPageState extends State<PilotRegistrationPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      unawaited(store.restoreSession().then((_) {
-        if (!mounted) return;
-        if (!store.isLoggedIn) {
-          context.go('/login');
-          return;
-        }
-        if (!store.operatorRegistrationCompleted &&
-            !store.registrationJustCompleted) {
-          store.openPilotOnboarding();
-        }
-      }));
+      unawaited(
+        store.restoreSession().then((_) {
+          if (!mounted) return;
+          if (!store.isLoggedIn) {
+            context.go('/login');
+            return;
+          }
+          if (!store.operatorRegistrationCompleted &&
+              !store.registrationJustCompleted) {
+            store.openPilotOnboarding();
+          }
+        }),
+      );
     });
   }
 
@@ -548,7 +556,9 @@ class _DrameHomePageState extends State<DrameHomePage> {
             body: Center(child: CircularProgressIndicator(color: DC.primary)),
           );
         }
-        if (!store.isLoading && store.lastError != null && store.pilots.isEmpty) {
+        if (!store.isLoading &&
+            store.lastError != null &&
+            store.pilots.isEmpty) {
           return Scaffold(
             backgroundColor: DC.canvas,
             body: Center(
@@ -742,11 +752,11 @@ class _DrameHomePageState extends State<DrameHomePage> {
                     ),
                   ),
 
-                  // ── Live operators banner ──────────────────────────────────
+                  // ── Job request map ─────────────────────────────────────────
                   SliverToBoxAdapter(
                     child: _RevealOnScroll(
                       scrollController: _scrollController,
-                      child: _LiveOperatorsBannerSection(store: store),
+                      child: _JobRequestMapSection(store: store),
                     ),
                   ),
 
@@ -938,57 +948,57 @@ class _DrameHomePageState extends State<DrameHomePage> {
         if (!didPop) setState(() => _tabIndex = 0);
       },
       child: Scaffold(
-      backgroundColor: DC.canvas,
-      appBar: _buildMobileAppBar(context, store),
-      body: SafeArea(
-        top: false,
-        child: Stack(
-          children: <Widget>[
-            for (int i = 0; i < tabChildren.length; i++)
-              if (_visitedMobileTabs.contains(i))
-                Offstage(
-                  offstage: safeIndex != i,
-                  child: TickerMode(
-                    enabled: safeIndex == i,
-                    child: tabChildren[i],
+        backgroundColor: DC.canvas,
+        appBar: _buildMobileAppBar(context, store),
+        body: SafeArea(
+          top: false,
+          child: Stack(
+            children: <Widget>[
+              for (int i = 0; i < tabChildren.length; i++)
+                if (_visitedMobileTabs.contains(i))
+                  Offstage(
+                    offstage: safeIndex != i,
+                    child: TickerMode(
+                      enabled: safeIndex == i,
+                      child: tabChildren[i],
+                    ),
                   ),
-                ),
-          ],
+            ],
+          ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: safeIndex,
+          onTap: (index) {
+            if (!store.isLoggedIn &&
+                index != 0 &&
+                index != 2 &&
+                !store.isPilotMode) {
+              showLoginRequiredDialog(context);
+              return;
+            }
+            setState(() {
+              _tabIndex = index;
+              _visitedMobileTabs.add(index);
+            });
+          },
+          selectedItemColor: _primary,
+          unselectedItemColor: const Color(0xFF8BA0B8),
+          backgroundColor: Colors.white,
+          elevation: 8,
+          type: BottomNavigationBarType.fixed,
+          selectedLabelStyle: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+          items: navItems,
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: safeIndex,
-        onTap: (index) {
-          if (!store.isLoggedIn &&
-              index != 0 &&
-              index != 2 &&
-              !store.isPilotMode) {
-            showLoginRequiredDialog(context);
-            return;
-          }
-          setState(() {
-            _tabIndex = index;
-            _visitedMobileTabs.add(index);
-          });
-        },
-        selectedItemColor: _primary,
-        unselectedItemColor: const Color(0xFF8BA0B8),
-        backgroundColor: Colors.white,
-        elevation: 8,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-        ),
-        items: navItems,
-      ),
-    ),
     );
   }
 }

@@ -895,6 +895,8 @@ class DrameStore extends ChangeNotifier {
     required String caption,
     required String categoryLabel,
     required String locationLabel,
+    double? latitude,
+    double? longitude,
     List<FeedImageUpload> images = const <FeedImageUpload>[],
   }) async {
     try {
@@ -902,6 +904,8 @@ class DrameStore extends ChangeNotifier {
         caption: caption,
         categoryLabel: categoryLabel,
         locationLabel: locationLabel,
+        latitude: latitude,
+        longitude: longitude,
         images: images,
       );
       myFeedPosts = <OperatorFeedPost>[
