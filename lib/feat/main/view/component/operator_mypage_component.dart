@@ -777,8 +777,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   bool _isExpanded = false;
   bool _isSubmitting = false;
   final List<PickedFile> _pendingImages = <PickedFile>[];
-  String? _selectedCategory;
-  String? _selectedArea;
   LatLng? _pickedLocation;
   String? _pickedLocationLabel;
 
@@ -825,9 +823,19 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   Future<void> _submit() async {
     if (_isSubmitting) return;
     final caption = _captionController.text.trim();
-    if (caption.isEmpty && _pendingImages.isEmpty) return;
 
     final messenger = ScaffoldMessenger.of(context);
+    if (_pendingImages.isEmpty) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('사진을 최소 1장 이상 올려주세요.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      return;
+    }
     if (_pickedLocation == null) {
       messenger
         ..hideCurrentSnackBar()
@@ -862,14 +870,9 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ),
                 )
                 .toList(),
-        categoryLabel:
-            _selectedCategory ??
-            widget.store.selectedPilot?.categories.firstOrNull ??
-            '',
+        categoryLabel: widget.store.selectedPilot?.categories.firstOrNull ?? '',
         locationLabel:
-            _selectedArea ??
-            widget.store.selectedPilot?.availableAreas.firstOrNull ??
-            '',
+            widget.store.selectedPilot?.availableAreas.firstOrNull ?? '',
         latitude: _pickedLocation!.latitude,
         longitude: _pickedLocation!.longitude,
       );
@@ -898,8 +901,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       _isSubmitting = false;
       _isExpanded = false;
       _pendingImages.clear();
-      _selectedCategory = null;
-      _selectedArea = null;
       _pickedLocation = null;
       _pickedLocationLabel = null;
     });
@@ -997,87 +998,6 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                         borderSide: const BorderSide(color: _focus, width: 1.2),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedCategory,
-                          hint: const Text('서비스 종류'),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: _line),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: _line),
-                            ),
-                          ),
-                          items:
-                              (widget
-                                              .store
-                                              .selectedPilot
-                                              ?.categories
-                                              .isNotEmpty ==
-                                          true
-                                      ? widget.store.selectedPilot!.categories
-                                      : defaultDroneCategories
-                                          .map((c) => c.label)
-                                          .toList())
-                                  .map(
-                                    (cat) => DropdownMenuItem<String>(
-                                      value: cat,
-                                      child: Text(cat),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged:
-                              (v) => setState(() => _selectedCategory = v),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedArea,
-                          hint: const Text('지역'),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: _line),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(color: _line),
-                            ),
-                          ),
-                          items:
-                              defaultServiceAreas
-                                  .where((a) => a != '전체')
-                                  .map(
-                                    (a) => DropdownMenuItem<String>(
-                                      value: a,
-                                      child: Text(a),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) => setState(() => _selectedArea = v),
-                        ),
-                      ),
-                    ],
                   ),
                   const SizedBox(height: 12),
                   InkWell(
@@ -1309,7 +1229,10 @@ class _AddFeedImagesButton extends StatelessWidget {
               size: 26,
             ),
             const SizedBox(height: 6),
-            Text('사진 여러 장 추가', style: AppText.metricLabel),
+            Text(
+              wide ? '사진 여러 장 추가 (필수)' : '사진 여러 장 추가',
+              style: AppText.metricLabel,
+            ),
           ],
         ),
       ),
