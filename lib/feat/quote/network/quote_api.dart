@@ -20,6 +20,7 @@ abstract class QuoteApi {
     required String locationLabel,
     String detail = '',
     int? proposedAmount,
+    DateTime? preferredDate,
   });
 }
 
@@ -72,6 +73,8 @@ class SupabaseQuoteApi implements QuoteApi {
               'client_display_name': clientDisplayName,
               if (preferredDate != null)
                 'preferred_start_at': preferredDate.toUtc().toIso8601String(),
+              if (request.latitude != null) 'latitude': request.latitude,
+              if (request.longitude != null) 'longitude': request.longitude,
             })
             .select('id')
             .single();
@@ -295,6 +298,7 @@ class SupabaseQuoteApi implements QuoteApi {
     required String locationLabel,
     String detail = '',
     int? proposedAmount,
+    DateTime? preferredDate,
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
@@ -337,6 +341,8 @@ class SupabaseQuoteApi implements QuoteApi {
               'budget_max': proposedAmount ?? budget.$2,
               'contact_window': '앱 내 채팅 우선',
               'client_display_name': clientDisplayName,
+              if (preferredDate != null)
+                'preferred_start_at': preferredDate.toUtc().toIso8601String(),
             })
             .select('id, status, budget_min, budget_max, created_at')
             .single();

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../common/drame_text_styles.dart';
+import '../../../main/view/component/feed_location_picker.dart';
 
 const quoteNavy = Colors.black;
 const quoteInk = Colors.black;
@@ -266,6 +268,60 @@ class QuoteDateField extends StatelessWidget {
         ),
         isEmpty: selectedDate == null,
         child: Text(_formatted, style: QuoteText.body.copyWith(color: quoteInk)),
+      ),
+    );
+  }
+}
+
+/// Precise map pin for the shoot location, supplementary to the coarse
+/// 지역 chip selector -- same "coarse label + precise map pick" split used
+/// for feed post locations and the job-request-map composer.
+class QuoteLocationField extends StatelessWidget {
+  const QuoteLocationField({
+    super.key,
+    required this.location,
+    required this.locationLabel,
+    required this.onLocationSelected,
+  });
+
+  final LatLng? location;
+  final String? locationLabel;
+  final ValueChanged<FeedLocationPickerResult> onLocationSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final result = await showFeedLocationPicker(context, initial: location);
+        if (result != null) onLocationSelected(result);
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: '촬영 위치 (지도, 선택)',
+          labelStyle: QuoteText.body,
+          filled: true,
+          fillColor: quoteSoft,
+          suffixIcon: const Icon(
+            Icons.map_outlined,
+            size: 18,
+            color: Color(0xFF9CA3AF),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: quoteLine),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: quoteLine),
+          ),
+        ),
+        isEmpty: locationLabel == null,
+        child: Text(
+          locationLabel ?? '',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: QuoteText.body.copyWith(color: quoteInk),
+        ),
       ),
     );
   }

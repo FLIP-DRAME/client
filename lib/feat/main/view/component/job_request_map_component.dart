@@ -21,6 +21,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
   String _composerBudget = '협의';
   LatLng? _composerLocation;
   String? _composerLocationLabel;
+  DateTime? _composerDate;
   final TextEditingController _composerDetailController =
       TextEditingController();
   bool _submitting = false;
@@ -92,6 +93,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
             longitude: location.longitude,
             locationLabel: _composerLocationLabel ?? '지도에서 선택한 위치',
             detail: _composerDetailController.text.trim(),
+            preferredDate: _composerDate,
           );
       if (!mounted) return;
       setState(() {
@@ -103,6 +105,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
         _composerBudget = '협의';
         _composerLocation = null;
         _composerLocationLabel = null;
+        _composerDate = null;
         _composerDetailController.clear();
       });
       messenger.showSnackBar(
@@ -151,6 +154,8 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       remaining: '확인 필요',
       mapLabel: '${request.locationLabel} 지도',
       createdAt: request.createdAt,
+      latitude: request.latitude,
+      longitude: request.longitude,
     );
     _openPilotRequestReviewPage(context, initialRequest: stub);
   }
@@ -212,6 +217,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 category: _composerCategory,
                 budget: _composerBudget,
                 locationLabel: _composerLocationLabel,
+                date: _composerDate,
                 detailController: _composerDetailController,
                 submitting: _submitting,
                 onCategoryChanged:
@@ -219,6 +225,8 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 onBudgetChanged:
                     (value) => setState(() => _composerBudget = value),
                 onPickLocation: _pickComposerLocation,
+                onDateChanged:
+                    (value) => setState(() => _composerDate = value),
                 onSubmit: _submitComposer,
               ),
               const SizedBox(height: 20),
@@ -251,11 +259,13 @@ class _JobRequestComposer extends StatelessWidget {
     required this.category,
     required this.budget,
     required this.locationLabel,
+    required this.date,
     required this.detailController,
     required this.submitting,
     required this.onCategoryChanged,
     required this.onBudgetChanged,
     required this.onPickLocation,
+    required this.onDateChanged,
     required this.onSubmit,
   });
 
@@ -266,11 +276,13 @@ class _JobRequestComposer extends StatelessWidget {
   final String? category;
   final String budget;
   final String? locationLabel;
+  final DateTime? date;
   final TextEditingController detailController;
   final bool submitting;
   final ValueChanged<String> onCategoryChanged;
   final ValueChanged<String> onBudgetChanged;
   final VoidCallback onPickLocation;
+  final ValueChanged<DateTime> onDateChanged;
   final VoidCallback onSubmit;
 
   @override
@@ -348,6 +360,8 @@ class _JobRequestComposer extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 14),
+          QuoteDateField(selectedDate: date, onDateSelected: onDateChanged),
           const SizedBox(height: 14),
           TextField(
             controller: detailController,

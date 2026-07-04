@@ -775,21 +775,7 @@ class DrameStore extends ChangeNotifier {
             .map(
               (item) =>
                   item.id == request.id
-                      ? PilotWorkRequest(
-                        id: item.id,
-                        category: item.category,
-                        status: '확인 중',
-                        location: item.location,
-                        distance: item.distance,
-                        dateRange: item.dateRange,
-                        budget: item.budget,
-                        client: item.client,
-                        summary: item.summary,
-                        progress: item.progress,
-                        remaining: item.remaining,
-                        mapLabel: item.mapLabel,
-                        createdAt: item.createdAt,
-                      )
+                      ? item.copyWith(status: '확인 중')
                       : item,
             )
             .toList();
@@ -805,6 +791,8 @@ class DrameStore extends ChangeNotifier {
     required String budgetRange,
     required String contactWindow,
     int? proposedAmount,
+    double? latitude,
+    double? longitude,
   }) async {
     await _api.updateMyQuoteRequest(
       requestId: requestId,
@@ -815,6 +803,8 @@ class DrameStore extends ChangeNotifier {
       budgetRange: budgetRange,
       contactWindow: contactWindow,
       proposedAmount: proposedAmount,
+      latitude: latitude,
+      longitude: longitude,
     );
     myQuotes = await _api.fetchMyQuotes();
     notifyListeners();
@@ -970,6 +960,8 @@ class DrameStore extends ChangeNotifier {
       myQuoteId: data.myQuoteId,
       myQuoteMessage: data.myQuoteMessage,
       myQuotePrice: data.myQuotePrice,
+      latitude: data.latitude,
+      longitude: data.longitude,
     );
   }
 

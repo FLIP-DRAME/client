@@ -2082,7 +2082,18 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
     final compact = MediaQuery.sizeOf(context).width < 980;
     return Consumer<DrameStore>(
       builder: (context, store, _) {
-        final requests = store.pilotWorkRequests;
+        // 지도 마커의 "견적 응답하기"로 들어온 방송(broadcast) 요청은 아직 견적을
+        // 보내기 전이라 서버 목록(store.pilotWorkRequests)에는 없다 (RLS상 아직
+        // 안 보임). 목록에도 같이 보여서 오른쪽 상세와의 연결이 명확하도록,
+        // 서버 목록에 없는 초기 stub은 화면 표시용으로만 맨 앞에 끼워 넣는다 —
+        // store 자체는 건드리지 않는다. 실제로 견적을 보내면 서버 목록에 같은
+        // id로 진짜 데이터가 들어오면서 이 임시 항목을 자연스럽게 대체한다.
+        final initial = widget.initialRequest;
+        final requests =
+            initial != null &&
+                    !store.pilotWorkRequests.any((r) => r.id == initial.id)
+                ? <PilotWorkRequest>[initial, ...store.pilotWorkRequests]
+                : store.pilotWorkRequests;
         // store가 갱신되면 selectedRequest도 최신 객체로 교체
         if (selectedRequest != null) {
           final idx = requests.indexWhere((r) => r.id == selectedRequest!.id);
@@ -2657,22 +2668,7 @@ class _RequestReviewDetail extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Container(
-            height: 160,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Icon(Icons.map_outlined, color: Color(0xFF8BA0B8)),
-                const SizedBox(height: 8),
-                Text(request.mapLabel, style: AppText.metricLabel),
-              ],
-            ),
-          ),
+          _RequestReviewMap(request: request),
           if (isCompleted) ...<Widget>[
             const SizedBox(height: 18),
             const Divider(color: _line),
@@ -2708,6 +2704,90 @@ class _RequestReviewDetail extends ConsumerWidget {
             initialPrice: request.myQuotePrice,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RequestReviewMap extends StatelessWidget {
+  const _RequestReviewMap({required this.request});
+
+  final PilotWorkRequest request;
+
+  static const Color _navy = Color(0xFF16305E);
+
+  @override
+  Widget build(BuildContext context) {
+    if (!request.hasLocation) {
+      return Container(
+        height: 160,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Icon(Icons.map_outlined, color: Color(0xFF8BA0B8)),
+            const SizedBox(height: 8),
+            Text(request.mapLabel, style: AppText.metricLabel),
+          ],
+        ),
+      );
+    }
+    final point = LatLng(request.latitude!, request.longitude!);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 160,
+        width: double.infinity,
+        child: IgnorePointer(
+          child: FlutterMap(
+            options: MapOptions(
+              initialCenter: point,
+              initialZoom: 13,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.none,
+              ),
+            ),
+            children: <Widget>[
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.modu.drame',
+              ),
+              MarkerLayer(
+                markers: <Marker>[
+                  Marker(
+                    point: point,
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _navy,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: const <BoxShadow>[
+                          BoxShadow(
+                            color: Color(0x330A0B0D),
+                            blurRadius: 12,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.place_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -4536,8 +4616,8 @@ class _HowItWorksSection extends StatelessWidget {
                 children: const <Widget>[
                   _HowItWorksStep(
                     number: '01',
-                    title: '서비스 선택',
-                    description: '항공촬영, 방제, 측량 등 필요한 드론 서비스를 카테고리에서 선택하세요.',
+                    title: '견적 요청',
+                    description: '지도에서 촬영 위치를 직접 선택하거나, 운용자에게 직접 견적을 요청하세요.',
                   ),
                   SizedBox(height: 24),
                   _HowItWorksStep(
@@ -4560,8 +4640,8 @@ class _HowItWorksSection extends StatelessWidget {
                   Expanded(
                     child: _HowItWorksStep(
                       number: '01',
-                      title: '서비스 선택',
-                      description: '항공촬영, 방제, 측량 등 필요한 드론 서비스를 카테고리에서 선택하세요.',
+                      title: '견적 요청',
+                      description: '지도에서 촬영 위치를 직접 선택하거나, 운용자에게 직접 견적을 요청하세요.',
                     ),
                   ),
                   SizedBox(width: 24),

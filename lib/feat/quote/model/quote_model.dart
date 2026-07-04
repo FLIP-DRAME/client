@@ -10,6 +10,8 @@ class QuoteRequest {
     required this.budgetRange,
     required this.contactWindow,
     this.proposedAmount,
+    this.latitude,
+    this.longitude,
   });
 
   final DronePilot pilot;
@@ -20,6 +22,8 @@ class QuoteRequest {
   final String budgetRange;
   final String contactWindow;
   final int? proposedAmount;
+  final double? latitude;
+  final double? longitude;
 }
 
 class QuoteEstimate {

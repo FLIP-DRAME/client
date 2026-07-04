@@ -46,6 +46,8 @@ class _FeedLocationPickerDialogState
   final TextEditingController _searchController = TextEditingController();
   LatLng? _picked;
   String? _pickedLabel;
+  bool _resolvingLabel = false;
+  int _pickToken = 0;
   bool _searching = false;
   List<_GeocodeResult> _results = const <_GeocodeResult>[];
   String? _searchError;
@@ -108,9 +110,11 @@ class _FeedLocationPickerDialogState
   }
 
   void _selectResult(_GeocodeResult result) {
+    _pickToken++;
     setState(() {
       _picked = result.position;
       _pickedLabel = result.label;
+      _resolvingLabel = false;
       _results = const <_GeocodeResult>[];
       _searchController.text = result.label;
     });
@@ -118,11 +122,49 @@ class _FeedLocationPickerDialogState
   }
 
   void _handleTap(TapPosition tapPosition, LatLng point) {
+    final token = ++_pickToken;
     setState(() {
       _picked = point;
       _pickedLabel = null;
+      _resolvingLabel = true;
+    });
+    _reverseGeocode(point).then((label) {
+      if (!mounted || token != _pickToken) return;
+      setState(() {
+        _pickedLabel = label;
+        _resolvingLabel = false;
+      });
     });
   }
+
+  Future<String?> _reverseGeocode(LatLng point) async {
+    try {
+      final uri = Uri.https('nominatim.openstreetmap.org', '/reverse', {
+        'format': 'json',
+        'lat': point.latitude.toString(),
+        'lon': point.longitude.toString(),
+        'accept-language': 'ko',
+        'zoom': '16',
+      });
+      final response = await http
+          .get(
+            uri,
+            headers: const {
+              'User-Agent': 'ModuDroneApp/1.0 (contact: support@modedrone.kr)',
+            },
+          )
+          .timeout(const Duration(seconds: 6));
+      if (response.statusCode != 200) return null;
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final name = decoded['display_name']?.toString();
+      return (name == null || name.isEmpty) ? null : name;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _coordinateLabel(LatLng point) =>
+      '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
 
   @override
   Widget build(BuildContext context) {
@@ -258,14 +300,10 @@ class _FeedLocationPickerDialogState
                               markers: <Marker>[
                                 Marker(
                                   point: _picked!,
-                                  width: 44,
-                                  height: 44,
-                                  alignment: Alignment.topCenter,
-                                  child: const Icon(
-                                    Icons.location_on_rounded,
-                                    color: _navy,
-                                    size: 40,
-                                  ),
+                                  width: 46,
+                                  height: 46,
+                                  alignment: Alignment.center,
+                                  child: const _PickedLocationMarker(),
                                 ),
                               ],
                             ),
@@ -299,7 +337,9 @@ class _FeedLocationPickerDialogState
               Text(
                 _picked == null
                     ? '아직 위치가 선택되지 않았습니다.'
-                    : '선택됨: ${_picked!.latitude.toStringAsFixed(5)}, ${_picked!.longitude.toStringAsFixed(5)}',
+                    : _resolvingLabel
+                    ? '선택됨: ${_coordinateLabel(_picked!)} (주소 확인 중…)'
+                    : '선택됨: ${_pickedLabel ?? _coordinateLabel(_picked!)}',
                 style: const TextStyle(fontSize: 12, color: _muted),
               ),
               const SizedBox(height: 14),
@@ -318,7 +358,7 @@ class _FeedLocationPickerDialogState
                             : () => Navigator.of(context).pop(
                               FeedLocationPickerResult(
                                 position: _picked!,
-                                label: _pickedLabel,
+                                label: _pickedLabel ?? _coordinateLabel(_picked!),
                               ),
                             ),
                     style: FilledButton.styleFrom(backgroundColor: _navy),
@@ -330,6 +370,27 @@ class _FeedLocationPickerDialogState
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PickedLocationMarker extends StatelessWidget {
+  const _PickedLocationMarker();
+
+  static const Color _selected = Color(0xFF05B169);
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _selected,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(color: Color(0x330A0B0D), blurRadius: 16, offset: Offset(0, 8)),
+        ],
+      ),
+      child: const Icon(Icons.location_on_rounded, color: Colors.white, size: 26),
     );
   }
 }

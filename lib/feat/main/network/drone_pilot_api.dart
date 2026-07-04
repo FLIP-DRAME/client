@@ -31,6 +31,8 @@ abstract class DronePilotApi {
     required String budgetRange,
     required String contactWindow,
     int? proposedAmount,
+    double? latitude,
+    double? longitude,
   });
   Future<void> submitQuoteForRequest(
     PilotWorkRequest request,
@@ -79,6 +81,8 @@ class PilotWorkRequestData {
     this.myQuoteId,
     this.myQuoteMessage,
     this.myQuotePrice,
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -94,6 +98,8 @@ class PilotWorkRequestData {
   final String? myQuoteId;
   final String? myQuoteMessage;
   final int? myQuotePrice;
+  final double? latitude;
+  final double? longitude;
 }
 
 class UserQuoteSummary {
@@ -1079,6 +1085,13 @@ class SupabaseDronePilotApi implements DronePilotApi {
     final operatorId = profile?['id']?.toString();
     if (operatorId == null) return const <PilotWorkRequestData>[];
 
+    // No `.eq('preferred_operator_id', operatorId)` filter here: broadcast
+    // (map-posted) requests have `preferred_operator_id: null` and are only
+    // visible to this operator once they've submitted a quote, via a
+    // separate RLS policy keyed off the `quotes` table — see
+    // supabase_job_request_broadcast_response_migration.sql. RLS already
+    // restricts the result set to (a) requests targeted at this operator and
+    // (b) requests this operator has quoted, so no extra filter is needed.
     final rows = await _client
         .from('job_requests')
         .select('''
@@ -1095,10 +1108,11 @@ class SupabaseDronePilotApi implements DronePilotApi {
           client_display_name,
           operator_viewed_at,
           created_at,
+          latitude,
+          longitude,
           service_categories(label),
           quotes(id, message, proposed_price, operator_id)
         ''')
-        .eq('preferred_operator_id', operatorId)
         .neq('client_id', userId)
         .order('created_at', ascending: false);
 
@@ -1138,6 +1152,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
         myQuoteId: myQuote?['id']?.toString(),
         myQuoteMessage: myQuote?['message']?.toString(),
         myQuotePrice: (myQuote?['proposed_price'] as num?)?.toInt(),
+        latitude: (map['latitude'] as num?)?.toDouble(),
+        longitude: (map['longitude'] as num?)?.toDouble(),
       );
     }).toList();
   }
@@ -1284,6 +1300,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
     required String budgetRange,
     required String contactWindow,
     int? proposedAmount,
+    double? latitude,
+    double? longitude,
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) {
@@ -1311,6 +1329,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
           'contact_window': contactWindow,
           if (parsedDate != null)
             'preferred_start_at': parsedDate.toUtc().toIso8601String(),
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
         })
         .eq('id', requestId)
         .eq('client_id', userId);

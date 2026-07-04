@@ -248,8 +248,8 @@ class _UserHomeTabState extends State<_UserHomeTab> {
                           children: <Widget>[
                             _HowItWorksStepCard(
                               step: '01',
-                              title: '서비스 선택',
-                              body: '카테고리에서 필요한 드론 서비스를 선택',
+                              title: '견적 요청',
+                              body: '지도에서 위치 선택 또는 운용자에게 직접 요청',
                               width: cardW,
                             ),
                             const SizedBox(width: 10),
@@ -3539,6 +3539,8 @@ class _OperatorRequestSheetState extends State<_OperatorRequestSheet> {
                   ),
                 ),
 
+                const SizedBox(height: 12),
+                _RequestReviewMap(request: req),
                 const SizedBox(height: 12),
 
                 // ── Quote response section ─────────────────────────────────

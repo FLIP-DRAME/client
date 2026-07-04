@@ -93,6 +93,8 @@ class PilotWorkRequest {
     this.myQuoteId,
     this.myQuoteMessage,
     this.myQuotePrice,
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -111,10 +113,37 @@ class PilotWorkRequest {
   final String? myQuoteId;
   final String? myQuoteMessage;
   final int? myQuotePrice;
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasLocation => latitude != null && longitude != null;
 
   String get displayLocation {
     final v = location.trim();
     if (v.isEmpty || v == '??' || v == '?') return '지역 협의';
     return v;
+  }
+
+  PilotWorkRequest copyWith({String? status}) {
+    return PilotWorkRequest(
+      id: id,
+      category: category,
+      status: status ?? this.status,
+      location: location,
+      distance: distance,
+      dateRange: dateRange,
+      budget: budget,
+      client: client,
+      summary: summary,
+      progress: progress,
+      remaining: remaining,
+      mapLabel: mapLabel,
+      createdAt: createdAt,
+      myQuoteId: myQuoteId,
+      myQuoteMessage: myQuoteMessage,
+      myQuotePrice: myQuotePrice,
+      latitude: latitude,
+      longitude: longitude,
+    );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../core/app_defaults.dart';
@@ -28,6 +29,8 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
   String? _district;
   String _budget = '50만원 이하';
   DateTime? _selectedDate;
+  LatLng? _pickedLocation;
+  String? _pickedLocationLabel;
   bool _submitting = false;
 
   String get _formattedDate {
@@ -129,6 +132,8 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
       budgetRange: _budget,
       contactWindow: _contactController.text,
       proposedAmount: proposedAmount,
+      latitude: _pickedLocation?.latitude,
+      longitude: _pickedLocation?.longitude,
     );
     try {
       final store = ref.read(drameStoreProvider);
@@ -142,6 +147,8 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
           budgetRange: _budget,
           contactWindow: _contactController.text,
           proposedAmount: proposedAmount,
+          latitude: _pickedLocation?.latitude,
+          longitude: _pickedLocation?.longitude,
         );
       } else {
         await store.submitQuoteRequest(request);
@@ -218,6 +225,15 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                       onSelected: (value) => setState(() => _district = value),
                     ),
                   ],
+                  const SizedBox(height: 16),
+                  QuoteLocationField(
+                    location: _pickedLocation,
+                    locationLabel: _pickedLocationLabel,
+                    onLocationSelected: (result) => setState(() {
+                      _pickedLocation = result.position;
+                      _pickedLocationLabel = result.label;
+                    }),
+                  ),
                   const SizedBox(height: 20),
                   QuoteDateField(
                     selectedDate: _selectedDate,
