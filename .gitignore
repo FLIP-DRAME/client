@@ -78,3 +78,8 @@ package-lock.json
 screenshots/
 qa_result_*.json
 qa_web_result_*.json
+
+# Root-level SQL migration notes -- run manually in the Supabase SQL
+# Editor, never committed (this repo is public; these expose schema/RLS
+# details that shouldn't be world-readable).
+/*.sql
