@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+Disallow: /login
+Disallow: /signup
+Disallow: /quote/
+Disallow: /my/
+Disallow: /pilot/
+Disallow: /operator/mypage
+Disallow: /operator/requests
+Disallow: /chats
+Disallow: /chat/
+
+Sitemap: https://modeofficial.net/sitemap.xml
