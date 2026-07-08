@@ -2589,7 +2589,7 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
   }
 }
 
-class _RequestReviewDetail extends ConsumerWidget {
+class _RequestReviewDetail extends ConsumerStatefulWidget {
   const _RequestReviewDetail({
     required this.request,
     required this.isCompleted,
@@ -2599,6 +2599,47 @@ class _RequestReviewDetail extends ConsumerWidget {
   final PilotWorkRequest request;
   final bool isCompleted;
   final Future<void> Function(String message, int? proposedPrice) onComplete;
+
+  @override
+  ConsumerState<_RequestReviewDetail> createState() =>
+      _RequestReviewDetailState();
+}
+
+class _RequestReviewDetailState extends ConsumerState<_RequestReviewDetail> {
+  String? _fetchedDetail;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.request.summary.isEmpty) {
+      unawaited(_loadDetail());
+    }
+  }
+
+  @override
+  void didUpdateWidget(_RequestReviewDetail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.request.id != widget.request.id &&
+        widget.request.summary.isEmpty) {
+      setState(() => _fetchedDetail = null);
+      unawaited(_loadDetail());
+    }
+  }
+
+  Future<void> _loadDetail() async {
+    try {
+      final detail = await ref
+          .read(quoteApiProvider)
+          .fetchMapJobRequestDetail(widget.request.id);
+      if (!mounted) return;
+      setState(() => _fetchedDetail = detail?.detail);
+    } catch (_) {}
+  }
+
+  PilotWorkRequest get request => widget.request;
+  bool get isCompleted => widget.isCompleted;
+  Future<void> Function(String message, int? proposedPrice) get onComplete =>
+      widget.onComplete;
 
   Future<void> _openChat(BuildContext context, WidgetRef ref) async {
     try {
@@ -2623,7 +2664,9 @@ class _RequestReviewDetail extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final displayDetail =
+        request.summary.isNotEmpty ? request.summary : (_fetchedDetail ?? '');
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -2662,8 +2705,31 @@ class _RequestReviewDetail extends ConsumerWidget {
                   icon: Icons.person_outline_rounded,
                   text: '의뢰자: ${request.client}',
                 ),
-                const SizedBox(height: 14),
-                Text(request.summary, style: AppText.cardSubtitle),
+                if (displayDetail.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F8FA),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _line),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          '요청 내용',
+                          style: AppText.metricLabel.copyWith(
+                            color: const Color(0xFF7C828A),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(displayDetail, style: AppText.cardSubtitle),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
