@@ -264,7 +264,8 @@ class SupabaseQuoteApi implements QuoteApi {
           longitude,
           location_label,
           created_at,
-          category_label
+          category_label,
+          preferred_start_at
         ''')
         .order('created_at', ascending: false)
         .limit(limit);
@@ -285,6 +286,9 @@ class SupabaseQuoteApi implements QuoteApi {
         createdAt:
             DateTime.tryParse((map['created_at'] ?? '').toString()) ??
             DateTime.now(),
+        preferredDate: DateTime.tryParse(
+          (map['preferred_start_at'] ?? '').toString(),
+        ),
       );
     }).toList();
   }
@@ -361,6 +365,7 @@ class SupabaseQuoteApi implements QuoteApi {
       createdAt:
           DateTime.tryParse((row['created_at'] ?? '').toString()) ??
           DateTime.now(),
+      preferredDate: preferredDate,
     );
   }
 }

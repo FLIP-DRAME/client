@@ -146,7 +146,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       status: request.isInProgress ? '진행 중' : '신규',
       location: request.locationLabel,
       distance: '',
-      dateRange: '',
+      dateRange: request.dateLabel,
       budget: request.budgetLabel,
       client: '고객',
       summary: '',
@@ -683,7 +683,7 @@ class _JobRequestPreview extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '${request.locationLabel} · ${request.budgetLabel}',
+                '${request.locationLabel} · ${request.budgetLabel} · ${request.dateLabel}',
                 style: AppText.cardSubtitle,
               ),
               const SizedBox(height: 14),

@@ -69,15 +69,22 @@ android/*.keystore
 # Release build artifacts (binary)
 release_artifacts/**/*.aab
 release_artifacts/**/*.apk
+releases/
+
+# Generated sales reports / scratch workbooks -- not source
+outputs/
+tmp_sales_workbook/
 
 # Node / Puppeteer QA
 node_modules/
 package-lock.json
 
-# QA output (screenshots & result JSONs)
-screenshots/
-qa_result_*.json
-qa_web_result_*.json
+# QA toolkit (see qa/README.md) -- output and per-project config, not source
+qa/screenshots/
+qa/results/
+qa/config.js
+qa/**/*.png
+qa/**/*result*.json
 
 # Root-level SQL migration notes -- run manually in the Supabase SQL
 # Editor, never committed (this repo is public; these expose schema/RLS

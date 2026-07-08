@@ -3263,7 +3263,7 @@ class _LicenseStep extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _PdfUploadField(
-          label: '자격증 파일 (PDF)',
+          label: '자격증 파일 (PDF) (선택)',
           fileName: data.licenseFileName,
           onPick: (bytes, name) async {
             try {
@@ -3322,7 +3322,7 @@ class _BusinessStep extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _PdfUploadField(
-          label: '사업자등록증 파일 (PDF)',
+          label: '사업자등록증 파일 (PDF) (선택)',
           fileName: data.businessFileName,
           onPick: (bytes, name) async {
             try {
@@ -3460,7 +3460,7 @@ class _InsuranceStep extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _PilotTextField(
-          label: '가입된 기체 번호',
+          label: '가입된 기체 번호 (선택)',
           initialValue: data.insuranceDroneNumber,
           hint: '예: D-2024-001',
           keyboardType: TextInputType.text,
@@ -3472,7 +3472,7 @@ class _InsuranceStep extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _PdfUploadField(
-          label: '보험 증권 파일 (PDF)',
+          label: '보험 증권 파일 (PDF) (선택)',
           fileName: data.insuranceFileName,
           onPick: (bytes, name) async {
             try {
@@ -3529,7 +3529,7 @@ class _DroneStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _PilotSelectField(
-                  label: '제조사',
+                  label: '제조사 (선택)',
                   value: drone.maker,
                   values: const <String>['DJI', 'Autel', 'Parrot', '기타'],
                   onChanged:
@@ -3537,7 +3537,7 @@ class _DroneStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 _PilotTextField(
-                  label: '모델명',
+                  label: '모델명 *',
                   initialValue: drone.model,
                   hint: 'Mavic 3 Pro',
                   onChanged:
@@ -3564,7 +3564,7 @@ class _DroneStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 _PilotTextField(
-                  label: '기체 신고번호',
+                  label: '기체 신고번호 (선택)',
                   initialValue: drone.registrationNumber,
                   hint: 'S1234567',
                   keyboardType: TextInputType.text,

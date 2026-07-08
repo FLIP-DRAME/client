@@ -99,6 +99,7 @@ class MapJobRequest {
     required this.latitude,
     required this.longitude,
     required this.createdAt,
+    this.preferredDate,
   });
 
   final String id;
@@ -109,6 +110,15 @@ class MapJobRequest {
   final double latitude;
   final double longitude;
   final DateTime createdAt;
+  final DateTime? preferredDate;
+
+  String get dateLabel {
+    final date = preferredDate;
+    if (date == null) return '일정 협의';
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}.$month.$day';
+  }
 
   static const _inProgressStatuses = <String>{
     'accepted',

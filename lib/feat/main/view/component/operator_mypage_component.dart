@@ -567,21 +567,21 @@ class _OperatorDroneListCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _InlineEditableSelect(
-                  label: '제조사',
+                  label: '제조사 (선택)',
                   value: drone.maker,
                   values: const <String>['DJI', 'Autel', 'Parrot', '기타'],
                   onChanged:
                       (value) => store.updatePilotDrone(index, maker: value),
                 ),
                 _InlineEditableText(
-                  label: '모델명',
+                  label: '모델명 *',
                   value: drone.model,
                   hint: 'Mavic 3 Pro',
                   onChanged:
                       (value) => store.updatePilotDrone(index, model: value),
                 ),
                 _InlineEditableText(
-                  label: '신고번호',
+                  label: '신고번호 (선택)',
                   value: drone.registrationNumber,
                   hint: 'S1234567',
                   onChanged:
@@ -593,7 +593,7 @@ class _OperatorDroneListCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('기체 카테고리', style: AppText.metricLabel),
+                  child: Text('기체 카테고리 *', style: AppText.metricLabel),
                 ),
                 const SizedBox(height: 8),
                 _PilotChipGroup(
@@ -605,7 +605,7 @@ class _OperatorDroneListCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('탑재 센서', style: AppText.metricLabel),
+                  child: Text('탑재 센서 (선택)', style: AppText.metricLabel),
                 ),
                 const SizedBox(height: 8),
                 _PilotChipGroup(
