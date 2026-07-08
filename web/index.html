@@ -47,6 +47,30 @@
 
   <title>모두의 드론 | 전문 드론 기사 매칭 플랫폼</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- SEO: structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "모두의 드론",
+    "url": "https://modeofficial.net/",
+    "image": "https://modeofficial.net/og-image.png",
+    "description": "항공촬영, 농약방제, 측량·매핑, 시설점검까지 검증된 전문 드론 운용자를 2분 만에 연결하는 드론 작업 매칭 플랫폼입니다.",
+    "areaServed": "KR",
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "드론 작업 서비스",
+      "itemListElement": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "항공촬영" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "농약방제" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "측량" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "매핑" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "시설점검" } }
+      ]
+    }
+  }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
