@@ -613,14 +613,22 @@ class _JobRequestMap extends StatelessWidget {
               children: <Widget>[
                 FlutterMap(
                   options: MapOptions(
-                    initialCenter: const LatLng(36.35, 127.85),
-                    initialZoom: 6.5,
-                    minZoom: 6,
+                    initialCenter: const LatLng(36.1, 127.85),
+                    initialZoom: 8.3,
+                    // CameraConstraint.contain requires the WHOLE viewport
+                    // to stay inside bounds -- if minZoom is too low, the
+                    // viewport at that zoom is wider than Korea and contain
+                    // rejects every camera update (zoom appears frozen).
+                    // 8 is the lowest zoom where a full-width desktop map
+                    // card still fits inside the bounds below, confirmed by
+                    // manual QA (scroll all the way out, no neighboring
+                    // country visible, zoom still responds).
+                    minZoom: 8,
                     maxZoom: 17,
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                     ),
-                    cameraConstraint: CameraConstraint.containCenter(
+                    cameraConstraint: CameraConstraint.contain(
                       bounds: LatLngBounds(
                         const LatLng(32.9, 124.4),
                         const LatLng(38.9, 131.95),
