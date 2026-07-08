@@ -603,7 +603,9 @@ class _JobRequestMap extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 720;
-        return SizedBox(
+        return Listener(
+          onPointerSignal: (_) {},
+          child: SizedBox(
           height: compact ? 520 : 560,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -618,7 +620,7 @@ class _JobRequestMap extends StatelessWidget {
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                     ),
-                    cameraConstraint: CameraConstraint.contain(
+                    cameraConstraint: CameraConstraint.containCenter(
                       bounds: LatLngBounds(
                         const LatLng(32.9, 124.4),
                         const LatLng(38.9, 131.95),
@@ -720,6 +722,7 @@ class _JobRequestMap extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         );
       },
