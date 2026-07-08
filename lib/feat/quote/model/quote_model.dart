@@ -100,6 +100,7 @@ class MapJobRequest {
     required this.longitude,
     required this.createdAt,
     this.preferredDate,
+    this.detail = '',
     this.isOwn = false,
   });
 
@@ -112,6 +113,7 @@ class MapJobRequest {
   final double longitude;
   final DateTime createdAt;
   final DateTime? preferredDate;
+  final String detail;
 
   /// True when the current logged-in user is the one who posted this
   /// request. Only set for rows fetched via `fetchMyMapRequests` -- the

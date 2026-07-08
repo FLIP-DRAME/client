@@ -278,7 +278,8 @@ class SupabaseQuoteApi implements QuoteApi {
           location_label,
           created_at,
           category_label,
-          preferred_start_at
+          preferred_start_at,
+          detail
         ''')
         .order('created_at', ascending: false)
         .limit(limit);
@@ -302,6 +303,7 @@ class SupabaseQuoteApi implements QuoteApi {
         preferredDate: DateTime.tryParse(
           (map['preferred_start_at'] ?? '').toString(),
         ),
+        detail: (map['detail'] ?? '').toString(),
       );
     }).toList();
 
@@ -329,6 +331,7 @@ class SupabaseQuoteApi implements QuoteApi {
           location_label,
           created_at,
           preferred_start_at,
+          detail,
           service_categories(label)
         ''')
         .eq('client_id', userId)
@@ -356,6 +359,7 @@ class SupabaseQuoteApi implements QuoteApi {
         preferredDate: DateTime.tryParse(
           (map['preferred_start_at'] ?? '').toString(),
         ),
+        detail: (map['detail'] ?? '').toString(),
         isOwn: true,
       );
     }).toList();

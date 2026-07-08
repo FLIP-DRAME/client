@@ -126,6 +126,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                           longitude: r.longitude,
                           createdAt: r.createdAt,
                           preferredDate: r.preferredDate,
+                          detail: r.detail,
                           isOwn: r.isOwn,
                         )
                       : r,
@@ -242,8 +243,6 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       );
       return;
     }
-    final detailText =
-        _selectedDetail?.id == request.id ? (_selectedDetail?.detail ?? '') : '';
     final stub = PilotWorkRequest(
       id: request.id,
       category: request.category,
@@ -253,7 +252,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       dateRange: request.dateLabel,
       budget: request.budgetLabel,
       client: '고객',
-      summary: detailText,
+      summary: request.detail,
       progress: '',
       remaining: '확인 필요',
       mapLabel: '${request.locationLabel} 지도',
