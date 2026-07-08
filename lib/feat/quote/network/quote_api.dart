@@ -31,6 +31,10 @@ abstract class QuoteApi {
   /// Closes a map-posted request early (stop receiving further quotes).
   /// Only the owner (client_id) may do this -- enforced by RLS.
   Future<void> closeMapJobRequest(String requestId);
+
+  /// Fetches the user-written detail text for a single map request.
+  /// Returns null on any error so callers can degrade gracefully.
+  Future<MapJobRequestDetail?> fetchMapJobRequestDetail(String requestId);
 }
 
 class SupabaseQuoteApi implements QuoteApi {
@@ -368,6 +372,26 @@ class SupabaseQuoteApi implements QuoteApi {
         .update(<String, Object?>{'status': 'cancelled'})
         .eq('id', requestId)
         .eq('client_id', userId);
+  }
+
+  @override
+  Future<MapJobRequestDetail?> fetchMapJobRequestDetail(
+    String requestId,
+  ) async {
+    try {
+      final row = await _client
+          .from('job_requests')
+          .select('id, detail')
+          .eq('id', requestId)
+          .maybeSingle();
+      if (row == null) return null;
+      return MapJobRequestDetail(
+        id: row['id'].toString(),
+        detail: (row['detail'] ?? '').toString(),
+      );
+    } on PostgrestException {
+      return null;
+    }
   }
 
   @override

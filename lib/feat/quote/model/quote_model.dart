@@ -151,6 +151,17 @@ class MapJobRequest {
   bool get isClosedOrExpired => isClosed || isExpired;
 }
 
+/// Full detail of a map-pinned job request, fetched on demand when a pin is
+/// selected. Kept separate from [MapJobRequest] so the map load stays light.
+class MapJobRequestDetail {
+  const MapJobRequestDetail({required this.id, this.detail = ''});
+
+  final String id;
+  final String detail;
+
+  bool get hasDetail => detail.trim().isNotEmpty;
+}
+
 class ContactAccess {
   const ContactAccess({
     required this.phone,
