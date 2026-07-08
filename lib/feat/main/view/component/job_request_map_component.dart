@@ -15,6 +15,8 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
 
   List<MapJobRequest>? _requests;
   String? _selectedId;
+  MapJobRequestDetail? _selectedDetail;
+  String? _detailLoadingId;
   bool _showComposer = false;
 
   String? _composerCategory;
@@ -59,9 +61,29 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
           merged.values.toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       setState(() => _requests = combined);
+      if (combined.isNotEmpty) {
+        unawaited(_fetchDetail(combined.first.id));
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _requests = const <MapJobRequest>[]);
+    }
+  }
+
+  Future<void> _fetchDetail(String requestId) async {
+    if (_detailLoadingId == requestId) return;
+    _detailLoadingId = requestId;
+    setState(() => _selectedDetail = null);
+    try {
+      final detail = await ref
+          .read(quoteApiProvider)
+          .fetchMapJobRequestDetail(requestId);
+      if (!mounted || _selectedId != requestId && requestId != _requests?.firstOrNull?.id) return;
+      setState(() => _selectedDetail = detail);
+    } catch (_) {
+      // degrade gracefully — preview card still shows without detail
+    } finally {
+      _detailLoadingId = null;
     }
   }
 
@@ -104,6 +126,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                           longitude: r.longitude,
                           createdAt: r.createdAt,
                           preferredDate: r.preferredDate,
+                          detail: r.detail,
                           isOwn: r.isOwn,
                         )
                       : r,
@@ -229,7 +252,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       dateRange: request.dateLabel,
       budget: request.budgetLabel,
       client: '고객',
-      summary: '',
+      summary: request.detail,
       progress: '',
       remaining: '확인 필요',
       mapLabel: '${request.locationLabel} 지도',
@@ -324,7 +347,11 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
               _JobRequestMap(
                 requests: requests,
                 selectedId: _selectedId,
-                onSelect: (request) => setState(() => _selectedId = request.id),
+                selectedDetail: _selectedDetail,
+                onSelect: (request) {
+                  setState(() => _selectedId = request.id);
+                  unawaited(_fetchDetail(request.id));
+                },
                 onRespond: _handleRespond,
                 onClose: _closeRequest,
               ),
@@ -555,12 +582,14 @@ class _JobRequestMap extends StatelessWidget {
     required this.onSelect,
     required this.onRespond,
     required this.onClose,
+    this.selectedDetail,
   });
 
   static const Color _navy = Color(0xFF16305E);
 
   final List<MapJobRequest> requests;
   final String? selectedId;
+  final MapJobRequestDetail? selectedDetail;
   final ValueChanged<MapJobRequest> onSelect;
   final ValueChanged<MapJobRequest> onRespond;
   final ValueChanged<MapJobRequest> onClose;
@@ -663,6 +692,7 @@ class _JobRequestMap extends StatelessWidget {
                   bottom: 12,
                   child: _JobRequestPreview(
                     request: selected,
+                    detail: selectedDetail,
                     compact: compact,
                     onRespond: () => onRespond(selected),
                     onClose: () => onClose(selected),
@@ -758,6 +788,7 @@ class _JobRequestPreview extends StatelessWidget {
     required this.compact,
     required this.onRespond,
     required this.onClose,
+    this.detail,
   });
 
   static const Color _navy = Color(0xFF16305E);
@@ -765,6 +796,7 @@ class _JobRequestPreview extends StatelessWidget {
   static const Color _closed = Color(0xFF9CA3AF);
 
   final MapJobRequest request;
+  final MapJobRequestDetail? detail;
   final bool compact;
   final VoidCallback onRespond;
   final VoidCallback onClose;
@@ -818,6 +850,23 @@ class _JobRequestPreview extends StatelessWidget {
                 '${request.locationLabel} · ${request.budgetLabel} · ${request.dateLabel}',
                 style: AppText.cardSubtitle,
               ),
+              if (detail != null && detail!.hasDetail) ...<Widget>[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7F8FA),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    detail!.detail,
+                    style: AppText.cardSubtitle,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
               if (request.isOwn && !closed)
                 SizedBox(
