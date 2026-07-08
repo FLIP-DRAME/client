@@ -10,6 +10,11 @@ abstract class QuoteApi {
   /// Open, geotagged broadcast requests for the job-request map.
   Future<List<MapJobRequest>> fetchOpenMapRequests({int limit = 100});
 
+  /// The current user's own map-posted broadcast requests, regardless of
+  /// status -- used so an owner can see/close their own pin even after it
+  /// has closed or auto-expired and dropped off the public map.
+  Future<List<MapJobRequest>> fetchMyMapRequests();
+
   /// Posts a new broadcast request (no preferred operator) pinned at the
   /// given map location.
   Future<MapJobRequest> createMapJobRequest({
@@ -22,6 +27,10 @@ abstract class QuoteApi {
     int? proposedAmount,
     DateTime? preferredDate,
   });
+
+  /// Closes a map-posted request early (stop receiving further quotes).
+  /// Only the owner (client_id) may do this -- enforced by RLS.
+  Future<void> closeMapJobRequest(String requestId);
 }
 
 class SupabaseQuoteApi implements QuoteApi {
@@ -270,7 +279,7 @@ class SupabaseQuoteApi implements QuoteApi {
         .order('created_at', ascending: false)
         .limit(limit);
 
-    return rows.map<MapJobRequest>((row) {
+    final requests = rows.map<MapJobRequest>((row) {
       final map = Map<String, dynamic>.from(row as Map);
       return MapJobRequest(
         id: map['id'].toString(),
@@ -291,6 +300,74 @@ class SupabaseQuoteApi implements QuoteApi {
         ),
       );
     }).toList();
+
+    // Defensive client-side filter: the DB view is expected to already drop
+    // closed/expired rows (see supabase_job_request_expiry_migration.sql),
+    // but this keeps the public feed correct even before that migration is
+    // applied, or if it's ever missed on a fresh Supabase project.
+    return requests.where((r) => !r.isClosedOrExpired).toList();
+  }
+
+  @override
+  Future<List<MapJobRequest>> fetchMyMapRequests() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const <MapJobRequest>[];
+
+    final rows = await _client
+        .from('job_requests')
+        .select('''
+          id,
+          status,
+          budget_min,
+          budget_max,
+          latitude,
+          longitude,
+          location_label,
+          created_at,
+          preferred_start_at,
+          service_categories(label)
+        ''')
+        .eq('client_id', userId)
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null)
+        .order('created_at', ascending: false);
+
+    return rows.map<MapJobRequest>((row) {
+      final map = Map<String, dynamic>.from(row as Map);
+      final categoryRow = map['service_categories'] as Map?;
+      return MapJobRequest(
+        id: map['id'].toString(),
+        status: (map['status'] ?? 'open').toString(),
+        category: (categoryRow?['label'] ?? '드론 작업').toString(),
+        budgetLabel: _budgetLabelFromRange(
+          map['budget_min'],
+          map['budget_max'],
+        ),
+        locationLabel: (map['location_label'] ?? '지역 미정').toString(),
+        latitude: (map['latitude'] as num).toDouble(),
+        longitude: (map['longitude'] as num).toDouble(),
+        createdAt:
+            DateTime.tryParse((map['created_at'] ?? '').toString()) ??
+            DateTime.now(),
+        preferredDate: DateTime.tryParse(
+          (map['preferred_start_at'] ?? '').toString(),
+        ),
+        isOwn: true,
+      );
+    }).toList();
+  }
+
+  @override
+  Future<void> closeMapJobRequest(String requestId) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('로그인이 필요합니다.');
+    }
+    await _client
+        .from('job_requests')
+        .update(<String, Object?>{'status': 'cancelled'})
+        .eq('id', requestId)
+        .eq('client_id', userId);
   }
 
   @override
@@ -366,6 +443,7 @@ class SupabaseQuoteApi implements QuoteApi {
           DateTime.tryParse((row['created_at'] ?? '').toString()) ??
           DateTime.now(),
       preferredDate: preferredDate,
+      isOwn: true,
     );
   }
 }

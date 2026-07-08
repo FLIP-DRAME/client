@@ -100,6 +100,7 @@ class MapJobRequest {
     required this.longitude,
     required this.createdAt,
     this.preferredDate,
+    this.isOwn = false,
   });
 
   final String id;
@@ -111,6 +112,13 @@ class MapJobRequest {
   final double longitude;
   final DateTime createdAt;
   final DateTime? preferredDate;
+
+  /// True when the current logged-in user is the one who posted this
+  /// request. Only set for rows fetched via `fetchMyMapRequests` -- the
+  /// public map feed never carries ownership info.
+  final bool isOwn;
+
+  static const autoCloseAfter = Duration(days: 7);
 
   String get dateLabel {
     final date = preferredDate;
@@ -128,6 +136,19 @@ class MapJobRequest {
   };
 
   bool get isInProgress => _inProgressStatuses.contains(status);
+
+  /// Manually closed by the requester (stopped accepting quotes). Reuses
+  /// the existing 'cancelled' job_status enum value -- job_status is a
+  /// Postgres enum with a fixed set of members, and 'cancelled' already
+  /// means exactly this and is already excluded from the public map view.
+  bool get isClosed => status == 'cancelled';
+
+  /// 7 days past creation -- treated as closed even if never manually
+  /// closed, so stale broadcast requests fall off the map on their own.
+  bool get isExpired =>
+      DateTime.now().toUtc().difference(createdAt.toUtc()) >= autoCloseAfter;
+
+  bool get isClosedOrExpired => isClosed || isExpired;
 }
 
 class ContactAccess {

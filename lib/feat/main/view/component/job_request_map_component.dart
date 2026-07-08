@@ -40,12 +40,92 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
 
   Future<void> _load() async {
     try {
-      final requests = await ref.read(quoteApiProvider).fetchOpenMapRequests();
+      final api = ref.read(quoteApiProvider);
+      final open = await api.fetchOpenMapRequests();
+      final mine =
+          widget.store.isLoggedIn
+              ? await api.fetchMyMapRequests()
+              : const <MapJobRequest>[];
       if (!mounted) return;
-      setState(() => _requests = requests);
+      // Own requests win on id collisions -- they carry the true status
+      // (e.g. closed/expired) even after the public feed has dropped them.
+      final merged = <String, MapJobRequest>{
+        for (final request in open) request.id: request,
+      };
+      for (final request in mine) {
+        merged[request.id] = request;
+      }
+      final combined =
+          merged.values.toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      setState(() => _requests = combined);
     } catch (_) {
       if (!mounted) return;
       setState(() => _requests = const <MapJobRequest>[]);
+    }
+  }
+
+  Future<void> _closeRequest(MapJobRequest request) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('요청을 마감할까요?'),
+        content: const Text('마감하면 지도에서 사라지고 더 이상 견적을 받을 수 없습니다.'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('마감하기'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(quoteApiProvider).closeMapJobRequest(request.id);
+      if (!mounted) return;
+      setState(() {
+        _requests =
+            _requests
+                ?.map(
+                  (r) => r.id == request.id
+                      ? MapJobRequest(
+                          id: r.id,
+                          status: 'cancelled',
+                          category: r.category,
+                          budgetLabel: r.budgetLabel,
+                          locationLabel: r.locationLabel,
+                          latitude: r.latitude,
+                          longitude: r.longitude,
+                          createdAt: r.createdAt,
+                          preferredDate: r.preferredDate,
+                          isOwn: r.isOwn,
+                        )
+                      : r,
+                )
+                .toList();
+      });
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('요청을 마감했습니다. 더 이상 견적을 받지 않습니다.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -246,6 +326,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 selectedId: _selectedId,
                 onSelect: (request) => setState(() => _selectedId = request.id),
                 onRespond: _handleRespond,
+                onClose: _closeRequest,
               ),
           ],
         ),
@@ -382,6 +463,26 @@ class _JobRequestComposer extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: Color(0xFF7C828A),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  '등록한 요청은 7일이 지나면 지도에서 자동으로 마감(삭제)돼요. 그 전에 직접 마감할 수도 있어요.',
+                  style: AppText.metricLabel.copyWith(
+                    color: const Color(0xFF7C828A),
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -453,6 +554,7 @@ class _JobRequestMap extends StatelessWidget {
     required this.selectedId,
     required this.onSelect,
     required this.onRespond,
+    required this.onClose,
   });
 
   static const Color _navy = Color(0xFF16305E);
@@ -461,6 +563,7 @@ class _JobRequestMap extends StatelessWidget {
   final String? selectedId;
   final ValueChanged<MapJobRequest> onSelect;
   final ValueChanged<MapJobRequest> onRespond;
+  final ValueChanged<MapJobRequest> onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -478,11 +581,20 @@ class _JobRequestMap extends StatelessWidget {
             child: Stack(
               children: <Widget>[
                 FlutterMap(
-                  options: const MapOptions(
-                    initialCenter: LatLng(36.35, 127.85),
+                  options: MapOptions(
+                    initialCenter: const LatLng(36.35, 127.85),
                     initialZoom: 6.5,
-                    minZoom: 5,
+                    minZoom: 6,
                     maxZoom: 17,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                    ),
+                    cameraConstraint: CameraConstraint.contain(
+                      bounds: LatLngBounds(
+                        const LatLng(32.9, 124.4),
+                        const LatLng(38.9, 131.95),
+                      ),
+                    ),
                   ),
                   children: <Widget>[
                     TileLayer(
@@ -503,6 +615,7 @@ class _JobRequestMap extends StatelessWidget {
                                   height: 54,
                                   child: _JobRequestMarker(
                                     inProgress: request.isInProgress,
+                                    closed: request.isClosedOrExpired,
                                     selected: request.id == selected.id,
                                     onTap: () => onSelect(request),
                                   ),
@@ -552,6 +665,7 @@ class _JobRequestMap extends StatelessWidget {
                     request: selected,
                     compact: compact,
                     onRespond: () => onRespond(selected),
+                    onClose: () => onClose(selected),
                   ),
                 ),
                 Positioned(
@@ -586,39 +700,51 @@ class _JobRequestMap extends StatelessWidget {
 class _JobRequestMarker extends StatelessWidget {
   const _JobRequestMarker({
     required this.inProgress,
+    required this.closed,
     required this.selected,
     required this.onTap,
   });
 
   final bool inProgress;
+  final bool closed;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = inProgress ? const Color(0xFF05B169) : const Color(0xFF16305E);
+    final color =
+        closed
+            ? const Color(0xFF9CA3AF)
+            : inProgress
+                ? const Color(0xFF05B169)
+                : const Color(0xFF16305E);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
         duration: const Duration(milliseconds: 160),
         scale: selected ? 1.12 : 1,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: selected ? color : Colors.white,
-            border: Border.all(color: color, width: inProgress ? 3 : 2),
-            boxShadow: const <BoxShadow>[
-              BoxShadow(
-                color: Color(0x330A0B0D),
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.request_quote_rounded,
-            color: selected ? Colors.white : color,
-            size: 23,
+        child: Opacity(
+          opacity: closed ? 0.6 : 1,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: selected ? color : Colors.white,
+              border: Border.all(color: color, width: inProgress ? 3 : 2),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                  color: Color(0x330A0B0D),
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Icon(
+              closed
+                  ? Icons.lock_clock_rounded
+                  : Icons.request_quote_rounded,
+              color: selected ? Colors.white : color,
+              size: 23,
+            ),
           ),
         ),
       ),
@@ -631,19 +757,25 @@ class _JobRequestPreview extends StatelessWidget {
     required this.request,
     required this.compact,
     required this.onRespond,
+    required this.onClose,
   });
 
   static const Color _navy = Color(0xFF16305E);
   static const Color _inProgress = Color(0xFF05B169);
+  static const Color _closed = Color(0xFF9CA3AF);
 
   final MapJobRequest request;
   final bool compact;
   final VoidCallback onRespond;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = request.isInProgress ? _inProgress : _navy;
-    final statusLabel = request.isInProgress ? '진행중' : '요청 대기중';
+    final closed = request.isClosedOrExpired;
+    final statusColor =
+        closed ? _closed : (request.isInProgress ? _inProgress : _navy);
+    final statusLabel =
+        closed ? '요청마감' : (request.isInProgress ? '진행중' : '요청 대기중');
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: compact ? double.infinity : 360),
       child: Material(
@@ -687,22 +819,40 @@ class _JobRequestPreview extends StatelessWidget {
                 style: AppText.cardSubtitle,
               ),
               const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: onRespond,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _navy,
-                    foregroundColor: Colors.white,
-                    textStyle: AppText.button,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+              if (request.isOwn && !closed)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: onClose,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFB3261E),
+                      side: const BorderSide(color: Color(0xFFE4B7B3)),
+                      textStyle: AppText.button,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
+                    child: const Text('요청 마감하기'),
                   ),
-                  child: const Text('견적 응답하기'),
+                )
+              else if (!request.isOwn && !closed)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: onRespond,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _navy,
+                      foregroundColor: Colors.white,
+                      textStyle: AppText.button,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('견적 응답하기'),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
