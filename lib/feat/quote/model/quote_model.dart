@@ -100,6 +100,7 @@ class MapJobRequest {
     required this.longitude,
     required this.createdAt,
     this.preferredDate,
+    this.detail = '',
     this.isOwn = false,
   });
 
@@ -112,6 +113,7 @@ class MapJobRequest {
   final double longitude;
   final DateTime createdAt;
   final DateTime? preferredDate;
+  final String detail;
 
   /// True when the current logged-in user is the one who posted this
   /// request. Only set for rows fetched via `fetchMyMapRequests` -- the
@@ -161,6 +163,17 @@ class MapJobRequest {
     if (diff.inDays < 365) return '${diff.inDays ~/ 30}개월 전';
     return '${diff.inDays ~/ 365}년 전';
   }
+}
+
+/// Full detail of a map-pinned job request, fetched on demand when a pin is
+/// selected. Kept separate from [MapJobRequest] so the map load stays light.
+class MapJobRequestDetail {
+  const MapJobRequestDetail({required this.id, this.detail = ''});
+
+  final String id;
+  final String detail;
+
+  bool get hasDetail => detail.trim().isNotEmpty;
 }
 
 class ContactAccess {

@@ -15,6 +15,8 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
 
   List<MapJobRequest>? _requests;
   String? _selectedId;
+  MapJobRequestDetail? _selectedDetail;
+  String? _detailLoadingId;
   bool _showComposer = false;
 
   String? _composerCategory;
@@ -59,29 +61,53 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
           merged.values.toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       setState(() => _requests = combined);
+      if (combined.isNotEmpty) {
+        unawaited(_fetchDetail(combined.first.id));
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() => _requests = const <MapJobRequest>[]);
     }
   }
 
+  Future<void> _fetchDetail(String requestId) async {
+    if (_detailLoadingId == requestId) return;
+    _detailLoadingId = requestId;
+    setState(() => _selectedDetail = null);
+    try {
+      final detail = await ref
+          .read(quoteApiProvider)
+          .fetchMapJobRequestDetail(requestId);
+      if (!mounted ||
+          _selectedId != requestId && requestId != _requests?.firstOrNull?.id) {
+        return;
+      }
+      setState(() => _selectedDetail = detail);
+    } catch (_) {
+      // degrade gracefully -- preview card still shows without detail
+    } finally {
+      _detailLoadingId = null;
+    }
+  }
+
   Future<void> _closeRequest(MapJobRequest request) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('요청을 마감할까요?'),
-        content: const Text('마감하면 지도에서 사라지고 더 이상 견적을 받을 수 없습니다.'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('취소'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('요청을 마감할까요?'),
+            content: const Text('마감하면 지도에서 사라지고 더 이상 견적을 받을 수 없습니다.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('취소'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('마감하기'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('마감하기'),
-          ),
-        ],
-      ),
     );
     if (confirmed != true || !mounted) return;
 
@@ -93,20 +119,22 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
         _requests =
             _requests
                 ?.map(
-                  (r) => r.id == request.id
-                      ? MapJobRequest(
-                          id: r.id,
-                          status: 'cancelled',
-                          category: r.category,
-                          budgetLabel: r.budgetLabel,
-                          locationLabel: r.locationLabel,
-                          latitude: r.latitude,
-                          longitude: r.longitude,
-                          createdAt: r.createdAt,
-                          preferredDate: r.preferredDate,
-                          isOwn: r.isOwn,
-                        )
-                      : r,
+                  (r) =>
+                      r.id == request.id
+                          ? MapJobRequest(
+                            id: r.id,
+                            status: 'cancelled',
+                            category: r.category,
+                            budgetLabel: r.budgetLabel,
+                            locationLabel: r.locationLabel,
+                            latitude: r.latitude,
+                            longitude: r.longitude,
+                            createdAt: r.createdAt,
+                            preferredDate: r.preferredDate,
+                            detail: r.detail,
+                            isOwn: r.isOwn,
+                          )
+                          : r,
                 )
                 .toList();
       });
@@ -120,9 +148,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            error.toString().replaceFirst('Exception: ', ''),
-          ),
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -144,10 +170,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
   Future<void> _submitComposer() async {
     if (_submitting) return;
     if (!widget.store.isLoggedIn) {
-      showLoginRequiredDialog(
-        context,
-        message: '촬영 요청을 등록하려면 로그인이 필요합니다.',
-      );
+      showLoginRequiredDialog(context, message: '촬영 요청을 등록하려면 로그인이 필요합니다.');
       return;
     }
     final category = _composerCategory ?? defaultDroneCategories.first.label;
@@ -201,10 +224,10 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            error.toString().replaceFirst('Bad state: ', '').replaceFirst(
-              'Exception: ',
-              '',
-            ),
+            error
+                .toString()
+                .replaceFirst('Bad state: ', '')
+                .replaceFirst('Exception: ', ''),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -229,7 +252,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       dateRange: request.dateLabel,
       budget: request.budgetLabel,
       client: '고객',
-      summary: '',
+      summary: request.detail,
       progress: '',
       remaining: '확인 필요',
       mapLabel: '${request.locationLabel} 지도',
@@ -305,8 +328,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 onBudgetChanged:
                     (value) => setState(() => _composerBudget = value),
                 onPickLocation: _pickComposerLocation,
-                onDateChanged:
-                    (value) => setState(() => _composerDate = value),
+                onDateChanged: (value) => setState(() => _composerDate = value),
                 onSubmit: _submitComposer,
               ),
               const SizedBox(height: 20),
@@ -317,14 +339,20 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 child: Center(child: CircularProgressIndicator(color: _navy)),
               )
             else if (requests.isEmpty)
-              _JobRequestMapEmptyState(onNewRequest: () {
-                if (!_showComposer) setState(() => _showComposer = true);
-              })
+              _JobRequestMapEmptyState(
+                onNewRequest: () {
+                  if (!_showComposer) setState(() => _showComposer = true);
+                },
+              )
             else
               _JobRequestMap(
                 requests: requests,
                 selectedId: _selectedId,
-                onSelect: (request) => setState(() => _selectedId = request.id),
+                selectedDetail: _selectedDetail,
+                onSelect: (request) {
+                  setState(() => _selectedId = request.id);
+                  unawaited(_fetchDetail(request.id));
+                },
                 onDismiss: () => setState(() => _selectedId = null),
                 onRespond: _handleRespond,
                 onClose: _closeRequest,
@@ -369,8 +397,7 @@ class _JobRequestComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categoryOptions =
-        defaultDroneCategories.map((c) => c.label).toList();
+    final categoryOptions = defaultDroneCategories.map((c) => c.label).toList();
     final selectedCategory =
         categoryOptions.contains(category) ? category! : categoryOptions.first;
     return Container(
@@ -402,10 +429,7 @@ class _JobRequestComposer extends StatelessWidget {
             onTap: onPickLocation,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFD),
                 borderRadius: BorderRadius.circular(8),
@@ -418,7 +442,8 @@ class _JobRequestComposer extends StatelessWidget {
                   Icon(
                     Icons.map_rounded,
                     size: 18,
-                    color: locationLabel == null ? const Color(0xFF9CA3AF) : _mint,
+                    color:
+                        locationLabel == null ? const Color(0xFF9CA3AF) : _mint,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -536,10 +561,7 @@ class _JobRequestMapEmptyState extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF16305E),
               side: const BorderSide(color: Color(0xFFE4EAF2)),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               textStyle: AppText.button,
             ),
           ),
@@ -553,6 +575,7 @@ class _JobRequestMap extends StatefulWidget {
   const _JobRequestMap({
     required this.requests,
     required this.selectedId,
+    required this.selectedDetail,
     required this.onSelect,
     required this.onDismiss,
     required this.onRespond,
@@ -561,6 +584,7 @@ class _JobRequestMap extends StatefulWidget {
 
   final List<MapJobRequest> requests;
   final String? selectedId;
+  final MapJobRequestDetail? selectedDetail;
   final ValueChanged<MapJobRequest> onSelect;
   final VoidCallback onDismiss;
   final ValueChanged<MapJobRequest> onRespond;
@@ -572,11 +596,25 @@ class _JobRequestMap extends StatefulWidget {
 
 class _JobRequestMapState extends State<_JobRequestMap> {
   static const Color _navy = Color(0xFF16305E);
-  static const double _minZoom = 6;
+  // CameraConstraint.contain requires the WHOLE viewport to stay inside
+  // bounds -- if minZoom is too low, the viewport at that zoom is wider
+  // than Korea and contain rejects every camera update (zoom appears
+  // frozen). 8 is the lowest zoom where a full-width desktop map card
+  // still fits inside the bounds below.
+  static const double _minZoom = 8;
   static const double _maxZoom = 17;
 
   final MapController _mapController = MapController();
+  final ScrollController _cardScrollController = ScrollController();
+  final Map<String, GlobalKey> _cardKeys = <String, GlobalKey>{};
   bool _compactShowList = false;
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    _cardScrollController.dispose();
+    super.dispose();
+  }
 
   void _zoomBy(double delta) {
     final camera = _mapController.camera;
@@ -585,9 +623,37 @@ class _JobRequestMapState extends State<_JobRequestMap> {
   }
 
   @override
+  void didUpdateWidget(_JobRequestMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedId != null &&
+        widget.selectedId != oldWidget.selectedId) {
+      _scrollSelectedIntoView(widget.selectedId!);
+    }
+  }
+
+  void _scrollSelectedIntoView(String requestId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_cardScrollController.hasClients) return;
+      final renderObject =
+          _cardKeys[requestId]?.currentContext?.findRenderObject();
+      if (renderObject == null) return;
+      // Use the card list's own ScrollPosition directly (not the static
+      // Scrollable.ensureVisible helper) -- that helper walks up through
+      // every enclosing Scrollable, which also scrolled the outer page.
+      _cardScrollController.position.ensureVisible(
+        renderObject,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final requests = widget.requests;
     final selectedId = widget.selectedId;
+    final selectedDetail = widget.selectedDetail;
     final onSelect = widget.onSelect;
     final onDismiss = widget.onDismiss;
     final onRespond = widget.onRespond;
@@ -605,142 +671,156 @@ class _JobRequestMapState extends State<_JobRequestMap> {
           }
         }
 
-        final mapStack = ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Stack(
-            children: <Widget>[
-              FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter: const LatLng(36.35, 127.85),
-                  initialZoom: 6.5,
-                  minZoom: _minZoom,
-                  maxZoom: _maxZoom,
-                  interactionOptions: const InteractionOptions(
-                    flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                  ),
-                  cameraConstraint: CameraConstraint.contain(
-                    bounds: LatLngBounds(
-                      const LatLng(32.9, 124.4),
-                      const LatLng(38.9, 131.95),
+        final mapStack = Listener(
+          onPointerSignal: (_) {},
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              children: <Widget>[
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: const LatLng(36.1, 127.85),
+                    initialZoom: 8.3,
+                    minZoom: _minZoom,
+                    maxZoom: _maxZoom,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                    ),
+                    cameraConstraint: CameraConstraint.contain(
+                      bounds: LatLngBounds(
+                        const LatLng(32.9, 124.4),
+                        const LatLng(38.9, 131.95),
+                      ),
                     ),
                   ),
-                ),
-                children: <Widget>[
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.modu.drame',
-                  ),
-                  MarkerLayer(
-                    markers:
-                        requests
-                            .map(
-                              (request) => Marker(
-                                point: LatLng(
-                                  request.latitude,
-                                  request.longitude,
+                  children: <Widget>[
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.modu.drame',
+                    ),
+                    MarkerLayer(
+                      markers:
+                          requests
+                              .map(
+                                (request) => Marker(
+                                  point: LatLng(
+                                    request.latitude,
+                                    request.longitude,
+                                  ),
+                                  width: 54,
+                                  height: 54,
+                                  child: _JobRequestMarker(
+                                    inProgress: request.isInProgress,
+                                    closed: request.isClosedOrExpired,
+                                    selected: request.id == selectedId,
+                                    onTap: () => onSelect(request),
+                                  ),
                                 ),
-                                width: 54,
-                                height: 54,
-                                child: _JobRequestMarker(
-                                  inProgress: request.isInProgress,
-                                  closed: request.isClosedOrExpired,
-                                  selected: request.id == selectedId,
-                                  onTap: () => onSelect(request),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                  ),
-                ],
-              ),
-              Positioned(
-                left: 16,
-                top: 16,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.94),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFE4EAF2)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
+                              )
+                              .toList(),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        const Icon(
-                          Icons.radar_rounded,
-                          color: _navy,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${requests.length}개 요청 · 진행중 초록 테두리',
-                          style: AppText.metricLabel,
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              ),
-              Positioned(
-                right: 12,
-                top: 12,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 5,
-                    ),
-                    child: Text(
-                      '© OpenStreetMap contributors',
-                      style: AppText.metricLabel.copyWith(fontSize: 11),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 12,
-                bottom: 12,
-                child: _MapZoomControls(
-                  onZoomIn: () => _zoomBy(1),
-                  onZoomOut: () => _zoomBy(-1),
-                ),
-              ),
-              if (compact && selected != null)
                 Positioned(
-                  left: 12,
-                  right: 60,
-                  bottom: 12,
-                  child: _JobRequestPreview(
-                    request: selected,
-                    compact: true,
-                    onRespond: () => onRespond(selected!),
-                    onClose: () => onClose(selected!),
-                    onDismiss: onDismiss,
+                  left: 16,
+                  top: 16,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.94),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFE4EAF2)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          const Icon(
+                            Icons.radar_rounded,
+                            color: _navy,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${requests.length}개 요청 · 진행중 초록 테두리',
+                            style: AppText.metricLabel,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-            ],
+                Positioned(
+                  right: 12,
+                  top: 12,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 5,
+                      ),
+                      child: Text(
+                        '© OpenStreetMap contributors',
+                        style: AppText.metricLabel.copyWith(fontSize: 11),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: _MapZoomControls(
+                    onZoomIn: () => _zoomBy(1),
+                    onZoomOut: () => _zoomBy(-1),
+                  ),
+                ),
+                if (compact && selected != null)
+                  Positioned(
+                    left: 12,
+                    right: 60,
+                    bottom: 12,
+                    child: _JobRequestPreview(
+                      request: selected,
+                      detail: selectedDetail,
+                      compact: true,
+                      onRespond: () => onRespond(selected!),
+                      onClose: () => onClose(selected!),
+                      onDismiss: onDismiss,
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
 
         final cardList = ListView.separated(
+          controller: _cardScrollController,
+          // ListView only builds items near the current viewport -- a
+          // marker tap for a request whose card is further down the list
+          // has no RenderObject yet, so _scrollSelectedIntoView silently
+          // finds nothing to scroll to. A large cacheExtent keeps every
+          // card built regardless of scroll position (this list is at
+          // most a few dozen items, so the cost is negligible).
+          scrollCacheExtent: const ScrollCacheExtent.pixels(5000),
           itemCount: requests.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final request = requests[index];
             return GestureDetector(
+              key: _cardKeys.putIfAbsent(request.id, () => GlobalKey()),
               onTap: () => onSelect(request),
               child: _JobRequestPreview(
                 request: request,
+                detail: request.id == selectedId ? selectedDetail : null,
                 compact: true,
                 highlighted: request.id == selectedId,
                 onRespond: () => onRespond(request),
@@ -755,8 +835,8 @@ class _JobRequestMapState extends State<_JobRequestMap> {
             children: <Widget>[
               _CompactViewToggle(
                 showList: _compactShowList,
-                onChanged: (showList) =>
-                    setState(() => _compactShowList = showList),
+                onChanged:
+                    (showList) => setState(() => _compactShowList = showList),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -936,8 +1016,8 @@ class _JobRequestMarker extends StatelessWidget {
         closed
             ? const Color(0xFF9CA3AF)
             : inProgress
-                ? const Color(0xFF05B169)
-                : const Color(0xFF16305E);
+            ? const Color(0xFF05B169)
+            : const Color(0xFF16305E);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
@@ -959,9 +1039,7 @@ class _JobRequestMarker extends StatelessWidget {
               ],
             ),
             child: Icon(
-              closed
-                  ? Icons.lock_clock_rounded
-                  : Icons.request_quote_rounded,
+              closed ? Icons.lock_clock_rounded : Icons.request_quote_rounded,
               color: selected ? Colors.white : color,
               size: 23,
             ),
@@ -980,6 +1058,7 @@ class _JobRequestPreview extends StatelessWidget {
     required this.onClose,
     this.highlighted = false,
     this.onDismiss,
+    this.detail,
   });
 
   static const Color _navy = Color(0xFF16305E);
@@ -992,6 +1071,7 @@ class _JobRequestPreview extends StatelessWidget {
   final VoidCallback onClose;
   final bool highlighted;
   final VoidCallback? onDismiss;
+  final MapJobRequestDetail? detail;
 
   @override
   Widget build(BuildContext context) {
@@ -1071,6 +1151,23 @@ class _JobRequestPreview extends StatelessWidget {
                     '${request.locationLabel} · ${request.budgetLabel} · ${request.dateLabel}',
                     style: AppText.cardSubtitle,
                   ),
+                  if (detail != null && detail!.hasDetail) ...<Widget>[
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F8FA),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        detail!.detail,
+                        style: AppText.cardSubtitle,
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 14),
                   if (request.isOwn && !closed)
                     SizedBox(
