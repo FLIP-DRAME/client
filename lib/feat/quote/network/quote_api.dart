@@ -51,11 +51,12 @@ class SupabaseQuoteApi implements QuoteApi {
 
     String clientDisplayName = _client.auth.currentUser?.email ?? '고객';
     if (userId != null) {
-      final profile = await _client
-          .from('profiles')
-          .select('nickname, name')
-          .eq('id', userId)
-          .maybeSingle();
+      final profile =
+          await _client
+              .from('profiles')
+              .select('nickname, name')
+              .eq('id', userId)
+              .maybeSingle();
       if (profile != null) {
         final nickname = profile['nickname']?.toString().trim() ?? '';
         final name = profile['name']?.toString().trim() ?? '';
@@ -284,28 +285,29 @@ class SupabaseQuoteApi implements QuoteApi {
         .order('created_at', ascending: false)
         .limit(limit);
 
-    final requests = rows.map<MapJobRequest>((row) {
-      final map = Map<String, dynamic>.from(row as Map);
-      return MapJobRequest(
-        id: map['id'].toString(),
-        status: (map['status'] ?? 'open').toString(),
-        category: (map['category_label'] ?? '드론 작업').toString(),
-        budgetLabel: _budgetLabelFromRange(
-          map['budget_min'],
-          map['budget_max'],
-        ),
-        locationLabel: (map['location_label'] ?? '지역 미정').toString(),
-        latitude: (map['latitude'] as num).toDouble(),
-        longitude: (map['longitude'] as num).toDouble(),
-        createdAt:
-            DateTime.tryParse((map['created_at'] ?? '').toString()) ??
-            DateTime.now(),
-        preferredDate: DateTime.tryParse(
-          (map['preferred_start_at'] ?? '').toString(),
-        ),
-        detail: (map['detail'] ?? '').toString(),
-      );
-    }).toList();
+    final requests =
+        rows.map<MapJobRequest>((row) {
+          final map = Map<String, dynamic>.from(row as Map);
+          return MapJobRequest(
+            id: map['id'].toString(),
+            status: (map['status'] ?? 'open').toString(),
+            category: (map['category_label'] ?? '드론 작업').toString(),
+            budgetLabel: _budgetLabelFromRange(
+              map['budget_min'],
+              map['budget_max'],
+            ),
+            locationLabel: (map['location_label'] ?? '지역 미정').toString(),
+            latitude: (map['latitude'] as num).toDouble(),
+            longitude: (map['longitude'] as num).toDouble(),
+            createdAt:
+                DateTime.tryParse((map['created_at'] ?? '').toString()) ??
+                DateTime.now(),
+            preferredDate: DateTime.tryParse(
+              (map['preferred_start_at'] ?? '').toString(),
+            ),
+            detail: (map['detail'] ?? '').toString(),
+          );
+        }).toList();
 
     // Defensive client-side filter: the DB view is expected to already drop
     // closed/expired rows (see supabase_job_request_expiry_migration.sql),
@@ -383,11 +385,12 @@ class SupabaseQuoteApi implements QuoteApi {
     String requestId,
   ) async {
     try {
-      final row = await _client
-          .from('job_requests')
-          .select('id, detail')
-          .eq('id', requestId)
-          .maybeSingle();
+      final row =
+          await _client
+              .from('job_requests')
+              .select('id, detail')
+              .eq('id', requestId)
+              .maybeSingle();
       if (row == null) return null;
       return MapJobRequestDetail(
         id: row['id'].toString(),
@@ -460,10 +463,7 @@ class SupabaseQuoteApi implements QuoteApi {
       id: row['id'].toString(),
       status: (row['status'] ?? 'open').toString(),
       category: categoryLabel,
-      budgetLabel: _budgetLabelFromRange(
-        row['budget_min'],
-        row['budget_max'],
-      ),
+      budgetLabel: _budgetLabelFromRange(row['budget_min'], row['budget_max']),
       locationLabel: locationLabel,
       latitude: latitude,
       longitude: longitude,

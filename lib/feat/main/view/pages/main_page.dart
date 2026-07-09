@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:flutter_map/flutter_map.dart';
@@ -429,16 +430,18 @@ class _DrameHomePageState extends State<DrameHomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final store = context.read<DrameStore>();
-      unawaited(store.restoreSession().then((_) {
-        if (!mounted) return;
-        // /operator 진입은 로그인 + 운용자만 가능.
-        if (widget.operatorMode && !store.isLoggedIn) {
-          context.go('/home');
-          return;
-        }
-        store.setPilotMode(widget.operatorMode);
-        unawaited(store.load(initial: true));
-      }));
+      unawaited(
+        store.restoreSession().then((_) {
+          if (!mounted) return;
+          // /operator 진입은 로그인 + 운용자만 가능.
+          if (widget.operatorMode && !store.isLoggedIn) {
+            context.go('/home');
+            return;
+          }
+          store.setPilotMode(widget.operatorMode);
+          unawaited(store.load(initial: true));
+        }),
+      );
     });
   }
 

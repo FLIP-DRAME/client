@@ -78,10 +78,13 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       final detail = await ref
           .read(quoteApiProvider)
           .fetchMapJobRequestDetail(requestId);
-      if (!mounted || _selectedId != requestId && requestId != _requests?.firstOrNull?.id) return;
+      if (!mounted ||
+          _selectedId != requestId && requestId != _requests?.firstOrNull?.id) {
+        return;
+      }
       setState(() => _selectedDetail = detail);
     } catch (_) {
-      // degrade gracefully — preview card still shows without detail
+      // degrade gracefully -- preview card still shows without detail
     } finally {
       _detailLoadingId = null;
     }
@@ -90,20 +93,21 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
   Future<void> _closeRequest(MapJobRequest request) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('요청을 마감할까요?'),
-        content: const Text('마감하면 지도에서 사라지고 더 이상 견적을 받을 수 없습니다.'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('취소'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('요청을 마감할까요?'),
+            content: const Text('마감하면 지도에서 사라지고 더 이상 견적을 받을 수 없습니다.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('취소'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('마감하기'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('마감하기'),
-          ),
-        ],
-      ),
     );
     if (confirmed != true || !mounted) return;
 
@@ -115,21 +119,22 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
         _requests =
             _requests
                 ?.map(
-                  (r) => r.id == request.id
-                      ? MapJobRequest(
-                          id: r.id,
-                          status: 'cancelled',
-                          category: r.category,
-                          budgetLabel: r.budgetLabel,
-                          locationLabel: r.locationLabel,
-                          latitude: r.latitude,
-                          longitude: r.longitude,
-                          createdAt: r.createdAt,
-                          preferredDate: r.preferredDate,
-                          detail: r.detail,
-                          isOwn: r.isOwn,
-                        )
-                      : r,
+                  (r) =>
+                      r.id == request.id
+                          ? MapJobRequest(
+                            id: r.id,
+                            status: 'cancelled',
+                            category: r.category,
+                            budgetLabel: r.budgetLabel,
+                            locationLabel: r.locationLabel,
+                            latitude: r.latitude,
+                            longitude: r.longitude,
+                            createdAt: r.createdAt,
+                            preferredDate: r.preferredDate,
+                            detail: r.detail,
+                            isOwn: r.isOwn,
+                          )
+                          : r,
                 )
                 .toList();
       });
@@ -143,9 +148,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       if (!mounted) return;
       messenger.showSnackBar(
         SnackBar(
-          content: Text(
-            error.toString().replaceFirst('Exception: ', ''),
-          ),
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -167,10 +170,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
   Future<void> _submitComposer() async {
     if (_submitting) return;
     if (!widget.store.isLoggedIn) {
-      showLoginRequiredDialog(
-        context,
-        message: '촬영 요청을 등록하려면 로그인이 필요합니다.',
-      );
+      showLoginRequiredDialog(context, message: '촬영 요청을 등록하려면 로그인이 필요합니다.');
       return;
     }
     final category = _composerCategory ?? defaultDroneCategories.first.label;
@@ -224,10 +224,10 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            error.toString().replaceFirst('Bad state: ', '').replaceFirst(
-              'Exception: ',
-              '',
-            ),
+            error
+                .toString()
+                .replaceFirst('Bad state: ', '')
+                .replaceFirst('Exception: ', ''),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -328,8 +328,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 onBudgetChanged:
                     (value) => setState(() => _composerBudget = value),
                 onPickLocation: _pickComposerLocation,
-                onDateChanged:
-                    (value) => setState(() => _composerDate = value),
+                onDateChanged: (value) => setState(() => _composerDate = value),
                 onSubmit: _submitComposer,
               ),
               const SizedBox(height: 20),
@@ -340,9 +339,11 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 child: Center(child: CircularProgressIndicator(color: _navy)),
               )
             else if (requests.isEmpty)
-              _JobRequestMapEmptyState(onNewRequest: () {
-                if (!_showComposer) setState(() => _showComposer = true);
-              })
+              _JobRequestMapEmptyState(
+                onNewRequest: () {
+                  if (!_showComposer) setState(() => _showComposer = true);
+                },
+              )
             else
               _JobRequestMap(
                 requests: requests,
@@ -352,6 +353,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                   setState(() => _selectedId = request.id);
                   unawaited(_fetchDetail(request.id));
                 },
+                onDismiss: () => setState(() => _selectedId = null),
                 onRespond: _handleRespond,
                 onClose: _closeRequest,
               ),
@@ -395,8 +397,7 @@ class _JobRequestComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categoryOptions =
-        defaultDroneCategories.map((c) => c.label).toList();
+    final categoryOptions = defaultDroneCategories.map((c) => c.label).toList();
     final selectedCategory =
         categoryOptions.contains(category) ? category! : categoryOptions.first;
     return Container(
@@ -428,10 +429,7 @@ class _JobRequestComposer extends StatelessWidget {
             onTap: onPickLocation,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFD),
                 borderRadius: BorderRadius.circular(8),
@@ -444,7 +442,8 @@ class _JobRequestComposer extends StatelessWidget {
                   Icon(
                     Icons.map_rounded,
                     size: 18,
-                    color: locationLabel == null ? const Color(0xFF9CA3AF) : _mint,
+                    color:
+                        locationLabel == null ? const Color(0xFF9CA3AF) : _mint,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -562,10 +561,7 @@ class _JobRequestMapEmptyState extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF16305E),
               side: const BorderSide(color: Color(0xFFE4EAF2)),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               textStyle: AppText.button,
             ),
           ),
@@ -575,56 +571,119 @@ class _JobRequestMapEmptyState extends StatelessWidget {
   }
 }
 
-class _JobRequestMap extends StatelessWidget {
+class _JobRequestMap extends StatefulWidget {
   const _JobRequestMap({
     required this.requests,
     required this.selectedId,
+    required this.selectedDetail,
     required this.onSelect,
+    required this.onDismiss,
     required this.onRespond,
     required this.onClose,
-    this.selectedDetail,
   });
-
-  static const Color _navy = Color(0xFF16305E);
 
   final List<MapJobRequest> requests;
   final String? selectedId;
   final MapJobRequestDetail? selectedDetail;
   final ValueChanged<MapJobRequest> onSelect;
+  final VoidCallback onDismiss;
   final ValueChanged<MapJobRequest> onRespond;
   final ValueChanged<MapJobRequest> onClose;
 
   @override
+  State<_JobRequestMap> createState() => _JobRequestMapState();
+}
+
+class _JobRequestMapState extends State<_JobRequestMap> {
+  static const Color _navy = Color(0xFF16305E);
+  // CameraConstraint.contain requires the WHOLE viewport to stay inside
+  // bounds -- if minZoom is too low, the viewport at that zoom is wider
+  // than Korea and contain rejects every camera update (zoom appears
+  // frozen). 8 is the lowest zoom where a full-width desktop map card
+  // still fits inside the bounds below.
+  static const double _minZoom = 8;
+  static const double _maxZoom = 17;
+
+  final MapController _mapController = MapController();
+  final ScrollController _cardScrollController = ScrollController();
+  final Map<String, GlobalKey> _cardKeys = <String, GlobalKey>{};
+  bool _compactShowList = false;
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    _cardScrollController.dispose();
+    super.dispose();
+  }
+
+  void _zoomBy(double delta) {
+    final camera = _mapController.camera;
+    final zoom = (camera.zoom + delta).clamp(_minZoom, _maxZoom);
+    _mapController.move(camera.center, zoom);
+  }
+
+  @override
+  void didUpdateWidget(_JobRequestMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedId != null &&
+        widget.selectedId != oldWidget.selectedId) {
+      _scrollSelectedIntoView(widget.selectedId!);
+    }
+  }
+
+  void _scrollSelectedIntoView(String requestId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_cardScrollController.hasClients) return;
+      final renderObject =
+          _cardKeys[requestId]?.currentContext?.findRenderObject();
+      if (renderObject == null) return;
+      // Use the card list's own ScrollPosition directly (not the static
+      // Scrollable.ensureVisible helper) -- that helper walks up through
+      // every enclosing Scrollable, which also scrolled the outer page.
+      _cardScrollController.position.ensureVisible(
+        renderObject,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final selected = requests.firstWhere(
-      (request) => request.id == selectedId,
-      orElse: () => requests.first,
-    );
+    final requests = widget.requests;
+    final selectedId = widget.selectedId;
+    final selectedDetail = widget.selectedDetail;
+    final onSelect = widget.onSelect;
+    final onDismiss = widget.onDismiss;
+    final onRespond = widget.onRespond;
+    final onClose = widget.onClose;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 720;
-        return Listener(
+        final mapHeight = compact ? 420.0 : 560.0;
+
+        MapJobRequest? selected;
+        for (final request in requests) {
+          if (request.id == selectedId) {
+            selected = request;
+            break;
+          }
+        }
+
+        final mapStack = Listener(
           onPointerSignal: (_) {},
-          child: SizedBox(
-          height: compact ? 520 : 560,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Stack(
               children: <Widget>[
                 FlutterMap(
+                  mapController: _mapController,
                   options: MapOptions(
                     initialCenter: const LatLng(36.1, 127.85),
                     initialZoom: 8.3,
-                    // CameraConstraint.contain requires the WHOLE viewport
-                    // to stay inside bounds -- if minZoom is too low, the
-                    // viewport at that zoom is wider than Korea and contain
-                    // rejects every camera update (zoom appears frozen).
-                    // 8 is the lowest zoom where a full-width desktop map
-                    // card still fits inside the bounds below, confirmed by
-                    // manual QA (scroll all the way out, no neighboring
-                    // country visible, zoom still responds).
-                    minZoom: 8,
-                    maxZoom: 17,
+                    minZoom: _minZoom,
+                    maxZoom: _maxZoom,
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                     ),
@@ -655,7 +714,7 @@ class _JobRequestMap extends StatelessWidget {
                                   child: _JobRequestMarker(
                                     inProgress: request.isInProgress,
                                     closed: request.isClosedOrExpired,
-                                    selected: request.id == selected.id,
+                                    selected: request.id == selectedId,
                                     onTap: () => onSelect(request),
                                   ),
                                 ),
@@ -697,18 +756,6 @@ class _JobRequestMap extends StatelessWidget {
                   ),
                 ),
                 Positioned(
-                  left: compact ? 12 : null,
-                  right: 12,
-                  bottom: 12,
-                  child: _JobRequestPreview(
-                    request: selected,
-                    detail: selectedDetail,
-                    compact: compact,
-                    onRespond: () => onRespond(selected),
-                    onClose: () => onClose(selected),
-                  ),
-                ),
-                Positioned(
                   right: 12,
                   top: 12,
                   child: DecoratedBox(
@@ -728,12 +775,224 @@ class _JobRequestMap extends StatelessWidget {
                     ),
                   ),
                 ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: _MapZoomControls(
+                    onZoomIn: () => _zoomBy(1),
+                    onZoomOut: () => _zoomBy(-1),
+                  ),
+                ),
+                if (compact && selected != null)
+                  Positioned(
+                    left: 12,
+                    right: 60,
+                    bottom: 12,
+                    child: _JobRequestPreview(
+                      request: selected,
+                      detail: selectedDetail,
+                      compact: true,
+                      onRespond: () => onRespond(selected!),
+                      onClose: () => onClose(selected!),
+                      onDismiss: onDismiss,
+                    ),
+                  ),
               ],
             ),
           ),
+        );
+
+        final cardList = ListView.separated(
+          controller: _cardScrollController,
+          // ListView only builds items near the current viewport -- a
+          // marker tap for a request whose card is further down the list
+          // has no RenderObject yet, so _scrollSelectedIntoView silently
+          // finds nothing to scroll to. A large cacheExtent keeps every
+          // card built regardless of scroll position (this list is at
+          // most a few dozen items, so the cost is negligible).
+          scrollCacheExtent: const ScrollCacheExtent.pixels(5000),
+          itemCount: requests.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final request = requests[index];
+            return GestureDetector(
+              key: _cardKeys.putIfAbsent(request.id, () => GlobalKey()),
+              onTap: () => onSelect(request),
+              child: _JobRequestPreview(
+                request: request,
+                detail: request.id == selectedId ? selectedDetail : null,
+                compact: true,
+                highlighted: request.id == selectedId,
+                onRespond: () => onRespond(request),
+                onClose: () => onClose(request),
+              ),
+            );
+          },
+        );
+
+        if (compact) {
+          return Column(
+            children: <Widget>[
+              _CompactViewToggle(
+                showList: _compactShowList,
+                onChanged:
+                    (showList) => setState(() => _compactShowList = showList),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: mapHeight,
+                child: _compactShowList ? cardList : mapStack,
+              ),
+            ],
+          );
+        }
+
+        return SizedBox(
+          height: mapHeight,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(flex: 3, child: mapStack),
+              const SizedBox(width: 16),
+              Expanded(flex: 2, child: cardList),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+class _CompactViewToggle extends StatelessWidget {
+  const _CompactViewToggle({required this.showList, required this.onChanged});
+
+  static const Color _line = Color(0xFFE4EAF2);
+
+  final bool showList;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8FA),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _line),
+      ),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: _CompactViewToggleButton(
+              label: '지도',
+              icon: Icons.map_rounded,
+              selected: !showList,
+              onTap: () => onChanged(false),
+            ),
+          ),
+          Expanded(
+            child: _CompactViewToggleButton(
+              label: '견적 목록',
+              icon: Icons.request_quote_rounded,
+              selected: showList,
+              onTap: () => onChanged(true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactViewToggleButton extends StatelessWidget {
+  const _CompactViewToggleButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  static const Color _navy = Color(0xFF16305E);
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? _navy : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? Colors.white : const Color(0xFF7C828A),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppText.metricLabel.copyWith(
+                  color: selected ? Colors.white : const Color(0xFF7C828A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapZoomControls extends StatelessWidget {
+  const _MapZoomControls({required this.onZoomIn, required this.onZoomOut});
+
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE4EAF2)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _MapZoomButton(icon: Icons.add_rounded, onTap: onZoomIn),
+          const Divider(height: 1, color: Color(0xFFE4EAF2)),
+          _MapZoomButton(icon: Icons.remove_rounded, onTap: onZoomOut),
+        ],
+      ),
+    );
+  }
+}
+
+class _MapZoomButton extends StatelessWidget {
+  const _MapZoomButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: Icon(icon, size: 20, color: const Color(0xFF16305E)),
+      ),
     );
   }
 }
@@ -757,8 +1016,8 @@ class _JobRequestMarker extends StatelessWidget {
         closed
             ? const Color(0xFF9CA3AF)
             : inProgress
-                ? const Color(0xFF05B169)
-                : const Color(0xFF16305E);
+            ? const Color(0xFF05B169)
+            : const Color(0xFF16305E);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
@@ -780,9 +1039,7 @@ class _JobRequestMarker extends StatelessWidget {
               ],
             ),
             child: Icon(
-              closed
-                  ? Icons.lock_clock_rounded
-                  : Icons.request_quote_rounded,
+              closed ? Icons.lock_clock_rounded : Icons.request_quote_rounded,
               color: selected ? Colors.white : color,
               size: 23,
             ),
@@ -799,6 +1056,8 @@ class _JobRequestPreview extends StatelessWidget {
     required this.compact,
     required this.onRespond,
     required this.onClose,
+    this.highlighted = false,
+    this.onDismiss,
     this.detail,
   });
 
@@ -811,6 +1070,8 @@ class _JobRequestPreview extends StatelessWidget {
   final bool compact;
   final VoidCallback onRespond;
   final VoidCallback onClose;
+  final bool highlighted;
+  final VoidCallback? onDismiss;
 
   @override
   Widget build(BuildContext context) {
@@ -823,98 +1084,146 @@ class _JobRequestPreview extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: compact ? double.infinity : 360),
       child: Material(
         color: Colors.white,
-        elevation: 12,
+        elevation: highlighted ? 16 : 8,
         shadowColor: Colors.black.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Row(
+        child: Stack(
+          children: <Widget>[
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: highlighted ? _navy : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      request.category,
-                      style: AppText.smallStrong.copyWith(fontSize: 15),
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: onDismiss != null ? 18 : 0,
+                          ),
+                          child: Text(
+                            request.category,
+                            style: AppText.smallStrong.copyWith(fontSize: 15),
+                          ),
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: <Widget>[
+                          Text(
+                            request.elapsedLabel,
+                            style: AppText.metricLabel.copyWith(
+                              color: const Color(0xFF9CA3AF),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              statusLabel,
+                              style: AppText.metricLabel.copyWith(
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      statusLabel,
-                      style: AppText.metricLabel.copyWith(color: statusColor),
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${request.locationLabel} · ${request.budgetLabel} · ${request.dateLabel}',
+                    style: AppText.cardSubtitle,
                   ),
+                  if (detail != null && detail!.hasDetail) ...<Widget>[
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F8FA),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        detail!.detail,
+                        style: AppText.cardSubtitle,
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  if (request.isOwn && !closed)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: onClose,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFB3261E),
+                          side: const BorderSide(color: Color(0xFFE4B7B3)),
+                          textStyle: AppText.button,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('요청 마감하기'),
+                      ),
+                    )
+                  else if (!request.isOwn && !closed)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: onRespond,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _navy,
+                          foregroundColor: Colors.white,
+                          textStyle: AppText.button,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('견적 응답하기'),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${request.locationLabel} · ${request.budgetLabel} · ${request.dateLabel}',
-                style: AppText.cardSubtitle,
+            ),
+            if (onDismiss != null)
+              Positioned(
+                top: -2,
+                right: -2,
+                child: InkWell(
+                  onTap: onDismiss,
+                  borderRadius: BorderRadius.circular(100),
+                  child: const Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: Color(0xFF9CA3AF),
+                    ),
+                  ),
+                ),
               ),
-              if (detail != null && detail!.hasDetail) ...<Widget>[
-                const SizedBox(height: 10),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F8FA),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    detail!.detail,
-                    style: AppText.cardSubtitle,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 14),
-              if (request.isOwn && !closed)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: onClose,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFB3261E),
-                      side: const BorderSide(color: Color(0xFFE4B7B3)),
-                      textStyle: AppText.button,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('요청 마감하기'),
-                  ),
-                )
-              else if (!request.isOwn && !closed)
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: onRespond,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _navy,
-                      foregroundColor: Colors.white,
-                      textStyle: AppText.button,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('견적 응답하기'),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );
