@@ -149,6 +149,18 @@ class MapJobRequest {
       DateTime.now().toUtc().difference(createdAt.toUtc()) >= autoCloseAfter;
 
   bool get isClosedOrExpired => isClosed || isExpired;
+
+  /// Relative time since this request was posted, e.g. "3시간 전", "2일 전".
+  String get elapsedLabel {
+    final diff = DateTime.now().toUtc().difference(createdAt.toUtc());
+    if (diff.inMinutes < 1) return '방금 전';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}분 전';
+    if (diff.inHours < 24) return '${diff.inHours}시간 전';
+    if (diff.inDays < 7) return '${diff.inDays}일 전';
+    if (diff.inDays < 30) return '${diff.inDays ~/ 7}주 전';
+    if (diff.inDays < 365) return '${diff.inDays ~/ 30}개월 전';
+    return '${diff.inDays ~/ 365}년 전';
+  }
 }
 
 class ContactAccess {

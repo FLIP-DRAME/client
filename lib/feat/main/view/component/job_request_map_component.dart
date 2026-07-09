@@ -325,6 +325,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 requests: requests,
                 selectedId: _selectedId,
                 onSelect: (request) => setState(() => _selectedId = request.id),
+                onDismiss: () => setState(() => _selectedId = null),
                 onRespond: _handleRespond,
                 onClose: _closeRequest,
               ),
@@ -548,151 +549,370 @@ class _JobRequestMapEmptyState extends StatelessWidget {
   }
 }
 
-class _JobRequestMap extends StatelessWidget {
+class _JobRequestMap extends StatefulWidget {
   const _JobRequestMap({
     required this.requests,
     required this.selectedId,
     required this.onSelect,
+    required this.onDismiss,
     required this.onRespond,
     required this.onClose,
   });
 
-  static const Color _navy = Color(0xFF16305E);
-
   final List<MapJobRequest> requests;
   final String? selectedId;
   final ValueChanged<MapJobRequest> onSelect;
+  final VoidCallback onDismiss;
   final ValueChanged<MapJobRequest> onRespond;
   final ValueChanged<MapJobRequest> onClose;
 
   @override
+  State<_JobRequestMap> createState() => _JobRequestMapState();
+}
+
+class _JobRequestMapState extends State<_JobRequestMap> {
+  static const Color _navy = Color(0xFF16305E);
+  static const double _minZoom = 6;
+  static const double _maxZoom = 17;
+
+  final MapController _mapController = MapController();
+  bool _compactShowList = false;
+
+  void _zoomBy(double delta) {
+    final camera = _mapController.camera;
+    final zoom = (camera.zoom + delta).clamp(_minZoom, _maxZoom);
+    _mapController.move(camera.center, zoom);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final selected = requests.firstWhere(
-      (request) => request.id == selectedId,
-      orElse: () => requests.first,
-    );
+    final requests = widget.requests;
+    final selectedId = widget.selectedId;
+    final onSelect = widget.onSelect;
+    final onDismiss = widget.onDismiss;
+    final onRespond = widget.onRespond;
+    final onClose = widget.onClose;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 720;
-        return SizedBox(
-          height: compact ? 520 : 560,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Stack(
-              children: <Widget>[
-                FlutterMap(
-                  options: MapOptions(
-                    initialCenter: const LatLng(36.35, 127.85),
-                    initialZoom: 6.5,
-                    minZoom: 6,
-                    maxZoom: 17,
-                    interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                    ),
-                    cameraConstraint: CameraConstraint.contain(
-                      bounds: LatLngBounds(
-                        const LatLng(32.9, 124.4),
-                        const LatLng(38.9, 131.95),
-                      ),
+        final mapHeight = compact ? 420.0 : 560.0;
+
+        MapJobRequest? selected;
+        for (final request in requests) {
+          if (request.id == selectedId) {
+            selected = request;
+            break;
+          }
+        }
+
+        final mapStack = ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Stack(
+            children: <Widget>[
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: const LatLng(36.35, 127.85),
+                  initialZoom: 6.5,
+                  minZoom: _minZoom,
+                  maxZoom: _maxZoom,
+                  interactionOptions: const InteractionOptions(
+                    flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                  ),
+                  cameraConstraint: CameraConstraint.contain(
+                    bounds: LatLngBounds(
+                      const LatLng(32.9, 124.4),
+                      const LatLng(38.9, 131.95),
                     ),
                   ),
-                  children: <Widget>[
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.modu.drame',
-                    ),
-                    MarkerLayer(
-                      markers:
-                          requests
-                              .map(
-                                (request) => Marker(
-                                  point: LatLng(
-                                    request.latitude,
-                                    request.longitude,
-                                  ),
-                                  width: 54,
-                                  height: 54,
-                                  child: _JobRequestMarker(
-                                    inProgress: request.isInProgress,
-                                    closed: request.isClosedOrExpired,
-                                    selected: request.id == selected.id,
-                                    onTap: () => onSelect(request),
-                                  ),
+                ),
+                children: <Widget>[
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.modu.drame',
+                  ),
+                  MarkerLayer(
+                    markers:
+                        requests
+                            .map(
+                              (request) => Marker(
+                                point: LatLng(
+                                  request.latitude,
+                                  request.longitude,
                                 ),
-                              )
-                              .toList(),
+                                width: 54,
+                                height: 54,
+                                child: _JobRequestMarker(
+                                  inProgress: request.isInProgress,
+                                  closed: request.isClosedOrExpired,
+                                  selected: request.id == selectedId,
+                                  onTap: () => onSelect(request),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ],
+              ),
+              Positioned(
+                left: 16,
+                top: 16,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE4EAF2)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
                     ),
-                  ],
-                ),
-                Positioned(
-                  left: 16,
-                  top: 16,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.94),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFE4EAF2)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          const Icon(
-                            Icons.radar_rounded,
-                            color: _navy,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${requests.length}개 요청 · 진행중 초록 테두리',
-                            style: AppText.metricLabel,
-                          ),
-                        ],
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const Icon(
+                          Icons.radar_rounded,
+                          color: _navy,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${requests.length}개 요청 · 진행중 초록 테두리',
+                          style: AppText.metricLabel,
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
+              Positioned(
+                right: 12,
+                top: 12,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      '© OpenStreetMap contributors',
+                      style: AppText.metricLabel.copyWith(fontSize: 11),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: _MapZoomControls(
+                  onZoomIn: () => _zoomBy(1),
+                  onZoomOut: () => _zoomBy(-1),
+                ),
+              ),
+              if (compact && selected != null)
                 Positioned(
-                  left: compact ? 12 : null,
-                  right: 12,
+                  left: 12,
+                  right: 60,
                   bottom: 12,
                   child: _JobRequestPreview(
                     request: selected,
-                    compact: compact,
-                    onRespond: () => onRespond(selected),
-                    onClose: () => onClose(selected),
+                    compact: true,
+                    onRespond: () => onRespond(selected!),
+                    onClose: () => onClose(selected!),
+                    onDismiss: onDismiss,
                   ),
                 ),
-                Positioned(
-                  right: 12,
-                  top: 12,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 5,
-                      ),
-                      child: Text(
-                        '© OpenStreetMap contributors',
-                        style: AppText.metricLabel.copyWith(fontSize: 11),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            ],
+          ),
+        );
+
+        final cardList = ListView.separated(
+          itemCount: requests.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final request = requests[index];
+            return GestureDetector(
+              onTap: () => onSelect(request),
+              child: _JobRequestPreview(
+                request: request,
+                compact: true,
+                highlighted: request.id == selectedId,
+                onRespond: () => onRespond(request),
+                onClose: () => onClose(request),
+              ),
+            );
+          },
+        );
+
+        if (compact) {
+          return Column(
+            children: <Widget>[
+              _CompactViewToggle(
+                showList: _compactShowList,
+                onChanged: (showList) =>
+                    setState(() => _compactShowList = showList),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: mapHeight,
+                child: _compactShowList ? cardList : mapStack,
+              ),
+            ],
+          );
+        }
+
+        return SizedBox(
+          height: mapHeight,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Expanded(flex: 3, child: mapStack),
+              const SizedBox(width: 16),
+              Expanded(flex: 2, child: cardList),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+class _CompactViewToggle extends StatelessWidget {
+  const _CompactViewToggle({required this.showList, required this.onChanged});
+
+  static const Color _line = Color(0xFFE4EAF2);
+
+  final bool showList;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8FA),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _line),
+      ),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: _CompactViewToggleButton(
+              label: '지도',
+              icon: Icons.map_rounded,
+              selected: !showList,
+              onTap: () => onChanged(false),
+            ),
+          ),
+          Expanded(
+            child: _CompactViewToggleButton(
+              label: '견적 목록',
+              icon: Icons.request_quote_rounded,
+              selected: showList,
+              onTap: () => onChanged(true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactViewToggleButton extends StatelessWidget {
+  const _CompactViewToggleButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  static const Color _navy = Color(0xFF16305E);
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? _navy : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? Colors.white : const Color(0xFF7C828A),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppText.metricLabel.copyWith(
+                  color: selected ? Colors.white : const Color(0xFF7C828A),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapZoomControls extends StatelessWidget {
+  const _MapZoomControls({required this.onZoomIn, required this.onZoomOut});
+
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE4EAF2)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          _MapZoomButton(icon: Icons.add_rounded, onTap: onZoomIn),
+          const Divider(height: 1, color: Color(0xFFE4EAF2)),
+          _MapZoomButton(icon: Icons.remove_rounded, onTap: onZoomOut),
+        ],
+      ),
+    );
+  }
+}
+
+class _MapZoomButton extends StatelessWidget {
+  const _MapZoomButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: Icon(icon, size: 20, color: const Color(0xFF16305E)),
+      ),
     );
   }
 }
@@ -758,6 +978,8 @@ class _JobRequestPreview extends StatelessWidget {
     required this.compact,
     required this.onRespond,
     required this.onClose,
+    this.highlighted = false,
+    this.onDismiss,
   });
 
   static const Color _navy = Color(0xFF16305E);
@@ -768,6 +990,8 @@ class _JobRequestPreview extends StatelessWidget {
   final bool compact;
   final VoidCallback onRespond;
   final VoidCallback onClose;
+  final bool highlighted;
+  final VoidCallback? onDismiss;
 
   @override
   Widget build(BuildContext context) {
@@ -780,81 +1004,129 @@ class _JobRequestPreview extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: compact ? double.infinity : 360),
       child: Material(
         color: Colors.white,
-        elevation: 12,
+        elevation: highlighted ? 16 : 8,
         shadowColor: Colors.black.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Row(
+        child: Stack(
+          children: <Widget>[
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: highlighted ? _navy : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      request.category,
-                      style: AppText.smallStrong.copyWith(fontSize: 15),
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: onDismiss != null ? 18 : 0,
+                          ),
+                          child: Text(
+                            request.category,
+                            style: AppText.smallStrong.copyWith(fontSize: 15),
+                          ),
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: <Widget>[
+                          Text(
+                            request.elapsedLabel,
+                            style: AppText.metricLabel.copyWith(
+                              color: const Color(0xFF9CA3AF),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              statusLabel,
+                              style: AppText.metricLabel.copyWith(
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      statusLabel,
-                      style: AppText.metricLabel.copyWith(color: statusColor),
-                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${request.locationLabel} · ${request.budgetLabel} · ${request.dateLabel}',
+                    style: AppText.cardSubtitle,
                   ),
+                  const SizedBox(height: 14),
+                  if (request.isOwn && !closed)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: onClose,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFB3261E),
+                          side: const BorderSide(color: Color(0xFFE4B7B3)),
+                          textStyle: AppText.button,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('요청 마감하기'),
+                      ),
+                    )
+                  else if (!request.isOwn && !closed)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: onRespond,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _navy,
+                          foregroundColor: Colors.white,
+                          textStyle: AppText.button,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('견적 응답하기'),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${request.locationLabel} · ${request.budgetLabel} · ${request.dateLabel}',
-                style: AppText.cardSubtitle,
-              ),
-              const SizedBox(height: 14),
-              if (request.isOwn && !closed)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: onClose,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFB3261E),
-                      side: const BorderSide(color: Color(0xFFE4B7B3)),
-                      textStyle: AppText.button,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+            ),
+            if (onDismiss != null)
+              Positioned(
+                top: -2,
+                right: -2,
+                child: InkWell(
+                  onTap: onDismiss,
+                  borderRadius: BorderRadius.circular(100),
+                  child: const Padding(
+                    padding: EdgeInsets.all(2),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 18,
+                      color: Color(0xFF9CA3AF),
                     ),
-                    child: const Text('요청 마감하기'),
-                  ),
-                )
-              else if (!request.isOwn && !closed)
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: onRespond,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _navy,
-                      foregroundColor: Colors.white,
-                      textStyle: AppText.button,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('견적 응답하기'),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

@@ -250,7 +250,7 @@ class DroneFeedSection extends ConsumerStatefulWidget {
 class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
   int _visibleCount = 9;
   List<_FeedPost>? _remoteFeed;
-  bool _showPhotoFeed = false;
+  bool _showPhotoFeed = true;
   String? _selectedMapPostId;
 
   @override
