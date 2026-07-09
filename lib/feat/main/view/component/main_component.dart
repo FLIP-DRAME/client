@@ -120,10 +120,7 @@ class AppText {
 // ── Scroll Reveal ─────────────────────────────────────────────────────────────
 
 class _RevealOnScroll extends StatefulWidget {
-  const _RevealOnScroll({
-    required this.child,
-    required this.scrollController,
-  });
+  const _RevealOnScroll({required this.child, required this.scrollController});
 
   final Widget child;
   final ScrollController scrollController;
@@ -909,13 +906,14 @@ class _OperatorPortfolioBuilderSectionState
                   backgroundColor: _soft,
                   backgroundImage:
                       imageUrl == null ? null : NetworkImage(imageUrl),
-                  child: imageUrl == null
-                      ? Icon(
-                          Icons.flight_takeoff_rounded,
-                          color: _muted,
-                          size: size * 0.32,
-                        )
-                      : null,
+                  child:
+                      imageUrl == null
+                          ? Icon(
+                            Icons.flight_takeoff_rounded,
+                            color: _muted,
+                            size: size * 0.32,
+                          )
+                          : null,
                 ),
               ),
               Positioned(
@@ -929,19 +927,20 @@ class _OperatorPortfolioBuilderSectionState
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: _uploadingPhoto
-                      ? const Padding(
-                          padding: EdgeInsets.all(5),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                  child:
+                      _uploadingPhoto
+                          ? const Padding(
+                            padding: EdgeInsets.all(5),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : Icon(
+                            Icons.camera_alt_rounded,
                             color: Colors.white,
+                            size: size < 70 ? 11 : 15,
                           ),
-                        )
-                      : Icon(
-                          Icons.camera_alt_rounded,
-                          color: Colors.white,
-                          size: size < 70 ? 11 : 15,
-                        ),
                 ),
               ),
             ],
@@ -1048,7 +1047,12 @@ class _OperatorPortfolioBuilderSectionState
                             icon: Icons.map_outlined,
                             text: () {
                               final v = pilot.availableAreas
-                                  .where((a) => a.trim().isNotEmpty && a != '??' && a != '?')
+                                  .where(
+                                    (a) =>
+                                        a.trim().isNotEmpty &&
+                                        a != '??' &&
+                                        a != '?',
+                                  )
                                   .join(', ');
                               return v.isEmpty ? '지역 협의' : v;
                             }(),
@@ -1201,12 +1205,17 @@ class _OperatorPortfolioBuilderSectionState
                   child: GestureDetector(
                     onTap: () => setState(() => _previewTab = i),
                     child: Container(
-                      padding: EdgeInsets.only(bottom: 8, right: i < 2 ? 20 : 0),
+                      padding: EdgeInsets.only(
+                        bottom: 8,
+                        right: i < 2 ? 20 : 0,
+                      ),
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
                             color:
-                                _previewTab == i ? _primary : Colors.transparent,
+                                _previewTab == i
+                                    ? _primary
+                                    : Colors.transparent,
                             width: 2,
                           ),
                         ),
@@ -1406,17 +1415,15 @@ class _OperatorPortfolioBuilderSectionState
                   label: Text(area),
                   selected: selected,
                   showCheckmark: false,
-                  onSelected:
-                      (_) {
-                        if (area == '전체') {
-                          setState(() {
-                            _selectedAreas =
-                                selected ? <String>{} : <String>{'전체'};
-                          });
-                        } else {
-                          _toggleServiceRegion(area);
-                        }
-                      },
+                  onSelected: (_) {
+                    if (area == '전체') {
+                      setState(() {
+                        _selectedAreas = selected ? <String>{} : <String>{'전체'};
+                      });
+                    } else {
+                      _toggleServiceRegion(area);
+                    }
+                  },
                   selectedColor: _navy,
                   backgroundColor: Colors.white,
                   side: BorderSide(
@@ -1450,18 +1457,17 @@ class _OperatorPortfolioBuilderSectionState
             spacing: 8,
             runSpacing: 8,
             children:
-                <String>[
-                  '전체',
-                  ...defaultServiceDistricts[region]!,
-                ].map((district) {
-                  final selected =
-                      _selectedDistrictsFor(region).contains(district);
+                <String>['전체', ...defaultServiceDistricts[region]!].map((
+                  district,
+                ) {
+                  final selected = _selectedDistrictsFor(
+                    region,
+                  ).contains(district);
                   return FilterChip(
                     label: Text(district),
                     selected: selected,
                     showCheckmark: false,
-                    onSelected:
-                        (_) => _toggleServiceDistrict(region, district),
+                    onSelected: (_) => _toggleServiceDistrict(region, district),
                     selectedColor: const Color(0xFFEAF2FF),
                     backgroundColor: Colors.white,
                     side: BorderSide(
@@ -1470,8 +1476,7 @@ class _OperatorPortfolioBuilderSectionState
                     ),
                     labelStyle: AppText.chip.copyWith(
                       color: selected ? _primary : _ink,
-                      fontWeight:
-                          selected ? FontWeight.w700 : FontWeight.w400,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
@@ -1719,15 +1724,17 @@ class _OperatorProfileCard extends StatelessWidget {
               CircleAvatar(
                 radius: 38,
                 backgroundColor: Colors.white,
-                backgroundImage: store.selectedPilot?.avatarUrl != null
-                    ? NetworkImage(store.selectedPilot!.avatarUrl!)
-                    : null,
-                child: store.selectedPilot?.avatarUrl == null
-                    ? Text(
-                        nickname.isNotEmpty ? nickname.characters.first : '?',
-                        style: AppText.cardTitle,
-                      )
-                    : null,
+                backgroundImage:
+                    store.selectedPilot?.avatarUrl != null
+                        ? NetworkImage(store.selectedPilot!.avatarUrl!)
+                        : null,
+                child:
+                    store.selectedPilot?.avatarUrl == null
+                        ? Text(
+                          nickname.isNotEmpty ? nickname.characters.first : '?',
+                          style: AppText.cardTitle,
+                        )
+                        : null,
               ),
               const SizedBox(width: 18),
               Expanded(
@@ -2135,19 +2142,19 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
                                 tooltip: '뒤로가기',
                               ),
                               if (!compact) ...[
-                              const SizedBox(width: 10),
-                              InkWell(
-                                onTap: () => context.go('/home'),
-                                borderRadius: BorderRadius.circular(8),
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  child: Text('모두의 드론', style: HomeText.logo),
+                                const SizedBox(width: 10),
+                                InkWell(
+                                  onTap: () => context.go('/home'),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 8),
+                                    child: Text('모두의 드론', style: HomeText.logo),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 18),
-                              Container(width: 1, height: 22, color: _line),
-                              const SizedBox(width: 18),
-                            ],
+                                const SizedBox(width: 18),
+                                Container(width: 1, height: 22, color: _line),
+                                const SizedBox(width: 18),
+                              ],
                               const Text('받은 요청', style: AppText.cardTitle),
                             ],
                           ),
@@ -2551,8 +2558,7 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
                 children: <Widget>[
                   _RequestMeta(
                     icon: Icons.place_outlined,
-                    text:
-                        widget.request.displayLocation,
+                    text: widget.request.displayLocation,
                   ),
                   _RequestMeta(
                     icon: Icons.calendar_today_outlined,
@@ -2589,7 +2595,7 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
   }
 }
 
-class _RequestReviewDetail extends ConsumerWidget {
+class _RequestReviewDetail extends ConsumerStatefulWidget {
   const _RequestReviewDetail({
     required this.request,
     required this.isCompleted,
@@ -2600,10 +2606,52 @@ class _RequestReviewDetail extends ConsumerWidget {
   final bool isCompleted;
   final Future<void> Function(String message, int? proposedPrice) onComplete;
 
+  @override
+  ConsumerState<_RequestReviewDetail> createState() =>
+      _RequestReviewDetailState();
+}
+
+class _RequestReviewDetailState extends ConsumerState<_RequestReviewDetail> {
+  String? _fetchedDetail;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.request.summary.isEmpty) {
+      unawaited(_loadDetail());
+    }
+  }
+
+  @override
+  void didUpdateWidget(_RequestReviewDetail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.request.id != widget.request.id &&
+        widget.request.summary.isEmpty) {
+      setState(() => _fetchedDetail = null);
+      unawaited(_loadDetail());
+    }
+  }
+
+  Future<void> _loadDetail() async {
+    try {
+      final detail = await ref
+          .read(quoteApiProvider)
+          .fetchMapJobRequestDetail(widget.request.id);
+      if (!mounted) return;
+      setState(() => _fetchedDetail = detail?.detail);
+    } catch (_) {}
+  }
+
+  PilotWorkRequest get request => widget.request;
+  bool get isCompleted => widget.isCompleted;
+  Future<void> Function(String message, int? proposedPrice) get onComplete =>
+      widget.onComplete;
+
   Future<void> _openChat(BuildContext context, WidgetRef ref) async {
     try {
-      final roomId =
-          await ref.read(chatViewModelProvider).getOrCreateRoom(request.id);
+      final roomId = await ref
+          .read(chatViewModelProvider)
+          .getOrCreateRoom(request.id);
       if (context.mounted) {
         context.push(
           '/chat/$roomId',
@@ -2623,7 +2671,9 @@ class _RequestReviewDetail extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final displayDetail =
+        request.summary.isNotEmpty ? request.summary : (_fetchedDetail ?? '');
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
@@ -2662,8 +2712,31 @@ class _RequestReviewDetail extends ConsumerWidget {
                   icon: Icons.person_outline_rounded,
                   text: '의뢰자: ${request.client}',
                 ),
-                const SizedBox(height: 14),
-                Text(request.summary, style: AppText.cardSubtitle),
+                if (displayDetail.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F8FA),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _line),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          '요청 내용',
+                          style: AppText.metricLabel.copyWith(
+                            color: const Color(0xFF7C828A),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(displayDetail, style: AppText.cardSubtitle),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -3033,9 +3106,10 @@ class _PilotStepCard extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: InkWell(
-                onTap: locked
-                    ? null
-                    : () => store.goToPilotOnboardingStep(entry.key),
+                onTap:
+                    locked
+                        ? null
+                        : () => store.goToPilotOnboardingStep(entry.key),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -3052,35 +3126,37 @@ class _PilotStepCard extends StatelessWidget {
                         radius: 14,
                         backgroundColor:
                             active ? _focus : const Color(0xFFF1F3F5),
-                        child: completed
-                            ? const Icon(
-                                Icons.check_rounded,
-                                color: _ink,
-                                size: 17,
-                              )
-                            : locked
+                        child:
+                            completed
                                 ? const Icon(
-                                    Icons.lock_outline_rounded,
-                                    color: Color(0xFFC5CDD8),
-                                    size: 14,
-                                  )
+                                  Icons.check_rounded,
+                                  color: _ink,
+                                  size: 17,
+                                )
+                                : locked
+                                ? const Icon(
+                                  Icons.lock_outline_rounded,
+                                  color: Color(0xFFC5CDD8),
+                                  size: 14,
+                                )
                                 : Text(
-                                    '${entry.key + 1}',
-                                    style: TextStyle(
-                                      color: active ? Colors.white : _muted,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w900,
-                                    ),
+                                  '${entry.key + 1}',
+                                  style: TextStyle(
+                                    color: active ? Colors.white : _muted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w900,
                                   ),
+                                ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           entry.value,
                           style: AppText.smallStrong.copyWith(
-                            color: locked
-                                ? const Color(0xFFC5CDD8)
-                                : active
+                            color:
+                                locked
+                                    ? const Color(0xFFC5CDD8)
+                                    : active
                                     ? _ink
                                     : const Color(0xFFA3B0C2),
                           ),
@@ -3225,9 +3301,10 @@ class _LicenseNumberFormatter extends TextInputFormatter {
   ) {
     final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
     final limited = digits.length > 8 ? digits.substring(0, 8) : digits;
-    final formatted = limited.length <= 2
-        ? limited
-        : '${limited.substring(0, 2)}-${limited.substring(2)}';
+    final formatted =
+        limited.length <= 2
+            ? limited
+            : '${limited.substring(0, 2)}-${limited.substring(2)}';
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
@@ -3256,9 +3333,7 @@ class _LicenseStep extends StatelessWidget {
           initialValue: data.licenseNumber,
           hint: '예: 24-000123',
           keyboardType: TextInputType.number,
-          inputFormatters: <TextInputFormatter>[
-            _LicenseNumberFormatter(),
-          ],
+          inputFormatters: <TextInputFormatter>[_LicenseNumberFormatter()],
           onChanged: (value) => store.updatePilotLicense(number: value),
         ),
         const SizedBox(height: 18),
@@ -3275,9 +3350,9 @@ class _LicenseStep extends StatelessWidget {
               }
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('업로드 실패: $e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('업로드 실패: $e')));
               }
             }
           },
@@ -3334,9 +3409,9 @@ class _BusinessStep extends StatelessWidget {
               }
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('업로드 실패: $e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('업로드 실패: $e')));
               }
             }
           },
@@ -3467,8 +3542,7 @@ class _InsuranceStep extends StatelessWidget {
           inputFormatters: <TextInputFormatter>[
             LengthLimitingTextInputFormatter(60),
           ],
-          onChanged:
-              (value) => store.updatePilotInsurance(droneNumber: value),
+          onChanged: (value) => store.updatePilotInsurance(droneNumber: value),
         ),
         const SizedBox(height: 18),
         _PdfUploadField(
@@ -3484,9 +3558,9 @@ class _InsuranceStep extends StatelessWidget {
               }
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('업로드 실패: $e')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('업로드 실패: $e')));
               }
             }
           },
@@ -3597,12 +3671,20 @@ class _AreaStep extends StatelessWidget {
   final DrameStore store;
 
   static const List<String> _regions = <String>[
-    '서울', '경기', '인천', '강원', '충청', '전라', '경상', '제주',
+    '서울',
+    '경기',
+    '인천',
+    '강원',
+    '충청',
+    '전라',
+    '경상',
+    '제주',
   ];
 
-  Set<String> _activeRegions(Set<String> areas) => _regions.where((r) {
-    return areas.contains(r) || areas.any((a) => a.startsWith('$r '));
-  }).toSet();
+  Set<String> _activeRegions(Set<String> areas) =>
+      _regions.where((r) {
+        return areas.contains(r) || areas.any((a) => a.startsWith('$r '));
+      }).toSet();
 
   Set<String> _activeDistricts(String region, Set<String> areas) {
     final result = <String>{};
@@ -3628,12 +3710,11 @@ class _AreaStep extends StatelessWidget {
           selected: activeRegions,
           onTap: store.togglePilotRegion,
         ),
-        for (final region in _regions.where(activeRegions.contains)) ...<Widget>[
+        for (final region in _regions.where(
+          activeRegions.contains,
+        )) ...<Widget>[
           const SizedBox(height: 14),
-          Text(
-            '$region 세부 지역',
-            style: AppText.smallStrong,
-          ),
+          Text('$region 세부 지역', style: AppText.smallStrong),
           const SizedBox(height: 8),
           _PilotChipGroup(
             values: <String>[
@@ -4078,8 +4159,7 @@ class _SectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (action != null)
-          Text(action!, style: AppText.eyebrow),
+        if (action != null) Text(action!, style: AppText.eyebrow),
       ],
     );
   }
@@ -4165,11 +4245,12 @@ class _PilotPortfolioCard extends StatelessWidget {
           children: <Widget>[
             Expanded(
               child: _PortfolioPreviewGrid(
-                images: pilot.portfolioImages.isNotEmpty
-                    ? pilot.portfolioImages
-                    : pilot.avatarUrl != null
-                    ? <String>[pilot.avatarUrl!]
-                    : const <String>[],
+                images:
+                    pilot.portfolioImages.isNotEmpty
+                        ? pilot.portfolioImages
+                        : pilot.avatarUrl != null
+                        ? <String>[pilot.avatarUrl!]
+                        : const <String>[],
               ),
             ),
             Padding(
@@ -4245,14 +4326,10 @@ class _PortfolioPreviewGrid extends StatelessWidget {
         Expanded(
           child: Column(
             children: <Widget>[
-              Expanded(
-                child: _NetworkCover(imageUrl: previewImages[1]),
-              ),
+              Expanded(child: _NetworkCover(imageUrl: previewImages[1])),
               if (previewImages.length > 2) ...<Widget>[
                 const SizedBox(height: 3),
-                Expanded(
-                  child: _NetworkCover(imageUrl: previewImages[2]),
-                ),
+                Expanded(child: _NetworkCover(imageUrl: previewImages[2])),
               ],
             ],
           ),
@@ -5093,7 +5170,11 @@ class _QuoteSubmitPaywallState extends ConsumerState<_QuoteSubmitPaywall> {
   Future<void> _checkUnlocked() async {
     final api = ref.read(dronePilotApiProvider);
     final unlocked = await api.isRequestUnlocked(widget.requestId);
-    if (mounted) setState(() { _unlocked = unlocked; _loading = false; });
+    if (mounted)
+      setState(() {
+        _unlocked = unlocked;
+        _loading = false;
+      });
   }
 
   Future<void> _onPayTap() async {
@@ -5159,8 +5240,10 @@ class _QuoteSubmitPaywallState extends ConsumerState<_QuoteSubmitPaywall> {
               onTap: _onPayTap,
               borderRadius: BorderRadius.circular(50),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEE500),
                   borderRadius: BorderRadius.circular(50),
@@ -5175,7 +5258,7 @@ class _QuoteSubmitPaywallState extends ConsumerState<_QuoteSubmitPaywall> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                      const Text(
+                    const Text(
                       '사전등록 혜택 수수료 무료!',
                       style: TextStyle(
                         color: Color(0xFF191919),
@@ -5582,20 +5665,22 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: const Color(0xFFEEF0F3),
-                    backgroundImage: pilot.avatarUrl != null
-                        ? NetworkImage(pilot.avatarUrl!)
-                        : null,
-                    child: pilot.avatarUrl == null
-                        ? Text(
-                            pilot.name.characters.first,
-                            style: const TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0A0B0D),
-                            ),
-                          )
-                        : null,
+                    backgroundImage:
+                        pilot.avatarUrl != null
+                            ? NetworkImage(pilot.avatarUrl!)
+                            : null,
+                    child:
+                        pilot.avatarUrl == null
+                            ? Text(
+                              pilot.name.characters.first,
+                              style: const TextStyle(
+                                fontFamily: 'Pretendard',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF0A0B0D),
+                              ),
+                            )
+                            : null,
                   ),
                   const SizedBox(width: 8),
                   Expanded(

@@ -1066,12 +1066,12 @@ class _JobRequestPreview extends StatelessWidget {
   static const Color _closed = Color(0xFF9CA3AF);
 
   final MapJobRequest request;
+  final MapJobRequestDetail? detail;
   final bool compact;
   final VoidCallback onRespond;
   final VoidCallback onClose;
   final bool highlighted;
   final VoidCallback? onDismiss;
-  final MapJobRequestDetail? detail;
 
   @override
   Widget build(BuildContext context) {
