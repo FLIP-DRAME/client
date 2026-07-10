@@ -55,18 +55,36 @@ class ModerationApi {
   Future<List<BlockedUser>> fetchBlockedUsers() async {
     final ids = await fetchBlockedUserIds();
     if (ids.isEmpty) return const <BlockedUser>[];
-    final rows = await _client
-        .from('profiles')
-        .select('id, nickname, name')
-        .inFilter('id', ids.toList());
-    return rows.map((row) {
-      final map = Map<String, dynamic>.from(row as Map);
-      final nickname = (map['nickname'] ?? '').toString().trim();
-      final name = (map['name'] ?? '').toString().trim();
-      return BlockedUser(
-        userId: map['id'].toString(),
-        displayName: nickname.isNotEmpty ? nickname : (name.isNotEmpty ? name : '알 수 없음'),
-      );
-    }).toList();
+
+    // profiles RLS only exposes a user's own row (same reason chat_api.dart
+    // falls back to a placeholder name for the other party) -- looking up
+    // someone else's nickname/name here will silently come back empty, not
+    // as an error. Every blocked id still gets an entry so a resolved-name
+    // failure never hides a real block from the management screen.
+    final names = <String, String>{};
+    try {
+      final rows = await _client
+          .from('profiles')
+          .select('id, nickname, name')
+          .inFilter('id', ids.toList());
+      for (final row in rows) {
+        final map = Map<String, dynamic>.from(row as Map);
+        final nickname = (map['nickname'] ?? '').toString().trim();
+        final name = (map['name'] ?? '').toString().trim();
+        final resolved = nickname.isNotEmpty ? nickname : name;
+        if (resolved.isNotEmpty) names[map['id'].toString()] = resolved;
+      }
+    } catch (_) {
+      // Fall through to id-only display below.
+    }
+
+    return ids
+        .map(
+          (id) => BlockedUser(
+            userId: id,
+            displayName: names[id] ?? '사용자 ${id.substring(0, 8)}',
+          ),
+        )
+        .toList();
   }
 }
