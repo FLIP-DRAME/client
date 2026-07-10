@@ -32,7 +32,20 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     setState(() { _loading = true; _error = null; });
     try {
       final rooms = await ref.read(chatViewModelProvider).fetchRooms();
-      if (mounted) setState(() => _rooms = rooms);
+      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+      final blockedIds =
+          await ref.read(moderationApiProvider).fetchBlockedUserIds();
+      final visibleRooms =
+          blockedIds.isEmpty
+              ? rooms
+              : rooms.where((room) {
+                final otherPartyUserId =
+                    currentUserId == room.clientId
+                        ? room.operatorId
+                        : room.clientId;
+                return !blockedIds.contains(otherPartyUserId);
+              }).toList();
+      if (mounted) setState(() => _rooms = visibleRooms);
       await ref.read(drameStoreProvider).refreshChatUnreadCount();
     } on AuthException {
       // 비로그인 상태에서는 채팅 목록을 불러올 수 없음
@@ -97,11 +110,19 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
                     return _ChatRoomTile(
                       room: _rooms[index],
                       onTap: () async {
+                        final room = _rooms[index];
+                        final currentUserId =
+                            Supabase.instance.client.auth.currentUser?.id;
+                        final otherPartyUserId =
+                            currentUserId == room.clientId
+                                ? room.operatorId
+                                : room.clientId;
                         await context.push(
-                          '/chat/${_rooms[index].id}',
+                          '/chat/${room.id}',
                           extra: <String, String>{
-                            'otherPartyName': _rooms[index].otherPartyName,
-                            'category': _rooms[index].category,
+                            'otherPartyName': room.otherPartyName,
+                            'category': room.category,
+                            'otherPartyUserId': otherPartyUserId,
                           },
                         );
                         if (mounted) _load();

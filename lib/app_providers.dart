@@ -8,6 +8,7 @@ import 'feat/feed/network/feed_api.dart';
 import 'feat/feed/viewmodel/feed_view_model.dart';
 import 'feat/main/network/drone_pilot_api.dart';
 import 'feat/main/viewmodel/main_view_model.dart';
+import 'feat/moderation/network/moderation_api.dart';
 import 'feat/quote/network/quote_api.dart';
 import 'feat/quote/viewmodel/quote_view_model.dart';
 
@@ -50,4 +51,8 @@ final chatApiProvider = Provider<ChatApi>((ref) {
 
 final chatViewModelProvider = Provider<ChatViewModel>((ref) {
   return ChatViewModel(ref.watch(chatApiProvider));
+});
+
+final moderationApiProvider = Provider<ModerationApi>((ref) {
+  return ModerationApi(ref.watch(supabaseClientProvider));
 });

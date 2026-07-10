@@ -88,6 +88,7 @@ class _FeedPost {
     required this.date,
     required this.likes,
     required this.caption,
+    this.authorId = '',
     this.operatorId,
     this.authorAvatarUrl,
     this.likedByMe = false,
@@ -105,6 +106,7 @@ class _FeedPost {
     date: post.date,
     likes: post.likes,
     caption: post.caption,
+    authorId: post.authorId,
     operatorId: post.operatorId,
     authorAvatarUrl: post.authorAvatarUrl,
   );
@@ -118,6 +120,7 @@ class _FeedPost {
   final String date;
   final int likes;
   final String caption;
+  final String authorId;
   final String? operatorId;
   final String? authorAvatarUrl;
   final bool likedByMe;
@@ -260,9 +263,16 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
       final api = ref.read(feedApiProvider);
       List<FeedPost> posts = const <FeedPost>[];
       Set<String> likedIds = <String>{};
+      Set<String> blockedIds = <String>{};
       try {
         posts = await ref.read(feedViewModelProvider).fetchPosts();
         likedIds = await api.fetchMyLikedPostIds();
+        blockedIds =
+            await ref.read(moderationApiProvider).fetchBlockedUserIds();
+        if (blockedIds.isNotEmpty) {
+          posts =
+              posts.where((post) => !blockedIds.contains(post.authorId)).toList();
+        }
       } catch (_) {
         if (!mounted) return;
         setState(() => _remoteFeed = const <_FeedPost>[]);
@@ -289,6 +299,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                     date: post.date,
                     likes: post.likes,
                     caption: post.caption,
+                    authorId: post.authorId,
                     operatorId: post.operatorId,
                     authorAvatarUrl: post.authorAvatarUrl,
                     likedByMe: likedIds.contains(post.id),
@@ -938,6 +949,17 @@ class _FeedTimelineCard extends StatelessWidget {
                     ),
                   ),
                   _FeedCategoryChip(label: post.category),
+                  ReportBlockMenuButton(
+                    reportTargetType: ReportTargetType.feedPost,
+                    reportTargetId: post.id,
+                    targetUserId:
+                        post.authorId.isEmpty ? null : post.authorId,
+                    targetUserName: post.authorName,
+                    isOwnContent:
+                        post.authorId.isNotEmpty &&
+                        post.authorId ==
+                            Supabase.instance.client.auth.currentUser?.id,
+                  ),
                 ],
               ),
             ),
@@ -1222,6 +1244,17 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                     Text(widget.post.authorRole, style: FeedText.authorRole),
                   ],
                 ),
+              ),
+              ReportBlockMenuButton(
+                reportTargetType: ReportTargetType.feedPost,
+                reportTargetId: widget.post.id,
+                targetUserId:
+                    widget.post.authorId.isEmpty ? null : widget.post.authorId,
+                targetUserName: widget.post.authorName,
+                isOwnContent:
+                    widget.post.authorId.isNotEmpty &&
+                    widget.post.authorId ==
+                        Supabase.instance.client.auth.currentUser?.id,
               ),
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),

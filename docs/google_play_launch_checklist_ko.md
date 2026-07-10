@@ -318,12 +318,42 @@ mode_data_safety_upload_20260605.csv
 현재 확인된 값:
 
 ```text
-Android applicationId: com.flip.mode
+Android applicationId: com.modu.drone
 Android app label: 모두의 드론
 개인정보처리방침 route: /privacy
 계정 삭제 route: /delete-account
 Play 업로드 AAB: build/app/outputs/bundle/release/app-release.aab
 ```
+
+## UGC 모더레이션 (신고/차단/제재)
+
+채팅과 피드가 있는 앱이라 Google Play 심사에서 가장 먼저 확인하는 항목입니다.
+구현 상태:
+
+```text
+신고 기능: 채팅 상대, 피드 게시글, 게시글 작성자를 신고 가능 (content_reports 테이블)
+차단 기능: 사용자 차단 시 피드 게시글/채팅방이 서로 안 보임 (user_blocks 테이블)
+계정 정지: profiles.account_status = 'suspended'로 로그인 자체를 막음
+콘텐츠 숨김: feed_posts.is_hidden = true로 피드에서 즉시 숨김
+차단 관리 화면: 마이페이지 > 차단 관리 (/blocked-users)에서 차단 해제 가능
+```
+
+관리자 패널이 따로 없으므로, 실제 검토·제재는 Supabase SQL Editor에서 직접 처리합니다:
+
+```sql
+-- 신고 검토
+select * from content_reports where status = 'pending' order by created_at desc;
+
+-- 게시글 숨기기
+update feed_posts set is_hidden = true where id = '<post-id>';
+
+-- 계정 정지
+update profiles set account_status = 'suspended' where id = '<user-id>';
+```
+
+`supabase_moderation_migration.sql`(저장소 루트, gitignored)을 Supabase SQL Editor에서 실행해야
+위 테이블/컬럼이 생기고 기능이 동작합니다. 아직 실행 전이면 앱은 신고/차단 API 호출 시
+오류를 반환합니다(테이블 없음).
 
 출시 전 필수 확인:
 

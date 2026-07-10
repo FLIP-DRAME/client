@@ -286,6 +286,12 @@ class DrameStore extends ChangeNotifier {
         email: email,
         password: password,
       );
+      if (await _api.isAccountSuspended()) {
+        await Supabase.instance.client.auth.signOut();
+        throw Exception(
+          '이용이 제한된 계정입니다. 문의: privacy@modeofficial.net',
+        );
+      }
       await restoreSession(session: response.session);
     } on AuthException catch (error) {
       throw Exception(_authErrorMessage(error));
@@ -442,6 +448,15 @@ class DrameStore extends ChangeNotifier {
     if (!isLoggedIn && !isSessionRestoring) {
       isSessionRestoring = true;
       notifyListeners();
+    }
+
+    if (await _api.isAccountSuspended()) {
+      await auth.signOut();
+      clearSessionState(notify: false);
+      lastError = '이용이 제한된 계정입니다. 문의: privacy@modeofficial.net';
+      isSessionRestoring = false;
+      notifyListeners();
+      return;
     }
 
     final metadata = user.userMetadata ?? const <String, dynamic>{};

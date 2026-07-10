@@ -305,6 +305,15 @@ class _OperatorMyPageBody extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 TextButton(
+                  onPressed: () => context.push('/blocked-users'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: _muted,
+                    textStyle: AppText.button,
+                  ),
+                  child: const Text('차단 관리'),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
                   onPressed:
                       () => _showOperatorAccountDeletionDialog(context, store),
                   style: TextButton.styleFrom(

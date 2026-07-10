@@ -810,7 +810,7 @@ class _JobRequestMapState extends State<_JobRequestMap> {
           // finds nothing to scroll to. A large cacheExtent keeps every
           // card built regardless of scroll position (this list is at
           // most a few dozen items, so the cost is negligible).
-          scrollCacheExtent: const ScrollCacheExtent.pixels(5000),
+          cacheExtent: 5000,
           itemCount: requests.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {

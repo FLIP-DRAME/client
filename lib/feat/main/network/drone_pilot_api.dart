@@ -18,6 +18,7 @@ abstract class DronePilotApi {
   Future<DronePilot?> fetchPilotById(String id);
   Future<DronePilot?> fetchMyOperatorProfile();
   Future<({String name, String nickname})?> fetchMyAccountProfile();
+  Future<bool> isAccountSuspended();
   Future<List<PilotWorkRequestData>> fetchOperatorRequests();
   Future<List<UserQuoteSummary>> fetchMyQuotes();
   Future<List<AppNotification>> fetchNotifications();
@@ -364,6 +365,24 @@ class SupabaseDronePilotApi implements DronePilotApi {
       name: (row['name'] ?? '').toString().trim(),
       nickname: (row['nickname'] ?? '').toString().trim(),
     );
+  }
+
+  @override
+  Future<bool> isAccountSuspended() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return false;
+    try {
+      final row = await _client
+          .from('profiles')
+          .select('account_status')
+          .eq('id', userId)
+          .maybeSingle();
+      return row?['account_status'] == 'suspended';
+    } catch (_) {
+      // Column may not exist yet if the moderation migration hasn't been
+      // run -- fail open rather than locking every user out.
+      return false;
+    }
   }
 
   @override

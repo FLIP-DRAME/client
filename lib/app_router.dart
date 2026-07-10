@@ -12,6 +12,7 @@ import 'feat/legal/view/pages/account_deletion_page.dart';
 import 'feat/legal/view/pages/terms_page.dart';
 import 'feat/chat/view/pages/chat_list_page.dart';
 import 'feat/chat/view/pages/chat_room_page.dart';
+import 'feat/moderation/view/pages/blocked_users_page.dart';
 import 'feat/landing/view/pages/landing_page.dart';
 import 'feat/main/model/main_models.dart';
 import 'feat/main/model/drone_pilot_model.dart';
@@ -285,6 +286,12 @@ final GoRouter appRouter = GoRouter(
           const NoTransitionPage(child: AccountDeletionPage()),
     ),
     GoRoute(
+      path: '/blocked-users',
+      name: 'blocked-users',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: BlockedUsersPage()),
+    ),
+    GoRoute(
       path: '/chats',
       name: 'chats',
       pageBuilder: (context, state) =>
@@ -300,11 +307,14 @@ final GoRouter appRouter = GoRouter(
             extra is Map<String, String> ? extra['otherPartyName'] ?? '' : '';
         final category =
             extra is Map<String, String> ? extra['category'] ?? '' : '';
+        final otherPartyUserId =
+            extra is Map<String, String> ? extra['otherPartyUserId'] : null;
         return NoTransitionPage(
           child: ChatRoomPage(
             roomId: roomId,
             otherPartyName: otherPartyName,
             category: category,
+            otherPartyUserId: otherPartyUserId,
           ),
         );
       },

@@ -15,6 +15,7 @@ class FeedPost {
     required this.createdAt,
     required this.likes,
     required this.caption,
+    this.authorId = '',
     this.operatorId,
     this.authorAvatarUrl,
     this.latitude,
@@ -33,6 +34,11 @@ class FeedPost {
   final String caption;
   final String? operatorId;
   final String? authorAvatarUrl;
+
+  /// The post author's actual auth user id (feed_posts.author_id) -- used
+  /// to report/block the author, unlike [operatorId] which points at
+  /// operator_profiles.id.
+  final String authorId;
 
   /// Shoot location of the photo, picked by the operator on a map at
   /// upload time -- null for posts created before this field existed.
@@ -75,6 +81,7 @@ class FeedApi {
         .from('feed_posts')
         .select('''
           id,
+          author_id,
           title,
           body,
           location_label,
@@ -85,6 +92,7 @@ class FeedApi {
           operator:operator_profiles(id, display_name, specialty, avatar_url)
         ''')
         .eq('is_published', true)
+        .eq('is_hidden', false)
         .order('created_at', ascending: false)
         .limit(limit);
 
@@ -99,6 +107,7 @@ class FeedApi {
         .from('feed_posts')
         .select('''
           id,
+          author_id,
           title,
           body,
           location_label,
@@ -110,6 +119,7 @@ class FeedApi {
         ''')
         .eq('operator_id', operatorId)
         .eq('is_published', true)
+        .eq('is_hidden', false)
         .order('created_at', ascending: false)
         .limit(limit);
 
@@ -124,6 +134,7 @@ class FeedApi {
         .from('feed_posts')
         .select('''
           id,
+          author_id,
           title,
           body,
           location_label,
@@ -197,6 +208,7 @@ class FeedApi {
               })
               .select('''
                 id,
+                author_id,
                 title,
                 body,
                 location_label,
@@ -244,6 +256,7 @@ class FeedApi {
         .from('feed_posts')
         .select('''
           id,
+          author_id,
           title,
           body,
           location_label,
@@ -489,6 +502,7 @@ class FeedApi {
               ? 0
               : ((likes.first as Map?)?['count'] as num?)?.toInt() ?? 0,
       caption: (map['body'] ?? map['title'] ?? '').toString(),
+      authorId: (map['author_id'] ?? '').toString(),
       operatorId: operator?['id']?.toString(),
       authorAvatarUrl:
           (operator?['avatar_url']?.toString().trim().isEmpty ?? true)

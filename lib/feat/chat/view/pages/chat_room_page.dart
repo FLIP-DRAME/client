@@ -8,6 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../app_providers.dart';
 import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_text_styles.dart';
+import '../../../moderation/model/moderation_model.dart';
+import '../../../moderation/view/component/report_block_menu.dart';
 import '../../model/chat_model.dart';
 
 class ChatRoomPage extends ConsumerStatefulWidget {
@@ -16,11 +18,13 @@ class ChatRoomPage extends ConsumerStatefulWidget {
     required this.roomId,
     required this.otherPartyName,
     this.category = '',
+    this.otherPartyUserId,
   });
 
   final String roomId;
   final String otherPartyName;
   final String category;
+  final String? otherPartyUserId;
 
   @override
   ConsumerState<ChatRoomPage> createState() => _ChatRoomPageState();
@@ -31,6 +35,7 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
   StreamSubscription<List<ChatMessage>>? _sub;
   List<ChatMessage> _messages = <ChatMessage>[];
   bool _sending = false;
+  bool _blocked = false;
 
   String get _currentUserId =>
       Supabase.instance.client.auth.currentUser?.id ?? '';
@@ -44,6 +49,18 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
           .markRead(widget.roomId)
           .then((_) => ref.read(drameStoreProvider).refreshChatUnreadCount()),
     );
+    final otherPartyUserId = widget.otherPartyUserId;
+    if (otherPartyUserId != null) {
+      unawaited(
+        ref
+            .read(moderationApiProvider)
+            .fetchBlockedUserIds()
+            .then((ids) {
+              if (mounted) setState(() => _blocked = ids.contains(otherPartyUserId));
+            })
+            .catchError((_) {}),
+      );
+    }
     _sub = vm.messageStream(widget.roomId).listen((msgs) {
       if (!mounted) return;
       // 확정된 메시지와 내용+발신자가 같은 temp 제거 (중복 방지)
@@ -140,6 +157,18 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
           ],
         ),
         titleSpacing: 0,
+        actions: <Widget>[
+          ReportBlockMenuButton(
+            reportTargetType: ReportTargetType.chatUser,
+            reportTargetId: widget.otherPartyUserId ?? widget.roomId,
+            targetUserId: widget.otherPartyUserId,
+            targetUserName: widget.otherPartyName,
+            iconColor: DC.ink,
+            onBlocked: () {
+              if (mounted) setState(() => _blocked = true);
+            },
+          ),
+        ],
       ),
       body: Column(
         children: <Widget>[
@@ -200,11 +229,33 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
                       },
                     ),
           ),
-          _InputBar(
-            controller: _inputController,
-            sending: _sending,
-            onSend: _send,
-          ),
+          if (_blocked)
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: DC.spBase,
+                vertical: DC.spSm,
+              ),
+              child: SafeArea(
+                top: false,
+                child: Text(
+                  '차단한 상대입니다. 메시지를 보낼 수 없습니다.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: DrameTextStyles.fontFamily,
+                    fontSize: DrameTextStyles.bodySize,
+                    color: DC.muted,
+                  ),
+                ),
+              ),
+            )
+          else
+            _InputBar(
+              controller: _inputController,
+              sending: _sending,
+              onSend: _send,
+            ),
         ],
       ),
     );

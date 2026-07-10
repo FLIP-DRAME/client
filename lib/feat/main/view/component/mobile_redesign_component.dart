@@ -1145,6 +1145,10 @@ class _UserMyPageTab extends StatelessWidget {
                   onTap: () => context.push('/privacy'),
                 ),
                 _MobileMenuItem(
+                  label: '차단 관리',
+                  onTap: () => context.push('/blocked-users'),
+                ),
+                _MobileMenuItem(
                   label: '로그아웃',
                   isDestructive: true,
                   onTap: () async {
@@ -2704,6 +2708,10 @@ class _OperatorMyPageMobileTab extends StatelessWidget {
             _MobileMenuSection(
               title: '계정',
               items: <_MobileMenuItem>[
+                _MobileMenuItem(
+                  label: '차단 관리',
+                  onTap: () => context.push('/blocked-users'),
+                ),
                 _MobileMenuItem(
                   label: '로그아웃',
                   onTap: () async {
