@@ -258,10 +258,17 @@ class _QuotePriceRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(label, style: PortfolioText.quoteLabel),
-          const Spacer(),
-          Text(value, style: PortfolioText.quoteValue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              style: PortfolioText.quoteValue,
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );
