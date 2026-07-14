@@ -3018,8 +3018,8 @@ class _PilotOnboardingSection extends StatelessWidget {
   static const _steps = <String>[
     '자격증 등록',
     '사업자 정보',
-    '보험 등록',
     '보유 기체',
+    '보험 등록',
     '활동 지역·일정',
   ];
 
@@ -3211,8 +3211,8 @@ class _PilotFormCard extends StatelessWidget {
     final bodies = <Widget>[
       _LicenseStep(store: store),
       _BusinessStep(store: store),
-      _InsuranceStep(store: store),
       _DroneStep(store: store),
+      _InsuranceStep(store: store),
       _AreaStep(store: store),
     ];
     return Container(
@@ -3338,7 +3338,7 @@ class _LicenseStep extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _PdfUploadField(
-          label: '자격증 파일 (PDF) (선택)',
+          label: '자격증 파일 (PDF) *',
           fileName: data.licenseFileName,
           onPick: (bytes, name) async {
             try {
@@ -3397,7 +3397,7 @@ class _BusinessStep extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         _PdfUploadField(
-          label: '사업자등록증 파일 (PDF) (선택)',
+          label: '사업자등록증 파일 (PDF) *',
           fileName: data.businessFileName,
           onPick: (bytes, name) async {
             try {
@@ -3518,35 +3518,24 @@ class _InsuranceStep extends StatelessWidget {
         _PilotSelectField(
           label: '보험사 *',
           value: data.insuranceCompany,
-          values: const <String>['DB손해보험', '삼성화재', '현대해상', 'KB손해보험'],
+          values: const <String>[
+            'DB손해보험',
+            '삼성화재',
+            '현대해상',
+            'KB손해보험',
+            '한화손해보험',
+            '메리츠화재',
+            '롯데손해보험',
+            'MG손해보험',
+            '흥국화재',
+            'NH농협손해보험',
+            '기타',
+          ],
           onChanged: (value) => store.updatePilotInsurance(company: value),
         ),
         const SizedBox(height: 18),
-        _PilotTextField(
-          label: '보험 증권번호 *',
-          initialValue: data.insuranceNumber,
-          hint: 'DB-DRONE-240001',
-          keyboardType: TextInputType.text,
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9-]')),
-            LengthLimitingTextInputFormatter(40),
-          ],
-          onChanged: (value) => store.updatePilotInsurance(number: value),
-        ),
-        const SizedBox(height: 18),
-        _PilotTextField(
-          label: '가입된 기체 번호 (선택)',
-          initialValue: data.insuranceDroneNumber,
-          hint: '예: D-2024-001',
-          keyboardType: TextInputType.text,
-          inputFormatters: <TextInputFormatter>[
-            LengthLimitingTextInputFormatter(60),
-          ],
-          onChanged: (value) => store.updatePilotInsurance(droneNumber: value),
-        ),
-        const SizedBox(height: 18),
         _PdfUploadField(
-          label: '보험 증권 파일 (PDF) (선택)',
+          label: '보험 증권 파일 (PDF) *',
           fileName: data.insuranceFileName,
           onPick: (bytes, name) async {
             try {
@@ -3605,7 +3594,15 @@ class _DroneStep extends StatelessWidget {
                 _PilotSelectField(
                   label: '제조사 (선택)',
                   value: drone.maker,
-                  values: const <String>['DJI', 'Autel', 'Parrot', '기타'],
+                  values: const <String>[
+                    'DJI',
+                    'Autel',
+                    'Parrot',
+                    '유콘시스템',
+                    '니어스랩',
+                    'XAG',
+                    '기타',
+                  ],
                   onChanged:
                       (value) => store.updatePilotDrone(index, maker: value),
                 ),
@@ -3638,7 +3635,7 @@ class _DroneStep extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 _PilotTextField(
-                  label: '기체 신고번호 (선택)',
+                  label: '기체 신고번호 *',
                   initialValue: drone.registrationNumber,
                   hint: 'S1234567',
                   keyboardType: TextInputType.text,

@@ -560,16 +560,11 @@ class SupabaseDronePilotApi implements DronePilotApi {
         }),
       );
     }
-    if (data.insuranceNumber.toString().isNotEmpty) {
+    if (data.insuranceCompany.toString().trim().isNotEmpty) {
       await _tryOptionalWrite(
         () => _client.from('operator_insurances').insert(<String, Object?>{
           'operator_id': operatorId,
           'company': data.insuranceCompany,
-          'policy_number': data.insuranceNumber,
-          'drone_registration':
-              data.insuranceDroneNumber.isEmpty
-                  ? null
-                  : data.insuranceDroneNumber,
         }),
       );
     }

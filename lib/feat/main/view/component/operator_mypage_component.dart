@@ -262,18 +262,17 @@ class _OperatorMyPageBody extends StatelessWidget {
                               '삼성화재',
                               '현대해상',
                               'KB손해보험',
+                              '한화손해보험',
+                              '메리츠화재',
+                              '롯데손해보험',
+                              'MG손해보험',
+                              '흥국화재',
+                              'NH농협손해보험',
+                              '기타',
                             ],
                             onChanged:
                                 (value) =>
                                     store.updatePilotInsurance(company: value),
-                          ),
-                          _InlineEditableText(
-                            label: '보험 증권번호',
-                            value: store.pilotOnboarding.insuranceNumber,
-                            hint: 'DB-DRONE-240001',
-                            onChanged:
-                                (value) =>
-                                    store.updatePilotInsurance(number: value),
                           ),
                         ],
                       ),
@@ -578,7 +577,15 @@ class _OperatorDroneListCard extends StatelessWidget {
                 _InlineEditableSelect(
                   label: '제조사 (선택)',
                   value: drone.maker,
-                  values: const <String>['DJI', 'Autel', 'Parrot', '기타'],
+                  values: const <String>[
+                    'DJI',
+                    'Autel',
+                    'Parrot',
+                    '유콘시스템',
+                    '니어스랩',
+                    'XAG',
+                    '기타',
+                  ],
                   onChanged:
                       (value) => store.updatePilotDrone(index, maker: value),
                 ),
@@ -590,7 +597,7 @@ class _OperatorDroneListCard extends StatelessWidget {
                       (value) => store.updatePilotDrone(index, model: value),
                 ),
                 _InlineEditableText(
-                  label: '신고번호 (선택)',
+                  label: '신고번호 *',
                   value: drone.registrationNumber,
                   hint: 'S1234567',
                   onChanged:

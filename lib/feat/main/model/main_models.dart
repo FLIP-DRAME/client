@@ -30,8 +30,6 @@ class PilotOnboardingData {
   String? businessFileUrl;
   String? businessFileName;
   String insuranceCompany = 'DB손해보험';
-  String insuranceNumber = '';
-  String insuranceDroneNumber = '';
   bool insuranceUploaded = false;
   String? insuranceFileUrl;
   String? insuranceFileName;
