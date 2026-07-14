@@ -563,6 +563,8 @@ class DrameStore extends ChangeNotifier {
         r'^\d{2}-\d{6}$',
       ).hasMatch(data.licenseNumber.trim())) {
         message = '자격증 번호를 00-000000 형식으로 입력해 주세요.';
+      } else if ((data.licenseFileName ?? '').trim().isEmpty) {
+        message = '자격증 파일을 첨부해 주세요.';
       }
     } else if (step == 1) {
       if (data.businessName.trim().isEmpty) {
@@ -573,22 +575,32 @@ class DrameStore extends ChangeNotifier {
         message = '사업자등록번호는 000-00-00000 형식으로 입력해 주세요.';
       } else if (data.representativeName.trim().isEmpty) {
         message = '대표자명을 입력해 주세요.';
+      } else if ((data.businessFileName ?? '').trim().isEmpty) {
+        message = '사업자등록증 파일을 첨부해 주세요.';
       }
     } else if (step == 2) {
-      if (data.insuranceNumber.trim().isEmpty) {
-        message = '보험 증권번호를 입력해 주세요.';
-      }
-    } else if (step == 3) {
-      final hasDrone = data.drones.any(
+      final enteredDrones = data.drones.where(
         (drone) => drone.model.trim().isNotEmpty,
       );
-      final hasCategory = data.drones.any(
+      final hasDrone = enteredDrones.isNotEmpty;
+      final hasCategory = enteredDrones.any(
         (drone) => drone.categories.isNotEmpty,
+      );
+      final hasRegistrationNumber = enteredDrones.every(
+        (drone) => drone.registrationNumber.trim().isNotEmpty,
       );
       if (!hasDrone) {
         message = '보유 기체의 모델명을 하나 이상 입력해 주세요.';
       } else if (!hasCategory) {
         message = '기체 작업 분야를 하나 이상 선택해 주세요.';
+      } else if (!hasRegistrationNumber) {
+        message = '기체 신고번호를 입력해 주세요.';
+      }
+    } else if (step == 3) {
+      if (data.insuranceCompany.trim().isEmpty) {
+        message = '보험사를 선택해 주세요.';
+      } else if ((data.insuranceFileName ?? '').trim().isEmpty) {
+        message = '보험 증권 파일을 첨부해 주세요.';
       }
     } else if (step == 4 && data.areas.isEmpty) {
       message = '주요 활동 지역을 하나 이상 선택해 주세요.';
@@ -644,17 +656,9 @@ class DrameStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updatePilotInsurance({
-    String? company,
-    String? number,
-    String? droneNumber,
-    bool? uploaded,
-  }) {
+  void updatePilotInsurance({String? company, bool? uploaded}) {
     pilotOnboarding.insuranceCompany =
         company ?? pilotOnboarding.insuranceCompany;
-    pilotOnboarding.insuranceNumber = number ?? pilotOnboarding.insuranceNumber;
-    pilotOnboarding.insuranceDroneNumber =
-        droneNumber ?? pilotOnboarding.insuranceDroneNumber;
     pilotOnboarding.insuranceUploaded =
         uploaded ?? pilotOnboarding.insuranceUploaded;
     notifyListeners();
