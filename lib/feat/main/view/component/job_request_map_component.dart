@@ -40,6 +40,17 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
     super.dispose();
   }
 
+  /// Closed/expired requests sink to the bottom; otherwise newest first.
+  List<MapJobRequest> _sortRequests(List<MapJobRequest> requests) {
+    return requests..sort((a, b) {
+      final closedCompare = (a.isClosedOrExpired ? 1 : 0).compareTo(
+        b.isClosedOrExpired ? 1 : 0,
+      );
+      if (closedCompare != 0) return closedCompare;
+      return b.createdAt.compareTo(a.createdAt);
+    });
+  }
+
   Future<void> _load() async {
     try {
       final api = ref.read(quoteApiProvider);
@@ -57,9 +68,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       for (final request in mine) {
         merged[request.id] = request;
       }
-      final combined =
-          merged.values.toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final combined = _sortRequests(merged.values.toList());
       setState(() => _requests = combined);
       if (combined.isNotEmpty) {
         unawaited(_fetchDetail(combined.first.id));
@@ -116,7 +125,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       await ref.read(quoteApiProvider).closeMapJobRequest(request.id);
       if (!mounted) return;
       setState(() {
-        _requests =
+        final updated =
             _requests
                 ?.map(
                   (r) =>
@@ -137,6 +146,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                           : r,
                 )
                 .toList();
+        _requests = updated == null ? null : _sortRequests(updated);
       });
       messenger.showSnackBar(
         const SnackBar(
@@ -702,15 +712,21 @@ class _JobRequestMapState extends State<_JobRequestMap> {
                     ),
                     MarkerLayer(
                       markers:
-                          requests
+                          // Closed/expired markers are drawn first (i.e.
+                          // underneath) so active requests stay on top when
+                          // pins overlap.
+                          <MapJobRequest>[
+                            ...requests.where((r) => r.isClosedOrExpired),
+                            ...requests.where((r) => !r.isClosedOrExpired),
+                          ]
                               .map(
                                 (request) => Marker(
                                   point: LatLng(
                                     request.latitude,
                                     request.longitude,
                                   ),
-                                  width: 54,
-                                  height: 54,
+                                  width: request.isClosedOrExpired ? 27 : 54,
+                                  height: request.isClosedOrExpired ? 27 : 54,
                                   child: _JobRequestMarker(
                                     inProgress: request.isInProgress,
                                     closed: request.isClosedOrExpired,
@@ -1018,31 +1034,33 @@ class _JobRequestMarker extends StatelessWidget {
             : inProgress
             ? const Color(0xFF05B169)
             : const Color(0xFF16305E);
+    // Closed markers get a fully opaque black border; the fill/icon still
+    // dim via alpha so the border isn't washed out along with them.
+    final borderColor = closed ? Colors.black : color;
+    final fillColor = selected ? color : Colors.white;
+    final iconColor = selected ? Colors.white : color;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedScale(
         duration: const Duration(milliseconds: 160),
         scale: selected ? 1.12 : 1,
-        child: Opacity(
-          opacity: closed ? 0.6 : 1,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: selected ? color : Colors.white,
-              border: Border.all(color: color, width: inProgress ? 3 : 2),
-              boxShadow: const <BoxShadow>[
-                BoxShadow(
-                  color: Color(0x330A0B0D),
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Icon(
-              closed ? Icons.lock_clock_rounded : Icons.request_quote_rounded,
-              color: selected ? Colors.white : color,
-              size: 23,
-            ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: closed ? fillColor.withValues(alpha: 0.6) : fillColor,
+            border: Border.all(color: borderColor, width: inProgress ? 3 : 2),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x330A0B0D),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Icon(
+            closed ? Icons.lock_clock_rounded : Icons.request_quote_rounded,
+            color: closed ? iconColor.withValues(alpha: 0.6) : iconColor,
+            size: closed ? 11.5 : 23,
           ),
         ),
       ),
@@ -1201,6 +1219,24 @@ class _JobRequestPreview extends StatelessWidget {
                           ),
                         ),
                         child: const Text('견적 응답하기'),
+                      ),
+                    )
+                  else if (!request.isOwn && closed)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: null,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _closed,
+                          side: const BorderSide(color: Color(0xFFE5E7EB)),
+                          disabledForegroundColor: _closed,
+                          textStyle: AppText.button,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('마감된 요청입니다'),
                       ),
                     ),
                 ],

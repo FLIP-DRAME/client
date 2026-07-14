@@ -309,11 +309,11 @@ class SupabaseQuoteApi implements QuoteApi {
           );
         }).toList();
 
-    // Defensive client-side filter: the DB view is expected to already drop
-    // closed/expired rows (see supabase_job_request_expiry_migration.sql),
-    // but this keeps the public feed correct even before that migration is
-    // applied, or if it's ever missed on a fresh Supabase project.
-    return requests.where((r) => !r.isClosedOrExpired).toList();
+    // Both manually closed and naturally expired (past autoCloseAfter, never
+    // closed) requests stay in the public feed indefinitely, shown with a
+    // "요청마감" badge (see _JobRequestPreview / MapJobRequest.isClosedOrExpired)
+    // so other users still see the request rather than having it vanish.
+    return requests;
   }
 
   @override
