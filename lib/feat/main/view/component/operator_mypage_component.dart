@@ -10,6 +10,27 @@ void _showOperatorAccountDeletionDialog(
   );
 }
 
+Future<void> _uploadMyPageFile({
+  required BuildContext context,
+  required Future<void> Function() upload,
+  required String successMessage,
+}) async {
+  try {
+    await upload();
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(successMessage)));
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('업로드 실패: $e')));
+    }
+  }
+}
+
 class _OperatorProfileManagementPage extends StatelessWidget {
   const _OperatorProfileManagementPage({required this.store});
 
@@ -243,8 +264,45 @@ class _OperatorMyPageBody extends StatelessWidget {
                                   representative: value,
                                 ),
                           ),
+                          const SizedBox(height: 8),
+                          _PdfUploadField(
+                            label: '자격증 파일 (PDF) *',
+                            fileName: store.pilotOnboarding.licenseFileName,
+                            onPick:
+                                (bytes, name) =>
+                                    _uploadMyPageFile(
+                                      context: context,
+                                      upload: () => store.uploadLicensePdf(
+                                        bytes,
+                                        name,
+                                      ),
+                                      successMessage: '자격증 파일이 업로드되었습니다.',
+                                    ),
+                          ),
+                          const SizedBox(height: 12),
+                          _PdfUploadField(
+                            label: '사업자등록증 파일 (PDF) *',
+                            fileName: store.pilotOnboarding.businessFileName,
+                            onPick:
+                                (bytes, name) =>
+                                    _uploadMyPageFile(
+                                      context: context,
+                                      upload: () => store.uploadBusinessPdf(
+                                        bytes,
+                                        name,
+                                      ),
+                                      successMessage: '사업자등록증 파일이 업로드되었습니다.',
+                                    ),
+                          ),
                         ],
                       ),
+                    ),
+                    SizedBox(
+                      width:
+                          twoColumns
+                              ? (constraints.maxWidth - 18) / 2
+                              : constraints.maxWidth,
+                      child: _OperatorDroneListCard(store: store),
                     ),
                     SizedBox(
                       width:
@@ -274,15 +332,23 @@ class _OperatorMyPageBody extends StatelessWidget {
                                 (value) =>
                                     store.updatePilotInsurance(company: value),
                           ),
+                          const SizedBox(height: 8),
+                          _PdfUploadField(
+                            label: '보험 증권 파일 (PDF) *',
+                            fileName: store.pilotOnboarding.insuranceFileName,
+                            onPick:
+                                (bytes, name) =>
+                                    _uploadMyPageFile(
+                                      context: context,
+                                      upload: () => store.uploadInsurancePdf(
+                                        bytes,
+                                        name,
+                                      ),
+                                      successMessage: '보험 증권 파일이 업로드되었습니다.',
+                                    ),
+                          ),
                         ],
                       ),
-                    ),
-                    SizedBox(
-                      width:
-                          twoColumns
-                              ? (constraints.maxWidth - 18) / 2
-                              : constraints.maxWidth,
-                      child: _OperatorDroneListCard(store: store),
                     ),
                   ],
                 );
@@ -332,24 +398,59 @@ class _OperatorMyPageBody extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: FilledButton(
                 onPressed: () async {
-                  await store.saveMyProfile(
-                    name: store.accountName,
-                    nickname: store.accountNickname,
-                  );
-                  await store.updateOperatorProfile(
-                    intro:
-                        store.selectedPilot?.intro ??
-                        '${store.accountNickname.isNotEmpty ? store.accountNickname : store.accountName} 운용자입니다.',
-                    description:
-                        store.selectedPilot?.description ??
-                        store.pilotOnboarding.portfolioUrl,
-                    categoryLabels:
-                        store.selectedPilot?.categories ?? const <String>[],
-                    areaNames: store.pilotOnboarding.areas.toList(),
-                    portfolioImageUrls:
-                        store.selectedPilot?.portfolioImages ??
-                        const <String>[],
-                  );
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    store.validateOperatorOnboardingDetails();
+                  } catch (e) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e
+                              .toString()
+                              .replaceFirst('Exception: ', ''),
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+                  try {
+                    // 자격증/사업자/보험/기체 정보를 먼저 저장한다: 이 저장이
+                    // 실패하면(예: 아직 운용자 등록 전) 아래 saveMyProfile/
+                    // updateOperatorProfile이 트리거하는 load()로 인해 화면에
+                    // 입력해 둔 값이 리로드되어 사라지는 것을 방지한다.
+                    await store.saveOperatorOnboardingDetails();
+                    await store.saveMyProfile(
+                      name: store.accountName,
+                      nickname: store.accountNickname,
+                    );
+                    await store.updateOperatorProfile(
+                      intro:
+                          store.selectedPilot?.intro ??
+                          '${store.accountNickname.isNotEmpty ? store.accountNickname : store.accountName} 운용자입니다.',
+                      description:
+                          store.selectedPilot?.description ??
+                          store.pilotOnboarding.portfolioUrl,
+                      categoryLabels:
+                          store.selectedPilot?.categories ?? const <String>[],
+                      areaNames: store.pilotOnboarding.areas.toList(),
+                      portfolioImageUrls:
+                          store.selectedPilot?.portfolioImages ??
+                          const <String>[],
+                    );
+                  } catch (e) {
+                    if (context.mounted) {
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e
+                                .toString()
+                                .replaceFirst('Exception: ', ''),
+                          ),
+                        ),
+                      );
+                    }
+                    return;
+                  }
                   if (context.mounted) context.go('/operator');
                 },
                 style: FilledButton.styleFrom(

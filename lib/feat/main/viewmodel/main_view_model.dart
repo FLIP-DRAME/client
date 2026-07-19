@@ -133,6 +133,15 @@ class DrameStore extends ChangeNotifier {
         accountRole = '운용자';
         operatorRegistrationCompleted = true;
         operatorReviewStatus = myOperator.operatorStatus;
+        try {
+          final onboardingDetails =
+              await _api.fetchMyOperatorOnboardingDetails();
+          if (onboardingDetails != null) {
+            pilotOnboarding = onboardingDetails;
+          }
+        } catch (_) {
+          // 마이페이지 수정 화면은 필드가 비어 있어도 동작해야 하므로 조회 실패는 무시
+        }
       } else {
         // 운용자 등록 정보가 없으면 미등록 상태로 리셋
         operatorRegistrationCompleted = false;
@@ -946,6 +955,28 @@ class DrameStore extends ChangeNotifier {
       portfolioImageUrls: portfolioImageUrls,
     );
     await load();
+  }
+
+  /// 마이페이지에서 자격증/사업자/보험/보유 기체 정보를 저장하기 전에
+  /// 온보딩 마법사와 동일한 필수값 검증을 수행합니다. 유효하지 않으면 Exception을 던집니다.
+  void validateOperatorOnboardingDetails() {
+    _validatePilotOnboardingStep(0);
+    _validatePilotOnboardingStep(1);
+    _validatePilotOnboardingStep(2);
+    _validatePilotOnboardingStep(3);
+  }
+
+  Future<void> saveOperatorOnboardingDetails() async {
+    validateOperatorOnboardingDetails();
+    try {
+      await _api.updateOperatorOnboardingDetails(pilotOnboarding);
+    } on PostgrestException catch (error) {
+      throw Exception('운용자 정보 저장에 실패했습니다. (${error.message})');
+    } on Exception {
+      rethrow;
+    } catch (_) {
+      throw Exception('운용자 정보 저장 중 오류가 발생했습니다. 잠시 뒤 다시 시도해 주세요.');
+    }
   }
 
   Future<void> deleteFeedPost(String id) async {
