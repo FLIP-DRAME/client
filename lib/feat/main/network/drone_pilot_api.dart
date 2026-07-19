@@ -65,6 +65,8 @@ abstract class DronePilotApi {
   Future<bool> isRequestUnlocked(String requestId);
   Future<void> unlockRequest(String requestId);
   Future<void> deleteMyAccount();
+  Future<PilotOnboardingData?> fetchMyOperatorOnboardingDetails();
+  Future<void> updateOperatorOnboardingDetails(PilotOnboardingData data);
 }
 
 class PilotWorkRequestData {
@@ -797,6 +799,172 @@ class SupabaseDronePilotApi implements DronePilotApi {
               : body?.toString() ?? '';
       throw Exception('계정 삭제 실패 ($status): $detail');
     }
+  }
+
+  String? _fileNameFromUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    final segments = Uri.parse(url).pathSegments;
+    return segments.isEmpty ? url : segments.last;
+  }
+
+  @override
+  Future<PilotOnboardingData?> fetchMyOperatorOnboardingDetails() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return null;
+    final row =
+        await _client
+            .from('operator_profiles')
+            .select('''
+              business_name,
+              business_number,
+              representative_name,
+              location_label,
+              license_file_url,
+              business_file_url,
+              insurance_file_url,
+              operator_licenses(license_type, license_number),
+              operator_insurances(company),
+              operator_drones(maker, model, registration_number),
+              operator_service_areas(permission_type, regions(name))
+            ''')
+            .eq('user_id', userId)
+            .maybeSingle();
+    if (row == null) return null;
+
+    final data = PilotOnboardingData();
+    data.businessName = (row['business_name'] ?? '').toString();
+    data.businessNumber = (row['business_number'] ?? '').toString();
+    data.representativeName = (row['representative_name'] ?? '').toString();
+    data.licenseFileUrl = row['license_file_url'] as String?;
+    data.licenseFileName = _fileNameFromUrl(data.licenseFileUrl);
+    data.businessFileUrl = row['business_file_url'] as String?;
+    data.businessFileName = _fileNameFromUrl(data.businessFileUrl);
+    data.insuranceFileUrl = row['insurance_file_url'] as String?;
+    data.insuranceFileName = _fileNameFromUrl(data.insuranceFileUrl);
+
+    final licenses = List<Object?>.from(
+      row['operator_licenses'] as List? ?? const [],
+    );
+    if (licenses.isNotEmpty) {
+      final license = Map<String, dynamic>.from(licenses.first as Map);
+      data.licenseType =
+          (license['license_type'] ?? data.licenseType).toString();
+      data.licenseNumber = (license['license_number'] ?? '').toString();
+    }
+
+    final insurances = List<Object?>.from(
+      row['operator_insurances'] as List? ?? const [],
+    );
+    if (insurances.isNotEmpty) {
+      final insurance = Map<String, dynamic>.from(insurances.first as Map);
+      data.insuranceCompany =
+          (insurance['company'] ?? data.insuranceCompany).toString();
+    }
+
+    final drones = List<Object?>.from(
+      row['operator_drones'] as List? ?? const [],
+    );
+    if (drones.isNotEmpty) {
+      data.drones =
+          drones.whereType<Map>().map((item) {
+            final drone = Map<String, dynamic>.from(item);
+            return PilotDroneForm(
+              maker: (drone['maker'] ?? 'DJI').toString(),
+              model: (drone['model'] ?? '').toString(),
+              registrationNumber:
+                  (drone['registration_number'] ?? '').toString(),
+            );
+          }).toList();
+    }
+
+    final areas = <String>{
+      ...List<Object?>.from(
+        row['operator_service_areas'] as List? ?? const [],
+      ).whereType<Map>().map(
+        (item) => ((item['regions'] as Map?)?['name'] ?? '').toString(),
+      ).where((name) => name.isNotEmpty),
+      ..._splitLabels(row['location_label']),
+    };
+    data.areas = areas;
+
+    return data;
+  }
+
+  @override
+  Future<void> updateOperatorOnboardingDetails(PilotOnboardingData data) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다.');
+    final operatorRow =
+        await _client
+            .from('operator_profiles')
+            .select('id')
+            .eq('user_id', userId)
+            .maybeSingle();
+    if (operatorRow == null) {
+      throw Exception('운용자 등록 정보를 찾을 수 없습니다.');
+    }
+    final operatorId = operatorRow['id'].toString();
+
+    await _client
+        .from('operator_profiles')
+        .update(<String, Object?>{
+          'business_name': data.businessName,
+          'business_number': data.businessNumber,
+          'representative_name': data.representativeName,
+          'license_file_url': data.licenseFileUrl,
+          'business_file_url': data.businessFileUrl,
+          'insurance_file_url': data.insuranceFileUrl,
+        })
+        .eq('id', operatorId);
+
+    await _tryOptionalWrite(
+      () => _client
+          .from('operator_licenses')
+          .delete()
+          .eq('operator_id', operatorId),
+    );
+    if (data.licenseNumber.trim().isNotEmpty) {
+      await _tryOptionalWrite(
+        () => _client.from('operator_licenses').insert(<String, Object?>{
+          'operator_id': operatorId,
+          'license_type': data.licenseType,
+          'license_number': data.licenseNumber,
+        }),
+      );
+    }
+
+    await _tryOptionalWrite(
+      () => _client
+          .from('operator_insurances')
+          .delete()
+          .eq('operator_id', operatorId),
+    );
+    if (data.insuranceCompany.trim().isNotEmpty) {
+      await _tryOptionalWrite(
+        () => _client.from('operator_insurances').insert(<String, Object?>{
+          'operator_id': operatorId,
+          'company': data.insuranceCompany,
+        }),
+      );
+    }
+
+    await _tryOptionalWrite(
+      () =>
+          _client.from('operator_drones').delete().eq('operator_id', operatorId),
+    );
+    for (final drone in data.drones) {
+      if (drone.model.trim().isEmpty) continue;
+      await _tryOptionalWrite(
+        () => _client.from('operator_drones').insert(<String, Object?>{
+          'operator_id': operatorId,
+          'maker': drone.maker,
+          'model': drone.model,
+          'registration_number': drone.registrationNumber,
+        }),
+      );
+    }
+
+    await _syncOperatorAreas(operatorId, data);
   }
 
   Future<void> _tryOptionalWrite(Future<Object?> Function() write) async {
