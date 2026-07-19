@@ -313,7 +313,12 @@ class _OperatorListSection extends StatelessWidget {
               title: '조건에 맞는 운용자',
               action: '${store.pilots.length}명',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 6),
+            const Text(
+              '프로필 사진·서비스 소개·포트폴리오를 채운 운용자가 먼저 보여요',
+              style: AppText.metricLabel,
+            ),
+            const SizedBox(height: 18),
             if (store.pilots.isEmpty)
               const _EmptyOperatorState()
             else
@@ -1013,12 +1018,7 @@ class _OperatorPortfolioBuilderSectionState
           const Divider(color: _line),
           const SizedBox(height: 32),
           if (pilot == null)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 48),
-                child: Text('프로필 정보를 불러오는 중입니다.', style: AppText.cardSubtitle),
-              ),
-            )
+            Center(child: _buildProfileUnavailableState())
           else ...<Widget>[
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1128,11 +1128,9 @@ class _OperatorPortfolioBuilderSectionState
         ),
         const SizedBox(height: 14),
         if (pilot == null)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 40),
-            child: Center(
-              child: Text('프로필 정보를 불러오는 중입니다.', style: AppText.metricLabel),
-            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Center(child: _buildProfileUnavailableState()),
           )
         else ...<Widget>[
           Row(
@@ -1253,6 +1251,41 @@ class _OperatorPortfolioBuilderSectionState
           if (_previewTab == 2) _buildMobileInfoTab(pilot),
         ],
       ],
+    );
+  }
+
+  Widget _buildProfileUnavailableState() {
+    if (widget.store.operatorRegistrationCompleted) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Text('프로필 정보를 불러오는 중입니다.', style: AppText.cardSubtitle),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Text(
+            '운용자 등록을 완료하면 포트폴리오를 만들 수 있습니다.',
+            style: AppText.cardSubtitle,
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => context.push('/pilot/register'),
+            style: FilledButton.styleFrom(
+              backgroundColor: _primary,
+              foregroundColor: Colors.white,
+              textStyle: AppText.button,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('운용자 등록하기'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -74,6 +74,30 @@ class DronePilot {
 
   bool _isReadableArea(String value) =>
       value.isNotEmpty && value != '??' && value != '?' && value != '-';
+
+  /// How thoroughly this operator has filled out their public profile
+  /// (photo, service description, portfolio photos, region, etc). Higher is
+  /// more complete. Used to rank the "조건에 맞는 운용자" list so well-filled
+  /// profiles surface before near-empty ones, instead of by recency alone.
+  int get profileCompletenessScore {
+    var score = 0;
+    if (avatarUrl != null && avatarUrl!.trim().isNotEmpty) score += 20;
+    if (description.trim().length >= 30) {
+      score += 25;
+    } else if (description.trim().isNotEmpty) {
+      score += 10;
+    }
+    if (intro.trim().isNotEmpty) score += 10;
+    if (portfolioImages.isNotEmpty) {
+      score += 20 + (portfolioImages.length.clamp(0, 5) * 2);
+    }
+    if (specialty.trim().isNotEmpty) score += 10;
+    if (availableAreas.any((area) => _isReadableArea(area) && area != '전체')) {
+      score += 10;
+    }
+    if (categories.isNotEmpty) score += 5;
+    return score;
+  }
 }
 
 class OperatorReview {
