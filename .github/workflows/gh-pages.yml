@@ -39,7 +39,17 @@ jobs:
         run: flutter build web --wasm --release --base-href /
 
       - name: Add GitHub Pages SPA fallback
-        run: cp build/web/index.html build/web/404.html
+        run: |
+          cp build/web/index.html build/web/404.html
+          # GitHub Pages has no server-side rewrites, so 404.html always
+          # answers with an HTTP 404 status even though it serves the app
+          # shell -- Google Play's automated policy checker follows the
+          # status code, not the content, and flags the privacy policy and
+          # account deletion URLs as broken. Serve those two exact paths as
+          # native static files so they get a real 200 while still booting
+          # the same SPA, which then client-side routes to the right page.
+          cp build/web/index.html build/web/privacy.html
+          cp build/web/index.html build/web/delete-account.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
