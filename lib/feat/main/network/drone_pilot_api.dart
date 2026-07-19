@@ -273,6 +273,10 @@ class SupabaseDronePilotApi implements DronePilotApi {
         );
         if (areaCompare != 0) return areaCompare;
       }
+      final completenessCompare = b.profileCompletenessScore.compareTo(
+        a.profileCompletenessScore,
+      );
+      if (completenessCompare != 0) return completenessCompare;
       return a.name.compareTo(b.name);
     });
     return pilots;
