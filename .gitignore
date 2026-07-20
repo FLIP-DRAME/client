@@ -90,3 +90,6 @@ qa/**/*result*.json
 # Editor, never committed (this repo is public; these expose schema/RLS
 # details that shouldn't be world-readable).
 /*.sql
+
+# Zipped bundle of the above, for archiving to Notion -- same reason, never committed.
+/supabase_sql_scripts.zip

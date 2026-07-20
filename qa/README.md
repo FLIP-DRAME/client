@@ -76,6 +76,30 @@ hardcodes a relative path to `../build/web` — it's Flutter-project plumbing,
 not portable QA logic. Every script here assumes something is already
 serving the app at `config.baseUrl`.
 
+## Backend QA via Supabase CLI
+
+For "why does this API call 403 / return empty" style bugs, don't just guess
+from Flutter-side symptoms — the `supabase` CLI is already authenticated
+against this project's live DB, so it's usually faster to look directly:
+
+```bash
+supabase link --project-ref wgujitwmipifuhxavmsn   # first time only, read-only/safe
+supabase db query --linked "select * from pg_policies where tablename='objects'" -o json
+```
+
+This bypasses RLS like a service-role connection, so read queries (`select`)
+are safe to run freely, but treat `insert`/`update`/`create policy` etc. with
+the same "confirm before running" care as a `git push` — it mutates
+production directly.
+
+## SQL setup / migration scripts
+
+The root-level `supabase_*.sql` files (bucket + RLS setup, migrations) are
+gitignored — this repo is public and they expose schema/RLS details that
+shouldn't be world-readable. They're bundled as `supabase_sql_scripts.zip`
+(also gitignored, local-only) and archived in Notion instead; pull that zip
+from Notion and unpack it at the project root if you need them.
+
 ## Writing a new script
 
 ```js
