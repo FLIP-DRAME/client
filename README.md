@@ -1,16 +1,107 @@
-# 모드
+# 모드 (Drane)
 
-A new Flutter project.
+드론 촬영 서비스 매칭 플랫폼 — 견적, 포트폴리오, 채팅, 오퍼레이터 워크플로우.
 
-## Getting Started
+이 문서는 개발을 몰라도 프로젝트가 어떻게 생겼고 왜 이렇게 만들었는지,
+그리고 클로드한테 뭘 어떻게 시키면 되는지 이해할 수 있게 쓴 문서입니다.
 
-This project is a starting point for a Flutter application.
+## 이 프로젝트, 폴더가 왜 이렇게 나뉘어 있나요?
 
-A few resources to get you started if this is your first Flutter project:
+코드 폴더는 복잡해 보이지만 규칙만 알면 단순합니다. 이 프로젝트는 "기능별"로
+폴더가 나뉘어 있고, 각 기능 폴더 안은 다시 "역할별"로 나뉘어 있습니다.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```
+lib/
+  feat/             기능들이 여기 다 모여있음
+    auth/           로그인/회원가입
+    landing/        랜딩/온보딩
+    main/           홈, 탭 네비게이션
+    feed/           촬영요청 피드/지도
+    quote/          견적
+    chat/           채팅
+    portfolio/      오퍼레이터 포트폴리오
+    moderation/     신고/모더레이션
+    legal/          약관 등 법적 문서
+  core/
+    supabase/       Supabase 클라이언트 초기화
+    platform/       앱/웹 분리 로직
+  common/           여러 기능이 같이 쓰는 위젯/유틸
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+**왜 이렇게 나눴나요?**
+- 기능마다 폴더가 따로 있어서, "채팅 기능 고쳐줘"라고 하면 `chat` 폴더만 보면
+  됩니다. 프로젝트 전체를 몰라도 그 기능만 건드릴 수 있습니다.
+- 각 기능 폴더 안에서도 "화면에 보이는 것"과 "그 뒤에서 일어나는 로직"을 분리해
+  뒀습니다 — 이게 아래에서 설명할 MVVM입니다.
+
+## MVVM이 뭔가요? (이 프로젝트의 실제 예시로 설명)
+
+MVVM은 "Model - View - ViewModel"의 줄임말로, 기능 하나를 역할 3가지로 쪼개서
+관리하는 방식입니다. 실제로 이 프로젝트의 "견적(quote)" 기능이 어떻게 나뉘어
+있는지 보면:
+
+1. **Model** — `lib/feat/quote/model/quote_model.dart`
+   데이터가 어떤 모양인지만 정의합니다. 예: "견적 요청(QuoteRequest)에는 조종사,
+   카테고리, 지역, 희망 날짜, 예산 같은 정보가 들어있다"는 데이터의 설계도.
+2. **Network** — `lib/feat/quote/network/quote_api.dart`
+   실제로 서버(Supabase)에 데이터를 보내고 받아오는 부분. 예: "견적 만들어줘
+   (createEstimate)", "연락처 열어줘(createContactAccess)" 같은 요청들.
+3. **ViewModel** — `lib/feat/quote/viewmodel/quote_view_model.dart`
+   화면이 필요로 하는 동작을 준비해주는 부분. 화면은 이 ViewModel한테 "견적
+   만들어줘"라고 시키기만 하면 되고, 실제로 서버랑 어떻게 통신하는지는 몰라도
+   됩니다.
+4. **View** — `lib/feat/quote/view/pages/quote_request_page.dart` 등
+   사람 눈에 실제로 보이는 화면. 버튼, 입력창, 레이아웃.
+
+**왜 이렇게 나누나요?**
+- 화면(View) 디자인을 바꿀 때 로직(ViewModel)을 안 건드려도 되고, 반대도
+  마찬가지입니다.
+- 데이터(Model)가 어떻게 생겼는지 한 군데만 보면 알 수 있습니다 — 여기저기
+  흩어져 있지 않습니다.
+- 버그가 나면 "화면 문제냐, 로직 문제냐, 서버 통신 문제냐"를 계층별로 좁혀서
+  찾을 수 있습니다.
+
+## Riverpod이 뭔가요?
+
+Riverpod은 위에서 말한 ViewModel을 화면(View)에서 편하게 꺼내 쓸 수 있게
+해주는 라이브러리입니다. "이 화면은 QuoteViewModel이 필요해"라고 하면
+Riverpod이 알아서 만들어서 연결해줍니다 — 이걸 "구독한다(watch)"고 표현합니다.
+
+## API는 어떻게 되어있나요? (일반 서버 대신 Supabase)
+
+보통 앱은 "회사가 직접 만든 서버"에 데이터를 저장하고 불러옵니다. 이
+프로젝트는 그런 서버를 직접 만들지 않고, **Supabase**라는 서비스를 그
+자리에 그대로 쓰고 있습니다. Supabase가 DB + 로그인 + 파일 저장 등을 대신
+다 해주는 서비스라서, 우리가 따로 "API 서버"를 만들고 유지보수할 필요가
+없습니다.
+
+그래서 흔히 쓰는 Retrofit 같은 "서버 통신 전용 라이브러리"도 필요 없고,
+각 기능의 `network/` 폴더가 Supabase 클라이언트를 직접 호출하는 걸로
+끝납니다. **나중에 진짜 회사 서버가 따로 생기면, 그때 가서 이 자리에 새로운
+통신 계층(예: Retrofit)을 넣으면 됩니다.** 지금 미리 만들어둘 필요는 없습니다
+— 현재는 위에서 설명한 MVVM 계층 로직 + 앱/웹 분리 로직(`core/platform`)만
+나뉘어 있는 상태입니다.
+
+## 개발/QA할 때 팁 (개발 몰라도 클로드한테 이렇게 시키면 됩니다)
+
+- **서버/DB 상태가 궁금할 때** (예: "왜 이 기능이 안 되지?") — 그냥 클로드한테
+  "Supabase CLI로 서버/DB 연동해서 확인해줘"라고 시키면 됩니다. 클로드가 알아서
+  Supabase CLI로 직접 DB를 조회해서 원인을 찾아줍니다.
+- **기능 개발이 끝나고 잘 되는지 확인하고 싶을 때** — `qa/` 폴더를 기준으로
+  "QA 해줘"라고 요청하면 됩니다. 클로드가 그 폴더의 도구(Puppeteer 기반 QA
+  하네스)로 실제 화면을 켜서 알아서 검증해줍니다. 자세한 내용은
+  [`qa/README.md`](qa/README.md) 참고.
+
+## 실행 방법
+
+```bash
+flutter pub get
+flutter run
+```
+
+## 주의사항
+
+루트에 있는 `supabase_*.sql`, `supabase_sql_scripts.zip` 파일은 **실제 운영
+DB(진짜 서비스 데이터)와 직접 연결된 설정/쿼리**라서 절대로 깃(GitHub)에
+올리면 안 됩니다 (이미 `.gitignore`로 막아뒀습니다). 이 파일들은 노션에
+올려둘 예정이니, 노션에서 받아서 프로젝트 루트에 넣고 사용하면 됩니다.
