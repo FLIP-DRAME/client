@@ -102,6 +102,7 @@ class MapJobRequest {
     this.preferredDate,
     this.detail = '',
     this.isOwn = false,
+    this.hasMyQuote = false,
   });
 
   final String id;
@@ -120,7 +121,29 @@ class MapJobRequest {
   /// public map feed never carries ownership info.
   final bool isOwn;
 
-  static const autoCloseAfter = Duration(days: 7);
+  /// True when the current logged-in operator has already submitted a quote
+  /// for this request. Not part of the server payload -- stamped on client
+  /// side after cross-referencing the operator's own quotes.
+  final bool hasMyQuote;
+
+  MapJobRequest copyWith({bool? hasMyQuote}) {
+    return MapJobRequest(
+      id: id,
+      status: status,
+      category: category,
+      budgetLabel: budgetLabel,
+      locationLabel: locationLabel,
+      latitude: latitude,
+      longitude: longitude,
+      createdAt: createdAt,
+      preferredDate: preferredDate,
+      detail: detail,
+      isOwn: isOwn,
+      hasMyQuote: hasMyQuote ?? this.hasMyQuote,
+    );
+  }
+
+  static const autoCloseAfter = Duration(days: 14);
 
   String get dateLabel {
     final date = preferredDate;
@@ -145,7 +168,7 @@ class MapJobRequest {
   /// means exactly this and is already excluded from the public map view.
   bool get isClosed => status == 'cancelled';
 
-  /// 7 days past creation -- treated as closed even if never manually
+  /// 14 days past creation -- treated as closed even if never manually
   /// closed, so stale broadcast requests fall off the map on their own.
   bool get isExpired =>
       DateTime.now().toUtc().difference(createdAt.toUtc()) >= autoCloseAfter;

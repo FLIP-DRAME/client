@@ -132,3 +132,73 @@ Future<void> showOperatorApprovalRequiredDialog(
     },
   );
 }
+
+/// 운용자 미등록 계정이 견적 응답 등 운용자 전용 기능에 접근했을 때 호출.
+/// 등록 여부를 묻고, 동의하면 운용자 등록 화면으로 이동시킴.
+Future<void> showOperatorRegistrationPromptDialog(BuildContext context) async {
+  await showDialog<void>(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.4),
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+        title: const Text(
+          '운용자 등록 완료 후 확인 가능합니다',
+          style: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF0A0B0D),
+          ),
+        ),
+        content: const Text(
+          '운용자 등록하시겠습니까?',
+          style: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 14,
+            color: Color(0xFF5B616E),
+            height: 1.5,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF5B616E),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              textStyle: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              dialogContext.push('/pilot/register');
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: DC.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              textStyle: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            child: const Text('운용자 등록하기'),
+          ),
+        ],
+      );
+    },
+  );
+}

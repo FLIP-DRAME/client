@@ -35,15 +35,29 @@ class ChatApi {
             .single();
 
     final clientUserId = jobRow['client_id'].toString();
-    final operatorProfileId = jobRow['preferred_operator_id'].toString();
+    final preferredOperatorId = jobRow['preferred_operator_id']?.toString();
 
-    final opRow =
-        await _client
-            .from('operator_profiles')
-            .select('user_id')
-            .eq('id', operatorProfileId)
-            .single();
-    final operatorUserId = opRow['user_id'].toString();
+    String operatorUserId;
+    if (preferredOperatorId != null && preferredOperatorId.isNotEmpty) {
+      final opRow =
+          await _client
+              .from('operator_profiles')
+              .select('user_id')
+              .eq('id', preferredOperatorId)
+              .single();
+      operatorUserId = opRow['user_id'].toString();
+    } else {
+      // Broadcast (map-posted) job_requests never get preferred_operator_id
+      // filled in, even once a quote is accepted, so it can't be used to
+      // find the operator here. The client side only shows the chat button
+      // once it has a resolved pilotId (see my_quotes_component.dart), so
+      // whoever reaches this branch signed in as the operator themselves.
+      final currentUserId = _uid;
+      if (currentUserId == clientUserId) {
+        throw StateError('상대 운용자를 확인할 수 없습니다.');
+      }
+      operatorUserId = currentUserId;
+    }
 
     final row =
         await _client
