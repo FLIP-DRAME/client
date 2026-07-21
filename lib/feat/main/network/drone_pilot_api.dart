@@ -1580,10 +1580,25 @@ class SupabaseDronePilotApi implements DronePilotApi {
           .update(payload)
           .eq('id', existing.first['id']);
     }
-    await _client
-        .from('job_requests')
-        .update(<String, Object?>{'status': 'quoted'})
-        .eq('id', request.id);
+
+    // Broadcast (map-posted) requests have no preferred_operator_id and can
+    // receive quotes from multiple operators, so flipping status away from
+    // 'open' here would hide the request from the public map feed for every
+    // other operator after just the first quote. Only direct requests (a
+    // single targeted operator) advance to 'quoted'.
+    final jobRow =
+        await _client
+            .from('job_requests')
+            .select('preferred_operator_id')
+            .eq('id', request.id)
+            .maybeSingle();
+    final isBroadcast = (jobRow?['preferred_operator_id']) == null;
+    if (!isBroadcast) {
+      await _client
+          .from('job_requests')
+          .update(<String, Object?>{'status': 'quoted'})
+          .eq('id', request.id);
+    }
     await _tryOptionalWrite(() => _insertClientQuoteNotification(request.id));
   }
 

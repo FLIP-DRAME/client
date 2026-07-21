@@ -2694,7 +2694,8 @@ class _RequestReviewDetailState extends ConsumerState<_RequestReviewDetail> {
           },
         );
       }
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[_RequestReviewDetail] 채팅방 열기 실패: $e\n$st');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('채팅방을 열 수 없습니다. 다시 시도해 주세요.')),

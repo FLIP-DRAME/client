@@ -14,6 +14,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
   static const Color _navy = Color(0xFF16305E);
 
   List<MapJobRequest>? _requests;
+  Map<String, String> _myQuotedClientNames = const <String, String>{};
   String? _selectedId;
   MapJobRequestDetail? _selectedDetail;
   String? _detailLoadingId;
@@ -59,6 +60,18 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
           widget.store.isLoggedIn
               ? await api.fetchMyMapRequests()
               : const <MapJobRequest>[];
+      // Requests this operator has already sent a quote for -- used to swap
+      // "견적 응답하기" for "채팅하기" on those cards instead of letting them
+      // respond again.
+      final myQuotedClientNames = <String, String>{
+        if (widget.store.operatorRegistrationCompleted)
+          for (final r
+              in (await ref
+                  .read(dronePilotApiProvider)
+                  .fetchOperatorRequests())
+                  .where((r) => r.myQuoteId != null))
+            r.id: r.client,
+      };
       if (!mounted) return;
       // Own requests win on id collisions -- they carry the true status
       // (e.g. closed/expired) even after the public feed has dropped them.
@@ -68,8 +81,20 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       for (final request in mine) {
         merged[request.id] = request;
       }
-      final combined = _sortRequests(merged.values.toList());
-      setState(() => _requests = combined);
+      final combined = _sortRequests(
+        merged.values
+            .map(
+              (request) =>
+                  myQuotedClientNames.containsKey(request.id)
+                      ? request.copyWith(hasMyQuote: true)
+                      : request,
+            )
+            .toList(),
+      );
+      setState(() {
+        _requests = combined;
+        _myQuotedClientNames = myQuotedClientNames;
+      });
       if (combined.isNotEmpty) {
         unawaited(_fetchDetail(combined.first.id));
       }
@@ -253,6 +278,10 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       );
       return;
     }
+    if (!widget.store.operatorRegistrationCompleted) {
+      unawaited(showOperatorRegistrationPromptDialog(context));
+      return;
+    }
     final stub = PilotWorkRequest(
       id: request.id,
       category: request.category,
@@ -271,6 +300,31 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
       longitude: request.longitude,
     );
     _openPilotRequestReviewPage(context, initialRequest: stub);
+  }
+
+  Future<void> _handleChat(MapJobRequest request) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final roomId = await ref
+          .read(chatViewModelProvider)
+          .getOrCreateRoom(request.id);
+      if (mounted) {
+        context.push(
+          '/chat/$roomId',
+          extra: <String, String>{
+            'otherPartyName': _myQuotedClientNames[request.id] ?? '고객',
+            'category': request.category,
+          },
+        );
+      }
+    } catch (e, st) {
+      debugPrint('[_JobRequestMapSection] 채팅방 열기 실패: $e\n$st');
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('채팅방을 열 수 없습니다. 다시 시도해 주세요.')),
+        );
+      }
+    }
   }
 
   @override
@@ -366,6 +420,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                 onDismiss: () => setState(() => _selectedId = null),
                 onRespond: _handleRespond,
                 onClose: _closeRequest,
+                onChat: _handleChat,
               ),
           ],
         ),
@@ -511,7 +566,7 @@ class _JobRequestComposer extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  '등록한 요청은 7일이 지나면 지도에서 자동으로 마감(삭제)돼요. 그 전에 직접 마감할 수도 있어요.',
+                  '등록한 요청은 14일이 지나면 지도에서 자동으로 마감(삭제)돼요. 그 전에 직접 마감할 수도 있어요.',
                   style: AppText.metricLabel.copyWith(
                     color: const Color(0xFF7C828A),
                   ),
@@ -590,6 +645,7 @@ class _JobRequestMap extends StatefulWidget {
     required this.onDismiss,
     required this.onRespond,
     required this.onClose,
+    required this.onChat,
   });
 
   final List<MapJobRequest> requests;
@@ -599,6 +655,7 @@ class _JobRequestMap extends StatefulWidget {
   final VoidCallback onDismiss;
   final ValueChanged<MapJobRequest> onRespond;
   final ValueChanged<MapJobRequest> onClose;
+  final ValueChanged<MapJobRequest> onChat;
 
   @override
   State<_JobRequestMap> createState() => _JobRequestMapState();
@@ -668,6 +725,7 @@ class _JobRequestMapState extends State<_JobRequestMap> {
     final onDismiss = widget.onDismiss;
     final onRespond = widget.onRespond;
     final onClose = widget.onClose;
+    final onChat = widget.onChat;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 720;
@@ -810,6 +868,7 @@ class _JobRequestMapState extends State<_JobRequestMap> {
                       compact: true,
                       onRespond: () => onRespond(selected!),
                       onClose: () => onClose(selected!),
+                      onChat: () => onChat(selected!),
                       onDismiss: onDismiss,
                     ),
                   ),
@@ -841,6 +900,7 @@ class _JobRequestMapState extends State<_JobRequestMap> {
                 highlighted: request.id == selectedId,
                 onRespond: () => onRespond(request),
                 onClose: () => onClose(request),
+                onChat: () => onChat(request),
               ),
             );
           },
@@ -1074,6 +1134,7 @@ class _JobRequestPreview extends StatelessWidget {
     required this.compact,
     required this.onRespond,
     required this.onClose,
+    required this.onChat,
     this.highlighted = false,
     this.onDismiss,
     this.detail,
@@ -1088,6 +1149,7 @@ class _JobRequestPreview extends StatelessWidget {
   final bool compact;
   final VoidCallback onRespond;
   final VoidCallback onClose;
+  final VoidCallback onChat;
   final bool highlighted;
   final VoidCallback? onDismiss;
 
@@ -1204,6 +1266,24 @@ class _JobRequestPreview extends StatelessWidget {
                         child: const Text('요청 마감하기'),
                       ),
                     )
+                  else if (!request.isOwn && !closed && request.hasMyQuote)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: onChat,
+                        icon: const Icon(Icons.chat_rounded, size: 16),
+                        label: const Text('채팅하기'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _navy,
+                          side: const BorderSide(color: _navy),
+                          textStyle: AppText.button,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    )
                   else if (!request.isOwn && !closed)
                     SizedBox(
                       width: double.infinity,
@@ -1221,7 +1301,7 @@ class _JobRequestPreview extends StatelessWidget {
                         child: const Text('견적 응답하기'),
                       ),
                     )
-                  else if (!request.isOwn && closed)
+                  else if (closed)
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
