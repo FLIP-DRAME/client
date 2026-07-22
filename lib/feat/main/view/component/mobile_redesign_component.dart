@@ -35,29 +35,10 @@ class _MobileNewAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: <Widget>[
           const DrameLogo(size: 26),
           const Spacer(),
-          Container(
-            height: 32,
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: _bgBeige,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: _line),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                _ModeChipItem(
-                  label: '이용자',
-                  selected: !store.isPilotMode,
-                  onTap: () => onModeChanged(false),
-                ),
-                _ModeChipItem(
-                  label: '운용자',
-                  selected: store.isPilotMode,
-                  onTap: () => onModeChanged(true),
-                ),
-              ],
-            ),
+          DrameModeSwitchButton(
+            isOperator: store.isPilotMode,
+            onUserTap: () => onModeChanged(false),
+            onOperatorTap: () => onModeChanged(true),
           ),
           if (!store.isLoggedIn) ...<Widget>[
             const SizedBox(width: 10),
@@ -83,57 +64,6 @@ class _MobileNewAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _ModeChipItem extends StatelessWidget {
-  const _ModeChipItem({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow:
-                selected
-                    ? <BoxShadow>[
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                    : null,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: const Color(0xFF0A0B0D),
-            ),
-          ),
-        ),
       ),
     );
   }

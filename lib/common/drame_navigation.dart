@@ -190,7 +190,7 @@ class DrameTopNavigation extends StatelessWidget {
                     child: const Text('로그인'),
                   ),
                   const SizedBox(width: 8),
-                  _ModeSwitchButton(
+                  DrameModeSwitchButton(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -211,7 +211,7 @@ class DrameTopNavigation extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  _ModeSwitchButton(
+                  DrameModeSwitchButton(
                     isOperator: true,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -232,7 +232,7 @@ class DrameTopNavigation extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  _ModeSwitchButton(
+                  DrameModeSwitchButton(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -406,10 +406,13 @@ class _NavBadge extends StatelessWidget {
 
 /// 홈(이용자)과 운용자 페이지를 오가는 단일 전환 버튼.
 ///
-///   • 홈에 있을 때 ([isOperator] == false)  : "운용자 페이지" → [onOperatorTap]
-///   • 운용자 페이지에 있을 때 ([isOperator])   : "홈"          → [onUserTap]
-class _ModeSwitchButton extends StatefulWidget {
-  const _ModeSwitchButton({
+///   • 홈에 있을 때 ([isOperator] == false)  : "운용자" → [onOperatorTap]
+///   • 운용자 페이지에 있을 때 ([isOperator])   : "홈"     → [onUserTap]
+///
+/// 웹 상단 내비게이션과 모바일 앱바에서 공용으로 사용된다.
+class DrameModeSwitchButton extends StatefulWidget {
+  const DrameModeSwitchButton({
+    super.key,
     required this.isOperator,
     required this.onUserTap,
     required this.onOperatorTap,
@@ -420,10 +423,10 @@ class _ModeSwitchButton extends StatefulWidget {
   final VoidCallback onOperatorTap;
 
   @override
-  State<_ModeSwitchButton> createState() => _ModeSwitchButtonState();
+  State<DrameModeSwitchButton> createState() => _DrameModeSwitchButtonState();
 }
 
-class _ModeSwitchButtonState extends State<_ModeSwitchButton> {
+class _DrameModeSwitchButtonState extends State<DrameModeSwitchButton> {
   // 브랜드 다크 네이비 — 톤/무드의 기준 색상.
   static const Color _navy = Color(0xFF293341);
 
