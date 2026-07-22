@@ -190,7 +190,7 @@ class DrameTopNavigation extends StatelessWidget {
                     child: const Text('로그인'),
                   ),
                   const SizedBox(width: 8),
-                  _ModeToggle(
+                  _ModeSwitchButton(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -211,7 +211,7 @@ class DrameTopNavigation extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  _ModeToggle(
+                  _ModeSwitchButton(
                     isOperator: true,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -232,7 +232,7 @@ class DrameTopNavigation extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  _ModeToggle(
+                  _ModeSwitchButton(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -404,8 +404,12 @@ class _NavBadge extends StatelessWidget {
   }
 }
 
-class _ModeToggle extends StatelessWidget {
-  const _ModeToggle({
+/// 홈(이용자)과 운용자 페이지를 오가는 단일 전환 버튼.
+///
+///   • 홈에 있을 때 ([isOperator] == false)  : "운용자 페이지" → [onOperatorTap]
+///   • 운용자 페이지에 있을 때 ([isOperator])   : "홈"          → [onUserTap]
+class _ModeSwitchButton extends StatefulWidget {
+  const _ModeSwitchButton({
     required this.isOperator,
     required this.onUserTap,
     required this.onOperatorTap,
@@ -416,69 +420,60 @@ class _ModeToggle extends StatelessWidget {
   final VoidCallback onOperatorTap;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: DC.surfaceStrong,
-        borderRadius: BorderRadius.circular(DC.rxPill),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          _ToggleTab(label: '이용자', active: !isOperator, onTap: onUserTap),
-          _ToggleTab(label: '운용자', active: isOperator, onTap: onOperatorTap),
-        ],
-      ),
-    );
-  }
+  State<_ModeSwitchButton> createState() => _ModeSwitchButtonState();
 }
 
-class _ToggleTab extends StatelessWidget {
-  const _ToggleTab({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
+class _ModeSwitchButtonState extends State<_ModeSwitchButton> {
+  // 브랜드 다크 네이비 — 톤/무드의 기준 색상.
+  static const Color _navy = Color(0xFF293341);
 
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+    // 운용자 페이지에 있으면 홈으로 돌아가는 버튼, 그 외에는 운용자로 가는 버튼.
+    final bool toHome = widget.isOperator;
+    final String label = toHome ? '홈' : '운용자';
+    final IconData icon =
+        toHome ? Icons.home_outlined : Icons.dashboard_customize_outlined;
+    final VoidCallback onTap = toHome ? widget.onUserTap : widget.onOperatorTap;
+
+    // 홈    : 흰 배경 + 네이비 테두리·글씨 (outlined)
+    // 운용자 : 네이비 채움 + 흰 글씨 (filled)
+    final Color background = toHome ? _navy : Colors.white;
+    final Color foreground = toHome ? Colors.white : _navy;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(DC.rxPill),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          constraints: const BoxConstraints(minWidth: 64, minHeight: 30),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        child: Container(
+          height: 36,
+          // 두 상태(홈/운용자)의 버튼 폭을 동일하게 고정.
+          width: 104,
           decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
+            color: toHome
+                ? background
+                : (_hovered ? _navy.withValues(alpha: 0.06) : background),
             borderRadius: BorderRadius.circular(DC.rxPill),
-            boxShadow:
-                active
-                    ? <BoxShadow>[
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                    : null,
+            border: Border.all(color: _navy, width: 1.5),
           ),
-          child: Center(
-            child: Text(
-              label,
-              style: DT.navLink.copyWith(
-                color: active ? DC.ink : DC.muted,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(icon, size: 16, color: foreground),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: DT.navLink.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
