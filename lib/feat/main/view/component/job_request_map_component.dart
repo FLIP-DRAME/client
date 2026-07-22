@@ -274,7 +274,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
     if (!widget.store.isLoggedIn) {
       showLoginRequiredDialog(
         context,
-        message: '요청 상세 확인과 견적 응답은 로그인 후 이용할 수 있습니다.',
+        message: '드론 조종사이신가요? 여기서 일감을 받아보세요.',
       );
       return;
     }
