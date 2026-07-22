@@ -535,7 +535,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
       onModeChanged: (isOperator) {
         if (isOperator) {
           if (!store.isLoggedIn) {
-            showLoginRequiredDialog(context);
+            showLoginRequiredDialog(
+              context,
+              message: '드론 조종사이신가요? 여기서 일감을 받아보세요.',
+            );
             return;
           }
           store.setPilotMode(true);
@@ -694,7 +697,10 @@ class _DrameHomePageState extends State<DrameHomePage> {
             },
             onSwitchToOperator: () {
               if (!store.isLoggedIn) {
-                showLoginRequiredDialog(context);
+                showLoginRequiredDialog(
+                  context,
+                  message: '드론 조종사이신가요? 여기서 일감을 받아보세요.',
+                );
                 return;
               }
               store.setPilotMode(true);

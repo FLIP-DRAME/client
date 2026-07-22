@@ -429,22 +429,16 @@ class DrameModeSwitchButton extends StatefulWidget {
 class _DrameModeSwitchButtonState extends State<DrameModeSwitchButton> {
   // 브랜드 다크 네이비 — 톤/무드의 기준 색상.
   static const Color _navy = Color(0xFF293341);
+  static const Color _navyHover = Color(0xFF1D2530);
 
   bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    // 운용자 페이지에 있으면 홈으로 돌아가는 버튼, 그 외에는 운용자로 가는 버튼.
+    // 운용자 페이지에 있으면 홈으로 돌아가는 버튼(보조 액션),
+    // 그 외에는 운용자로 가는 버튼(주 액션).
     final bool toHome = widget.isOperator;
-    final String label = toHome ? '홈' : '운용자';
-    final IconData icon =
-        toHome ? Icons.home_outlined : Icons.dashboard_customize_outlined;
     final VoidCallback onTap = toHome ? widget.onUserTap : widget.onOperatorTap;
-
-    // 홈    : 흰 배경 + 네이비 테두리·글씨 (outlined)
-    // 운용자 : 네이비 채움 + 흰 글씨 (filled)
-    final Color background = toHome ? _navy : Colors.white;
-    final Color foreground = toHome ? Colors.white : _navy;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -452,33 +446,79 @@ class _DrameModeSwitchButtonState extends State<DrameModeSwitchButton> {
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          height: 36,
-          // 두 상태(홈/운용자)의 버튼 폭을 동일하게 고정.
-          width: 104,
-          decoration: BoxDecoration(
-            color: toHome
-                ? background
-                : (_hovered ? _navy.withValues(alpha: 0.06) : background),
-            borderRadius: BorderRadius.circular(DC.rxPill),
-            border: Border.all(color: _navy, width: 1.5),
+        child: toHome ? _buildBackToHome() : _buildGoToOperator(),
+      ),
+    );
+  }
+
+  /// 홈 → 운용자 : 주 액션. 채움형 CTA + 화살표로 클릭 유도.
+  Widget _buildGoToOperator() {
+    return Container(
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: _hovered ? _navyHover : _navy,
+        borderRadius: BorderRadius.circular(DC.rxPill),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: _navy.withValues(alpha: _hovered ? 0.30 : 0.18),
+            blurRadius: _hovered ? 12 : 6,
+            offset: Offset(0, _hovered ? 4 : 2),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Icon(icon, size: 16, color: foreground),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: DT.navLink.copyWith(
-                  color: foreground,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            '운용자로 전환',
+            style: DT.navLink.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
-        ),
+          const SizedBox(width: 5),
+          // hover 시 화살표가 살짝 앞으로 → 행동 신호 강화.
+          AnimatedSlide(
+            offset: Offset(_hovered ? 0.2 : 0, 0),
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
+            child: const Icon(
+              Icons.arrow_forward_rounded,
+              size: 15,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 운용자 → 홈 : 보조 액션. 낮은 강조의 테두리형.
+  Widget _buildBackToHome() {
+    return Container(
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: _hovered ? _navy.withValues(alpha: 0.06) : Colors.white,
+        borderRadius: BorderRadius.circular(DC.rxPill),
+        border: Border.all(color: _navy, width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Icon(Icons.arrow_back_rounded, size: 15, color: _navy),
+          const SizedBox(width: 5),
+          Text(
+            '홈으로',
+            style: DT.navLink.copyWith(
+              color: _navy,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
       ),
     );
   }
