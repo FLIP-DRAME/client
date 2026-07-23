@@ -37,10 +37,19 @@ class QuoteStatusHelper {
 
   static int quoteRank(String status) => switch (status) {
     'completed' => 50,
-    'contact_opened' || 'in_progress' || 'paid' || 'confirmed' || 'accepted' =>
-      40,
+    'contact_opened' ||
+    'in_progress' ||
+    'paid' ||
+    'confirmed' ||
+    'accepted' => 40,
     'submitted' || 'quoted' => 30,
     'expired' || 'rejected' => 20,
     _ => 0,
   };
+
+  /// A map request has no preferred operator and must remain open after every
+  /// quote so other operators can continue to respond. Only a direct,
+  /// one-operator request advances to `quoted` automatically.
+  static bool shouldAdvanceJobAfterQuote(String? preferredOperatorId) =>
+      preferredOperatorId != null && preferredOperatorId.trim().isNotEmpty;
 }

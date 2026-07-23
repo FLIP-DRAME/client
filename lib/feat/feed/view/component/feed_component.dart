@@ -271,7 +271,9 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
             await ref.read(moderationApiProvider).fetchBlockedUserIds();
         if (blockedIds.isNotEmpty) {
           posts =
-              posts.where((post) => !blockedIds.contains(post.authorId)).toList();
+              posts
+                  .where((post) => !blockedIds.contains(post.authorId))
+                  .toList();
         }
       } catch (_) {
         if (!mounted) return;
@@ -506,10 +508,7 @@ class _FeedMapEmptyState extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: _navy,
               side: const BorderSide(color: _line),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               textStyle: FeedText.button,
             ),
           ),
@@ -952,8 +951,7 @@ class _FeedTimelineCard extends StatelessWidget {
                   ReportBlockMenuButton(
                     reportTargetType: ReportTargetType.feedPost,
                     reportTargetId: post.id,
-                    targetUserId:
-                        post.authorId.isEmpty ? null : post.authorId,
+                    targetUserId: post.authorId.isEmpty ? null : post.authorId,
                     targetUserName: post.authorName,
                     isOwnContent:
                         post.authorId.isNotEmpty &&
@@ -984,10 +982,10 @@ class _FeedTimelineCard extends StatelessWidget {
                         size: 25,
                         color: post.likedByMe ? const Color(0xFFE54866) : null,
                       ),
+                      const SizedBox(width: 6),
+                      Text('${post.likes}', style: FeedText.authorRole),
                       const SizedBox(width: 14),
                       const Icon(Icons.chat_bubble_outline_rounded, size: 23),
-                      const Spacer(),
-                      Text('${post.likes}명이 좋아함', style: FeedText.authorRole),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -1099,6 +1097,8 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final compact = size.width < 900;
+    final compactImageHeight =
+        (size.height * 0.34).clamp(180.0, 420.0).toDouble();
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
@@ -1116,7 +1116,10 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                 compact
                     ? Column(
                       children: <Widget>[
-                        SizedBox(height: 420, child: _imagePane()),
+                        SizedBox(
+                          height: compactImageHeight,
+                          child: _imagePane(),
+                        ),
                         Expanded(child: _metaPane()),
                       ],
                     )

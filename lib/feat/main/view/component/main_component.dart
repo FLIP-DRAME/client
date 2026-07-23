@@ -2086,7 +2086,7 @@ class _RequestCardState extends State<_RequestCard> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('응답하기'),
+                  child: const Text('견적 보내기'),
                 ),
               ),
             ],
@@ -2122,7 +2122,7 @@ class _PilotRequestReviewPageState extends State<_PilotRequestReviewPage> {
     final compact = MediaQuery.sizeOf(context).width < 980;
     return Consumer<DrameStore>(
       builder: (context, store, _) {
-        // 지도 마커의 "견적 응답하기"로 들어온 방송(broadcast) 요청은 아직 견적을
+        // 지도 마커의 "견적 보내기"로 들어온 방송(broadcast) 요청은 아직 견적을
         // 보내기 전이라 서버 목록(store.pilotWorkRequests)에는 없다 (RLS상 아직
         // 안 보임). 목록에도 같이 보여서 오른쪽 상세와의 연결이 명확하도록,
         // 서버 목록에 없는 초기 stub은 화면 표시용으로만 맨 앞에 끼워 넣는다 —

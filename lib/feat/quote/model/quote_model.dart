@@ -143,8 +143,6 @@ class MapJobRequest {
     );
   }
 
-  static const autoCloseAfter = Duration(days: 14);
-
   String get dateLabel {
     final date = preferredDate;
     if (date == null) return '일정 협의';
@@ -167,13 +165,6 @@ class MapJobRequest {
   /// Postgres enum with a fixed set of members, and 'cancelled' already
   /// means exactly this and is already excluded from the public map view.
   bool get isClosed => status == 'cancelled';
-
-  /// 14 days past creation -- treated as closed even if never manually
-  /// closed, so stale broadcast requests fall off the map on their own.
-  bool get isExpired =>
-      DateTime.now().toUtc().difference(createdAt.toUtc()) >= autoCloseAfter;
-
-  bool get isClosedOrExpired => isClosed || isExpired;
 
   /// Relative time since this request was posted, e.g. "3시간 전", "2일 전".
   String get elapsedLabel {

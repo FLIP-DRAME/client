@@ -41,12 +41,10 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
     super.dispose();
   }
 
-  /// Closed/expired requests sink to the bottom; otherwise newest first.
+  /// Manually closed requests sink to the bottom; otherwise newest first.
   List<MapJobRequest> _sortRequests(List<MapJobRequest> requests) {
     return requests..sort((a, b) {
-      final closedCompare = (a.isClosedOrExpired ? 1 : 0).compareTo(
-        b.isClosedOrExpired ? 1 : 0,
-      );
+      final closedCompare = (a.isClosed ? 1 : 0).compareTo(b.isClosed ? 1 : 0);
       if (closedCompare != 0) return closedCompare;
       return b.createdAt.compareTo(a.createdAt);
     });
@@ -61,20 +59,19 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
               ? await api.fetchMyMapRequests()
               : const <MapJobRequest>[];
       // Requests this operator has already sent a quote for -- used to swap
-      // "견적 응답하기" for "채팅하기" on those cards instead of letting them
+      // "견적 보내기" for "채팅하기" on those cards instead of letting them
       // respond again.
       final myQuotedClientNames = <String, String>{
         if (widget.store.operatorRegistrationCompleted)
-          for (final r
-              in (await ref
+          for (final r in (await ref
                   .read(dronePilotApiProvider)
                   .fetchOperatorRequests())
-                  .where((r) => r.myQuoteId != null))
+              .where((r) => r.myQuoteId != null))
             r.id: r.client,
       };
       if (!mounted) return;
       // Own requests win on id collisions -- they carry the true status
-      // (e.g. closed/expired) even after the public feed has dropped them.
+      // (e.g. manually closed) even after the public feed has dropped them.
       final merged = <String, MapJobRequest>{
         for (final request in open) request.id: request,
       };
@@ -566,7 +563,7 @@ class _JobRequestComposer extends StatelessWidget {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  '등록한 요청은 14일이 지나면 지도에서 자동으로 마감(삭제)돼요. 그 전에 직접 마감할 수도 있어요.',
+                  '등록한 요청은 직접 마감하기 전까지 다른 운용자들이 계속 견적을 보낼 수 있어요.',
                   style: AppText.metricLabel.copyWith(
                     color: const Color(0xFF7C828A),
                   ),
@@ -770,24 +767,24 @@ class _JobRequestMapState extends State<_JobRequestMap> {
                     ),
                     MarkerLayer(
                       markers:
-                          // Closed/expired markers are drawn first (i.e.
+                          // Closed markers are drawn first (i.e.
                           // underneath) so active requests stay on top when
                           // pins overlap.
                           <MapJobRequest>[
-                            ...requests.where((r) => r.isClosedOrExpired),
-                            ...requests.where((r) => !r.isClosedOrExpired),
-                          ]
+                                ...requests.where((r) => r.isClosed),
+                                ...requests.where((r) => !r.isClosed),
+                              ]
                               .map(
                                 (request) => Marker(
                                   point: LatLng(
                                     request.latitude,
                                     request.longitude,
                                   ),
-                                  width: request.isClosedOrExpired ? 27 : 54,
-                                  height: request.isClosedOrExpired ? 27 : 54,
+                                  width: request.isClosed ? 27 : 54,
+                                  height: request.isClosed ? 27 : 54,
                                   child: _JobRequestMarker(
                                     inProgress: request.isInProgress,
-                                    closed: request.isClosedOrExpired,
+                                    closed: request.isClosed,
                                     selected: request.id == selectedId,
                                     onTap: () => onSelect(request),
                                   ),
@@ -1155,7 +1152,7 @@ class _JobRequestPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final closed = request.isClosedOrExpired;
+    final closed = request.isClosed;
     final statusColor =
         closed ? _closed : (request.isInProgress ? _inProgress : _navy);
     final statusLabel =
@@ -1298,7 +1295,7 @@ class _JobRequestPreview extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text('견적 응답하기'),
+                        child: const Text('견적 보내기'),
                       ),
                     )
                   else if (closed)
