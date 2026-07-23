@@ -14,7 +14,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_providers.dart';
 import 'app_router.dart';
-import 'common/drame_text_styles.dart';
+import 'common/d_tokens.dart';
 
 // Shown for foreground FCM messages on Android/iOS
 final FlutterLocalNotificationsPlugin _localNotifications =
@@ -167,7 +167,7 @@ class _DrameAppState extends ConsumerState<DrameApp> {
       supportedLocales: const <Locale>[Locale('ko', 'KR'), Locale('en')],
       routerConfig: appRouter,
       theme: ThemeData(
-        fontFamily: DrameTextStyles.fontFamily,
+        fontFamily: DT.fontFamily,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.black,
           primary: Colors.black,
