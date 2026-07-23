@@ -959,7 +959,7 @@ class _OperatorFeedGridSectionState
                   Text(
                     '${posts.length}',
                     style: const TextStyle(
-                      fontFamily: DrameTextStyles.fontFamily,
+                      fontFamily: DT.fontFamily,
                       fontSize: 14,
                       color: _mutedGray,
                     ),
@@ -1011,7 +1011,7 @@ class _OperatorFeedGridSectionState
                       foregroundColor: _primary,
                       side: const BorderSide(color: _primary),
                       textStyle: const TextStyle(
-                        fontFamily: DrameTextStyles.fontFamily,
+                        fontFamily: DT.fontFamily,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1251,7 +1251,7 @@ class _ReviewSectionState extends State<_ReviewSection> {
               Text(
                 '(${_reviews.length})',
                 style: const TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
+                  fontFamily: DT.fontFamily,
                   fontSize: 14,
                   color: _mutedGray,
                 ),
@@ -1271,7 +1271,7 @@ class _ReviewSectionState extends State<_ReviewSection> {
                   foregroundColor: _primary,
                   side: const BorderSide(color: _primary),
                   textStyle: const TextStyle(
-                    fontFamily: DrameTextStyles.fontFamily,
+                    fontFamily: DT.fontFamily,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1288,7 +1288,7 @@ class _ReviewSectionState extends State<_ReviewSection> {
               const Text(
                 '리뷰 작성 완료',
                 style: TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
+                  fontFamily: DT.fontFamily,
                   fontSize: 13,
                   color: _mutedGray,
                 ),
@@ -1308,7 +1308,7 @@ class _ReviewSectionState extends State<_ReviewSection> {
               child: Text(
                 '아직 리뷰가 없습니다',
                 style: TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
+                  fontFamily: DT.fontFamily,
                   fontSize: 14,
                   color: _mutedGray,
                 ),
@@ -1374,7 +1374,7 @@ class _ReviewCard extends StatelessWidget {
           Text(
             '${review.createdAt.year}.${review.createdAt.month.toString().padLeft(2, '0')}.${review.createdAt.day.toString().padLeft(2, '0')}',
             style: const TextStyle(
-              fontFamily: DrameTextStyles.fontFamily,
+              fontFamily: DT.fontFamily,
               fontSize: 12,
               color: _mutedGray,
             ),
@@ -1458,7 +1458,7 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
       title: const Text(
         '리뷰 남기기',
         style: TextStyle(
-          fontFamily: DrameTextStyles.fontFamily,
+          fontFamily: DT.fontFamily,
           fontWeight: FontWeight.w700,
           fontSize: 18,
         ),
@@ -1472,7 +1472,7 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
             const Text(
               '별점',
               style: TextStyle(
-                fontFamily: DrameTextStyles.fontFamily,
+                fontFamily: DT.fontFamily,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -1517,7 +1517,7 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
                   borderSide: const BorderSide(color: _primary, width: 1.4),
                 ),
                 hintStyle: const TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
+                  fontFamily: DT.fontFamily,
                   fontSize: 14,
                   color: _mutedGray,
                 ),

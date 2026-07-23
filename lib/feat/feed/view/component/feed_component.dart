@@ -1223,15 +1223,7 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                     avatarUrl != null ? NetworkImage(avatarUrl) : null,
                 child:
                     avatarUrl == null
-                        ? Text(
-                          initial,
-                          style: const TextStyle(
-                            fontFamily: DrameTextStyles.fontFamily,
-                            color: Colors.white,
-                            fontSize: DrameTextStyles.bodySize,
-                            fontWeight: DrameTextStyles.semiBold,
-                          ),
-                        )
+                        ? ModeSemiBoldText(initial, size: 14, color: Colors.white)
                         : null,
               ),
               const SizedBox(width: 12),
@@ -1382,10 +1374,10 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                   decoration: const InputDecoration(
                     hintText: '댓글 달기...',
                     hintStyle: TextStyle(
-                      fontFamily: DrameTextStyles.fontFamily,
+                      fontFamily: DT.fontFamily,
                       color: _muted,
-                      fontSize: DrameTextStyles.bodySize,
-                      fontWeight: DrameTextStyles.regular,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                     ),
                     border: InputBorder.none,
                     isDense: true,
