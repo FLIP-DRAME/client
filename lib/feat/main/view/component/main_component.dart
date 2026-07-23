@@ -217,7 +217,7 @@ class _CategorySelectionSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const _SectionHeader(
+            const ModeSectionHeader(
               eyebrow: '6가지 전문 드론 서비스',
               title: '어떤 서비스가 필요하신가요?',
             ),
@@ -279,7 +279,7 @@ class _AreaSelectionSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _SectionHeader(
+            ModeSectionHeader(
               eyebrow: '${store.selectedCategory!.label} 운용자 매칭',
               title: '촬영 지역을 선택하세요',
             ),
@@ -308,10 +308,10 @@ class _OperatorListSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            _SectionHeader(
+            ModeSectionHeader(
               eyebrow: '${store.selectedArea} 허가 운용자 우선 표시',
               title: '조건에 맞는 운용자',
-              action: '${store.pilots.length}명',
+              trailing: Text('${store.pilots.length}명', style: AppText.eyebrow),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -446,27 +446,20 @@ class _ServiceCategoryCardState extends State<_ServiceCategoryCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            Text(
+                            ModeSemiBoldText(
                               widget.category.label,
-                              style: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF0A0B0D),
-                                height: 1.3,
-                              ),
+                              size: 15,
+                              color: const Color(0xFF0A0B0D),
+                              height: 1.3,
                             ),
-                            Text(
+                            ModeText(
                               widget.category.description,
+                              size: 12,
+                              weight: FontWeight.w400,
+                              color: const Color(0xFF7C828A),
+                              height: 1.4,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF7C828A),
-                                height: 1.4,
-                              ),
                             ),
                           ],
                         ),
@@ -493,28 +486,21 @@ class _ServiceCategoryCardState extends State<_ServiceCategoryCard> {
                         ),
                       ),
                       const Spacer(),
-                      Text(
+                      ModeSemiBoldText(
                         widget.category.label,
-                        style: const TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF0A0B0D),
-                          height: 1.3,
-                        ),
+                        size: 16,
+                        color: const Color(0xFF0A0B0D),
+                        height: 1.3,
                       ),
                       const SizedBox(height: 6),
-                      Text(
+                      ModeText(
                         widget.category.description,
+                        size: 13,
+                        weight: FontWeight.w400,
+                        color: const Color(0xFF7C828A),
+                        height: 1.5,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF7C828A),
-                          height: 1.5,
-                        ),
                       ),
                     ],
                   ),
@@ -624,20 +610,7 @@ class _MiniChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: _soft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: AppText.metricLabel.copyWith(
-          color: _navy,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+    return ModeChip(label: label, background: _soft, foreground: _navy);
   }
 }
 
@@ -646,17 +619,16 @@ class _EmptyOperatorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: _soft,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _line),
-      ),
-      child: const Text(
-        '선택한 조건에 맞는 운용자가 아직 없습니다. 다른 지역을 선택해보세요.',
-        style: AppText.cardSubtitle,
+      child: ModeCard(
+        variant: ModeCardVariant.softFilled,
+        padding: const EdgeInsets.all(28),
+        radius: 12,
+        child: const ModeEmptyState(
+          icon: Icons.person_search_outlined,
+          title: '선택한 조건에 맞는 운용자가 아직 없습니다. 다른 지역을 선택해보세요.',
+        ),
       ),
     );
   }
@@ -1093,13 +1065,10 @@ class _OperatorPortfolioBuilderSectionState
                 children: <Widget>[
                   Text('포트폴리오 미리보기', style: AppText.cardTitle),
                   SizedBox(height: 2),
-                  Text(
+                  ModeText(
                     '고객에게 보이는 내 프로필 페이지',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 12,
-                      color: Color(0xFF7C828A),
-                    ),
+                    size: 12,
+                    color: Color(0xFF7C828A),
                   ),
                 ],
               ),
@@ -1142,14 +1111,10 @@ class _OperatorPortfolioBuilderSectionState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
+                    ModeBoldText(
                       pilot.name,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF0A0B0D),
-                      ),
+                      size: 16,
+                      color: const Color(0xFF0A0B0D),
                     ),
                     const SizedBox(height: 3),
                     Row(
@@ -1161,13 +1126,10 @@ class _OperatorPortfolioBuilderSectionState
                         ),
                         const SizedBox(width: 2),
                         Flexible(
-                          child: Text(
+                          child: ModeText(
                             '${pilot.displayLocation}  ·  ${pilot.displaySpecialty}',
-                            style: const TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 12,
-                              color: Color(0xFF7C828A),
-                            ),
+                            size: 12,
+                            color: const Color(0xFF7C828A),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1176,13 +1138,10 @@ class _OperatorPortfolioBuilderSectionState
                     ),
                     if (pilot.intro.isNotEmpty) ...<Widget>[
                       const SizedBox(height: 2),
-                      Text(
+                      ModeText(
                         pilot.intro,
-                        style: const TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 12,
-                          color: Color(0xFF7C828A),
-                        ),
+                        size: 12,
+                        color: const Color(0xFF7C828A),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1218,20 +1177,14 @@ class _OperatorPortfolioBuilderSectionState
                           ),
                         ),
                       ),
-                      child: Text(
+                      child: ModeText(
                         const <String>['포트폴리오', '리뷰', '정보'][i],
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 14,
-                          fontWeight:
-                              _previewTab == i
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                          color:
-                              _previewTab == i
-                                  ? _primary
-                                  : const Color(0xFF7C828A),
-                        ),
+                        size: 14,
+                        weight:
+                            _previewTab == i
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                        color: _previewTab == i ? _primary : const Color(0xFF7C828A),
                       ),
                     ),
                   ),
@@ -1852,27 +1805,11 @@ class _OperatorReviewBadge extends StatelessWidget {
             ? Icons.hourglass_top_rounded
             : Icons.warning_amber_rounded;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            store.operatorReviewLabel,
-            style: AppText.chip.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+    return ModeChip(
+      label: store.operatorReviewLabel,
+      icon: icon,
+      background: background,
+      foreground: color,
     );
   }
 }
@@ -2028,34 +1965,20 @@ class _RequestCardState extends State<_RequestCard> {
                   _MiniChip(label: widget.request.displayLocation),
                   const Spacer(),
                   // 신규 상태는 색 테두리만; 텍스트 배지로 상태 표시
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          _isNew
-                              ? const Color(0xFFEBFAF3)
-                              : widget.request.status == '마감 임박'
-                              ? const Color(0xFFFFF1F0)
-                              : const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      widget.request.status,
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            _isNew
-                                ? const Color(0xFF05B169)
-                                : widget.request.status == '마감 임박'
-                                ? const Color(0xFFCF202F)
-                                : const Color(0xFF7C828A),
-                      ),
-                    ),
+                  ModeChip(
+                    label: widget.request.status,
+                    background:
+                        _isNew
+                            ? const Color(0xFFEBFAF3)
+                            : widget.request.status == '마감 임박'
+                            ? const Color(0xFFFFF1F0)
+                            : const Color(0xFFF7F7F7),
+                    foreground:
+                        _isNew
+                            ? const Color(0xFF05B169)
+                            : widget.request.status == '마감 임박'
+                            ? const Color(0xFFCF202F)
+                            : const Color(0xFF7C828A),
                   ),
                 ],
               ),
@@ -2472,24 +2395,7 @@ class _RequestTabChip extends StatelessWidget {
     final bg = selected ? const Color(0xFFF2F3F5) : Colors.transparent;
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? fg : const Color(0xFFDEE1E6)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            color: fg,
-          ),
-        ),
-      ),
+      child: ModeChip(label: label, background: bg, foreground: fg),
     );
   }
 }
@@ -2549,38 +2455,24 @@ class _RequestReviewCardState extends State<_RequestReviewCard> {
                 children: <Widget>[
                   _MiniChip(label: widget.request.category),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          _isReviewing
-                              ? const Color(0xFFEBFAF3)
-                              : _isQuoteSent
-                              ? const Color(0xFFEEF4FF)
-                              : widget.request.status == '마감 임박'
-                              ? const Color(0xFFFFF1F0)
-                              : const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      widget.request.status,
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color:
-                            _isReviewing
-                                ? const Color(0xFF05B169)
-                                : _isQuoteSent
-                                ? _navy
-                                : widget.request.status == '마감 임박'
-                                ? const Color(0xFFCF202F)
-                                : const Color(0xFF7C828A),
-                      ),
-                    ),
+                  ModeChip(
+                    label: widget.request.status,
+                    background:
+                        _isReviewing
+                            ? const Color(0xFFEBFAF3)
+                            : _isQuoteSent
+                            ? const Color(0xFFEEF4FF)
+                            : widget.request.status == '마감 임박'
+                            ? const Color(0xFFFFF1F0)
+                            : const Color(0xFFF7F7F7),
+                    foreground:
+                        _isReviewing
+                            ? const Color(0xFF05B169)
+                            : _isQuoteSent
+                            ? _navy
+                            : widget.request.status == '마감 임박'
+                            ? const Color(0xFFCF202F)
+                            : const Color(0xFF7C828A),
                   ),
                 ],
               ),
@@ -3173,13 +3065,11 @@ class _PilotStepCard extends StatelessWidget {
                                   color: Color(0xFFC5CDD8),
                                   size: 14,
                                 )
-                                : Text(
+                                : ModeText(
                                   '${entry.key + 1}',
-                                  style: TextStyle(
-                                    color: active ? Colors.white : _muted,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                                  size: 12,
+                                  weight: FontWeight.w900,
+                                  color: active ? Colors.white : _muted,
                                 ),
                       ),
                       const SizedBox(width: 12),
@@ -3943,7 +3833,7 @@ class _PopularPortfolioSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const _SectionHeader(eyebrow: '이용자들이 만족한', title: '인기 운용자들의 포트폴리오'),
+            const ModeSectionHeader(eyebrow: '이용자들이 만족한', title: '인기 운용자들의 포트폴리오'),
             const SizedBox(height: 22),
             _PortfolioCategoryChips(store: store),
             const SizedBox(height: 24),
@@ -4109,28 +3999,13 @@ class _AreaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 14 : 16,
-          vertical: compact ? 7 : 8,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? _focus : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: selected ? _focus : _line),
-        ),
-        child: Text(
-          label,
-          style: AppText.chip.copyWith(
-            color: _ink,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            fontSize: compact ? 14 : 15,
-          ),
-        ),
+      child: ModeChip(
+        label: label,
+        background: selected ? _focus : Colors.white,
+        foreground: _ink,
+        shape: ModeChipShape.rounded,
       ),
     );
   }
@@ -4164,38 +4039,6 @@ class _PageShell extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.eyebrow,
-    required this.title,
-    this.action,
-  });
-
-  final String eyebrow;
-  final String title;
-  final String? action;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: <Widget>[
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(eyebrow, style: AppText.eyebrow),
-              const SizedBox(height: 7),
-              Text(title, style: AppText.sectionTitle),
-            ],
-          ),
-        ),
-        if (action != null) Text(action!, style: AppText.eyebrow),
-      ],
-    );
-  }
-}
-
 class _PortfolioCategoryChips extends StatelessWidget {
   const _PortfolioCategoryChips({required this.store});
 
@@ -4222,28 +4065,12 @@ class _PortfolioCategoryChips extends StatelessWidget {
               final selected = category == store.selectedPortfolioCategory;
               return Padding(
                 padding: const EdgeInsets.only(right: 10),
-                child: InkWell(
+                child: GestureDetector(
                   onTap: () => store.selectPortfolioCategory(category),
-                  borderRadius: BorderRadius.circular(999),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 11,
-                    ),
-                    decoration: BoxDecoration(
-                      color: selected ? _focus : Colors.white,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: selected ? _focus : _line),
-                    ),
-                    child: Text(
-                      category,
-                      style: AppText.chip.copyWith(
-                        color: _ink,
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w600,
-                      ),
-                    ),
+                  child: ModeChip(
+                    label: category,
+                    background: selected ? _focus : Colors.white,
+                    foreground: _ink,
                   ),
                 ),
               );
@@ -4465,22 +4292,15 @@ class _MobilePilotRequestsPageState extends State<_MobilePilotRequestsPage> {
           ),
           const SizedBox(height: 16),
           if (filtered.isEmpty)
-            Container(
+            const SizedBox(
               width: double.infinity,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F8FA),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _line),
-              ),
-              child: const Center(
-                child: Text(
-                  '아직 받은 요청이 없습니다',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 14,
-                    color: Color(0xFF7C828A),
-                  ),
+              child: ModeCard(
+                variant: ModeCardVariant.softFilled,
+                padding: EdgeInsets.all(32),
+                radius: 12,
+                child: ModeEmptyState(
+                  icon: Icons.inbox_outlined,
+                  title: '아직 받은 요청이 없습니다',
                 ),
               ),
             )
@@ -4600,16 +4420,12 @@ class _HeroBandDarkState extends State<_HeroBandDark>
               opacity: _headFade,
               child: SlideTransition(
                 position: _headSlide,
-                child: Text(
+                child: ModeBoldText(
                   '모든 드론 서비스를\n하나의 플랫폼에서',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: headSize,
-                    fontWeight: FontWeight.w700,
-                    height: 1.15,
-                    letterSpacing: compact ? -0.8 : -1.5,
-                    color: const Color(0xFF0A0B0D),
-                  ),
+                  size: headSize,
+                  height: 1.15,
+                  letterSpacing: compact ? -0.8 : -1.5,
+                  color: const Color(0xFF0A0B0D),
                 ),
               ),
             ),
@@ -4618,15 +4434,11 @@ class _HeroBandDarkState extends State<_HeroBandDark>
               opacity: _subFade,
               child: SlideTransition(
                 position: _subSlide,
-                child: const Text(
+                child: const ModeText(
                   '  항공촬영부터 농업방제까지, 빠르게 견적을 받아보세요.',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    height: 1.6,
-                    color: Color(0xFF5B616E),
-                  ),
+                  size: 16,
+                  height: 1.6,
+                  color: Color(0xFF5B616E),
                 ),
               ),
             ),
@@ -4714,7 +4526,7 @@ class _HowItWorksSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const _SectionHeader(
+            const ModeSectionHeader(
               eyebrow: '3단계로 끝나는 드론 서비스',
               title: '어떻게 작동하나요?',
             ),
@@ -4790,47 +4602,32 @@ class _HowItWorksStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ModeCard(
+      variant: ModeCardVariant.flatBordered,
+      radius: 24,
       padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFDEE1E6)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
+          ModeSemiBoldText(
             number,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF0052FF),
-              letterSpacing: 0.5,
-            ),
+            size: 13,
+            color: const Color(0xFF0052FF),
+            letterSpacing: 0.5,
           ),
           const SizedBox(height: 16),
-          Text(
+          ModeSemiBoldText(
             title,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF0A0B0D),
-              height: 1.3,
-            ),
+            size: 18,
+            color: const Color(0xFF0A0B0D),
+            height: 1.3,
           ),
           const SizedBox(height: 10),
-          Text(
+          ModeText(
             description,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF5B616E),
-              height: 1.6,
-            ),
+            size: 14,
+            color: const Color(0xFF5B616E),
+            height: 1.6,
           ),
         ],
       ),
@@ -4860,27 +4657,19 @@ class _OperatorCtaBand extends StatelessWidget {
                 ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text(
+                    const ModeText(
                       '드론 기사이신가요?',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white,
-                        height: 1.15,
-                        letterSpacing: -0.8,
-                      ),
+                      size: 32,
+                      color: Colors.white,
+                      height: 1.15,
+                      letterSpacing: -0.8,
                     ),
                     const SizedBox(height: 14),
-                    const Text(
+                    const ModeText(
                       '모드에 등록하고 매달 검증된 프로젝트를 받아보세요.\n자격 확인부터 결제까지 플랫폼이 모두 처리합니다.',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFFA8ACB3),
-                        height: 1.6,
-                      ),
+                      size: 15,
+                      color: Color(0xFFA8ACB3),
+                      height: 1.6,
                     ),
                     const SizedBox(height: 28),
                     ElevatedButton(
@@ -4911,27 +4700,19 @@ class _OperatorCtaBand extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text(
+                          ModeText(
                             '드론 기사이신가요?',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 44,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.white,
-                              height: 1.1,
-                              letterSpacing: -1.2,
-                            ),
+                            size: 44,
+                            color: Colors.white,
+                            height: 1.1,
+                            letterSpacing: -1.2,
                           ),
                           SizedBox(height: 16),
-                          Text(
+                          ModeText(
                             '모드에 등록하고 매달 검증된 프로젝트를 받아보세요.\n자격 확인부터 결제까지 플랫폼이 모두 처리합니다.',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFFA8ACB3),
-                              height: 1.6,
-                            ),
+                            size: 16,
+                            color: Color(0xFFA8ACB3),
+                            height: 1.6,
                           ),
                         ],
                       ),
@@ -5051,24 +4832,16 @@ class _FooterBrand extends StatelessWidget {
       children: <Widget>[
         DrameLogo(size: 22, onDark: true),
         SizedBox(height: DC.spXs),
-        Text(
+        ModeText(
           '모두의 드론 — 드론 매칭 플랫폼',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF6B7280),
-          ),
+          size: 13,
+          color: Color(0xFF6B7280),
         ),
         SizedBox(height: DC.spBase),
-        Text(
+        ModeText(
           '© 2026 Mode Drone. All rights reserved.',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF4B5563),
-          ),
+          size: 12,
+          color: Color(0xFF4B5563),
         ),
       ],
     );
@@ -5094,15 +4867,7 @@ class _FooterLinks extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
+        ModeBoldText(title, size: 13, color: Colors.white),
         const SizedBox(height: DC.spSm),
         ...links.map(
           (link) => Padding(
@@ -5114,15 +4879,7 @@ class _FooterLinks extends StatelessWidget {
               },
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
-                child: Text(
-                  link,
-                  style: const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
+                child: ModeText(link, size: 13, color: const Color(0xFF6B7280)),
               ),
             ),
           ),
@@ -5137,16 +4894,10 @@ class _PriorityBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8FBF4),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: const Text(
-        '허가 우선',
-        style: TextStyle(color: Color(0xFF128765), fontWeight: FontWeight.w900),
-      ),
+    return const ModeChip(
+      label: '허가 우선',
+      background: Color(0xFFE8FBF4),
+      foreground: Color(0xFF128765),
     );
   }
 }
@@ -5289,14 +5040,10 @@ class _QuoteSubmitPaywallState extends ConsumerState<_QuoteSubmitPaywall> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    const Text(
+                    const ModeBoldText(
                       '사전등록 혜택 수수료 무료!',
-                      style: TextStyle(
-                        color: Color(0xFF191919),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: DrameTextStyles.fontFamily,
-                      ),
+                      size: 14,
+                      color: Color(0xFF191919),
                     ),
                   ],
                 ),
@@ -5590,14 +5337,10 @@ class _LiveOperatorsBannerSection extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (!compact)
-                  const Text(
+                  const ModeText(
                     '등록된 운용자 데이터를 실시간으로 반영합니다',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF9CA3AF),
-                    ),
+                    size: 13,
+                    color: Color(0xFF9CA3AF),
                   ),
               ],
             ),
@@ -5693,41 +5436,22 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  CircleAvatar(
+                  ModeAvatar(
+                    imageUrl: pilot.avatarUrl,
                     radius: 16,
-                    backgroundColor: const Color(0xFFEEF0F3),
-                    backgroundImage:
-                        pilot.avatarUrl != null
-                            ? NetworkImage(pilot.avatarUrl!)
-                            : null,
-                    child:
-                        pilot.avatarUrl == null
-                            ? Text(
-                              pilot.name.characters.first,
-                              style: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF0A0B0D),
-                              ),
-                            )
-                            : null,
+                    fallbackText: pilot.name.characters.first,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
+                        ModeSemiBoldText(
                           pilot.name,
+                          size: 13,
+                          color: const Color(0xFF0A0B0D),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF0A0B0D),
-                          ),
                         ),
                         Row(
                           children: <Widget>[
@@ -5738,15 +5462,12 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
                             ),
                             const SizedBox(width: 2),
                             Expanded(
-                              child: Text(
+                              child: ModeText(
                                 pilot.displayLocation,
+                                size: 11,
+                                color: const Color(0xFF7C828A),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: 'Pretendard',
-                                  fontSize: 11,
-                                  color: Color(0xFF7C828A),
-                                ),
                               ),
                             ),
                           ],
@@ -5772,41 +5493,21 @@ class _LiveOperatorCardState extends State<_LiveOperatorCard> {
                     pilot.categories
                         .take(2)
                         .map(
-                          (cat) => Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF7F8FA),
-                              borderRadius: BorderRadius.circular(100),
-                              border: Border.all(
-                                color: const Color(0xFFE4EAF2),
-                              ),
-                            ),
-                            child: Text(
-                              cat,
-                              style: const TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF5B616E),
-                              ),
-                            ),
+                          (cat) => ModeChip(
+                            label: cat,
+                            background: const Color(0xFFF7F8FA),
+                            foreground: const Color(0xFF5B616E),
                           ),
                         )
                         .toList(),
               ),
               const Spacer(),
-              Text(
+              ModeText(
                 pilot.categories.join(' · '),
+                size: 11,
+                color: const Color(0xFF9CA3AF),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 11,
-                  color: Color(0xFF9CA3AF),
-                ),
               ),
             ],
           ),
