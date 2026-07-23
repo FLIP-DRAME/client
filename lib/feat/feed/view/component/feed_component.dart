@@ -347,7 +347,12 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
 
     if (actualFeed.isEmpty) {
       return const _FeedPageShell(
-        child: Text('아직 공개된 피드가 없습니다.', style: FeedText.body),
+        child: ModeText(
+          '아직 공개된 피드가 없습니다.',
+          size: 14,
+          color: _ink,
+          height: 1.55,
+        ),
       );
     }
     final mapPoints = _mapPointsFor(actualFeed);
@@ -497,7 +502,7 @@ class _FeedMapEmptyState extends StatelessWidget {
         children: <Widget>[
           const Icon(Icons.map_outlined, color: _muted, size: 36),
           const SizedBox(height: 12),
-          const Text('아직 위치가 등록된 촬영 게시물이 없습니다.', style: FeedText.body),
+          const ModeText('아직 위치가 등록된 촬영 게시물이 없습니다.', size: 14, color: _ink, height: 1.55),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: onShowPhotos,
@@ -549,11 +554,20 @@ class _FeedMapView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('드론 지도', style: FeedText.sectionTitle),
+                  ModeText(
+                    '드론 지도',
+                    size: 26,
+                    weight: FontWeight.w800,
+                    color: _navy,
+                    height: 1.25,
+                    letterSpacing: -0.6,
+                  ),
                   const SizedBox(height: 6),
-                  Text(
+                  ModeText(
                     '한국 지도에서 촬영 위치를 고르고 바로 사진을 확인하세요.',
-                    style: FeedText.body.copyWith(color: _muted),
+                    size: 14,
+                    color: _muted,
+                    height: 1.55,
                   ),
                 ],
               ),
@@ -645,9 +659,11 @@ class _FeedMapView extends StatelessWidget {
                             horizontal: 8,
                             vertical: 5,
                           ),
-                          child: Text(
+                          child: ModeMediumText(
                             '© OpenStreetMap contributors',
-                            style: FeedText.authorRole.copyWith(fontSize: 11),
+                            size: 11,
+                            color: _muted,
+                            height: 1.35,
                           ),
                         ),
                       ),
@@ -720,7 +736,7 @@ class _FeedMapLegend extends StatelessWidget {
           children: <Widget>[
             const Icon(Icons.radar_rounded, color: _navy, size: 18),
             const SizedBox(width: 8),
-            Text('$count개 촬영 지점', style: FeedText.metaPill),
+            ModeMediumText('$count개 촬영 지점', size: 13, color: _ink, height: 1.25),
           ],
         ),
       ),
@@ -775,25 +791,31 @@ class _FeedMapPreview extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(
+                      ModeSemiBoldText(
                         post.location,
+                        size: 14,
+                        color: _ink,
+                        height: 1.35,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: FeedText.authorName,
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      ModeMediumText(
                         post.category,
+                        size: 13,
+                        color: _muted,
+                        height: 1.35,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: FeedText.authorRole,
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      ModeText(
                         post.caption,
+                        size: 13,
+                        color: _ink,
+                        height: 1.55,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: FeedText.body.copyWith(fontSize: 13),
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -804,7 +826,7 @@ class _FeedMapPreview extends StatelessWidget {
                             size: 16,
                           ),
                           const SizedBox(width: 5),
-                          Text('${post.likes}', style: FeedText.metaPill),
+                          ModeMediumText('${post.likes}', size: 13, color: _ink, height: 1.25),
                           const Spacer(),
                           const Icon(
                             Icons.open_in_full_rounded,
@@ -881,11 +903,13 @@ class _FeedCardState extends State<_FeedCard> {
                 child: AnimatedOpacity(
                   opacity: _hovered ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 220),
-                  child: Text(
+                  child: ModeSemiBoldText(
                     widget.location,
+                    size: 14,
+                    color: Colors.white,
+                    height: 1.35,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: FeedText.feedLocation,
                   ),
                 ),
               ),
@@ -919,31 +943,25 @@ class _FeedTimelineCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
               child: Row(
                 children: <Widget>[
-                  CircleAvatar(
+                  ModeAvatar(
+                    imageUrl: avatarUrl,
                     radius: 22,
-                    backgroundColor: const Color(0xFFF1F4F8),
-                    backgroundImage:
-                        avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child:
-                        avatarUrl == null
-                            ? Text(
-                              initial,
-                              style: FeedText.authorName.copyWith(color: _navy),
-                            )
-                            : null,
+                    fallbackText: initial,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(post.authorName, style: FeedText.authorName),
+                        ModeSemiBoldText(post.authorName, size: 14, color: _ink, height: 1.35),
                         const SizedBox(height: 2),
-                        Text(
+                        ModeMediumText(
                           '${post.location} · ${post.category}',
+                          size: 13,
+                          color: _muted,
+                          height: 1.35,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: FeedText.authorRole,
                         ),
                       ],
                     ),
@@ -987,7 +1005,7 @@ class _FeedTimelineCard extends StatelessWidget {
                       const SizedBox(width: 14),
                       const Icon(Icons.chat_bubble_outline_rounded, size: 23),
                       const Spacer(),
-                      Text('${post.likes}명이 좋아함', style: FeedText.authorRole),
+                      ModeMediumText('${post.likes}명이 좋아함', size: 13, color: _muted, height: 1.35),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -1029,16 +1047,10 @@ class _FeedCategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF2FF),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: FeedText.metaPill.copyWith(color: const Color(0xFF0052FF)),
-      ),
+    return ModeChip(
+      label: label,
+      background: const Color(0xFFEAF2FF),
+      foreground: DC.primary,
     );
   }
 }
@@ -1231,9 +1243,9 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(widget.post.authorName, style: FeedText.authorName),
+                    ModeSemiBoldText(widget.post.authorName, size: 14, color: _ink, height: 1.35),
                     const SizedBox(height: 3),
-                    Text(widget.post.authorRole, style: FeedText.authorRole),
+                    ModeMediumText(widget.post.authorRole, size: 13, color: _muted, height: 1.35),
                   ],
                 ),
               ),
@@ -1308,17 +1320,19 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
+              ModeMediumText(
                 '${widget.post.location}에서 진행한 ${widget.post.category} 작업입니다.',
-                style: FeedText.bodyStrong,
+                size: 14,
+                color: _ink,
+                height: 1.55,
               ),
               const SizedBox(height: 20),
-              const Text('댓글', style: FeedText.dialogTitle),
+              const ModeSemiBoldText('댓글', size: 17, color: _ink, height: 1.35),
               const SizedBox(height: 12),
               if (_loadingComments)
                 const Center(child: CircularProgressIndicator(strokeWidth: 2))
               else if (_comments.isEmpty)
-                const Text('아직 댓글이 없습니다.', style: FeedText.body)
+                const ModeText('아직 댓글이 없습니다.', size: 14, color: _ink, height: 1.55)
               else
                 ..._comments.map((c) => _CommentTile(comment: c)),
             ],
@@ -1360,7 +1374,7 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: Text('좋아요 $_likeCount개', style: FeedText.likeCount),
+            child: ModeMediumText('좋아요 $_likeCount개', size: 14, color: _ink, height: 1.35),
           ),
         ),
         Padding(
@@ -1469,21 +1483,7 @@ class _PostMetaPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: _soft,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, color: _navy, size: 16),
-          const SizedBox(width: 6),
-          Text(text, style: FeedText.metaPill),
-        ],
-      ),
-    );
+    return ModeChip(label: text, icon: icon, background: _soft, foreground: _navy);
   }
 }
 
