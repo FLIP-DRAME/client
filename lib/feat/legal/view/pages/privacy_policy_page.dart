@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../common/d_tokens.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../../core/platform/platform_url_launcher.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
@@ -28,15 +28,7 @@ class PrivacyPolicyPage extends StatelessWidget {
           },
           icon: const Icon(Icons.arrow_back_rounded, color: DC.ink),
         ),
-        title: const Text(
-          '개인정보처리방침',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: DC.ink,
-          ),
-        ),
+        title: const ModeSemiBoldText('개인정보처리방침', size: 16, color: DC.ink),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, color: DC.hairline),
@@ -254,28 +246,16 @@ class _Header extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
+        ModeBoldText(
           text,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: DC.ink,
-            height: 1.25,
-            letterSpacing: -0.3,
-          ),
+          size: 22,
+          color: DC.ink,
+          height: 1.25,
+          letterSpacing: -0.3,
         ),
         if (subtitle != null) ...<Widget>[
           const SizedBox(height: 6),
-          Text(
-            subtitle!,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 13,
-              color: DC.muted,
-              height: 1.5,
-            ),
-          ),
+          ModeText(subtitle!, size: 13, color: DC.muted, height: 1.5),
         ],
       ],
     );
@@ -289,16 +269,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        color: DC.ink,
-        height: 1.4,
-      ),
-    );
+    return ModeBoldText(text, size: 15, color: DC.ink, height: 1.4);
   }
 }
 
@@ -309,16 +280,7 @@ class _SubTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: DC.ink,
-        height: 1.5,
-      ),
-    );
+    return ModeSemiBoldText(text, size: 13, color: DC.ink, height: 1.5);
   }
 }
 
@@ -329,16 +291,7 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: DC.body,
-        height: 1.65,
-      ),
-    );
+    return ModeText(text, size: 14, color: DC.body, height: 1.65);
   }
 }
 
@@ -362,15 +315,11 @@ class _AccountDeletionCard extends StatelessWidget {
             children: <Widget>[
               Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFF0052FF)),
               SizedBox(width: 8),
-              Text(
+              ModeBoldText(
                 '계정 및 데이터 삭제 요청 방법',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0052FF),
-                  height: 1.4,
-                ),
+                size: 14,
+                color: Color(0xFF0052FF),
+                height: 1.4,
               ),
             ],
           ),
@@ -379,20 +328,14 @@ class _AccountDeletionCard extends StatelessWidget {
           const _StepRow(number: '2', text: '"이메일로 삭제 요청" 버튼을 눌러 발송해 주세요.'),
           const _StepRow(number: '3', text: '회사는 영업일 기준 7일 이내 삭제를 처리하고 결과를 안내합니다.'),
           const SizedBox(height: 16),
-          const Text(
-            '삭제되는 데이터',
-            style: TextStyle(fontFamily: 'Pretendard', fontSize: 13, fontWeight: FontWeight.w600, color: DC.ink),
-          ),
+          const ModeSemiBoldText('삭제되는 데이터', size: 13, color: DC.ink),
           const SizedBox(height: 6),
           const _SmallBullet('계정 정보 (이름, 닉네임, 이메일, 비밀번호) — 즉시 삭제'),
           const _SmallBullet('프로필 사진, 포트폴리오 이미지 및 파일 — 즉시 삭제'),
           const _SmallBullet('피드 게시글, 이미지, 댓글 — 즉시 삭제'),
           const _SmallBullet('FCM 토큰(푸시 알림 정보) — 즉시 삭제'),
           const SizedBox(height: 12),
-          const Text(
-            '법령에 따라 보관되는 데이터',
-            style: TextStyle(fontFamily: 'Pretendard', fontSize: 13, fontWeight: FontWeight.w600, color: DC.ink),
-          ),
+          const ModeSemiBoldText('법령에 따라 보관되는 데이터', size: 13, color: DC.ink),
           const SizedBox(height: 6),
           const _SmallBullet('견적 요청 및 거래 기록 — 전자상거래법에 따라 최대 5년 보관'),
           const _SmallBullet('소비자 불만·분쟁 처리 기록 — 소비자보호법에 따라 3년 보관'),
@@ -424,14 +367,11 @@ class _AccountDeletionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          const ModeText(
             '계정 삭제 요청 이메일: privacy@modeofficial.net',
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 12,
-              color: DC.muted,
-              height: 1.5,
-            ),
+            size: 12,
+            color: DC.muted,
+            height: 1.5,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
@@ -449,15 +389,12 @@ class _AccountDeletionWebLink extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => context.push('/delete-account'),
-      child: const Text(
+      child: const ModeText(
         '계정 삭제 전용 페이지 열기 (로그인 없이 접근 가능) →',
-        style: TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 12,
-          color: Color(0xFF0052FF),
-          decoration: TextDecoration.underline,
-          height: 1.5,
-        ),
+        size: 12,
+        color: Color(0xFF0052FF),
+        decoration: TextDecoration.underline,
+        height: 1.5,
         textAlign: TextAlign.center,
       ),
     );
@@ -486,26 +423,10 @@ class _StepRow extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Text(
-              number,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
+            child: ModeBoldText(number, size: 11, color: Colors.white),
           ),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                color: DC.body,
-                height: 1.55,
-              ),
-            ),
+            child: ModeText(text, size: 13, color: DC.body, height: 1.55),
           ),
         ],
       ),
@@ -536,15 +457,7 @@ class _SmallBullet extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                color: DC.body,
-                height: 1.55,
-              ),
-            ),
+            child: ModeText(text, size: 13, color: DC.body, height: 1.55),
           ),
         ],
       ),
@@ -573,28 +486,11 @@ class _BulletList extends StatelessWidget {
                         padding: EdgeInsets.only(top: 7),
                         child: SizedBox(
                           width: 14,
-                          child: Text(
-                            '·',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 14,
-                              color: DC.muted,
-                              height: 1,
-                            ),
-                          ),
+                          child: ModeText('·', size: 14, color: DC.muted, height: 1),
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          item,
-                          style: const TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: DC.body,
-                            height: 1.65,
-                          ),
-                        ),
+                        child: ModeText(item, size: 14, color: DC.body, height: 1.65),
                       ),
                     ],
                   ),

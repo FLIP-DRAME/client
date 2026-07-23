@@ -40,13 +40,7 @@ class ModeChip extends StatelessWidget {
             Icon(icon, size: 11, color: foreground),
             const SizedBox(width: 4),
           ],
-          Text(
-            label,
-            style: DT.captionStrong.copyWith(
-              color: foreground,
-              letterSpacing: null,
-            ),
-          ),
+          Text(label, style: DT.captionStrong.copyWith(color: foreground)),
         ],
       ),
     );

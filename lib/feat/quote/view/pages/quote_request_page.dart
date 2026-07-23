@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../app_providers.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../../core/app_defaults.dart';
 import '../../../main/model/drone_pilot_model.dart';
 import '../../../main/network/drone_pilot_api.dart';
@@ -294,22 +295,13 @@ class _QuoteRequestPageState extends ConsumerState<QuoteRequestPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         flex: 2,
-                        child: FilledButton(
+                        child: ModeButton(
+                          label:
+                              _submitting
+                                  ? (_isEditing ? '수정 중…' : '요청 중…')
+                                  : (_isEditing ? '수정 완료' : '요청 보내기'),
                           onPressed: _submitting ? null : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF0052FF),
-                            foregroundColor: Colors.white,
-                            textStyle: QuoteText.button,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Text(
-                            _submitting
-                                ? (_isEditing ? '수정 중…' : '요청 중…')
-                                : (_isEditing ? '수정 완료' : '요청 보내기'),
-                          ),
+                          fullWidth: true,
                         ),
                       ),
                     ],

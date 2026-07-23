@@ -115,17 +115,31 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             SizedBox(height: compact ? 16 : 40),
-                            if (!compact) Text('내 견적', style: DT.titleLg),
+                            if (!compact)
+                              const ModeSemiBoldText(
+                                '내 견적',
+                                size: 24,
+                                height: 1.25,
+                                letterSpacing: -0.4,
+                              ),
                             if (!compact) const SizedBox(height: 8),
                             if (!compact)
-                              Text(
+                              const ModeText(
                                 '요청한 견적의 진행 상황을 확인하세요.',
-                                style: DT.bodyMd.copyWith(color: DC.body),
+                                size: 16,
+                                color: DC.body,
+                                height: 1.5,
                               ),
                             if (!compact) const SizedBox(height: 32),
                             if (compact) const SizedBox(height: 8),
                             if (quotes.isEmpty)
-                              _EmptyQuotes(onFind: () => context.go('/home'))
+                              ModeEmptyState(
+                                icon: Icons.inbox_outlined,
+                                title: '아직 보낸 견적이 없어요',
+                                subtitle: '운용자를 찾아 견적을 요청해 보세요.',
+                                actionLabel: '운용자 찾기',
+                                onAction: () => context.go('/home'),
+                              )
                             else ...<Widget>[
                               _QuoteSection(
                                 title: '견적 받음',
@@ -312,11 +326,18 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             const SizedBox(height: 40),
-                            Text('견적 요청 수정', style: DT.titleLg),
+                            const ModeSemiBoldText(
+                              '견적 요청 수정',
+                              size: 24,
+                              height: 1.25,
+                              letterSpacing: -0.4,
+                            ),
                             const SizedBox(height: 8),
-                            Text(
+                            ModeText(
                               '${quote.pilotName}에게 보낸 요청 내용을 수정합니다.',
-                              style: DT.bodyMd.copyWith(color: DC.body),
+                              size: 16,
+                              color: DC.body,
+                              height: 1.5,
                             ),
                             const SizedBox(height: 28),
                             _QuoteEditField(
@@ -465,22 +486,24 @@ class _QuoteSection extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            Text(title, style: DT.titleSm),
+            ModeSemiBoldText(title, size: 16, height: 1.25),
             const SizedBox(width: 8),
-            _StatusChip(label: '${quotes.length}', color: DC.primary),
+            ModeChip(
+              label: '${quotes.length}',
+              background: DC.primary.withValues(alpha: 0.1),
+              foreground: DC.primary,
+            ),
           ],
         ),
         const SizedBox(height: 12),
         if (quotes.isEmpty)
-          Container(
+          SizedBox(
             width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(DC.rxLg),
-              border: Border.all(color: DC.hairline),
+            child: ModeCard(
+              variant: ModeCardVariant.flatBordered,
+              padding: const EdgeInsets.all(18),
+              child: ModeText(emptyText, size: 16, color: DC.muted, height: 1.5),
             ),
-            child: Text(emptyText, style: DT.bodyMd.copyWith(color: DC.muted)),
           )
         else
           ...quotes.map(
@@ -532,26 +555,18 @@ class _QuoteCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statusColor = _statusColor(quote.status);
     final displayPrice =
         quote.price == '-' && quote.budgetOption.isNotEmpty
             ? quote.budgetOption
             : quote.price;
     final showChat = quote.isInProgress && quote.pilotId.isNotEmpty;
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(DC.rxLg),
-      child: InkWell(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: ModeCard(
+        variant: ModeCardVariant.flatBordered,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         onTap: onTap,
-        borderRadius: BorderRadius.circular(DC.rxLg),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(DC.rxLg),
-            border: Border.all(color: DC.hairline),
-          ),
-          child:
+        child:
               compact
                   ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,25 +574,35 @@ class _QuoteCard extends ConsumerWidget {
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: Text(quote.pilotName, style: DT.titleSm),
+                            child: ModeSemiBoldText(
+                              quote.pilotName,
+                              size: 16,
+                              height: 1.25,
+                            ),
                           ),
-                          _StatusChip(label: quote.status, color: statusColor),
+                          ModeStatusBadge(status: quote.status),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      ModeText(
                         '${quote.category}${_cleanArea(quote.area)}',
-                        style: DT.bodyMd.copyWith(color: DC.body),
+                        size: 16,
+                        color: DC.body,
+                        height: 1.5,
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      ModeText(
                         quote.date,
-                        style: DT.caption.copyWith(color: DC.muted),
+                        size: 13,
+                        color: DC.muted,
+                        height: 1.5,
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      ModeSemiBoldText(
                         displayPrice,
-                        style: DT.titleSm.copyWith(color: DC.primary),
+                        size: 16,
+                        color: DC.primary,
+                        height: 1.25,
                       ),
                       if (showChat) ...<Widget>[
                         const SizedBox(height: 12),
@@ -610,22 +635,30 @@ class _QuoteCard extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                Text(quote.pilotName, style: DT.titleSm),
+                                ModeSemiBoldText(
+                                  quote.pilotName,
+                                  size: 16,
+                                  height: 1.25,
+                                ),
                                 const SizedBox(height: 4),
-                                Text(
+                                ModeText(
                                   '${quote.category}${_cleanArea(quote.area)} · ${quote.date}',
-                                  style: DT.bodyMd.copyWith(color: DC.body),
+                                  size: 16,
+                                  color: DC.body,
+                                  height: 1.5,
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 16),
-                          Text(
+                          ModeSemiBoldText(
                             displayPrice,
-                            style: DT.titleSm.copyWith(color: DC.primary),
+                            size: 16,
+                            color: DC.primary,
+                            height: 1.25,
                           ),
                           const SizedBox(width: 20),
-                          _StatusChip(label: quote.status, color: statusColor),
+                          ModeStatusBadge(status: quote.status),
                           if (showChat) ...<Widget>[
                             const SizedBox(width: 12),
                             OutlinedButton.icon(
@@ -652,75 +685,6 @@ class _QuoteCard extends ConsumerWidget {
                     ],
                   ),
         ),
-      ),
-    );
-  }
-
-  Color _statusColor(String status) {
-    if (status == '견적 받음') return DC.primary;
-    if (status == '진행중') return const Color(0xFF16A34A);
-    if (status == '완료') return DC.muted;
-    if (status == '요청 보냄') return const Color(0xFF64748B);
-    switch (status) {
-      case '견적 받음':
-        return DC.primary;
-      case '진행중':
-        return const Color(0xFF16A34A);
-      case '완료':
-        return DC.muted;
-      default:
-        return DC.body;
-    }
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.label, required this.color});
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DC.rxPill),
-      ),
-      child: Text(
-        label,
-        style: DT.caption.copyWith(color: color, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
-
-class _EmptyQuotes extends StatelessWidget {
-  const _EmptyQuotes({required this.onFind});
-  final VoidCallback onFind;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: <Widget>[
-          const SizedBox(height: 48),
-          Icon(Icons.inbox_outlined, size: 48, color: DC.muted),
-          const SizedBox(height: 16),
-          Text('아직 보낸 견적이 없어요', style: DT.titleSm.copyWith(color: DC.body)),
-          const SizedBox(height: 8),
-          Text(
-            '운용자를 찾아 견적을 요청해 보세요.',
-            style: DT.bodyMd.copyWith(color: DC.muted),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: onFind,
-            style: dPrimaryButtonStyle(),
-            child: const Text('운용자 찾기'),
-          ),
-        ],
-      ),
-    );
+      );
   }
 }

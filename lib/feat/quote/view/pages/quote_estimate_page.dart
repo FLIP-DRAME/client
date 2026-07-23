@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app_providers.dart';
+import '../../../../common/mode/mode.dart';
 import '../../model/quote_model.dart';
 import '../component/quote_component.dart';
 
@@ -35,9 +36,12 @@ class _QuoteEstimatePageState extends ConsumerState<QuoteEstimatePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
+                  ModeBoldText(
                     widget.estimate.request.pilot.name,
-                    style: QuoteText.sectionTitle,
+                    size: 20,
+                    color: quoteNavy,
+                    height: 1.3,
+                    letterSpacing: -0.15,
                   ),
                   const SizedBox(height: 18),
                   QuoteInfoRow(
@@ -73,59 +77,45 @@ class _QuoteEstimatePageState extends ConsumerState<QuoteEstimatePage> {
                             size: 18,
                           ),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(item, style: QuoteText.body)),
+                          Expanded(
+                            child: ModeText(
+                              item,
+                              size: 14,
+                              color: quoteMuted,
+                              height: 1.55,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _submitting
-                          ? null
-                          : () async {
-                              setState(() => _submitting = true);
-                              try {
-                                final payment = await ref
-                                    .read(quoteViewModelProvider)
-                                    .createPaymentInstruction(widget.estimate);
-                                if (!context.mounted) return;
-                                context.push(
-                                  '/quote/payment',
-                                  extra: <String, Object?>{
-                                    'estimate': widget.estimate.copyWith(
-                                      paymentId: payment.paymentId,
-                                    ),
-                                    'paymentInstruction': payment,
-                                  },
-                                );
-                              } catch (_) {
-                                if (mounted) {
-                                  setState(() => _submitting = false);
-                                }
-                              }
-                            },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: quoteNavy,
-                        foregroundColor: Colors.white,
-                        textStyle: QuoteText.button,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: _submitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('계좌이체 결제로 진행하기'),
-                    ),
+                  ModeButton(
+                    label: '계좌이체 결제로 진행하기',
+                    fullWidth: true,
+                    loading: _submitting,
+                    onPressed: () async {
+                      setState(() => _submitting = true);
+                      try {
+                        final payment = await ref
+                            .read(quoteViewModelProvider)
+                            .createPaymentInstruction(widget.estimate);
+                        if (!context.mounted) return;
+                        context.push(
+                          '/quote/payment',
+                          extra: <String, Object?>{
+                            'estimate': widget.estimate.copyWith(
+                              paymentId: payment.paymentId,
+                            ),
+                            'paymentInstruction': payment,
+                          },
+                        );
+                      } catch (_) {
+                        if (mounted) {
+                          setState(() => _submitting = false);
+                        }
+                      }
+                    },
                   ),
                 ],
               ),

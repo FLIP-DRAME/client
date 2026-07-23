@@ -11,8 +11,6 @@ class _JobRequestMapSection extends ConsumerStatefulWidget {
 }
 
 class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
-  static const Color _navy = Color(0xFF16305E);
-
   List<MapJobRequest>? _requests;
   Map<String, String> _myQuotedClientNames = const <String, String>{};
   String? _selectedId;
@@ -346,11 +344,21 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const Text('촬영 요청 지도', style: AppText.cardTitle),
+                      const ModeText(
+                        '촬영 요청 지도',
+                        size: 22,
+                        weight: FontWeight.w800,
+                        color: DC.ink,
+                        height: 1.25,
+                        letterSpacing: -0.45,
+                      ),
                       const SizedBox(height: 6),
-                      Text(
+                      const ModeMediumText(
                         '지도에서 위치를 찍어 촬영 요청을 올리고, 다른 요청도 둘러보세요.',
-                        style: AppText.cardSubtitle,
+                        size: 14,
+                        color: DC.muted,
+                        height: 1.45,
+                        letterSpacing: -0.1,
                       ),
                     ],
                   ),
@@ -364,7 +372,7 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
                   ),
                   label: Text(_showComposer ? '닫기' : '새 요청 등록'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: _navy,
+                    backgroundColor: DC.navy,
                     foregroundColor: Colors.white,
                     textStyle: AppText.button,
                     padding: const EdgeInsets.symmetric(
@@ -400,7 +408,9 @@ class _JobRequestMapSectionState extends ConsumerState<_JobRequestMapSection> {
             if (requests == null)
               const SizedBox(
                 height: 420,
-                child: Center(child: CircularProgressIndicator(color: _navy)),
+                child: Center(
+                  child: CircularProgressIndicator(color: DC.navy),
+                ),
               )
             else if (requests.isEmpty)
               _JobRequestMapEmptyState(
@@ -444,8 +454,6 @@ class _JobRequestComposer extends StatelessWidget {
     required this.onSubmit,
   });
 
-  static const Color _navy = Color(0xFF16305E);
-  static const Color _line = Color(0xFFE4EAF2);
   static const Color _mint = Color(0xFF22C58B);
 
   final String? category;
@@ -470,7 +478,7 @@ class _JobRequestComposer extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _line),
+        border: Border.all(color: DC.mapHairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,7 +507,7 @@ class _JobRequestComposer extends StatelessWidget {
                 color: const Color(0xFFF8FAFD),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: locationLabel == null ? _line : _mint,
+                  color: locationLabel == null ? DC.mapHairline : _mint,
                 ),
               ),
               child: Row(
@@ -546,11 +554,11 @@ class _JobRequestComposer extends StatelessWidget {
               contentPadding: const EdgeInsets.all(14),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _line),
+                borderSide: const BorderSide(color: DC.mapHairline),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: _line),
+                borderSide: const BorderSide(color: DC.mapHairline),
               ),
             ),
           ),
@@ -580,7 +588,7 @@ class _JobRequestComposer extends StatelessWidget {
             child: FilledButton(
               onPressed: submitting ? null : onSubmit,
               style: FilledButton.styleFrom(
-                backgroundColor: _navy,
+                backgroundColor: DC.navy,
                 foregroundColor: Colors.white,
                 textStyle: AppText.button,
                 padding: const EdgeInsets.symmetric(vertical: 15),
@@ -610,22 +618,28 @@ class _JobRequestMapEmptyState extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE4EAF2)),
+        border: Border.all(color: DC.mapHairline),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           const Icon(Icons.map_outlined, color: Color(0xFF9CA3AF), size: 36),
           const SizedBox(height: 12),
-          const Text('아직 등록된 촬영 요청이 없습니다.', style: AppText.cardSubtitle),
+          const ModeMediumText(
+            '아직 등록된 촬영 요청이 없습니다.',
+            size: 14,
+            color: DC.muted,
+            height: 1.45,
+            letterSpacing: -0.1,
+          ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: onNewRequest,
             icon: const Icon(Icons.add_rounded),
             label: const Text('새 요청 등록'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF16305E),
-              side: const BorderSide(color: Color(0xFFE4EAF2)),
+              foregroundColor: DC.navy,
+              side: const BorderSide(color: DC.mapHairline),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               textStyle: AppText.button,
             ),
@@ -662,7 +676,6 @@ class _JobRequestMap extends StatefulWidget {
 }
 
 class _JobRequestMapState extends State<_JobRequestMap> {
-  static const Color _navy = Color(0xFF16305E);
   // CameraConstraint.contain requires the WHOLE viewport to stay inside
   // bounds -- if minZoom is too low, the viewport at that zoom is wider
   // than Korea and contain rejects every camera update (zoom appears
@@ -804,7 +817,7 @@ class _JobRequestMapState extends State<_JobRequestMap> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.94),
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFE4EAF2)),
+                      border: Border.all(color: DC.mapHairline),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -816,13 +829,16 @@ class _JobRequestMapState extends State<_JobRequestMap> {
                         children: <Widget>[
                           const Icon(
                             Icons.radar_rounded,
-                            color: _navy,
+                            color: DC.navy,
                             size: 18,
                           ),
                           const SizedBox(width: 8),
-                          Text(
+                          ModeMediumText(
                             '${requests.length}개 요청 · 진행중 초록 테두리',
-                            style: AppText.metricLabel,
+                            size: 13,
+                            color: DC.muted,
+                            height: 1.35,
+                            letterSpacing: -0.1,
                           ),
                         ],
                       ),
@@ -842,9 +858,12 @@ class _JobRequestMapState extends State<_JobRequestMap> {
                         horizontal: 8,
                         vertical: 5,
                       ),
-                      child: Text(
+                      child: ModeMediumText(
                         '© OpenStreetMap contributors',
-                        style: AppText.metricLabel.copyWith(fontSize: 11),
+                        size: 11,
+                        color: DC.muted,
+                        height: 1.35,
+                        letterSpacing: -0.1,
                       ),
                     ),
                   ),
@@ -942,8 +961,6 @@ class _JobRequestMapState extends State<_JobRequestMap> {
 class _CompactViewToggle extends StatelessWidget {
   const _CompactViewToggle({required this.showList, required this.onChanged});
 
-  static const Color _line = Color(0xFFE4EAF2);
-
   final bool showList;
   final ValueChanged<bool> onChanged;
 
@@ -954,7 +971,7 @@ class _CompactViewToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF7F8FA),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _line),
+        border: Border.all(color: DC.mapHairline),
       ),
       child: Row(
         children: <Widget>[
@@ -988,8 +1005,6 @@ class _CompactViewToggleButton extends StatelessWidget {
     required this.onTap,
   });
 
-  static const Color _navy = Color(0xFF16305E);
-
   final String label;
   final IconData icon;
   final bool selected;
@@ -998,7 +1013,7 @@ class _CompactViewToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? _navy : Colors.transparent,
+      color: selected ? DC.navy : Colors.transparent,
       borderRadius: BorderRadius.circular(6),
       child: InkWell(
         borderRadius: BorderRadius.circular(6),
@@ -1040,13 +1055,13 @@ class _MapZoomControls extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFE4EAF2)),
+        border: Border.all(color: DC.mapHairline),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           _MapZoomButton(icon: Icons.add_rounded, onTap: onZoomIn),
-          const Divider(height: 1, color: Color(0xFFE4EAF2)),
+          const Divider(height: 1, color: DC.mapHairline),
           _MapZoomButton(icon: Icons.remove_rounded, onTap: onZoomOut),
         ],
       ),
@@ -1067,7 +1082,7 @@ class _MapZoomButton extends StatelessWidget {
       child: SizedBox(
         width: 36,
         height: 36,
-        child: Icon(icon, size: 20, color: const Color(0xFF16305E)),
+        child: Icon(icon, size: 20, color: DC.navy),
       ),
     );
   }

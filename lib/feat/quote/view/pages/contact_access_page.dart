@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app_providers.dart';
+import '../../../../common/mode/mode.dart';
 import '../../model/quote_model.dart';
 import '../component/quote_component.dart';
 
@@ -70,40 +71,27 @@ class _ContactAccessPageState extends ConsumerState<ContactAccessPage> {
                     value: widget.contactAccess.kakaoChannel,
                   ),
                   const SizedBox(height: 14),
-                  Text(widget.contactAccess.note, style: QuoteText.body),
+                  ModeText(
+                    widget.contactAccess.note,
+                    size: 14,
+                    color: quoteMuted,
+                    height: 1.55,
+                  ),
                   const SizedBox(height: 24),
                   if (widget.estimate.jobRequestId != null)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _openingChat ? null : _startChat,
-                        icon: _openingChat
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.chat_rounded, size: 18),
-                        label: const Text('채팅으로 작업 조율하기'),
-                      ),
+                    ModeButton(
+                      label: '채팅으로 작업 조율하기',
+                      onPressed: _startChat,
+                      icon: Icons.chat_rounded,
+                      loading: _openingChat,
+                      fullWidth: true,
                     ),
                   const SizedBox(height: 10),
-                  OutlinedButton.icon(
+                  ModeButton(
+                    label: '메인으로 돌아가기',
                     onPressed: () => context.go('/home'),
-                    icon: const Icon(Icons.home_rounded),
-                    label: const Text('메인으로 돌아가기'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: quoteNavy,
-                      textStyle: QuoteText.button,
-                      side: const BorderSide(color: quoteLine),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                    ),
+                    icon: Icons.home_rounded,
+                    variant: ModeButtonVariant.secondary,
                   ),
                 ],
               ),

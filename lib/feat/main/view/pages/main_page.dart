@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:flutter_map/flutter_map.dart';
@@ -8,10 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../app_providers.dart';
-import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
 import '../../../../common/drame_text_styles.dart';
 import '../../../../common/login_prompt.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../../core/platform/platform_file_picker.dart';
 import '../../../../core/app_defaults.dart';
 import '../../../chat/view/pages/chat_list_page.dart';
@@ -37,42 +36,52 @@ part '../component/job_request_map_component.dart';
 
 class HomeText {
   static const TextStyle logo = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: Colors.black,
-    fontSize: DrameTextStyles.logoSize,
-    fontWeight: DrameTextStyles.bold,
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
     height: 1.15,
     letterSpacing: -0.2,
   );
 
   static const TextStyle heroTitle = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: Colors.black,
-    fontSize: DrameTextStyles.heroTitleSize,
-    fontWeight: DrameTextStyles.bold,
+    fontSize: 42,
+    fontWeight: FontWeight.w700,
     height: 1.2,
     letterSpacing: -0.4,
   );
 
   static const TextStyle heroSubtitle = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: Colors.black,
     fontSize: 16,
-    fontWeight: DrameTextStyles.regular,
+    fontWeight: FontWeight.w400,
     height: 1.55,
   );
 
   static const TextStyle heroSearch = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: Colors.black,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.medium,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
     height: 1.45,
   );
 
-  static const TextStyle topButton = DrameTextStyles.label;
+  static const TextStyle topButton = TextStyle(
+    fontFamily: DT.fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    height: 1.35,
+  );
 
-  static const TextStyle primaryButton = DrameTextStyles.labelStrong;
+  static const TextStyle primaryButton = TextStyle(
+    fontFamily: DT.fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    height: 1.35,
+  );
 }
 
 const _primary = Color(0xFF0052FF);
@@ -202,9 +211,10 @@ void _showNotifications(BuildContext context, DrameStore store) {
                     ),
           ),
           actions: <Widget>[
-            TextButton(
+            ModeButton(
+              label: '닫기',
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('닫기'),
+              variant: ModeButtonVariant.ghost,
             ),
           ],
         ),
@@ -576,38 +586,23 @@ class _DrameHomePageState extends State<DrameHomePage> {
                       color: Color(0xFFB0BEC5),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    const ModeBoldText(
                       '데이터를 불러오지 못했습니다',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
+                      size: 17,
+                      color: Colors.black87,
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    ModeText(
                       store.lastError!,
+                      size: 14,
+                      color: const Color(0xFF6E7F99),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 14,
-                        color: Color(0xFF6E7F99),
-                      ),
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton(
+                    ModeButton(
+                      label: '다시 시도',
                       onPressed: () => unawaited(store.load(initial: true)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: DC.primary,
-                        foregroundColor: Colors.white,
-                        shape: const StadiumBorder(),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: const Text('다시 시도'),
+                      variant: ModeButtonVariant.primary,
                     ),
                   ],
                 ),

@@ -267,20 +267,17 @@ class _FilterDropdown extends StatelessWidget {
                             const SizedBox(width: 8),
                           ] else
                             const SizedBox(width: 24),
-                          Text(
+                          ModeText(
                             opt,
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 14,
-                              fontWeight:
-                                  selected == opt
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                              color:
-                                  selected == opt
-                                      ? const Color(0xFF0052FF)
-                                      : const Color(0xFF0A0B0D),
-                            ),
+                            size: 14,
+                            weight:
+                                selected == opt
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                            color:
+                                selected == opt
+                                    ? const Color(0xFF0052FF)
+                                    : const Color(0xFF0A0B0D),
                           ),
                         ],
                       ),
@@ -311,17 +308,13 @@ class _FilterDropdown extends StatelessWidget {
                       : const Color(0xFF7C828A),
             ),
             const SizedBox(width: 5),
-            Text(
+            ModeMediumText(
               isFiltered ? selected : label,
-              style: TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color:
-                    isFiltered
-                        ? const Color(0xFF0052FF)
-                        : const Color(0xFF0A0B0D),
-              ),
+              size: 14,
+              color:
+                  isFiltered
+                      ? const Color(0xFF0052FF)
+                      : const Color(0xFF0A0B0D),
             ),
             const SizedBox(width: 4),
             Icon(
@@ -354,25 +347,10 @@ class _SortChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF0A0B0D) : Colors.white,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: selected ? const Color(0xFF0A0B0D) : const Color(0xFFDEE1E6),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: selected ? Colors.white : const Color(0xFF5B616E),
-          ),
-        ),
+      child: ModeChip(
+        label: label,
+        background: selected ? const Color(0xFF0A0B0D) : Colors.white,
+        foreground: selected ? Colors.white : const Color(0xFF5B616E),
       ),
     );
   }

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app_providers.dart';
-import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../../feat/main/viewmodel/main_view_model.dart';
 
 class SignupPage extends StatefulWidget {
@@ -185,26 +185,18 @@ class _SignupPageState extends State<SignupPage> {
                     color: const Color(0xFF0F172A),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
+                  const ModeSemiBoldText(
                     '회원가입',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      color: Color(0xFF0F172A),
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      height: 1.33,
-                    ),
+                    color: Color(0xFF0F172A),
+                    size: 17,
+                    height: 1.33,
                   ),
                   const Spacer(),
-                  const Text(
+                  const ModeSemiBoldText(
                     '폼 입력',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      color: Color(0xFF6B7280),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      height: 1.5,
-                    ),
+                    color: Color(0xFF6B7280),
+                    size: 12,
+                    height: 1.5,
                   ),
                 ],
               ),
@@ -227,16 +219,13 @@ class _SignupPageState extends State<SignupPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text(
+                    const ModeText(
                       '모두의 드론을\n시작해볼까요?',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        color: Color(0xFF0F172A),
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        height: 1.22,
-                        letterSpacing: 0,
-                      ),
+                      color: Color(0xFF0F172A),
+                      size: 26,
+                      weight: FontWeight.w800,
+                      height: 1.22,
+                      letterSpacing: 0,
                     ),
                     const SizedBox(height: 28),
                     TextField(
@@ -307,39 +296,20 @@ class _SignupPageState extends State<SignupPage> {
                     const SizedBox(height: 20),
                     _buildTermsRow(),
                     const SizedBox(height: 26),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: FilledButton(
-                        onPressed:
-                            _isLoading ? null : () => _handleSignup(store),
-                        style: _mobilePrimaryButtonStyle(),
-                        child:
-                            _isLoading
-                                ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.4,
-                                  ),
-                                )
-                                : const Text('회원가입 완료'),
-                      ),
+                    ModeButton(
+                      label: '회원가입 완료',
+                      onPressed: _isLoading ? null : () => _handleSignup(store),
+                      variant: ModeButtonVariant.primary,
+                      size: ModeButtonSize.lg,
+                      loading: _isLoading,
+                      fullWidth: true,
                     ),
                     const SizedBox(height: 22),
                     Center(
-                      child: TextButton(
+                      child: ModeButton(
+                        label: '이미 계정이 있으신가요? 로그인',
                         onPressed: () => context.go('/login'),
-                        child: const Text(
-                          '이미 계정이 있으신가요? 로그인',
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            height: 1.4,
-                          ),
-                        ),
+                        variant: ModeButtonVariant.ghost,
                       ),
                     ),
                   ],
@@ -392,21 +362,6 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  ButtonStyle _mobilePrimaryButtonStyle() {
-    return FilledButton.styleFrom(
-      backgroundColor: DC.primary,
-      foregroundColor: Colors.white,
-      disabledBackgroundColor: DC.primary.withValues(alpha: 0.55),
-      textStyle: const TextStyle(
-        fontFamily: 'Pretendard',
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        height: 1.15,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    );
-  }
-
   // ── Form Panel ──────────────────────────────────────────────────────────────
   Widget _buildFormPanel(
     BuildContext context,
@@ -425,22 +380,12 @@ class _SignupPageState extends State<SignupPage> {
                   horizontal: isDesktop ? 24 : 16,
                   vertical: 40,
                 ),
-                child: Container(
+                child: ModeCard(
+                  variant: ModeCardVariant.elevated,
+                  radius: 16,
                   padding: EdgeInsets.symmetric(
                     horizontal: isDesktop ? 40 : 24,
                     vertical: 32,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: DC.hairline),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -450,26 +395,19 @@ class _SignupPageState extends State<SignupPage> {
                       const SizedBox(height: 32),
 
                       // Title
-                      const Text(
+                      const ModeBoldText(
                         '회원가입',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: DC.ink,
-                          letterSpacing: -0.5,
-                          height: 1.2,
-                        ),
+                        size: 28,
+                        color: DC.ink,
+                        letterSpacing: -0.5,
+                        height: 1.2,
                       ),
                       const SizedBox(height: 6),
-                      const Text(
+                      const ModeText(
                         '모드 계정을 만들어 드론 서비스를 시작하세요',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 14,
-                          color: DC.body,
-                          height: 1.5,
-                        ),
+                        size: 14,
+                        color: DC.body,
+                        height: 1.5,
                       ),
                       const SizedBox(height: 28),
 
@@ -585,40 +523,13 @@ class _SignupPageState extends State<SignupPage> {
                       const SizedBox(height: 22),
 
                       // Signup button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: FilledButton(
-                          onPressed:
-                              _isLoading ? null : () => _handleSignup(store),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: DC.primary,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: DC.primary.withValues(
-                              alpha: 0.55,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            elevation: 0,
-                          ),
-                          child:
-                              _isLoading
-                                  ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                  : const Text('회원가입'),
-                        ),
+                      ModeButton(
+                        label: '회원가입',
+                        onPressed: _isLoading ? null : () => _handleSignup(store),
+                        variant: ModeButtonVariant.primary,
+                        size: ModeButtonSize.lg,
+                        loading: _isLoading,
+                        fullWidth: true,
                       ),
                       const SizedBox(height: 24),
 
@@ -627,25 +538,18 @@ class _SignupPageState extends State<SignupPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
-                            const Text(
+                            const ModeText(
                               '이미 회원이신가요?',
-                              style: TextStyle(
-                                fontFamily: 'Pretendard',
-                                fontSize: 14,
-                                color: DC.body,
-                              ),
+                              size: 14,
+                              color: DC.body,
                             ),
                             const SizedBox(width: 4),
                             GestureDetector(
                               onTap: () => context.go('/login'),
-                              child: const Text(
+                              child: const ModeSemiBoldText(
                                 '로그인',
-                                style: TextStyle(
-                                  fontFamily: 'Pretendard',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: DC.primary,
-                                ),
+                                size: 14,
+                                color: DC.primary,
                               ),
                             ),
                           ],
@@ -738,17 +642,12 @@ class _SignupPageState extends State<SignupPage> {
                     baseline: TextBaseline.alphabetic,
                     child: GestureDetector(
                       onTap: () => context.push('/terms'),
-                      child: const Text(
+                      child: const ModeSemiBoldText(
                         '이용약관',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 13,
-                          color: DC.primary,
-                          fontWeight: FontWeight.w600,
-                          height: 1.55,
-                          decoration: TextDecoration.underline,
-                          decorationColor: DC.primary,
-                        ),
+                        size: 13,
+                        color: DC.primary,
+                        height: 1.55,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
                   ),
@@ -758,17 +657,12 @@ class _SignupPageState extends State<SignupPage> {
                     baseline: TextBaseline.alphabetic,
                     child: GestureDetector(
                       onTap: () => context.push('/privacy'),
-                      child: const Text(
+                      child: const ModeSemiBoldText(
                         '개인정보처리방침',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 13,
-                          color: DC.primary,
-                          fontWeight: FontWeight.w600,
-                          height: 1.55,
-                          decoration: TextDecoration.underline,
-                          decorationColor: DC.primary,
-                        ),
+                        size: 13,
+                        color: DC.primary,
+                        height: 1.55,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
                   ),
@@ -824,17 +718,14 @@ class SignupWelcomePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  Text(
+                  ModeText(
                     '$name님, 환영합니다',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                      letterSpacing: 0,
-                      height: 1.25,
-                    ),
+                    size: 24,
+                    weight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    letterSpacing: 0,
+                    height: 1.25,
                   ),
                   const SizedBox(height: 16),
                   const Text.rich(
@@ -861,40 +752,18 @@ class SignupWelcomePage extends StatelessWidget {
                     ),
                   ),
                   const Spacer(flex: 2),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => context.go('/home'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: DC.primary,
-                        foregroundColor: Colors.white,
-                        textStyle: const TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          height: 1.15,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: const Text('드론 서비스 둘러보기'),
-                    ),
+                  ModeButton(
+                    label: '드론 서비스 둘러보기',
+                    onPressed: () => context.go('/home'),
+                    variant: ModeButtonVariant.primary,
+                    size: ModeButtonSize.lg,
+                    fullWidth: true,
                   ),
                   const SizedBox(height: 22),
-                  TextButton(
+                  ModeButton(
+                    label: '운용자로도 등록하기 →',
                     onPressed: () => context.go('/operator'),
-                    child: const Text(
-                      '운용자로도 등록하기 →',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        color: Color(0xFF6B7280),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        height: 1.4,
-                      ),
-                    ),
+                    variant: ModeButtonVariant.ghost,
                   ),
                 ],
               ),
@@ -931,26 +800,19 @@ class _SignupLeftPanel extends StatelessWidget {
           const SizedBox(height: 56),
 
           // Tagline
-          const Text(
+          const ModeBoldText(
             '모드 운용자가 되어\n더 많은 고객을 만나세요',
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.35,
-              letterSpacing: -0.8,
-            ),
+            size: 32,
+            color: Colors.white,
+            height: 1.35,
+            letterSpacing: -0.8,
           ),
           const SizedBox(height: 12),
-          Text(
+          ModeText(
             '검증된 전문가로 등록하고\n전국 드론 작업 요청을 받아보세요.',
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.6),
-              height: 1.65,
-            ),
+            size: 14,
+            color: Colors.white.withValues(alpha: 0.6),
+            height: 1.65,
           ),
 
           const SizedBox(height: 40),
@@ -992,25 +854,18 @@ class _SignupLeftPanel extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(
+                        ModeSemiBoldText(
                           item.text,
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withValues(alpha: 0.9),
-                            height: 1.4,
-                          ),
+                          size: 14,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          height: 1.4,
                         ),
                         const SizedBox(height: 2),
-                        Text(
+                        ModeText(
                           item.detail,
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 12,
-                            color: Colors.white.withValues(alpha: 0.45),
-                            height: 1.4,
-                          ),
+                          size: 12,
+                          color: Colors.white.withValues(alpha: 0.45),
+                          height: 1.4,
                         ),
                       ],
                     ),
@@ -1033,27 +888,19 @@ class _SignupLeftPanel extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text(
+                ModeText(
                   '이미 회원이신가요?',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  ),
+                  size: 14,
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
                 const SizedBox(width: 6),
                 GestureDetector(
                   onTap: onLoginTap,
-                  child: const Text(
+                  child: const ModeSemiBoldText(
                     '로그인',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: DC.primary,
-                      decoration: TextDecoration.underline,
-                      decorationColor: DC.primary,
-                    ),
+                    size: 14,
+                    color: DC.primary,
+                    decoration: TextDecoration.underline,
                   ),
                 ),
               ],
