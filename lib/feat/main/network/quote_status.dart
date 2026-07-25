@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+
+import '../../../common/d_tokens.dart';
+
 /// Quote status computation logic extracted for testability.
 class QuoteStatusHelper {
   const QuoteStatusHelper._();
@@ -46,6 +50,20 @@ class QuoteStatusHelper {
     'expired' || 'rejected' => 20,
     _ => 0,
   };
+
+  /// Foreground/background color pair for a status label as returned by
+  /// [clientLabel]. Single source of truth for status-chip coloring — used
+  /// to replace three previously independent, drifted color mappings.
+  static (Color foreground, Color background) statusColors(String label) {
+    return switch (label) {
+      '견적 받음' => (DC.primary, const Color(0xFFEEF4FF)),
+      '진행중' => (DC.up, const Color(0xFFE8F9F1)),
+      '완료' => (DC.muted, DC.surfaceStrong),
+      '거절' => (DC.down, const Color(0xFFFDECEC)),
+      '만료' => (DC.mutedSoft, DC.surfaceSoft),
+      _ => (DC.body, DC.surfaceSoft), // '요청 보냄' and any unknown status
+    };
+  }
 
   /// A map request has no preferred operator and must remain open after every
   /// quote so other operators can continue to respond. Only a direct,

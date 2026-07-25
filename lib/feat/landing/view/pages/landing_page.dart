@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../common/d_tokens.dart';
 import '../../../../common/drame_navigation.dart';
+import '../../../../common/mode/mode.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -221,16 +221,12 @@ class _MobileAppEntryFlowState extends State<_MobileAppEntryFlow> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: widget.onFinish,
-                          child: const Text(
+                          child: const ModeMediumText(
                             '건너뛰기',
                             textAlign: TextAlign.right,
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              color: Color(0xFF6B7280),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              height: 1.4,
-                            ),
+                            size: 14,
+                            color: Color(0xFF6B7280),
+                            height: 1.4,
                           ),
                         ),
                       ),
@@ -331,27 +327,20 @@ class _MobileSplashScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  const Text(
+                  const ModeText(
                     '모두의 드론',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0,
-                      height: 1.2,
-                    ),
+                    size: 26,
+                    weight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0,
+                    height: 1.2,
                   ),
                   const SizedBox(height: 14),
-                  const Text(
+                  const ModeSemiBoldText(
                     '전문 드론 기사 매칭 플랫폼',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      height: 1.33,
-                    ),
+                    size: 14,
+                    color: Colors.white,
+                    height: 1.33,
                   ),
                 ],
               ),
@@ -371,15 +360,7 @@ class _MobileSplashScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 14),
-                  Text(
-                    'v 1.0.0',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      color: Colors.white70,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  ModeSemiBoldText('v 1.0.0', size: 15, color: Colors.white70),
                 ],
               ),
             ),
@@ -423,39 +404,28 @@ class _MobileOnboardingPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 28),
-          Text(
+          ModeSemiBoldText(
             item.step,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              color: DC.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.5,
-              height: 1.5,
-            ),
+            size: 12,
+            color: DC.primary,
+            letterSpacing: 1.5,
+            height: 1.5,
           ),
           const SizedBox(height: 16),
-          Text(
+          ModeText(
             item.title,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              color: Color(0xFF0F172A),
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              height: 1.22,
-              letterSpacing: 0,
-            ),
+            size: 26,
+            weight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+            height: 1.22,
+            letterSpacing: 0,
           ),
           const SizedBox(height: 20),
-          Text(
+          ModeText(
             item.body,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              color: Color(0xFF6B7280),
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
-            ),
+            size: 14,
+            color: const Color(0xFF6B7280),
+            height: 1.5,
           ),
         ],
       ),
@@ -604,24 +574,9 @@ class _HeroSection extends StatelessWidget {
                     child: const Text('로그인'),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton(
+                  ModeButton(
+                    label: '시작하기',
                     onPressed: () => context.go('/signup'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: DC.primary,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      shape: const StadiumBorder(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text('시작하기'),
                   ),
                 ],
               ),
@@ -678,15 +633,11 @@ class _HeroSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 22),
                 // Subtitle
-                const Text(
+                const ModeText(
                   '항공 촬영, 방제, 점검, 측량까지 — 자격증과 보험까지\n검증된 드론 가사와 안전 고객로 바로 연결됩니다.',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF6B7280),
-                    height: 1.62,
-                  ),
+                  size: 18,
+                  color: Color(0xFF6B7280),
+                  height: 1.62,
                 ),
                 const SizedBox(height: 38),
                 // CTA buttons
@@ -776,15 +727,11 @@ class _HeroSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
+        const ModeText(
           '항공 촬영, 방제, 점검, 측량까지\n검증된 운용자와 바로 연결됩니다.',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF6B7280),
-            height: 1.6,
-          ),
+          size: 15,
+          color: Color(0xFF6B7280),
+          height: 1.6,
         ),
         const SizedBox(height: 28),
         Wrap(
@@ -920,14 +867,11 @@ class _OperatorPreviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(22),
                 ),
                 child: const Center(
-                  child: Text(
+                  child: ModeText(
                     't',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF5C93E8),
-                    ),
+                    size: 18,
+                    weight: FontWeight.w800,
+                    color: Color(0xFF5C93E8),
                   ),
                 ),
               ),
@@ -936,14 +880,11 @@ class _OperatorPreviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
+                    ModeText(
                       '운용자',
-                      style: TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF111827),
-                      ),
+                      size: 14,
+                      weight: FontWeight.w800,
+                      color: Color(0xFF111827),
                     ),
                     SizedBox(height: 5),
                     Row(
@@ -954,14 +895,10 @@ class _OperatorPreviewCard extends StatelessWidget {
                           color: Color(0xFF19C37D),
                         ),
                         SizedBox(width: 4),
-                        Text(
+                        ModeSemiBoldText(
                           '★ 4.9 · 인증 · 항공촬영 전문',
-                          style: TextStyle(
-                            fontFamily: 'Pretendard',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF6B7280),
-                          ),
+                          size: 11,
+                          color: Color(0xFF6B7280),
                         ),
                       ],
                     ),
@@ -978,14 +915,11 @@ class _OperatorPreviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: const Color(0xFF8FE8BE)),
                 ),
-                child: const Text(
+                child: const ModeText(
                   '인증',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF08A561),
-                  ),
+                  size: 11,
+                  weight: FontWeight.w800,
+                  color: Color(0xFF08A561),
                 ),
               ),
             ],
@@ -1023,14 +957,10 @@ class _OperatorPreviewCard extends StatelessWidget {
             children: <Widget>[
               const Expanded(
                 child: Center(
-                  child: Text(
+                  child: ModeBoldText(
                     '2분 전',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF7B8794),
-                    ),
+                    size: 11,
+                    color: Color(0xFF7B8794),
                   ),
                 ),
               ),
@@ -1047,14 +977,7 @@ class _OperatorPreviewCard extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                   ),
-                  child: const Text(
-                    '견적 확인',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                  child: const ModeText('견적 확인', size: 12, weight: FontWeight.w800),
                 ),
               ),
             ],
@@ -1098,14 +1021,11 @@ class _RequestPreviewCard extends StatelessWidget {
                   color: const Color(0xFFEAF3FF),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Text(
+                child: const ModeText(
                   'NEW',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    color: DC.primary,
-                  ),
+                  size: 10,
+                  weight: FontWeight.w900,
+                  color: DC.primary,
                 ),
               ),
               const Spacer(),
@@ -1125,35 +1045,20 @@ class _RequestPreviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
-            '서울 마포',
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF6B7280),
-            ),
-          ),
+          const ModeBoldText('서울 마포', size: 11, color: Color(0xFF6B7280)),
           const SizedBox(height: 5),
-          const Text(
+          const ModeText(
             '항공촬영',
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 23,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF111827),
-              height: 1.05,
-            ),
+            size: 23,
+            weight: FontWeight.w900,
+            color: Color(0xFF111827),
+            height: 1.05,
           ),
           const SizedBox(height: 8),
-          const Text(
+          const ModeSemiBoldText(
             '견적 준비 · 6월 5일',
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF7B8794),
-            ),
+            size: 12,
+            color: Color(0xFF7B8794),
           ),
           const SizedBox(height: 16),
           Row(
@@ -1181,14 +1086,11 @@ class _InfoPill extends StatelessWidget {
         color: const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(
+      child: ModeText(
         label,
-        style: const TextStyle(
-          fontFamily: 'Pretendard',
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: Color(0xFF475569),
-        ),
+        size: 11,
+        weight: FontWeight.w800,
+        color: const Color(0xFF475569),
       ),
     );
   }
@@ -1217,14 +1119,11 @@ class _MatchedChip extends StatelessWidget {
         children: <Widget>[
           Icon(Icons.check_circle_rounded, size: 18, color: Colors.white),
           SizedBox(width: 8),
-          Text(
+          ModeText(
             '매칭 완료 — 2분 만에',
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
+            size: 13,
+            weight: FontWeight.w800,
+            color: Colors.white,
           ),
         ],
       ),
@@ -1304,31 +1203,24 @@ class _ServicesSection extends StatelessWidget {
                   children: <Widget>[
                     _RevealOnScroll(
                       scrollController: scrollController,
-                      child: const Text(
+                      child: const ModeSemiBoldText(
                         'SERVICES',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 2,
-                          color: DC.primary,
-                        ),
+                        size: 12,
+                        letterSpacing: 2,
+                        color: DC.primary,
                       ),
                     ),
                     const SizedBox(height: DC.spBase),
                     _RevealOnScroll(
                       scrollController: scrollController,
                       delay: const Duration(milliseconds: 80),
-                      child: const Text(
+                      child: const ModeText(
                         '모든 드론 작업을 한 곳에서',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 36,
-                          fontWeight: FontWeight.w800,
-                          color: DC.ink,
-                          letterSpacing: -1,
-                          height: 1.2,
-                        ),
+                        size: 36,
+                        weight: FontWeight.w800,
+                        color: DC.ink,
+                        letterSpacing: -1,
+                        height: 1.2,
                       ),
                     ),
                   ],
@@ -1408,48 +1300,33 @@ class _ServiceTickerState extends State<_ServiceTicker>
           return Container(
             width: cardW,
             margin: const EdgeInsets.only(right: gap),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(DC.rxLg),
-              border: Border.all(color: DC.hairline),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: DC.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(DC.rxMd),
+            child: ModeCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: DC.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(DC.rxMd),
+                    ),
+                    child: Icon(s.$1, color: DC.primary, size: 20),
                   ),
-                  child: Icon(s.$1, color: DC.primary, size: 20),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  s.$2,
-                  style: const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: DC.ink,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  s.$3,
-                  style: const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
+                  const SizedBox(height: 12),
+                  ModeBoldText(s.$2, size: 15, color: DC.ink),
+                  const SizedBox(height: 4),
+                  ModeText(
+                    s.$3,
+                    size: 12,
                     color: DC.body,
                     height: 1.4,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -1566,16 +1443,7 @@ class _FlowStepBadge extends StatelessWidget {
           child: Icon(icon, color: Colors.white, size: 36),
         ),
         const SizedBox(height: 8),
-        Text(
-          '0$step',
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: DC.primary,
-            letterSpacing: 1,
-          ),
-        ),
+        ModeBoldText('0$step', size: 13, color: DC.primary, letterSpacing: 1),
       ],
     );
   }
@@ -1596,28 +1464,16 @@ class _FlowStepContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
+        ModeText(
           title,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: DC.ink,
-            letterSpacing: -1,
-            height: 1.2,
-          ),
+          size: 32,
+          weight: FontWeight.w800,
+          color: DC.ink,
+          letterSpacing: -1,
+          height: 1.2,
         ),
         const SizedBox(height: 16),
-        Text(
-          description,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 17,
-            fontWeight: FontWeight.w400,
-            color: DC.body,
-            height: 1.7,
-          ),
-        ),
+        ModeText(description, size: 17, color: DC.body, height: 1.7),
         const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1625,15 +1481,7 @@ class _FlowStepContent extends StatelessWidget {
             color: DC.primary.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(DC.rxPill),
           ),
-          child: Text(
-            highlight,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: DC.primary,
-            ),
-          ),
+          child: ModeSemiBoldText(highlight, size: 14, color: DC.primary),
         ),
       ],
     );
@@ -1682,15 +1530,7 @@ class _CategoryChip extends StatelessWidget {
         children: <Widget>[
           Icon(icon, size: 18, color: DC.primary),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: DC.ink,
-            ),
-          ),
+          ModeSemiBoldText(label, size: 14, color: DC.ink),
         ],
       ),
     );
@@ -1730,15 +1570,7 @@ class _QuoteRequestVisual extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
-                '견적 요청서',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: DC.ink,
-                ),
-              ),
+              const ModeBoldText('견적 요청서', size: 15, color: DC.ink),
             ],
           ),
           const SizedBox(height: 20),
@@ -1758,14 +1590,10 @@ class _QuoteRequestVisual extends StatelessWidget {
               children: const <Widget>[
                 Icon(Icons.notifications_outlined, color: DC.primary, size: 18),
                 SizedBox(width: 8),
-                Text(
+                ModeSemiBoldText(
                   '견적 3건이 도착했습니다',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: DC.primary,
-                  ),
+                  size: 13,
+                  color: DC.primary,
                 ),
               ],
             ),
@@ -1786,15 +1614,7 @@ class _PreviewField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: DC.muted,
-          ),
-        ),
+        ModeMediumText(label, size: 11, color: DC.muted),
         const SizedBox(height: 4),
         Container(
           width: double.infinity,
@@ -1804,15 +1624,7 @@ class _PreviewField extends StatelessWidget {
             borderRadius: BorderRadius.circular(DC.rxMd),
             border: Border.all(color: DC.hairline),
           ),
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: DC.ink,
-            ),
-          ),
+          child: ModeMediumText(value, size: 14, color: DC.ink),
         ),
       ],
     );
@@ -1907,15 +1719,7 @@ class _OperatorCard extends StatelessWidget {
               children: <Widget>[
                 Row(
                   children: <Widget>[
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: DC.ink,
-                      ),
-                    ),
+                    ModeBoldText(name, size: 15, color: DC.ink),
                     const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -1926,39 +1730,20 @@ class _OperatorCard extends StatelessWidget {
                         color: Color(0xFF16A34A).withValues(alpha: 0.10),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
+                      child: const ModeBoldText(
                         '인증',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF16A34A),
-                        ),
+                        size: 10,
+                        color: Color(0xFF16A34A),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  specialty,
-                  style: const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 12,
-                    color: DC.body,
-                  ),
-                ),
+                ModeText(specialty, size: 12, color: DC.body),
               ],
             ),
           ),
-          Text(
-            price,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: DC.primary,
-            ),
-          ),
+          ModeBoldText(price, size: 15, color: DC.primary),
         ],
       ),
     );
@@ -2008,15 +1793,12 @@ class _WhyDrameSection extends StatelessWidget {
             children: [
               _RevealOnScroll(
                 scrollController: scrollController,
-                child: const Text(
+                child: const ModeText(
                   '왜 모드인가요?',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: DC.ink,
-                    letterSpacing: -1,
-                  ),
+                  size: 36,
+                  weight: FontWeight.w800,
+                  color: DC.ink,
+                  letterSpacing: -1,
                 ),
               ),
               const SizedBox(height: DC.spXxl),
@@ -2063,12 +1845,8 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ModeCard(
       padding: const EdgeInsets.all(DC.spLg),
-      decoration: BoxDecoration(
-        border: Border.all(color: DC.hairline),
-        borderRadius: BorderRadius.circular(DC.rxLg),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2079,26 +1857,9 @@ class _FeatureCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: DC.ink,
-                  ),
-                ),
+                ModeBoldText(title, size: 16, color: DC.ink),
                 const SizedBox(height: DC.spXxs),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: DC.body,
-                    height: 1.6,
-                  ),
-                ),
+                ModeText(description, size: 14, color: DC.body, height: 1.6),
               ],
             ),
           ),
@@ -2162,27 +1923,20 @@ class _CtaContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const ModeSemiBoldText(
           '운용자 모집',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 2,
-            color: DC.primary,
-          ),
+          size: 12,
+          letterSpacing: 2,
+          color: DC.primary,
         ),
         const SizedBox(height: DC.spBase),
-        const Text(
+        const ModeText(
           '드론 전문가라면\n모드에서 수익을 늘려보세요',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 36,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-            height: 1.2,
-            letterSpacing: -1,
-          ),
+          size: 36,
+          weight: FontWeight.w800,
+          color: Colors.white,
+          height: 1.2,
+          letterSpacing: -1,
         ),
       ],
     );
@@ -2289,24 +2043,16 @@ class _FooterBrand extends StatelessWidget {
       children: [
         const DrameLogo(size: 22, onDark: true),
         const SizedBox(height: DC.spXs),
-        const Text(
+        const ModeText(
           '모두의 드론 — 드론 매칭 플랫폼',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF6B7280),
-          ),
+          size: 13,
+          color: Color(0xFF6B7280),
         ),
         const SizedBox(height: DC.spBase),
-        const Text(
+        const ModeText(
           '© 2026 Mode Drone. All rights reserved.',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF4B5563),
-          ),
+          size: 12,
+          color: Color(0xFF4B5563),
         ),
       ],
     );
@@ -2331,15 +2077,7 @@ class _FooterLinks extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        ModeSemiBoldText(title, size: 13, color: Colors.white),
         const SizedBox(height: DC.spBase),
         ...links.map(
           (link) => Padding(
@@ -2351,15 +2089,7 @@ class _FooterLinks extends StatelessWidget {
               },
               child: MouseRegion(
                 cursor: SystemMouseCursors.click,
-                child: Text(
-                  link,
-                  style: const TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
+                child: ModeText(link, size: 13, color: const Color(0xFF6B7280)),
               ),
             ),
           ),

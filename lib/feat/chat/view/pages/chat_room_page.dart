@@ -6,8 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app_providers.dart';
-import '../../../../common/d_tokens.dart';
-import '../../../../common/drame_text_styles.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../moderation/model/moderation_model.dart';
 import '../../../moderation/view/component/report_block_menu.dart';
 import '../../model/chat_model.dart';
@@ -135,25 +134,9 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              widget.otherPartyName,
-              style: const TextStyle(
-                fontFamily: DrameTextStyles.fontFamily,
-                fontSize: DrameTextStyles.itemTitleSize,
-                fontWeight: DrameTextStyles.semiBold,
-                color: DC.ink,
-              ),
-            ),
+            ModeSemiBoldText(widget.otherPartyName, size: 17, color: DC.ink),
             if (widget.category.isNotEmpty)
-              Text(
-                widget.category,
-                style: const TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
-                  fontSize: DrameTextStyles.labelSize,
-                  fontWeight: DrameTextStyles.regular,
-                  color: DC.muted,
-                ),
-              ),
+              ModeText(widget.category, size: 13, color: DC.muted),
           ],
         ),
         titleSpacing: 0,
@@ -176,14 +159,7 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
             child:
                 _messages.isEmpty
                     ? const Center(
-                      child: Text(
-                        '첫 메시지를 보내보세요',
-                        style: TextStyle(
-                          fontFamily: DrameTextStyles.fontFamily,
-                          fontSize: DrameTextStyles.bodySize,
-                          color: DC.muted,
-                        ),
-                      ),
+                      child: ModeText('첫 메시지를 보내보세요', size: 14, color: DC.muted),
                     )
                     : ListView.builder(
                       reverse: true,
@@ -239,14 +215,11 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
               ),
               child: SafeArea(
                 top: false,
-                child: Text(
+                child: ModeText(
                   '차단한 상대입니다. 메시지를 보낼 수 없습니다.',
+                  size: 14,
+                  color: DC.muted,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: DrameTextStyles.fontFamily,
-                    fontSize: DrameTextStyles.bodySize,
-                    color: DC.muted,
-                  ),
                 ),
               ),
             )
@@ -295,15 +268,7 @@ class _MessageBubble extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 if (senderName != null) ...<Widget>[
-                  Text(
-                    senderName!,
-                    style: const TextStyle(
-                      fontFamily: DrameTextStyles.fontFamily,
-                      fontSize: 11,
-                      fontWeight: DrameTextStyles.semiBold,
-                      color: DC.muted,
-                    ),
-                  ),
+                  ModeSemiBoldText(senderName!, size: 11, color: DC.muted),
                   const SizedBox(height: 3),
                 ],
                 Container(
@@ -330,15 +295,11 @@ class _MessageBubble extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Text(
+                  child: ModeText(
                     message.content,
-                    style: TextStyle(
-                      fontFamily: DrameTextStyles.fontFamily,
-                      fontSize: DrameTextStyles.bodySize,
-                      fontWeight: DrameTextStyles.regular,
-                      color: isMine ? Colors.white : DC.ink,
-                      height: 1.5,
-                    ),
+                    size: 14,
+                    color: isMine ? Colors.white : DC.ink,
+                    height: 1.5,
                   ),
                 ),
               ],
@@ -349,23 +310,8 @@ class _MessageBubble extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: <Widget>[
-              if (showRead)
-                const Text(
-                  '읽음',
-                  style: TextStyle(
-                    fontFamily: DrameTextStyles.fontFamily,
-                    fontSize: 10,
-                    color: DC.primary,
-                  ),
-                ),
-              Text(
-                _timeLabel(message.createdAt),
-                style: const TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
-                  fontSize: 11,
-                  color: DC.mutedSoft,
-                ),
-              ),
+              if (showRead) const ModeText('읽음', size: 10, color: DC.primary),
+              ModeText(_timeLabel(message.createdAt), size: 11, color: DC.mutedSoft),
             ],
           ),
           if (isMine) const SizedBox(width: DC.spXxs),
@@ -399,13 +345,10 @@ class _DateDivider extends StatelessWidget {
           const Expanded(child: Divider(color: DC.hairline)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: DC.spXs),
-            child: Text(
+            child: ModeText(
               '${date.year}년 ${date.month}월 ${date.day}일',
-              style: const TextStyle(
-                fontFamily: DrameTextStyles.fontFamily,
-                fontSize: 11,
-                color: DC.muted,
-              ),
+              size: 11,
+              color: DC.muted,
             ),
           ),
           const Expanded(child: Divider(color: DC.hairline)),
@@ -483,15 +426,15 @@ class _InputBarState extends State<_InputBar> {
                 maxLines: 5,
                 textInputAction: TextInputAction.newline,
                 style: const TextStyle(
-                  fontFamily: DrameTextStyles.fontFamily,
-                  fontSize: DrameTextStyles.bodySize,
+                  fontFamily: DT.fontFamily,
+                  fontSize: 14,
                   color: DC.ink,
                 ),
                 decoration: InputDecoration(
                   hintText: '메시지를 입력하세요',
                   hintStyle: const TextStyle(
-                    fontFamily: DrameTextStyles.fontFamily,
-                    fontSize: DrameTextStyles.bodySize,
+                    fontFamily: DT.fontFamily,
+                    fontSize: 14,
                     color: DC.mutedSoft,
                   ),
                   filled: true,

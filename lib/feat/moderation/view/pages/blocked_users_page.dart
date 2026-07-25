@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app_providers.dart';
-import '../../../../common/d_tokens.dart';
+import '../../../../common/mode/mode.dart';
 import '../../model/moderation_model.dart';
 
 class BlockedUsersPage extends ConsumerStatefulWidget {
@@ -60,15 +60,7 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
           onPressed: () => context.canPop() ? context.pop() : context.go('/'),
           icon: const Icon(Icons.arrow_back_rounded, color: DC.ink),
         ),
-        title: const Text(
-          '차단 관리',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: DC.ink,
-          ),
-        ),
+        title: const ModeSemiBoldText('차단 관리', size: 16, color: DC.ink),
       ),
       body: _error != null
           ? Center(
@@ -81,9 +73,10 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
               ? const Center(child: CircularProgressIndicator())
               : users.isEmpty
                   ? const Center(
-                      child: Text(
+                      child: ModeText(
                         '차단한 사용자가 없습니다.',
-                        style: TextStyle(color: DC.muted),
+                        size: 14,
+                        color: DC.muted,
                       ),
                     )
                   : ListView.separated(
@@ -95,9 +88,10 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
                         final user = users[index];
                         return ListTile(
                           title: Text(user.displayName),
-                          trailing: TextButton(
+                          trailing: ModeButton(
+                            label: '차단 해제',
                             onPressed: () => _unblock(user),
-                            child: const Text('차단 해제'),
+                            variant: ModeButtonVariant.ghost,
                           ),
                         );
                       },

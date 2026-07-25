@@ -16,6 +16,15 @@ abstract final class DC {
   // ── Hairlines ──────────────────────────────────────────────────────────────
   static const Color hairline = Color(0xFFDEE1E6);
   static const Color hairlineSoft = Color(0xFFEEF0F3);
+  // Slightly bluer hairline used behind map overlays (feed_location_picker,
+  // job_request_map) — kept distinct from `hairline` rather than forced to
+  // match, since the two shades were independently tuned for that surface.
+  static const Color mapHairline = Color(0xFFE4EAF2);
+
+  // ── Brand (secondary) ──────────────────────────────────────────────────────
+  // Deep navy used for map pins/labels — previously redeclared as a private
+  // `_navy` constant in several view files.
+  static const Color navy = Color(0xFF16305E);
 
   // ── Text ───────────────────────────────────────────────────────────────────
   static const Color ink = Color(0xFF0A0B0D);
@@ -59,6 +68,7 @@ abstract final class DC {
 
 abstract final class DT {
   static const String _sans = 'Pretendard';
+  static const String fontFamily = _sans;
 
   // display — weight 400, negative tracking
   static const TextStyle displayMega = TextStyle(

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../common/drame_text_styles.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../main/view/component/feed_location_picker.dart';
 
 const quoteNavy = Colors.black;
@@ -82,7 +83,7 @@ class QuoteScaffold extends StatelessWidget {
             }
           },
         ),
-        title: Text(title, style: QuoteText.logo),
+        title: ModeBoldText(title, size: 18, color: quoteNavy, height: 1.2),
       ),
       body: child,
     );
@@ -117,22 +118,13 @@ class QuotePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: quoteLine),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: quoteNavy.withValues(alpha: 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
+      child: ModeCard(
+        variant: ModeCardVariant.elevated,
+        padding: const EdgeInsets.all(24),
+        child: child,
       ),
-      child: child,
     );
   }
 }
@@ -146,7 +138,7 @@ class FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Text(text, style: QuoteText.label),
+      child: ModeSemiBoldText(text, size: 13, color: quoteInk, height: 1.35),
     );
   }
 }
@@ -267,7 +259,7 @@ class QuoteDateField extends StatelessWidget {
           ),
         ),
         isEmpty: selectedDate == null,
-        child: Text(_formatted, style: QuoteText.body.copyWith(color: quoteInk)),
+        child: ModeText(_formatted, size: 14, color: quoteInk, height: 1.55),
       ),
     );
   }
@@ -316,11 +308,13 @@ class QuoteLocationField extends StatelessWidget {
           ),
         ),
         isEmpty: locationLabel == null,
-        child: Text(
+        child: ModeText(
           locationLabel ?? '',
+          size: 14,
+          color: quoteInk,
+          height: 1.55,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: QuoteText.body.copyWith(color: quoteInk),
         ),
       ),
     );
@@ -376,13 +370,16 @@ class QuoteInfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(width: 128, child: Text(label, style: QuoteText.body)),
+          SizedBox(
+            width: 128,
+            child: ModeText(label, size: 14, color: quoteMuted, height: 1.55),
+          ),
           Expanded(
-            child: Text(
+            child: ModeSemiBoldText(
               value,
-              style: QuoteText.label.copyWith(
-                fontWeight: DrameTextStyles.semiBold,
-              ),
+              size: 13,
+              color: quoteInk,
+              height: 1.35,
             ),
           ),
         ],
@@ -402,9 +399,15 @@ class QuoteStepHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(title, style: QuoteText.title),
+        ModeBoldText(
+          title,
+          size: 28,
+          color: quoteInk,
+          height: 1.25,
+          letterSpacing: -0.25,
+        ),
         const SizedBox(height: 10),
-        Text(body, style: QuoteText.body),
+        ModeText(body, size: 14, color: quoteMuted, height: 1.55),
       ],
     );
   }

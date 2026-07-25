@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../common/d_tokens.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../../core/platform/platform_url_launcher.dart';
 
 class AccountDeletionPage extends StatelessWidget {
@@ -22,15 +22,7 @@ class AccountDeletionPage extends StatelessWidget {
           onPressed: () => context.canPop() ? context.pop() : context.go('/'),
           icon: const Icon(Icons.arrow_back_rounded, color: DC.ink),
         ),
-        title: const Text(
-          '계정 및 데이터 삭제',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: DC.ink,
-          ),
-        ),
+        title: const ModeSemiBoldText('계정 및 데이터 삭제', size: 16, color: DC.ink),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(height: 1, color: DC.hairline),
@@ -48,49 +40,35 @@ class AccountDeletionPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 // 앱 + 개발자 정보
-                const Text(
+                const ModeBoldText(
                   '모두의 드론 모드',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: DC.ink,
-                    height: 1.25,
-                    letterSpacing: -0.3,
-                  ),
+                  size: 22,
+                  color: DC.ink,
+                  height: 1.25,
+                  letterSpacing: -0.3,
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                const ModeText(
                   '개발자: modeOfficial',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 13,
-                    color: DC.muted,
-                    height: 1.5,
-                  ),
+                  size: 13,
+                  color: DC.muted,
+                  height: 1.5,
                 ),
                 const SizedBox(height: 28),
 
                 // 안내
-                const Text(
+                const ModeBoldText(
                   '계정 및 데이터 삭제 요청',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: DC.ink,
-                    height: 1.4,
-                  ),
+                  size: 17,
+                  color: DC.ink,
+                  height: 1.4,
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                const ModeText(
                   '본 페이지는 모두의 드론 모드 앱 계정 및 관련 데이터의 삭제를 요청할 수 있는 페이지입니다. 앱에 로그인된 상태라면 앱 내 마이페이지 > 계정 > 계정 삭제 메뉴를 이용하시면 즉시 삭제됩니다.',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 14,
-                    color: DC.body,
-                    height: 1.65,
-                  ),
+                  size: 14,
+                  color: DC.body,
+                  height: 1.65,
                 ),
                 const SizedBox(height: 28),
 
@@ -110,14 +88,10 @@ class AccountDeletionPage extends StatelessWidget {
                         children: <Widget>[
                           Icon(Icons.phone_iphone_rounded, size: 16, color: Color(0xFF0052FF)),
                           SizedBox(width: 6),
-                          Text(
+                          ModeBoldText(
                             '앱 내 즉시 삭제 방법',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF0052FF),
-                            ),
+                            size: 14,
+                            color: Color(0xFF0052FF),
                           ),
                         ],
                       ),
@@ -146,36 +120,26 @@ class AccountDeletionPage extends StatelessWidget {
                         children: <Widget>[
                           Icon(Icons.mail_outline_rounded, size: 16, color: Color(0xFFE53935)),
                           SizedBox(width: 6),
-                          Text(
+                          ModeBoldText(
                             '이메일로 삭제 요청',
-                            style: TextStyle(
-                              fontFamily: 'Pretendard',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFE53935),
-                            ),
+                            size: 14,
+                            color: Color(0xFFE53935),
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
-                      const Text(
+                      const ModeText(
                         '앱에 접근할 수 없는 경우, 아래 이메일로 계정 삭제를 요청할 수 있습니다. 요청 후 영업일 기준 7일 이내에 처리됩니다.',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 13,
-                          color: DC.body,
-                          height: 1.55,
-                        ),
+                        size: 13,
+                        color: DC.body,
+                        height: 1.55,
                       ),
                       const SizedBox(height: 6),
-                      const Text(
+                      const ModeText(
                         '이메일에 다음 내용을 포함해 주세요: 가입 이메일 주소, 삭제 요청 사유(선택)',
-                        style: TextStyle(
-                          fontFamily: 'Pretendard',
-                          fontSize: 12,
-                          color: DC.muted,
-                          height: 1.5,
-                        ),
+                        size: 12,
+                        color: DC.muted,
+                        height: 1.5,
                       ),
                       const SizedBox(height: 14),
                       SizedBox(
@@ -209,15 +173,11 @@ class AccountDeletionPage extends StatelessWidget {
                 const SizedBox(height: 28),
 
                 // 삭제 범위
-                const Text(
+                const ModeBoldText(
                   '삭제되는 데이터',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: DC.ink,
-                    height: 1.4,
-                  ),
+                  size: 15,
+                  color: DC.ink,
+                  height: 1.4,
                 ),
                 const SizedBox(height: 10),
                 _DataRow('즉시 삭제', '계정 정보, 프로필, 이미지, 포트폴리오, 피드 게시글, 댓글, 푸시 알림 토큰'),
@@ -229,15 +189,12 @@ class AccountDeletionPage extends StatelessWidget {
                 // 개인정보처리방침 링크
                 GestureDetector(
                   onTap: () => context.push('/privacy'),
-                  child: const Text(
+                  child: const ModeText(
                     '전체 개인정보처리방침 보기 →',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 13,
-                      color: Color(0xFF0052FF),
-                      decoration: TextDecoration.underline,
-                      height: 1.5,
-                    ),
+                    size: 13,
+                    color: Color(0xFF0052FF),
+                    decoration: TextDecoration.underline,
+                    height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 48),
@@ -271,26 +228,10 @@ class _Step extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: Text(
-              number,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
+            child: ModeBoldText(number, size: 10, color: Colors.white),
           ),
           Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                color: DC.body,
-                height: 1.55,
-              ),
-            ),
+            child: ModeText(text, size: 13, color: DC.body, height: 1.55),
           ),
         ],
       ),
@@ -312,27 +253,10 @@ class _DataRow extends StatelessWidget {
         children: <Widget>[
           SizedBox(
             width: 130,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: DC.ink,
-                height: 1.55,
-              ),
-            ),
+            child: ModeSemiBoldText(label, size: 12, color: DC.ink, height: 1.55),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 13,
-                color: DC.body,
-                height: 1.55,
-              ),
-            ),
+            child: ModeText(value, size: 13, color: DC.body, height: 1.55),
           ),
         ],
       ),

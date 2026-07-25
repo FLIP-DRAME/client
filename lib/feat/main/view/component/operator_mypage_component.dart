@@ -396,7 +396,7 @@ class _OperatorMyPageBody extends StatelessWidget {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: FilledButton(
+              child: ModeButton(
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   try {
@@ -453,19 +453,8 @@ class _OperatorMyPageBody extends StatelessWidget {
                   }
                   if (context.mounted) context.go('/operator');
                 },
-                style: FilledButton.styleFrom(
-                  backgroundColor: _navy,
-                  foregroundColor: Colors.white,
-                  textStyle: AppText.button,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28,
-                    vertical: 17,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('저장하고 운용자 페이지로'),
+                variant: ModeButtonVariant.primary,
+                label: '저장하고 운용자 페이지로',
               ),
             ),
           ],
@@ -505,17 +494,7 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
       children: <Widget>[
         Row(
           children: <Widget>[
-            CircleAvatar(
-              radius: 44,
-              backgroundColor: const Color(0xFFEEF0F3),
-              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-              child: avatarUrl == null
-                  ? Text(
-                      nickname.characters.first,
-                      style: AppText.cardTitle.copyWith(color: _navy),
-                    )
-                  : null,
-            ),
+            ModeAvatar(imageUrl: avatarUrl, radius: 44, fallbackText: nickname),
             const SizedBox(width: 22),
             Expanded(
               child: Column(
@@ -523,11 +502,12 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
                 children: <Widget>[
                   Text(nickname, style: AppText.cardTitle),
                   const SizedBox(height: 8),
-                  Text(
+                  ModeMediumText(
                     serviceText,
-                    style: AppText.portfolioTitle.copyWith(
-                      fontWeight: DrameTextStyles.medium,
-                    ),
+                    size: 18,
+                    color: _ink,
+                    height: 1.3,
+                    letterSpacing: -0.25,
                   ),
                   const SizedBox(height: 10),
                   Wrap(
@@ -551,18 +531,11 @@ class _OperatorMyPageProfileState extends State<_OperatorMyPageProfile> {
           Row(
             children: <Widget>[
               Expanded(
-                child: FilledButton(
+                child: ModeButton(
                   onPressed: () => context.push('/pilot/register'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _primary,
-                    foregroundColor: Colors.white,
-                    textStyle: AppText.button,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('운용자 등록'),
+                  variant: ModeButtonVariant.primary,
+                  fullWidth: true,
+                  label: '운용자 등록',
                 ),
               ),
             ],
@@ -579,13 +552,10 @@ class _OperatorMyPageSideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ModeCard(
+      variant: ModeCardVariant.flatBordered,
+      radius: 12,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _line),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -619,13 +589,10 @@ class _OperatorInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ModeCard(
+      variant: ModeCardVariant.flatBordered,
+      radius: 12,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _line),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -651,15 +618,13 @@ class _OperatorDroneListCard extends StatelessWidget {
         ...store.pilotOnboarding.drones.asMap().entries.map((entry) {
           final index = entry.key;
           final drone = entry.value;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 18),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFD),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _line),
-            ),
-            child: Column(
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: ModeCard(
+              variant: ModeCardVariant.softFilled,
+              radius: 10,
+              padding: const EdgeInsets.all(16),
+              child: Column(
               children: <Widget>[
                 Row(
                   children: <Widget>[
@@ -737,6 +702,7 @@ class _OperatorDroneListCard extends StatelessWidget {
                   onTap: (value) => store.togglePilotDroneSensor(index, value),
                 ),
               ],
+              ),
             ),
           );
         }),
@@ -1057,39 +1023,23 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ],
                 ),
               ),
-              FilledButton.icon(
+              ModeButton(
                 onPressed:
                     _isSubmitting
                         ? null
                         : () => setState(() => _isExpanded = !_isExpanded),
-                icon: Icon(
-                  _isExpanded ? Icons.close_rounded : Icons.add_rounded,
-                ),
-                label: Text(_isExpanded ? '닫기' : '새 게시물'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _primary,
-                  foregroundColor: Colors.white,
-                  textStyle: AppText.button,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 13,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+                icon: _isExpanded ? Icons.close_rounded : Icons.add_rounded,
+                label: _isExpanded ? '닫기' : '새 게시물',
+                variant: ModeButtonVariant.primary,
               ),
             ],
           ),
           const SizedBox(height: 20),
           if (_isExpanded) ...<Widget>[
-            Container(
+            ModeCard(
+              variant: ModeCardVariant.softFilled,
+              radius: 12,
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFD),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _line),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -1243,21 +1193,11 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     ),
                     const SizedBox(height: 12),
                   ],
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _isSubmitting ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _primary,
-                        foregroundColor: Colors.white,
-                        textStyle: AppText.button,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('피드에 등록'),
-                    ),
+                  ModeButton(
+                    onPressed: _isSubmitting ? null : _submit,
+                    variant: ModeButtonVariant.primary,
+                    fullWidth: true,
+                    label: '피드에 등록',
                   ),
                 ],
               ),
@@ -1265,26 +1205,17 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
             const SizedBox(height: 24),
           ],
           if (widget.store.myFeedPosts.isEmpty)
-            Container(
+            SizedBox(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 48),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFD),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _line),
-              ),
-              child: Column(
-                children: <Widget>[
-                  Icon(
-                    Icons.photo_library_outlined,
-                    size: 40,
-                    color: _muted.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('아직 올린 피드가 없어요', style: AppText.cardSubtitle),
-                  const SizedBox(height: 4),
-                  Text('작업 사진을 올려 고객에게 어필해보세요!', style: AppText.metricLabel),
-                ],
+              child: ModeCard(
+                variant: ModeCardVariant.softFilled,
+                radius: 12,
+                padding: const EdgeInsets.symmetric(vertical: 48),
+                child: const ModeEmptyState(
+                  icon: Icons.photo_library_outlined,
+                  title: '아직 올린 피드가 없어요',
+                  subtitle: '작업 사진을 올려 고객에게 어필해보세요!',
+                ),
               ),
             )
           else
@@ -1326,31 +1257,31 @@ class _AddFeedImagesButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: wide ? double.infinity : 104,
-        height: wide ? 96 : 104,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _line),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Icon(
-              Icons.add_photo_alternate_outlined,
-              color: onTap == null ? DC.muted.withValues(alpha: 0.5) : DC.muted,
-              size: 26,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              wide ? '사진 여러 장 추가 (필수)' : '사진 여러 장 추가',
-              style: AppText.metricLabel,
-            ),
-          ],
+    return SizedBox(
+      width: wide ? double.infinity : 104,
+      height: wide ? 96 : 104,
+      child: ModeCard(
+        variant: ModeCardVariant.flatBordered,
+        radius: 8,
+        padding: EdgeInsets.zero,
+        onTap: onTap,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(
+                Icons.add_photo_alternate_outlined,
+                color: onTap == null ? DC.muted.withValues(alpha: 0.5) : DC.muted,
+                size: 26,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                wide ? '사진 여러 장 추가 (필수)' : '사진 여러 장 추가',
+                style: AppText.metricLabel,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1386,20 +1317,10 @@ class _PendingFeedImage extends StatelessWidget {
           Positioned(
             left: 6,
             bottom: 6,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.68),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                index == 0 ? '대표' : '${index + 1}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            child: ModeChip(
+              label: index == 0 ? '대표' : '${index + 1}',
+              background: Colors.black.withValues(alpha: 0.68),
+              foreground: Colors.white,
             ),
           ),
           Positioned(

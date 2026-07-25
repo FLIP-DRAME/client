@@ -4,8 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app_providers.dart';
-import '../../../../common/d_tokens.dart';
-import '../../../../common/drame_text_styles.dart';
+import '../../../../common/mode/mode.dart';
 import '../../model/chat_model.dart';
 
 class ChatListPage extends ConsumerStatefulWidget {
@@ -81,23 +80,25 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
             }
           },
         ),
-        title: const Text(
-          '채팅',
-          style: TextStyle(
-            fontFamily: DrameTextStyles.fontFamily,
-            fontSize: DrameTextStyles.itemTitleSize,
-            fontWeight: DrameTextStyles.semiBold,
-            color: DC.ink,
-          ),
-        ),
+        title: const ModeSemiBoldText('채팅', size: 17, color: DC.ink),
       ),
       body:
           _loading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-              ? _ErrorState(message: _error!, onRetry: _load)
+              ? ModeEmptyState(
+                icon: Icons.error_outline_rounded,
+                title: '채팅 목록을 불러오지 못했습니다',
+                actionLabel: '다시 시도',
+                onAction: _load,
+              )
               : _rooms.isEmpty
-              ? _EmptyState(onRefresh: _load)
+              ? ModeEmptyState(
+                icon: Icons.chat_bubble_outline_rounded,
+                title: '아직 채팅이 없습니다',
+                actionLabel: '새로고침',
+                onAction: _load,
+              )
               : RefreshIndicator(
                 onRefresh: _load,
                 child: ListView.separated(
@@ -156,9 +157,10 @@ class _ChatRoomTile extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            _Avatar(
-              name: room.otherPartyName,
-              avatarUrl: room.otherPartyAvatarUrl,
+            ModeAvatar(
+              imageUrl: room.otherPartyAvatarUrl,
+              radius: 24,
+              fallbackText: room.otherPartyName,
             ),
             const SizedBox(width: DC.spSm),
             Expanded(
@@ -168,39 +170,27 @@ class _ChatRoomTile extends StatelessWidget {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: Text(
+                        child: ModeText(
                           room.otherPartyName,
-                          style: TextStyle(
-                            fontFamily: DrameTextStyles.fontFamily,
-                            fontSize: DrameTextStyles.bodySize,
-                            fontWeight:
-                                hasUnread
-                                    ? DrameTextStyles.semiBold
-                                    : DrameTextStyles.medium,
-                            color: DC.ink,
-                          ),
+                          size: 14,
+                          weight:
+                              hasUnread ? FontWeight.w600 : FontWeight.w500,
+                          color: DC.ink,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
+                      ModeText(
                         _timeLabel(room.lastMessageAt),
-                        style: TextStyle(
-                          fontFamily: DrameTextStyles.fontFamily,
-                          fontSize: 11,
-                          color: hasUnread ? DC.primary : DC.mutedSoft,
-                        ),
+                        size: 11,
+                        color: hasUnread ? DC.primary : DC.mutedSoft,
                       ),
                     ],
                   ),
                   const SizedBox(height: 3),
-                  Text(
+                  ModeMediumText(
                     '요청: ${room.category}',
-                    style: const TextStyle(
-                      fontFamily: DrameTextStyles.fontFamily,
-                      fontSize: 11,
-                      fontWeight: DrameTextStyles.medium,
-                      color: DC.primary,
-                    ),
+                    size: 11,
+                    color: DC.primary,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
@@ -208,44 +198,24 @@ class _ChatRoomTile extends StatelessWidget {
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: Text(
+                        child: ModeText(
                           room.lastMessage ?? room.category,
-                          style: TextStyle(
-                            fontFamily: DrameTextStyles.fontFamily,
-                            fontSize: DrameTextStyles.labelSize,
-                            fontWeight:
-                                hasUnread
-                                    ? DrameTextStyles.medium
-                                    : DrameTextStyles.regular,
-                            color: hasUnread ? DC.body : DC.muted,
-                          ),
+                          size: 13,
+                          weight:
+                              hasUnread ? FontWeight.w500 : FontWeight.w400,
+                          color: hasUnread ? DC.body : DC.muted,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
                       ),
                       if (hasUnread)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: const BoxDecoration(
-                            color: DC.primary,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(DC.rxPill),
-                            ),
-                          ),
-                          child: Text(
-                            room.unreadCount > 99
-                                ? '99+'
-                                : room.unreadCount.toString(),
-                            style: const TextStyle(
-                              fontFamily: DrameTextStyles.fontFamily,
-                              fontSize: 11,
-                              fontWeight: DrameTextStyles.semiBold,
-                              color: Colors.white,
-                            ),
-                          ),
+                        ModeChip(
+                          label:
+                              room.unreadCount > 99
+                                  ? '99+'
+                                  : room.unreadCount.toString(),
+                          background: DC.primary,
+                          foreground: Colors.white,
                         ),
                     ],
                   ),
@@ -271,116 +241,3 @@ class _ChatRoomTile extends StatelessWidget {
   }
 }
 
-// ─── Avatar ──────────────────────────────────────────────────────────────────
-
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.name, this.avatarUrl});
-
-  final String name;
-  final String? avatarUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = name.isNotEmpty ? name.characters.first.toUpperCase() : '?';
-    if (avatarUrl != null) {
-      return CircleAvatar(
-        radius: 24,
-        backgroundImage: NetworkImage(avatarUrl!),
-        backgroundColor: DC.surfaceStrong,
-      );
-    }
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: const BoxDecoration(
-        color: DC.surfaceStrong,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: const TextStyle(
-          fontFamily: DrameTextStyles.fontFamily,
-          fontSize: DrameTextStyles.bodySize,
-          fontWeight: DrameTextStyles.semiBold,
-          color: DC.body,
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Error State ─────────────────────────────────────────────────────────────
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(DC.spBase),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: DC.mutedSoft,
-            ),
-            const SizedBox(height: DC.spSm),
-            Text(
-              '채팅 목록을 불러오지 못했습니다',
-              style: const TextStyle(
-                fontFamily: DrameTextStyles.fontFamily,
-                fontSize: DrameTextStyles.bodySize,
-                color: DC.muted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: DC.spXs),
-            TextButton(onPressed: onRetry, child: const Text('다시 시도')),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Empty State ─────────────────────────────────────────────────────────────
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onRefresh});
-
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          const Icon(
-            Icons.chat_bubble_outline_rounded,
-            size: 48,
-            color: DC.mutedSoft,
-          ),
-          const SizedBox(height: DC.spSm),
-          const Text(
-            '아직 채팅이 없습니다',
-            style: TextStyle(
-              fontFamily: DrameTextStyles.fontFamily,
-              fontSize: DrameTextStyles.bodySize,
-              color: DC.muted,
-            ),
-          ),
-          const SizedBox(height: DC.spXs),
-          TextButton(onPressed: onRefresh, child: const Text('새로고침')),
-        ],
-      ),
-    );
-  }
-}

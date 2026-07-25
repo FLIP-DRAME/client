@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../common/mode/mode.dart';
+
 class TermsPage extends StatelessWidget {
   const TermsPage({super.key});
 
@@ -12,14 +14,7 @@ class TermsPage extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF111827),
         elevation: 0,
-        title: const Text(
-          '이용약관',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        title: const ModeBoldText('이용약관', size: 17),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () {
@@ -116,23 +111,17 @@ class _Header extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
+        ModeText(
           '모두의 드론 Mode 이용약관',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF111827),
-          ),
+          size: 26,
+          weight: FontWeight.w800,
+          color: Color(0xFF111827),
         ),
         SizedBox(height: 8),
-        Text(
+        ModeText(
           '시행일: 2026년 6월 7일',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 14,
-            color: Color(0xFF6B7280),
-          ),
+          size: 14,
+          color: Color(0xFF6B7280),
         ),
       ],
     );
@@ -152,24 +141,13 @@ class _Section extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-            ),
-          ),
+          ModeBoldText(title, size: 17, color: const Color(0xFF111827)),
           const SizedBox(height: 8),
-          Text(
+          ModeText(
             body,
-            style: const TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 14,
-              height: 1.7,
-              color: Color(0xFF374151),
-            ),
+            size: 14,
+            height: 1.7,
+            color: const Color(0xFF374151),
           ),
         ],
       ),

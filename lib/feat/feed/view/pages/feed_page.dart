@@ -6,7 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../app_providers.dart';
-import '../../../../common/drame_text_styles.dart';
+import '../../../../common/mode/mode.dart';
 import '../../../main/model/drone_pilot_model.dart';
 import '../../../moderation/model/moderation_model.dart';
 import '../../../moderation/view/component/report_block_menu.dart';
@@ -18,20 +18,24 @@ const _navy = Color(0xFF0A0B0D);
 const _ink = Color(0xFF0A0B0D);
 const _muted = Color(0xFF7C828A);
 const _soft = Color(0xFFF7F8FA);
-const _line = Color(0xFFE4EAF2);
+// Matches DC.mapHairline exactly; kept as a private alias (rather than
+// deleted per the usual migration rule) because feed_component.dart — a
+// `part of` this library that this migration pass doesn't touch — references
+// `_line` directly.
+const _line = DC.mapHairline;
 
 class FeedText {
   static const TextStyle eyebrow = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _muted,
     fontSize: 14,
-    fontWeight: DrameTextStyles.semiBold,
+    fontWeight: FontWeight.w600,
     height: 1.4,
     letterSpacing: -0.1,
   );
 
   static const TextStyle sectionTitle = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _navy,
     fontSize: 26,
     fontWeight: FontWeight.w800,
@@ -40,88 +44,93 @@ class FeedText {
   );
 
   static const TextStyle feedLocation = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: Colors.white,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.semiBold,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
     height: 1.35,
   );
 
-  static const TextStyle button = DrameTextStyles.button;
+  static const TextStyle button = TextStyle(
+    fontFamily: DT.fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    height: 1.2,
+  );
 
   static const TextStyle authorName = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _ink,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.semiBold,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
     height: 1.35,
   );
 
   static const TextStyle authorRole = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _muted,
-    fontSize: DrameTextStyles.labelSize,
-    fontWeight: DrameTextStyles.medium,
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
     height: 1.35,
   );
 
   static const TextStyle body = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _ink,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.regular,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
     height: 1.55,
   );
 
   static const TextStyle bodyStrong = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _ink,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.medium,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
     height: 1.55,
   );
 
   static const TextStyle dialogTitle = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _ink,
-    fontSize: DrameTextStyles.itemTitleSize,
-    fontWeight: DrameTextStyles.semiBold,
+    fontSize: 17,
+    fontWeight: FontWeight.w600,
     height: 1.35,
   );
 
   static const TextStyle metaPill = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _ink,
-    fontSize: DrameTextStyles.labelSize,
-    fontWeight: DrameTextStyles.medium,
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
     height: 1.25,
   );
 
   static const TextStyle likeCount = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _ink,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.medium,
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
     height: 1.35,
   );
 
   static const TextStyle comment = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
+    fontFamily: DT.fontFamily,
     color: _ink,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.regular,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
     height: 1.45,
   );
 
   static const TextStyle commentUser = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
-    fontWeight: DrameTextStyles.semiBold,
+    fontFamily: DT.fontFamily,
+    fontWeight: FontWeight.w600,
   );
 
   static const TextStyle input = TextStyle(
-    fontFamily: DrameTextStyles.fontFamily,
-    fontSize: DrameTextStyles.bodySize,
-    fontWeight: DrameTextStyles.regular,
+    fontFamily: DT.fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
     height: 1.3,
   );
 }

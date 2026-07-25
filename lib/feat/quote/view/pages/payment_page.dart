@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app_providers.dart';
+import '../../../../common/mode/mode.dart';
 import '../../model/quote_model.dart';
 import '../component/quote_component.dart';
 
@@ -61,70 +62,50 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
                     value: widget.paymentInstruction.depositorName,
                   ),
                   const SizedBox(height: 20),
-                  Container(
+                  SizedBox(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: quoteSoft,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: quoteLine),
-                    ),
-                    child: const Text(
-                      '입금 전 촬영 일정과 요청 범위를 다시 확인하세요. 결제 후에는 연락수단이 열리고 세부 일정 조율을 진행합니다.',
-                      style: QuoteText.body,
+                    child: ModeCard(
+                      variant: ModeCardVariant.softFilled,
+                      padding: const EdgeInsets.all(16),
+                      radius: 10,
+                      child: const ModeText(
+                        '입금 전 촬영 일정과 요청 범위를 다시 확인하세요. 결제 후에는 연락수단이 열리고 세부 일정 조율을 진행합니다.',
+                        size: 14,
+                        color: quoteMuted,
+                        height: 1.55,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _submitting
-                          ? null
-                          : () async {
-                              setState(() => _submitting = true);
-                              try {
-                                final contact = await ref
-                                    .read(quoteViewModelProvider)
-                                    .createContactAccess(
-                                      widget.estimate.copyWith(
-                                        paymentId: widget
-                                            .paymentInstruction.paymentId,
-                                      ),
-                                    );
-                                if (!context.mounted) return;
-                                context.push(
-                                  '/quote/contact',
-                                  extra: <String, Object?>{
-                                    'estimate': widget.estimate,
-                                    'contactAccess': contact,
-                                  },
-                                );
-                              } catch (_) {
-                                if (mounted) {
-                                  setState(() => _submitting = false);
-                                }
-                              }
-                            },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: quoteNavy,
-                        foregroundColor: Colors.white,
-                        textStyle: QuoteText.button,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: _submitting
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
+                  ModeButton(
+                    label: '입금 확인 완료',
+                    fullWidth: true,
+                    loading: _submitting,
+                    onPressed: () async {
+                      setState(() => _submitting = true);
+                      try {
+                        final contact = await ref
+                            .read(quoteViewModelProvider)
+                            .createContactAccess(
+                              widget.estimate.copyWith(
+                                paymentId: widget
+                                    .paymentInstruction.paymentId,
                               ),
-                            )
-                          : const Text('입금 확인 완료'),
-                    ),
+                            );
+                        if (!context.mounted) return;
+                        context.push(
+                          '/quote/contact',
+                          extra: <String, Object?>{
+                            'estimate': widget.estimate,
+                            'contactAccess': contact,
+                          },
+                        );
+                      } catch (_) {
+                        if (mounted) {
+                          setState(() => _submitting = false);
+                        }
+                      }
+                    },
                   ),
                 ],
               ),

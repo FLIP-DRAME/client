@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app_providers.dart';
-import '../../../../common/d_tokens.dart';
+import '../../../../common/mode/mode.dart';
 import '../../model/moderation_model.dart';
 
 /// Kebab-menu button offering "신고하기" / "차단하기" for a piece of UGC or
@@ -110,13 +110,14 @@ class ReportBlockMenuButton extends ConsumerWidget {
           '마이페이지의 차단 관리에서 언제든 해제할 수 있습니다.',
         ),
         actions: <Widget>[
-          TextButton(
+          ModeButton(
+            label: '취소',
+            variant: ModeButtonVariant.ghost,
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('취소'),
           ),
-          FilledButton(
+          ModeButton(
+            label: '차단하기',
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('차단하기'),
           ),
         ],
       ),
@@ -203,16 +204,17 @@ class _ReportDialogState extends State<_ReportDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        ModeButton(
+          label: '취소',
+          variant: ModeButtonVariant.ghost,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
         ),
-        FilledButton(
+        ModeButton(
+          label: '신고 제출',
           onPressed: () => Navigator.of(context).pop((
             reason: _reason,
             detail: _detailController.text.trim(),
           )),
-          child: const Text('신고 제출'),
         ),
       ],
     );

@@ -5,6 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
+import '../../../../common/mode/mode.dart';
+
 /// Result of picking the shoot location for a feed post: where the photo was
 /// taken, not the uploader's device location.
 class FeedLocationPickerResult {
@@ -38,9 +40,7 @@ class _FeedLocationPickerDialog extends StatefulWidget {
 class _FeedLocationPickerDialogState
     extends State<_FeedLocationPickerDialog> {
   static const LatLng _koreaCenter = LatLng(36.35, 127.85);
-  static const Color _navy = Color(0xFF16305E);
   static const Color _muted = Color(0xFF6B7684);
-  static const Color _line = Color(0xFFE1E6EC);
 
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
@@ -184,10 +184,7 @@ class _FeedLocationPickerDialogState
               Row(
                 children: <Widget>[
                   const Expanded(
-                    child: Text(
-                      '촬영 위치 선택',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                    ),
+                    child: ModeBoldText('촬영 위치 선택', size: 17),
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
@@ -196,9 +193,10 @@ class _FeedLocationPickerDialogState
                 ],
               ),
               const SizedBox(height: 2),
-              const Text(
+              const ModeText(
                 '지도를 탭해 위치를 지정하거나, 장소명을 검색해서 선택하세요.',
-                style: TextStyle(fontSize: 13, color: _muted),
+                size: 13,
+                color: _muted,
               ),
               const SizedBox(height: 14),
               Row(
@@ -217,7 +215,7 @@ class _FeedLocationPickerDialogState
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: _line),
+                          borderSide: const BorderSide(color: DC.mapHairline),
                         ),
                       ),
                       onSubmitted: (_) => _search(),
@@ -226,7 +224,7 @@ class _FeedLocationPickerDialogState
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: _searching ? null : _search,
-                    style: FilledButton.styleFrom(backgroundColor: _navy),
+                    style: FilledButton.styleFrom(backgroundColor: DC.navy),
                     child:
                         _searching
                             ? const SizedBox(
@@ -243,10 +241,7 @@ class _FeedLocationPickerDialogState
               ),
               if (_searchError != null) ...<Widget>[
                 const SizedBox(height: 6),
-                Text(
-                  _searchError!,
-                  style: const TextStyle(fontSize: 12, color: Colors.redAccent),
-                ),
+                ModeText(_searchError!, size: 12, color: Colors.redAccent),
               ],
               if (_results.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 8),
@@ -261,9 +256,9 @@ class _FeedLocationPickerDialogState
                       return ListTile(
                         dense: true,
                         leading: const Icon(Icons.place_outlined, size: 18),
-                        title: Text(
+                        title: ModeText(
                           result.label,
-                          style: const TextStyle(fontSize: 13),
+                          size: 13,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -322,9 +317,9 @@ class _FeedLocationPickerDialogState
                               horizontal: 6,
                               vertical: 3,
                             ),
-                            child: Text(
+                            child: ModeText(
                               '© OpenStreetMap contributors',
-                              style: TextStyle(fontSize: 10),
+                              size: 10,
                             ),
                           ),
                         ),
@@ -334,21 +329,23 @@ class _FeedLocationPickerDialogState
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
+              ModeText(
                 _picked == null
                     ? '아직 위치가 선택되지 않았습니다.'
                     : _resolvingLabel
                     ? '선택됨: ${_coordinateLabel(_picked!)} (주소 확인 중…)'
                     : '선택됨: ${_pickedLabel ?? _coordinateLabel(_picked!)}',
-                style: const TextStyle(fontSize: 12, color: _muted),
+                size: 12,
+                color: _muted,
               ),
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
-                  TextButton(
+                  ModeButton(
+                    label: '취소',
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('취소'),
+                    variant: ModeButtonVariant.ghost,
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -361,7 +358,7 @@ class _FeedLocationPickerDialogState
                                 label: _pickedLabel ?? _coordinateLabel(_picked!),
                               ),
                             ),
-                    style: FilledButton.styleFrom(backgroundColor: _navy),
+                    style: FilledButton.styleFrom(backgroundColor: DC.navy),
                     child: const Text('이 위치로 선택'),
                   ),
                 ],
