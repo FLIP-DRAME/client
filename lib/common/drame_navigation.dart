@@ -190,7 +190,7 @@ class DrameTopNavigation extends StatelessWidget {
                     child: const Text('로그인'),
                   ),
                   const SizedBox(width: 8),
-                  _ModeToggle(
+                  DrameModeSwitchButton(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -211,7 +211,7 @@ class DrameTopNavigation extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  _ModeToggle(
+                  DrameModeSwitchButton(
                     isOperator: true,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -232,7 +232,7 @@ class DrameTopNavigation extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  _ModeToggle(
+                  DrameModeSwitchButton(
                     isOperator: false,
                     onUserTap: onSwitchToUser ?? () {},
                     onOperatorTap: onSwitchToOperator ?? () {},
@@ -404,8 +404,15 @@ class _NavBadge extends StatelessWidget {
   }
 }
 
-class _ModeToggle extends StatelessWidget {
-  const _ModeToggle({
+/// 홈(이용자)과 운용자 페이지를 오가는 단일 전환 버튼.
+///
+///   • 홈에 있을 때 ([isOperator] == false)  : "운용자" → [onOperatorTap]
+///   • 운용자 페이지에 있을 때 ([isOperator])   : "홈"     → [onUserTap]
+///
+/// 웹 상단 내비게이션과 모바일 앱바에서 공용으로 사용된다.
+class DrameModeSwitchButton extends StatefulWidget {
+  const DrameModeSwitchButton({
+    super.key,
     required this.isOperator,
     required this.onUserTap,
     required this.onOperatorTap,
@@ -416,71 +423,102 @@ class _ModeToggle extends StatelessWidget {
   final VoidCallback onOperatorTap;
 
   @override
+  State<DrameModeSwitchButton> createState() => _DrameModeSwitchButtonState();
+}
+
+class _DrameModeSwitchButtonState extends State<DrameModeSwitchButton> {
+  // 브랜드 다크 네이비 — 톤/무드의 기준 색상.
+  static const Color _navy = Color(0xFF293341);
+  static const Color _navyHover = Color(0xFF1D2530);
+
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    // 운용자 페이지에 있으면 홈으로 돌아가는 버튼(보조 액션),
+    // 그 외에는 운용자로 가는 버튼(주 액션).
+    final bool toHome = widget.isOperator;
+    final VoidCallback onTap = toHome ? widget.onUserTap : widget.onOperatorTap;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: onTap,
+        child: toHome ? _buildBackToHome() : _buildGoToOperator(),
+      ),
+    );
+  }
+
+  /// 홈 → 운용자 : 주 액션. 채움형 CTA + 화살표로 클릭 유도.
+  Widget _buildGoToOperator() {
     return Container(
-      height: 36,
-      padding: const EdgeInsets.all(3),
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: DC.surfaceStrong,
+        color: _hovered ? _navyHover : _navy,
         borderRadius: BorderRadius.circular(DC.rxPill),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: _navy.withValues(alpha: _hovered ? 0.30 : 0.18),
+            blurRadius: _hovered ? 12 : 6,
+            offset: Offset(0, _hovered ? 4 : 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          _ToggleTab(label: '이용자', active: !isOperator, onTap: onUserTap),
-          _ToggleTab(label: '운용자', active: isOperator, onTap: onOperatorTap),
+          Text(
+            '운용자로 전환',
+            style: DT.navLink.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(width: 5),
+          // hover 시 화살표가 살짝 앞으로 → 행동 신호 강화.
+          AnimatedSlide(
+            offset: Offset(_hovered ? 0.2 : 0, 0),
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOut,
+            child: const Icon(
+              Icons.arrow_forward_rounded,
+              size: 15,
+              color: Colors.white,
+            ),
+          ),
         ],
       ),
     );
   }
-}
 
-class _ToggleTab extends StatelessWidget {
-  const _ToggleTab({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
+  /// 운용자 → 홈 : 보조 액션. 낮은 강조의 테두리형.
+  Widget _buildBackToHome() {
+    return Container(
+      height: 32,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: _hovered ? _navy.withValues(alpha: 0.06) : Colors.white,
         borderRadius: BorderRadius.circular(DC.rxPill),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          constraints: const BoxConstraints(minWidth: 64, minHeight: 30),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-          decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(DC.rxPill),
-            boxShadow:
-                active
-                    ? <BoxShadow>[
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                    : null,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: DT.navLink.copyWith(
-                color: active ? DC.ink : DC.muted,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              ),
+        border: Border.all(color: _navy, width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const Icon(Icons.arrow_back_rounded, size: 15, color: _navy),
+          const SizedBox(width: 5),
+          Text(
+            '홈으로',
+            style: DT.navLink.copyWith(
+              color: _navy,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
           ),
-        ),
+        ],
       ),
     );
   }

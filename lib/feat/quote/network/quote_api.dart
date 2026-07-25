@@ -11,8 +11,7 @@ abstract class QuoteApi {
   Future<List<MapJobRequest>> fetchOpenMapRequests({int limit = 100});
 
   /// The current user's own map-posted broadcast requests, regardless of
-  /// status -- used so an owner can see/close their own pin even after it
-  /// has closed or auto-expired and dropped off the public map.
+  /// status -- used so an owner can see or manually close their own request.
   Future<List<MapJobRequest>> fetchMyMapRequests();
 
   /// Posts a new broadcast request (no preferred operator) pinned at the
@@ -309,10 +308,8 @@ class SupabaseQuoteApi implements QuoteApi {
           );
         }).toList();
 
-    // Both manually closed and naturally expired (past autoCloseAfter, never
-    // closed) requests stay in the public feed indefinitely, shown with a
-    // "요청마감" badge (see _JobRequestPreview / MapJobRequest.isClosedOrExpired)
-    // so other users still see the request rather than having it vanish.
+    // Operator responses never close a broadcast request. Its requester is the
+    // only party that decides when the request changes to `cancelled`.
     return requests;
   }
 

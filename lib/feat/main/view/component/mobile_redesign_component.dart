@@ -35,29 +35,10 @@ class _MobileNewAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: <Widget>[
           const DrameLogo(size: 26),
           const Spacer(),
-          Container(
-            height: 32,
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              color: _bgBeige,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: _line),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                _ModeChipItem(
-                  label: '이용자',
-                  selected: !store.isPilotMode,
-                  onTap: () => onModeChanged(false),
-                ),
-                _ModeChipItem(
-                  label: '운용자',
-                  selected: store.isPilotMode,
-                  onTap: () => onModeChanged(true),
-                ),
-              ],
-            ),
+          DrameModeSwitchButton(
+            isOperator: store.isPilotMode,
+            onUserTap: () => onModeChanged(false),
+            onOperatorTap: () => onModeChanged(true),
           ),
           if (!store.isLoggedIn) ...<Widget>[
             const SizedBox(width: 10),
@@ -80,125 +61,19 @@ class _MobileNewAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-class _ModeChipItem extends StatelessWidget {
-  const _ModeChipItem({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
-            boxShadow:
-                selected
-                    ? <BoxShadow>[
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ]
-                    : null,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Pretendard',
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: const Color(0xFF0A0B0D),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ─── User Home Tab (PDF p.2) ──────────────────────────────────────────────────
 
-class _UserHomeTab extends StatefulWidget {
+class _UserHomeTab extends StatelessWidget {
   const _UserHomeTab({required this.store});
 
   final DrameStore store;
 
   @override
-  State<_UserHomeTab> createState() => _UserHomeTabState();
-}
-
-class _UserHomeTabState extends State<_UserHomeTab> {
-  String _selectedCat = '전체';
-  final PageController _pilotPageCtrl = PageController();
-  int _pilotPage = 0;
-
-  @override
-  void dispose() {
-    _pilotPageCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final store = widget.store;
-    final allPilots = store.allPilots;
-    final filtered =
-        _selectedCat == '전체'
-            ? allPilots
-            : allPilots.where((p) => p.hasCategory(_selectedCat)).toList();
-
     return ColoredBox(
       color: _bgBeige,
       child: CustomScrollView(
         slivers: <Widget>[
-          // ── Category chip row ──────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: ColoredBox(
-              color: Colors.white,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: <Widget>[
-                    _HomeCatChip(
-                      label: '전체',
-                      selected: _selectedCat == '전체',
-                      onTap: () => setState(() => _selectedCat = '전체'),
-                    ),
-                    ...store.categories.map(
-                      (cat) => Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: _HomeCatChip(
-                          label: cat.label,
-                          selected: _selectedCat == cat.label,
-                          onTap: () => setState(() => _selectedCat = cat.label),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
           // ── How it works ───────────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Container(
@@ -266,32 +141,6 @@ class _UserHomeTabState extends State<_UserHomeTab> {
           // ── Job request map ─────────────────────────────────────────────────
           SliverToBoxAdapter(child: _JobRequestMapSection(store: store)),
 
-          // ── Operator 2-per-page horizontal pager ──────────────────────────
-          SliverToBoxAdapter(
-            child:
-                filtered.isEmpty
-                    ? const Padding(
-                      padding: EdgeInsets.all(32),
-                      child: Center(
-                        child: ModeText(
-                          '해당 카테고리의 운용자가 없습니다.',
-                          size: 14,
-                          color: Color(0xFF7C828A),
-                        ),
-                      ),
-                    )
-                    : _OperatorPager(
-                      pilots: filtered,
-                      pageCtrl: _pilotPageCtrl,
-                      currentPage: _pilotPage,
-                      onPageChanged: (p) => setState(() => _pilotPage = p),
-                      onTap: (pilot) {
-                        store.selectPilot(pilot);
-                        _openPortfolio(context, pilot);
-                      },
-                    ),
-          ),
-
           // ── Category browse section ────────────────────────────────────────
           SliverToBoxAdapter(
             child: Container(
@@ -302,7 +151,7 @@ class _UserHomeTabState extends State<_UserHomeTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   const ModeText(
-                    '카테고리/지역별 서비스',
+                    '서비스별 포트폴리오 직접 찾기',
                     size: 18,
                     weight: FontWeight.w800,
                     color: Color(0xFF0A0B0D),
@@ -310,7 +159,7 @@ class _UserHomeTabState extends State<_UserHomeTab> {
                   ),
                   const SizedBox(height: 4),
                   const ModeText(
-                    '원하는 분야와 지역의 드론 서비스를 찾아보세요.',
+                    '원하는 서비스와 지역을 골라 운용자의 포트폴리오를 직접 확인해 보세요.',
                     size: 13,
                     color: Color(0xFF7C828A),
                   ),
@@ -331,7 +180,6 @@ class _UserHomeTabState extends State<_UserHomeTab> {
                       return GestureDetector(
                         onTap: () {
                           store.selectCategory(cat);
-                          setState(() => _selectedCat = cat.label);
                           _showCategoryAreaSheet(context, store, cat);
                         },
                         child: Container(
@@ -386,30 +234,6 @@ class _UserHomeTabState extends State<_UserHomeTab> {
   }
 }
 
-class _HomeCatChip extends StatelessWidget {
-  const _HomeCatChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ModeChip(
-        label: label,
-        background: selected ? const Color(0xFF0A0B0D) : Colors.white,
-        foreground: selected ? Colors.white : const Color(0xFF5B616E),
-      ),
-    );
-  }
-}
-
 class _HowItWorksStepCard extends StatelessWidget {
   const _HowItWorksStepCard({
     required this.step,
@@ -459,196 +283,6 @@ class _HowItWorksStepCard extends StatelessWidget {
   }
 }
 
-// ─── Operator 2-per-page Horizontal Pager ────────────────────────────────────
-
-class _OperatorPager extends StatelessWidget {
-  const _OperatorPager({
-    required this.pilots,
-    required this.pageCtrl,
-    required this.currentPage,
-    required this.onPageChanged,
-    required this.onTap,
-  });
-
-  final List<DronePilot> pilots;
-  final PageController pageCtrl;
-  final int currentPage;
-  final ValueChanged<int> onPageChanged;
-  final ValueChanged<DronePilot> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final pageCount = (pilots.length / 2).ceil();
-
-    return Column(
-      children: <Widget>[
-        SizedBox(
-          height: 148,
-          child: PageView.builder(
-            controller: pageCtrl,
-            onPageChanged: onPageChanged,
-            itemCount: pageCount,
-            itemBuilder: (context, pageIndex) {
-              final a = pageIndex * 2;
-              final b = a + 1;
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: _OperatorCardCompact(
-                        pilot: pilots[a],
-                        onTap: () => onTap(pilots[a]),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (b < pilots.length)
-                      Expanded(
-                        child: _OperatorCardCompact(
-                          pilot: pilots[b],
-                          onTap: () => onTap(pilots[b]),
-                        ),
-                      )
-                    else
-                      const Expanded(child: SizedBox()),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-        // Dot indicators
-        if (pageCount > 1) ...<Widget>[
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List<Widget>.generate(pageCount, (i) {
-              final active = i == currentPage;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: active ? 16 : 6,
-                height: 6,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                decoration: BoxDecoration(
-                  color: active ? _primary : const Color(0xFFCDD7E8),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 8),
-        ] else
-          const SizedBox(height: 8),
-      ],
-    );
-  }
-}
-
-class _OperatorCardCompact extends StatelessWidget {
-  const _OperatorCardCompact({required this.pilot, required this.onTap});
-
-  final DronePilot pilot;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = pilot.name.isNotEmpty ? pilot.name[0].toUpperCase() : '?';
-    final area = pilot.primaryDisplayArea;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE4EAF2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: <Widget>[
-                    ModeAvatar(radius: 19, fallbackText: initial),
-                    Positioned(
-                      bottom: 1,
-                      right: 1,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: _mint,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      ModeBoldText(
-                        pilot.name,
-                        size: 13,
-                        color: const Color(0xFF0A0B0D),
-                        letterSpacing: -0.1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (area.isNotEmpty)
-                        Row(
-                          children: <Widget>[
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 10,
-                              color: Color(0xFF7C828A),
-                            ),
-                            const SizedBox(width: 2),
-                            Expanded(
-                              child: ModeText(
-                                area,
-                                size: 11,
-                                color: const Color(0xFF5B616E),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 4,
-              runSpacing: 4,
-              children:
-                  pilot.categories
-                      .take(2)
-                      .map(
-                        (cat) => ModeChip(
-                          label: cat,
-                          background: const Color(0xFFEEF4FF),
-                          foreground: _primary,
-                          shape: ModeChipShape.rounded,
-                        ),
-                      )
-                      .toList(),
-            ),
-            const Spacer(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ─── Mobile Operator Card (PDF p.2 style) ─────────────────────────────────────
 
 class _MobileOperatorCard extends StatelessWidget {
@@ -689,9 +323,8 @@ class _MobileOperatorCard extends StatelessWidget {
                               height: 46,
                               fit: BoxFit.cover,
                               errorBuilder:
-                                  (_, __, ___) => _MobileAvatarFallback(
-                                    initial: initial,
-                                  ),
+                                  (_, __, ___) =>
+                                      _MobileAvatarFallback(initial: initial),
                             )
                             : _MobileAvatarFallback(initial: initial),
                   ),
@@ -2069,7 +1702,7 @@ class _RequestTile extends StatelessWidget {
               color: const Color(0xFF5B616E),
             ),
             const Spacer(),
-            ModeButton(label: '응답하기', onPressed: onTap, fullWidth: true),
+            ModeButton(label: '견적 보내기', onPressed: onTap, fullWidth: true),
           ],
         ),
       ),

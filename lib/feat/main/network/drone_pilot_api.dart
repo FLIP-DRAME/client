@@ -361,11 +361,12 @@ class SupabaseDronePilotApi implements DronePilotApi {
   Future<({String name, String nickname})?> fetchMyAccountProfile() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return null;
-    final row = await _client
-        .from('profiles')
-        .select('name, nickname')
-        .eq('id', userId)
-        .maybeSingle();
+    final row =
+        await _client
+            .from('profiles')
+            .select('name, nickname')
+            .eq('id', userId)
+            .maybeSingle();
     if (row == null) return null;
     return (
       name: (row['name'] ?? '').toString().trim(),
@@ -378,11 +379,12 @@ class SupabaseDronePilotApi implements DronePilotApi {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return false;
     try {
-      final row = await _client
-          .from('profiles')
-          .select('account_status')
-          .eq('id', userId)
-          .maybeSingle();
+      final row =
+          await _client
+              .from('profiles')
+              .select('account_status')
+              .eq('id', userId)
+              .maybeSingle();
       return row?['account_status'] == 'suspended';
     } catch (_) {
       // Column may not exist yet if the moderation migration hasn't been
@@ -882,11 +884,10 @@ class SupabaseDronePilotApi implements DronePilotApi {
     }
 
     final areas = <String>{
-      ...List<Object?>.from(
-        row['operator_service_areas'] as List? ?? const [],
-      ).whereType<Map>().map(
-        (item) => ((item['regions'] as Map?)?['name'] ?? '').toString(),
-      ).where((name) => name.isNotEmpty),
+      ...List<Object?>.from(row['operator_service_areas'] as List? ?? const [])
+          .whereType<Map>()
+          .map((item) => ((item['regions'] as Map?)?['name'] ?? '').toString())
+          .where((name) => name.isNotEmpty),
       ..._splitLabels(row['location_label']),
     };
     data.areas = areas;
@@ -953,8 +954,10 @@ class SupabaseDronePilotApi implements DronePilotApi {
     }
 
     await _tryOptionalWrite(
-      () =>
-          _client.from('operator_drones').delete().eq('operator_id', operatorId),
+      () => _client
+          .from('operator_drones')
+          .delete()
+          .eq('operator_id', operatorId),
     );
     for (final drone in data.drones) {
       if (drone.model.trim().isEmpty) continue;
@@ -1190,12 +1193,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
             );
             final bodyUrl = (item['body'] ?? '').toString();
             final isHttp =
-                bodyUrl.startsWith('http://') ||
-                bodyUrl.startsWith('https://');
-            return <String>[
-              if (isHttp) bodyUrl,
-              ...assetUrls,
-            ];
+                bodyUrl.startsWith('http://') || bodyUrl.startsWith('https://');
+            return <String>[if (isHttp) bodyUrl, ...assetUrls];
           }),
         }.where((url) => url.isNotEmpty).toList();
 
@@ -1592,8 +1591,8 @@ class SupabaseDronePilotApi implements DronePilotApi {
             .select('preferred_operator_id')
             .eq('id', request.id)
             .maybeSingle();
-    final isBroadcast = (jobRow?['preferred_operator_id']) == null;
-    if (!isBroadcast) {
+    final preferredOperatorId = jobRow?['preferred_operator_id']?.toString();
+    if (QuoteStatusHelper.shouldAdvanceJobAfterQuote(preferredOperatorId)) {
       await _client
           .from('job_requests')
           .update(<String, Object?>{'status': 'quoted'})

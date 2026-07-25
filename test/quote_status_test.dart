@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mode/feat/main/network/drone_pilot_api.dart';
 import 'package:mode/feat/main/network/quote_status.dart';
+import 'package:mode/feat/quote/model/quote_model.dart';
 
 void main() {
   // ── QuoteStatusHelper unit tests ──────────────────────────────────────────
@@ -115,6 +116,41 @@ void main() {
 
     test('expired → 만료', () {
       expect(QuoteStatusHelper.clientLabel('expired', hasQuote: false), '만료');
+    });
+  });
+
+  group('QuoteStatusHelper.shouldAdvanceJobAfterQuote', () {
+    test('지도 방송 요청은 첫 견적 뒤에도 open 상태를 유지한다', () {
+      expect(QuoteStatusHelper.shouldAdvanceJobAfterQuote(null), isFalse);
+      expect(QuoteStatusHelper.shouldAdvanceJobAfterQuote(''), isFalse);
+    });
+
+    test('특정 운용자에게 보낸 직접 요청만 quoted로 전환한다', () {
+      expect(
+        QuoteStatusHelper.shouldAdvanceJobAfterQuote('operator-1'),
+        isTrue,
+      );
+    });
+  });
+
+  group('MapJobRequest manual close', () {
+    MapJobRequest makeRequest(String status) => MapJobRequest(
+      id: 'request-1',
+      status: status,
+      category: '항공촬영',
+      budgetLabel: '협의',
+      locationLabel: '서울',
+      latitude: 37.5665,
+      longitude: 126.978,
+      createdAt: DateTime.utc(2020),
+    );
+
+    test('오래된 방송 요청도 요청자가 마감하기 전에는 열려 있다', () {
+      expect(makeRequest('open').isClosed, isFalse);
+    });
+
+    test('요청자가 cancelled로 바꾼 요청만 마감된다', () {
+      expect(makeRequest('cancelled').isClosed, isTrue);
     });
   });
 

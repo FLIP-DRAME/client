@@ -89,7 +89,8 @@ class FeedApi {
           longitude,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty, avatar_url)
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
+          likes:feed_likes(count)
         ''')
         .eq('is_published', true)
         .eq('is_hidden', false)
@@ -115,7 +116,8 @@ class FeedApi {
           longitude,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty, avatar_url)
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
+          likes:feed_likes(count)
         ''')
         .eq('operator_id', operatorId)
         .eq('is_published', true)
@@ -142,7 +144,8 @@ class FeedApi {
           longitude,
           created_at,
           category:service_categories(label),
-          operator:operator_profiles(id, display_name, specialty, avatar_url)
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
+          likes:feed_likes(count)
         ''')
         .eq('author_id', userId)
         .order('created_at', ascending: false)
@@ -222,18 +225,20 @@ class FeedApi {
       postId = post['id']?.toString();
 
       if (uploadedImages.isNotEmpty) {
-        await _client.from('feed_post_assets').insert(
-          uploadedImages.indexed
-              .map(
-                (entry) => <String, Object?>{
-                  'post_id': postId,
-                  'kind': 'image',
-                  'url': entry.$2.url,
-                  'sort_order': entry.$1,
-                },
-              )
-              .toList(),
-        );
+        await _client
+            .from('feed_post_assets')
+            .insert(
+              uploadedImages.indexed
+                  .map(
+                    (entry) => <String, Object?>{
+                      'post_id': postId,
+                      'kind': 'image',
+                      'url': entry.$2.url,
+                      'sort_order': entry.$1,
+                    },
+                  )
+                  .toList(),
+            );
       }
     } catch (_) {
       for (final uploadedImage in uploadedImages) {
