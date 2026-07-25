@@ -967,22 +967,10 @@ class _OperatorPortfolioBuilderSectionState
                 ),
               ),
               const SizedBox(width: 16),
-              FilledButton.icon(
+              ModeButton(
+                label: '편집하기',
                 onPressed: () => setState(() => _editing = true),
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('편집하기'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _primary,
-                  foregroundColor: Colors.white,
-                  textStyle: AppText.button,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+                icon: Icons.edit_outlined,
               ),
             ],
           ),
@@ -1224,18 +1212,9 @@ class _OperatorPortfolioBuilderSectionState
             style: AppText.cardSubtitle,
           ),
           const SizedBox(height: 16),
-          FilledButton(
+          ModeButton(
+            label: '운용자 등록하기',
             onPressed: () => context.push('/pilot/register'),
-            style: FilledButton.styleFrom(
-              backgroundColor: _primary,
-              foregroundColor: Colors.white,
-              textStyle: AppText.button,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('운용자 등록하기'),
           ),
         ],
       ),
@@ -1754,18 +1733,10 @@ class _OperatorProfileCard extends StatelessWidget {
               if (!store.operatorRegistrationCompleted) ...<Widget>[
                 const SizedBox(width: 12),
                 Expanded(
-                  child: FilledButton(
+                  child: ModeButton(
+                    label: '운용자 등록',
                     onPressed: () => context.push('/pilot/register'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _primary,
-                      foregroundColor: Colors.white,
-                      textStyle: AppText.button,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text('운용자 등록'),
+                    fullWidth: true,
                   ),
                 ),
               ],
@@ -2713,8 +2684,6 @@ class _RequestReviewMap extends StatelessWidget {
 
   final PilotWorkRequest request;
 
-  static const Color _navy = Color(0xFF16305E);
-
   @override
   Widget build(BuildContext context) {
     if (!request.hasLocation) {
@@ -2765,7 +2734,7 @@ class _RequestReviewMap extends StatelessWidget {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: _navy,
+                        color: DC.navy,
                         border: Border.all(color: Colors.white, width: 2),
                         boxShadow: const <BoxShadow>[
                           BoxShadow(

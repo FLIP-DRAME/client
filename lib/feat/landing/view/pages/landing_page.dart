@@ -574,24 +574,9 @@ class _HeroSection extends StatelessWidget {
                     child: const Text('로그인'),
                   ),
                   const SizedBox(width: 8),
-                  ElevatedButton(
+                  ModeButton(
+                    label: '시작하기',
                     onPressed: () => context.go('/signup'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: DC.primary,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(
-                        fontFamily: 'Pretendard',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      shape: const StadiumBorder(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text('시작하기'),
                   ),
                 ],
               ),

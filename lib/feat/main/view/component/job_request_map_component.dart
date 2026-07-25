@@ -1155,7 +1155,6 @@ class _JobRequestPreview extends StatelessWidget {
     this.detail,
   });
 
-  static const Color _navy = Color(0xFF16305E);
   static const Color _inProgress = Color(0xFF05B169);
   static const Color _closed = Color(0xFF9CA3AF);
 
@@ -1172,7 +1171,7 @@ class _JobRequestPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final closed = request.isClosedOrExpired;
     final statusColor =
-        closed ? _closed : (request.isInProgress ? _inProgress : _navy);
+        closed ? _closed : (request.isInProgress ? _inProgress : DC.navy);
     final statusLabel =
         closed ? '요청마감' : (request.isInProgress ? '진행중' : '요청 대기중');
     return ConstrainedBox(
@@ -1188,7 +1187,7 @@ class _JobRequestPreview extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: highlighted ? _navy : Colors.transparent,
+                  color: highlighted ? DC.navy : Colors.transparent,
                   width: 1.5,
                 ),
               ),
@@ -1221,21 +1220,10 @@ class _JobRequestPreview extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(100),
-                            ),
-                            child: Text(
-                              statusLabel,
-                              style: AppText.metricLabel.copyWith(
-                                color: statusColor,
-                              ),
-                            ),
+                          ModeChip(
+                            label: statusLabel,
+                            background: statusColor.withValues(alpha: 0.1),
+                            foreground: statusColor,
                           ),
                         ],
                       ),
@@ -1289,8 +1277,8 @@ class _JobRequestPreview extends StatelessWidget {
                         icon: const Icon(Icons.chat_rounded, size: 16),
                         label: const Text('채팅하기'),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: _navy,
-                          side: const BorderSide(color: _navy),
+                          foregroundColor: DC.navy,
+                          side: const BorderSide(color: DC.navy),
                           textStyle: AppText.button,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
@@ -1305,7 +1293,7 @@ class _JobRequestPreview extends StatelessWidget {
                       child: FilledButton(
                         onPressed: onRespond,
                         style: FilledButton.styleFrom(
-                          backgroundColor: _navy,
+                          backgroundColor: DC.navy,
                           foregroundColor: Colors.white,
                           textStyle: AppText.button,
                           padding: const EdgeInsets.symmetric(vertical: 13),

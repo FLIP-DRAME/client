@@ -783,13 +783,10 @@ class _SpecChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8EEFF),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: ModeSemiBoldText(label, size: 12, color: _primary),
+    return ModeChip(
+      label: label,
+      background: const Color(0xFFE8EEFF),
+      foreground: _primary,
     );
   }
 }
@@ -1442,13 +1439,9 @@ class _LeaveReviewDialogState extends State<_LeaveReviewDialog> {
           onPressed: _submitting ? null : () => Navigator.pop(context),
           child: const Text('취소'),
         ),
-        FilledButton(
+        ModeButton(
+          label: _submitting ? '제출 중…' : '리뷰 제출',
           onPressed: _submitting ? null : _submit,
-          style: FilledButton.styleFrom(
-            backgroundColor: _primary,
-            foregroundColor: Colors.white,
-          ),
-          child: Text(_submitting ? '제출 중…' : '리뷰 제출'),
         ),
       ],
     );
