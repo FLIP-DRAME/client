@@ -60,7 +60,7 @@ class _OperatorProfileManagementPage extends StatelessWidget {
                     initialRequest: store.firstPilotWorkRequest,
                   ),
               onMyPageTap: () {},
-              onChatTap: () => context.go('/chats'),
+              onChatTap: () => context.push('/chats'),
               onLogoutTap: () async {
                 await store.signOut();
                 if (context.mounted) context.go('/login');

@@ -84,7 +84,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                   onFeedTap: () => context.go('/feed'),
                   onPortfolioTap: () => context.go('/portfolio'),
                   onMyQuotesTap: () {},
-                  onChatTap: () => context.go('/chats'),
+                  onChatTap: () => context.push('/chats'),
                   onLogoutTap: () async {
                     await store.signOut();
                     if (context.mounted) context.go('/login');
@@ -300,7 +300,7 @@ class _MyQuoteDetailPageState extends State<MyQuoteDetailPage> {
                 onFeedTap: () => context.go('/feed'),
                 onPortfolioTap: () => context.go('/portfolio'),
                 onMyQuotesTap: () => context.go('/my/quotes'),
-                onChatTap: () => context.go('/chats'),
+                onChatTap: () => context.push('/chats'),
                 onLogoutTap: () async {
                   await store.signOut();
                   if (context.mounted) context.go('/login');

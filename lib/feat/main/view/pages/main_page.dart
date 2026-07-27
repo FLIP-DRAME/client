@@ -368,7 +368,7 @@ class _OperatorStandaloneShell extends StatelessWidget {
             onRequestsTap: () => context.go('/operator/requests'),
             onMyPageTap: () => context.go('/operator/mypage'),
             onMyQuotesTap: () => context.go('/my/quotes'),
-            onChatTap: () => context.go('/chats'),
+            onChatTap: () => context.push('/chats'),
             notificationCount: store.notificationCount,
             chatUnreadCount: store.chatUnreadCount,
             onNotificationTap: () => _showNotifications(context, store),
@@ -676,7 +676,7 @@ class _DrameHomePageState extends State<DrameHomePage> {
                 showLoginRequiredDialog(context);
                 return;
               }
-              context.go('/chats');
+              context.push('/chats');
             },
             onLogoutTap:
                 store.isLoggedIn
