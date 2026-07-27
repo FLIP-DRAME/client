@@ -160,11 +160,20 @@ class MapJobRequest {
 
   bool get isInProgress => _inProgressStatuses.contains(status);
 
-  /// Manually closed by the requester (stopped accepting quotes). Reuses
-  /// the existing 'cancelled' job_status enum value -- job_status is a
-  /// Postgres enum with a fixed set of members, and 'cancelled' already
-  /// means exactly this and is already excluded from the public map view.
-  bool get isClosed => status == 'cancelled';
+  static const expiryWindow = Duration(days: 14);
+
+  /// Auto-expires 14 days after posting if still unaddressed -- an open
+  /// request that nobody accepted shouldn't keep soliciting quotes forever.
+  bool get isExpired =>
+      status == 'open' &&
+      DateTime.now().toUtc().difference(createdAt.toUtc()) > expiryWindow;
+
+  /// Manually closed by the requester (stopped accepting quotes), or expired.
+  /// Reuses the existing 'cancelled' job_status enum value for manual close
+  /// -- job_status is a Postgres enum with a fixed set of members, and
+  /// 'cancelled' already means exactly this and is already excluded from the
+  /// public map view.
+  bool get isClosed => status == 'cancelled' || isExpired;
 
   /// Relative time since this request was posted, e.g. "3시간 전", "2일 전".
   String get elapsedLabel {

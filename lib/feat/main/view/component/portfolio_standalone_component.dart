@@ -73,7 +73,7 @@ class _PortfolioStandalonePageState extends State<PortfolioStandalonePage> {
                   onFeedTap: () => context.go('/feed'),
                   onPortfolioTap: () => context.go('/portfolio'),
                   onMyQuotesTap: () => context.go('/my/quotes'),
-                  onChatTap: () => context.go('/chats'),
+                  onChatTap: () => context.push('/chats'),
                   onLogoutTap: () async {
                     await store.signOut();
                     if (context.mounted) context.go('/login');
