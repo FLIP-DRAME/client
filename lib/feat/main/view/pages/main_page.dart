@@ -170,7 +170,7 @@ Future<void> _openOperatorPortfolio(
     );
     return;
   }
-  if (context.mounted) context.go('/operator/portfolio');
+  if (context.mounted) context.push('/operator/portfolio');
 }
 
 void _openPilotRequestReviewPage(
@@ -523,13 +523,13 @@ class _DrameHomePageState extends State<DrameHomePage> {
     DrameStore store,
   ) {
     if (id == 'requests') {
-      ctx.go('/operator/requests');
+      ctx.push('/operator/requests');
     } else if (id == 'feed') {
-      ctx.go('/operator/feed');
+      ctx.push('/operator/feed');
     } else if (id == 'portfolio') {
       _openOperatorPortfolio(ctx, store);
     } else if (id == 'profile') {
-      ctx.go('/operator/mypage');
+      ctx.push('/operator/mypage');
     } else {
       setState(() => _selectedTabId = id);
     }
