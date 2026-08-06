@@ -133,24 +133,40 @@ void main() {
     });
   });
 
-  group('MapJobRequest manual close', () {
-    MapJobRequest makeRequest(String status) => MapJobRequest(
-      id: 'request-1',
-      status: status,
-      category: '항공촬영',
-      budgetLabel: '협의',
-      locationLabel: '서울',
-      latitude: 37.5665,
-      longitude: 126.978,
-      createdAt: DateTime.utc(2020),
-    );
+  group('MapJobRequest auto-expiry & manual close', () {
+    MapJobRequest makeRequest(String status, {required DateTime createdAt}) =>
+        MapJobRequest(
+          id: 'request-1',
+          status: status,
+          category: '항공촬영',
+          budgetLabel: '협의',
+          locationLabel: '서울',
+          latitude: 37.5665,
+          longitude: 126.978,
+          createdAt: createdAt,
+        );
 
-    test('오래된 방송 요청도 요청자가 마감하기 전에는 열려 있다', () {
-      expect(makeRequest('open').isClosed, isFalse);
+    final fresh = DateTime.now().toUtc().subtract(const Duration(days: 1));
+    final old = DateTime.now().toUtc().subtract(const Duration(days: 20));
+
+    test('갓 등록된 open 요청은 열려 있다', () {
+      expect(makeRequest('open', createdAt: fresh).isClosed, isFalse);
     });
 
-    test('요청자가 cancelled로 바꾼 요청만 마감된다', () {
-      expect(makeRequest('cancelled').isClosed, isTrue);
+    test('14일이 지난 open 요청은 자동으로 마감된다', () {
+      expect(makeRequest('open', createdAt: old).isClosed, isTrue);
+    });
+
+    test('견적을 받았지만(quoted) 수락 전인 요청도 14일이 지나면 마감된다', () {
+      expect(makeRequest('quoted', createdAt: old).isClosed, isTrue);
+    });
+
+    test('요청자가 견적을 수락(accepted)하면 오래되어도 마감되지 않는다', () {
+      expect(makeRequest('accepted', createdAt: old).isClosed, isFalse);
+    });
+
+    test('요청자가 cancelled로 바꾼 요청은 마감된다', () {
+      expect(makeRequest('cancelled', createdAt: fresh).isClosed, isTrue);
     });
   });
 

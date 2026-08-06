@@ -162,10 +162,15 @@ class MapJobRequest {
 
   static const expiryWindow = Duration(days: 14);
 
-  /// Auto-expires 14 days after posting if still unaddressed -- an open
-  /// request that nobody accepted shouldn't keep soliciting quotes forever.
+  /// Auto-expires 14 days after posting if nobody has actually committed to
+  /// the job yet -- covers 'open' and 'quoted' (quotes received but none
+  /// accepted) alike, so a request doesn't keep soliciting quotes forever
+  /// just because someone replied to it. Only statuses in
+  /// [_inProgressStatuses] (someone accepted/paid/is in contact) or an
+  /// already-'cancelled' request are exempt.
   bool get isExpired =>
-      status == 'open' &&
+      status != 'cancelled' &&
+      !_inProgressStatuses.contains(status) &&
       DateTime.now().toUtc().difference(createdAt.toUtc()) > expiryWindow;
 
   /// Manually closed by the requester (stopped accepting quotes), or expired.
