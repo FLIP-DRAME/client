@@ -873,6 +873,15 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   String? _pickedLocationLabel;
   String _selectedCategory = '항공촬영';
 
+  // 텍스트 서식 상태
+  bool _isBold = false;
+  bool _isItalic = false;
+  bool _isUnderline = false;
+  String _selectedFontSize = '14';
+  static const List<String> _fontSizeOptions = <String>[
+    '10', '11', '12', '13', '14', '15', '16', '18', '20', '24', '28', '32',
+  ];
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -1035,15 +1044,43 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ],
                 ),
               ),
-              ModeButton(
-                onPressed:
-                    _isSubmitting
-                        ? null
-                        : () => setState(() => _isExpanded = !_isExpanded),
-                icon: _isExpanded ? Icons.close_rounded : Icons.add_rounded,
-                label: _isExpanded ? '닫기' : '새 게시물',
-                variant: ModeButtonVariant.primary,
-              ),
+              _isExpanded
+                  ? OutlinedButton.icon(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => setState(() => _isExpanded = false),
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      label: const Text('닫기'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF222222),
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF222222)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    )
+                  : ElevatedButton.icon(
+                      onPressed: () => setState(() => _isExpanded = true),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('새 게시물'),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: const Color(0xFF222222),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
             ],
           ),
           const SizedBox(height: 20),
@@ -1220,6 +1257,126 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                           color: const Color(0xFF4CAF50),
                           onTap: _isSubmitting ? null : _pickLocation,
                           badge: _pickedLocation != null ? '✓' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ─────────────────────────────────────────────────────────
+                  // 텍스트 서식 툴바
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFAFAFA),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        // 폰트 크기 선택
+                        Container(
+                          height: 26,
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFCCCCCC)),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedFontSize,
+                              isDense: true,
+                              icon: const Icon(
+                                Icons.arrow_drop_down,
+                                size: 16,
+                                color: Color(0xFF666666),
+                              ),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF333333),
+                              ),
+                              items: _fontSizeOptions.map((size) {
+                                return DropdownMenuItem<String>(
+                                  value: size,
+                                  child: Text('${size}pt'),
+                                );
+                              }).toList(),
+                              onChanged: _isSubmitting
+                                  ? null
+                                  : (value) {
+                                      if (value != null) {
+                                        setState(() => _selectedFontSize = value);
+                                      }
+                                    },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: const Color(0xFFDDDDDD),
+                        ),
+                        const SizedBox(width: 8),
+                        // Bold 버튼
+                        _TextFormatButton(
+                          label: 'B',
+                          isActive: _isBold,
+                          fontWeight: FontWeight.bold,
+                          onTap: _isSubmitting
+                              ? null
+                              : () => setState(() => _isBold = !_isBold),
+                        ),
+                        const SizedBox(width: 2),
+                        // Italic 버튼
+                        _TextFormatButton(
+                          label: 'I',
+                          isActive: _isItalic,
+                          fontStyle: FontStyle.italic,
+                          onTap: _isSubmitting
+                              ? null
+                              : () => setState(() => _isItalic = !_isItalic),
+                        ),
+                        const SizedBox(width: 2),
+                        // Underline 버튼
+                        _TextFormatButton(
+                          label: 'U',
+                          isActive: _isUnderline,
+                          textDecoration: TextDecoration.underline,
+                          onTap: _isSubmitting
+                              ? null
+                              : () => setState(() => _isUnderline = !_isUnderline),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: const Color(0xFFDDDDDD),
+                        ),
+                        const SizedBox(width: 8),
+                        // 텍스트 색상 버튼
+                        _TextColorButton(
+                          color: const Color(0xFF333333),
+                          onTap: _isSubmitting ? null : () {},
+                        ),
+                        const SizedBox(width: 4),
+                        _TextColorButton(
+                          color: const Color(0xFFE53935),
+                          onTap: _isSubmitting ? null : () {},
+                        ),
+                        const SizedBox(width: 4),
+                        _TextColorButton(
+                          color: const Color(0xFF1E88E5),
+                          onTap: _isSubmitting ? null : () {},
+                        ),
+                        const SizedBox(width: 4),
+                        _TextColorButton(
+                          color: const Color(0xFF43A047),
+                          onTap: _isSubmitting ? null : () {},
                         ),
                       ],
                     ),
@@ -1448,7 +1605,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF03C75A),
+                  backgroundColor: const Color(0xFF222222),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -1570,6 +1727,82 @@ class _SmartEditorToolButton extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 텍스트 서식 버튼 (B, I, U)
+class _TextFormatButton extends StatelessWidget {
+  const _TextFormatButton({
+    required this.label,
+    required this.isActive,
+    this.fontWeight,
+    this.fontStyle,
+    this.textDecoration,
+    this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final FontWeight? fontWeight;
+  final FontStyle? fontStyle;
+  final TextDecoration? textDecoration;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF333333) : Colors.white,
+          border: Border.all(
+            color: isActive ? const Color(0xFF333333) : const Color(0xFFCCCCCC),
+          ),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: fontWeight ?? FontWeight.normal,
+              fontStyle: fontStyle ?? FontStyle.normal,
+              decoration: textDecoration,
+              color: isActive ? Colors.white : const Color(0xFF333333),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 텍스트 색상 버튼
+class _TextColorButton extends StatelessWidget {
+  const _TextColorButton({
+    required this.color,
+    this.onTap,
+  });
+
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 22,
+        height: 22,
+        decoration: BoxDecoration(
+          color: color,
+          border: Border.all(color: const Color(0xFFCCCCCC)),
+          borderRadius: BorderRadius.circular(2),
         ),
       ),
     );
