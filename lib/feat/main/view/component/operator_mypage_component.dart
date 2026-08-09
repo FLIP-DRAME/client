@@ -856,6 +856,7 @@ class _OperatorFeedSection extends StatefulWidget {
 class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   static const int _maxImageCount = 10;
 
+  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _captionController = TextEditingController();
   bool _isExpanded = false;
   bool _isSubmitting = false;
@@ -865,6 +866,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
 
   @override
   void dispose() {
+    _titleController.dispose();
     _captionController.dispose();
     super.dispose();
   }
@@ -979,6 +981,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       return;
     }
     if (!mounted) return;
+    _titleController.clear();
     _captionController.clear();
     setState(() {
       _isSubmitting = false;
@@ -1043,15 +1046,19 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  // 제목 필드 (네이버 카페 스타일)
                   TextFormField(
-                    controller: _captionController,
-                    maxLines: 3,
-                    style: AppText.smallStrong.copyWith(color: _ink),
+                    controller: _titleController,
+                    style: AppText.cardTitle.copyWith(color: _ink),
                     decoration: InputDecoration(
-                      hintText: '작업 내용이나 소개글을 입력하세요...',
+                      hintText: '제목',
+                      hintStyle: AppText.cardTitle.copyWith(color: _muted),
                       filled: true,
                       fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 16,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: _line),
@@ -1067,55 +1074,10 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: _isSubmitting ? null : _pickLocation,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: _pickedLocation == null ? _line : _mint,
-                        ),
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          Icon(
-                            Icons.map_rounded,
-                            size: 18,
-                            color: _pickedLocation == null ? DC.muted : _mint,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              _pickedLocation == null
-                                  ? '촬영 위치를 지도에서 선택 (필수)'
-                                  : (_pickedLocationLabel ??
-                                      '선택됨: ${_pickedLocation!.latitude.toStringAsFixed(5)}, ${_pickedLocation!.longitude.toStringAsFixed(5)}'),
-                              style: AppText.smallStrong.copyWith(
-                                color: _pickedLocation == null ? DC.muted : _ink,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Text(
-                            _pickedLocation == null ? '선택하기' : '변경',
-                            style: AppText.metricLabel.copyWith(color: _mint),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  // 이미지 업로드 (우선 배치 - 네이버 카페 스타일)
                   if (_pendingImages.isNotEmpty) ...<Widget>[
                     SizedBox(
-                      height: 104,
+                      height: 140,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount:
@@ -1161,6 +1123,78 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                       onTap: _isSubmitting ? null : _pickImages,
                       wide: true,
                     ),
+                  const SizedBox(height: 16),
+                  // 본문 입력 영역
+                  TextFormField(
+                    controller: _captionController,
+                    maxLines: 6,
+                    style: AppText.smallStrong.copyWith(color: _ink),
+                    decoration: InputDecoration(
+                      hintText: '촬영 내용이나 작업 설명을 자유롭게 작성해주세요...',
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.all(14),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _line),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: _focus, width: 1.2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // 촬영 위치 선택
+                  InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _isSubmitting ? null : _pickLocation,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _pickedLocation == null ? _line : _mint,
+                        ),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Icon(
+                            Icons.map_rounded,
+                            size: 18,
+                            color: _pickedLocation == null ? DC.muted : _mint,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _pickedLocation == null
+                                  ? '촬영 위치를 지도에서 선택 (필수)'
+                                  : (_pickedLocationLabel ??
+                                      '선택됨: ${_pickedLocation!.latitude.toStringAsFixed(5)}, ${_pickedLocation!.longitude.toStringAsFixed(5)}'),
+                              style: AppText.smallStrong.copyWith(
+                                color: _pickedLocation == null ? DC.muted : _ink,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            _pickedLocation == null ? '선택하기' : '변경',
+                            style: AppText.metricLabel.copyWith(color: _mint),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   if (_isSubmitting) ...<Widget>[
                     Container(
@@ -1197,7 +1231,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     onPressed: _isSubmitting ? null : _submit,
                     variant: ModeButtonVariant.primary,
                     fullWidth: true,
-                    label: '피드에 등록',
+                    label: '등록',
                   ),
                 ],
               ),

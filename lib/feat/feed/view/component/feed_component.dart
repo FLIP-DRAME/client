@@ -251,7 +251,7 @@ class DroneFeedSection extends ConsumerStatefulWidget {
 }
 
 class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
-  int _visibleCount = 9;
+  int _visibleCount = 12;
   List<_FeedPost>? _remoteFeed;
   bool _showPhotoFeed = true;
   String? _selectedMapPostId;
@@ -320,7 +320,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
     if (old.region != widget.region ||
         old.category != widget.category ||
         old.sort != widget.sort) {
-      _visibleCount = 9;
+      _visibleCount = 12;
     }
   }
 
@@ -415,21 +415,33 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
             ),
           ),
           const SizedBox(height: 18),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: Column(
-                children:
-                    visibleItems
-                        .map(
-                          (item) => _FeedTimelineCard(
-                            post: item,
-                            onTap: () => _openPostDialog(context, item),
-                          ),
-                        )
-                        .toList(),
-              ),
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // 모바일: 1열, PC: 4열 (네이버 카페 갤러리 형식)
+              final isMobile = constraints.maxWidth < 600;
+              final crossAxisCount = isMobile ? 1 : 4;
+              final childAspectRatio = isMobile ? 1.2 : 0.85;
+              final spacing = isMobile ? 12.0 : 16.0;
+
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  childAspectRatio: childAspectRatio,
+                  crossAxisSpacing: spacing,
+                  mainAxisSpacing: spacing,
+                ),
+                itemCount: visibleItems.length,
+                itemBuilder: (context, index) {
+                  final item = visibleItems[index];
+                  return _FeedGalleryCard(
+                    post: item,
+                    onTap: () => _openPostDialog(context, item),
+                  );
+                },
+              );
+            },
           ),
           if (hasMore) ...<Widget>[
             const SizedBox(height: 24),
@@ -437,7 +449,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
               child: OutlinedButton.icon(
                 onPressed: () {
                   setState(() {
-                    final nextCount = _visibleCount + 9;
+                    final nextCount = _visibleCount + 12;
                     _visibleCount =
                         nextCount > actualFeed.length
                             ? actualFeed.length
@@ -913,6 +925,239 @@ class _FeedCardState extends State<_FeedCard> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 네이버 카페 갤러리 스타일 카드
+class _FeedGalleryCard extends StatefulWidget {
+  const _FeedGalleryCard({required this.post, required this.onTap});
+
+  final _FeedPost post;
+  final VoidCallback onTap;
+
+  @override
+  State<_FeedGalleryCard> createState() => _FeedGalleryCardState();
+}
+
+class _FeedGalleryCardState extends State<_FeedGalleryCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final post = widget.post;
+    final coverImage = post.images.isNotEmpty ? post.images.first : null;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _hovered ? 0.12 : 0.06),
+                blurRadius: _hovered ? 16 : 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                // 이미지 영역 (상단)
+                Expanded(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: <Widget>[
+                      if (coverImage != null)
+                        _FeedNetworkCover(imageUrl: coverImage)
+                      else
+                        const _FeedEmptyCover(),
+                      // 호버시 오버레이
+                      AnimatedOpacity(
+                        opacity: _hovered ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 180),
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          child: const Center(
+                            child: Icon(
+                              Icons.open_in_full_rounded,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // 이미지 개수 표시 (여러장인 경우)
+                      if (post.images.length > 1)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                const Icon(
+                                  Icons.photo_library_rounded,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${post.images.length}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // 정보 영역 (하단)
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      // 제목 (위치명)
+                      Text(
+                        post.location,
+                        style: const TextStyle(
+                          fontFamily: DT.fontFamily,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _ink,
+                          height: 1.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      // 작성자 + 지역
+                      Row(
+                        children: <Widget>[
+                          // 작성자 아바타
+                          if (post.authorAvatarUrl != null)
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundImage:
+                                  NetworkImage(post.authorAvatarUrl!),
+                            )
+                          else
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: _navy,
+                              child: Text(
+                                post.authorName.isNotEmpty
+                                    ? post.authorName[0]
+                                    : '모',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              post.authorName,
+                              style: const TextStyle(
+                                fontFamily: DT.fontFamily,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: _muted,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // 카테고리 칩
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEAF2FF),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              post.category,
+                              style: const TextStyle(
+                                fontFamily: DT.fontFamily,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: DC.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // 날짜 + 좋아요
+                      Row(
+                        children: <Widget>[
+                          Text(
+                            post.date,
+                            style: const TextStyle(
+                              fontFamily: DT.fontFamily,
+                              fontSize: 12,
+                              color: _muted,
+                            ),
+                          ),
+                          const Text(
+                            ' · ',
+                            style: TextStyle(fontSize: 12, color: _muted),
+                          ),
+                          Icon(
+                            post.likedByMe
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            size: 14,
+                            color:
+                                post.likedByMe
+                                    ? const Color(0xFFE54866)
+                                    : _muted,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${post.likes}',
+                            style: const TextStyle(
+                              fontFamily: DT.fontFamily,
+                              fontSize: 12,
+                              color: _muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
