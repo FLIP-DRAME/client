@@ -5,7 +5,7 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
-const BASE_URL = 'http://localhost:9001';
+const BASE_URL = 'http://localhost:9003';
 const OUT_DIR = path.join(__dirname, '../../artifacts');
 
 const SUPABASE_URL = 'https://wgujitwmipifuhxavmsn.supabase.co';
@@ -57,7 +57,13 @@ async function main() {
 
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--allow-running-insecure-content',
+    ],
   });
 
   try {
@@ -66,9 +72,9 @@ async function main() {
 
     // Login
     console.log('=== Logging in ===');
-    await page.goto(BASE_URL + '/home', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(BASE_URL + '/home', { waitUntil: 'networkidle0', timeout: 60000 });
     await waitForCanvas(page);
-    await delay(2000);
+    await delay(3000);
     await injectLogin(page, 'review-operator@modedrone.kr', 'Review2026!');
 
     // Navigate to operator feed page
