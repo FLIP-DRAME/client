@@ -855,6 +855,14 @@ class _OperatorFeedSection extends StatefulWidget {
 
 class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   static const int _maxImageCount = 10;
+  static const List<String> _categoryOptions = <String>[
+    '항공촬영',
+    '농약방제',
+    '부동산',
+    '측량·매핑',
+    '시설점검',
+    '행사촬영',
+  ];
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _captionController = TextEditingController();
@@ -863,6 +871,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   final List<PickedFile> _pendingImages = <PickedFile>[];
   LatLng? _pickedLocation;
   String? _pickedLocationLabel;
+  String _selectedCategory = '항공촬영';
 
   @override
   void dispose() {
@@ -955,9 +964,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ),
                 )
                 .toList(),
-        categoryLabel: widget.store.selectedPilot?.categories.firstOrNull ?? '',
-        locationLabel:
-            widget.store.selectedPilot?.availableAreas.firstOrNull ?? '',
+        categoryLabel: _selectedCategory,
+        locationLabel: _pickedLocationLabel ?? '',
         latitude: _pickedLocation!.latitude,
         longitude: _pickedLocation!.longitude,
       );
@@ -989,6 +997,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       _pendingImages.clear();
       _pickedLocation = null;
       _pickedLocationLabel = null;
+      _selectedCategory = '항공촬영';
     });
     messenger
       ..hideCurrentSnackBar()
@@ -1046,6 +1055,46 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  // 카테고리 선택 (네이버 카페 스타일 - 게시판 선택)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _line),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedCategory,
+                        isExpanded: true,
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: _muted,
+                        ),
+                        style: AppText.smallStrong.copyWith(color: _ink),
+                        items:
+                            _categoryOptions.map((category) {
+                              return DropdownMenuItem<String>(
+                                value: category,
+                                child: Text(category),
+                              );
+                            }).toList(),
+                        onChanged:
+                            _isSubmitting
+                                ? null
+                                : (value) {
+                                  if (value != null) {
+                                    setState(() => _selectedCategory = value);
+                                  }
+                                },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   // 제목 필드 (네이버 카페 스타일)
                   TextFormField(
                     controller: _titleController,

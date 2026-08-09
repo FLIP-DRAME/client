@@ -1041,9 +1041,9 @@ class _FeedGalleryCardState extends State<_FeedGalleryCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      // 제목 (위치명)
+                      // 제목 (본문 - 길면 축약)
                       Text(
-                        post.location,
+                        post.caption.isNotEmpty ? post.caption : post.location,
                         style: const TextStyle(
                           fontFamily: DT.fontFamily,
                           fontSize: 15,
@@ -1051,11 +1051,11 @@ class _FeedGalleryCardState extends State<_FeedGalleryCard> {
                           color: _ink,
                           height: 1.3,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 6),
-                      // 작성자 + 지역
+                      // 작성자 + 위치
                       Row(
                         children: <Widget>[
                           // 작성자 아바타
@@ -1083,7 +1083,7 @@ class _FeedGalleryCardState extends State<_FeedGalleryCard> {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              post.authorName,
+                              '${post.authorName} ${post.location}',
                               style: const TextStyle(
                                 fontFamily: DT.fontFamily,
                                 fontSize: 13,
