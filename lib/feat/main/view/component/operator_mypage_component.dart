@@ -1048,241 +1048,421 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
           ),
           const SizedBox(height: 20),
           if (_isExpanded) ...<Widget>[
-            ModeCard(
-              variant: ModeCardVariant.softFilled,
-              radius: 12,
-              padding: const EdgeInsets.all(20),
+            // ═══════════════════════════════════════════════════════════════
+            // SmartEditor 스타일 피드 작성 폼
+            // ═══════════════════════════════════════════════════════════════
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0xFFD5D5D5)),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  // 카테고리 선택 (네이버 카페 스타일 - 게시판 선택)
+                  // ─────────────────────────────────────────────────────────
+                  // 카테고리 행
+                  // ─────────────────────────────────────────────────────────
                   Container(
-                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 4,
+                      horizontal: 12,
+                      vertical: 8,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _line),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedCategory,
-                        isExpanded: true,
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: _muted,
-                        ),
-                        style: AppText.smallStrong.copyWith(color: _ink),
-                        items:
-                            _categoryOptions.map((category) {
-                              return DropdownMenuItem<String>(
-                                value: category,
-                                child: Text(category),
-                              );
-                            }).toList(),
-                        onChanged:
-                            _isSubmitting
-                                ? null
-                                : (value) {
-                                  if (value != null) {
-                                    setState(() => _selectedCategory = value);
-                                  }
-                                },
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF7F7F7),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  // 제목 필드 (네이버 카페 스타일)
-                  TextFormField(
-                    controller: _titleController,
-                    style: AppText.cardTitle.copyWith(color: _ink),
-                    decoration: InputDecoration(
-                      hintText: '제목',
-                      hintStyle: AppText.cardTitle.copyWith(color: _muted),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 16,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _focus, width: 1.2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // 이미지 업로드 (우선 배치 - 네이버 카페 스타일)
-                  if (_pendingImages.isNotEmpty) ...<Widget>[
-                    SizedBox(
-                      height: 140,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount:
-                            _pendingImages.length < _maxImageCount
-                                ? _pendingImages.length + 1
-                                : _pendingImages.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          if (index == _pendingImages.length) {
-                            return _AddFeedImagesButton(
-                              onTap: _isSubmitting ? null : _pickImages,
-                            );
-                          }
-                          return _PendingFeedImage(
-                            image: _pendingImages[index],
-                            index: index,
-                            onRemove:
-                                _isSubmitting
-                                    ? null
-                                    : () => setState(
-                                      () => _pendingImages.removeAt(index),
-                                    ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
+                    child: Row(
                       children: <Widget>[
-                        Icon(Icons.image_rounded, size: 13, color: _mint),
-                        const SizedBox(width: 6),
+                        const Text(
+                          '카테고리',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            '${_pendingImages.length}장 선택됨 · 첫 번째 사진이 대표로 표시됩니다.',
-                            style: AppText.metricLabel,
-                            overflow: TextOverflow.ellipsis,
+                          child: Container(
+                            height: 28,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: const Color(0xFFCCCCCC)),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedCategory,
+                                isExpanded: true,
+                                isDense: true,
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 18,
+                                  color: Color(0xFF666666),
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF333333),
+                                ),
+                                items:
+                                    _categoryOptions.map((category) {
+                                      return DropdownMenuItem<String>(
+                                        value: category,
+                                        child: Text(category),
+                                      );
+                                    }).toList(),
+                                onChanged:
+                                    _isSubmitting
+                                        ? null
+                                        : (value) {
+                                          if (value != null) {
+                                            setState(
+                                              () => _selectedCategory = value,
+                                            );
+                                          }
+                                        },
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ] else
-                    _AddFeedImagesButton(
-                      onTap: _isSubmitting ? null : _pickImages,
-                      wide: true,
+                  ),
+                  // ─────────────────────────────────────────────────────────
+                  // 제목 행
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
-                  const SizedBox(height: 16),
-                  // 본문 입력 영역
-                  TextFormField(
-                    controller: _captionController,
-                    maxLines: 6,
-                    style: AppText.smallStrong.copyWith(color: _ink),
-                    decoration: InputDecoration(
-                      hintText: '촬영 내용이나 작업 설명을 자유롭게 작성해주세요...',
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _focus, width: 1.2),
-                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Text(
+                          '제목',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: TextField(
+                            controller: _titleController,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF333333),
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: '제목을 입력하세요',
+                              hintStyle: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF999999),
+                              ),
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 6),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  // 촬영 위치 선택
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: _isSubmitting ? null : _pickLocation,
-                    child: Container(
-                      width: double.infinity,
+                  // ─────────────────────────────────────────────────────────
+                  // 파일첨부 툴바
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF7F7F7),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Text(
+                          '파일첨부',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        _SmartEditorToolButton(
+                          icon: Icons.photo_camera_rounded,
+                          label: '사진',
+                          color: const Color(0xFFFF6B35),
+                          onTap: _isSubmitting ? null : _pickImages,
+                          badge:
+                              _pendingImages.isNotEmpty
+                                  ? '${_pendingImages.length}'
+                                  : null,
+                        ),
+                        const SizedBox(width: 4),
+                        _SmartEditorToolButton(
+                          icon: Icons.map_rounded,
+                          label: '지도',
+                          color: const Color(0xFF4CAF50),
+                          onTap: _isSubmitting ? null : _pickLocation,
+                          badge: _pickedLocation != null ? '✓' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ─────────────────────────────────────────────────────────
+                  // 첨부된 사진 미리보기
+                  // ─────────────────────────────────────────────────────────
+                  if (_pendingImages.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFE5E5E5)),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(
+                            height: 80,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _pendingImages.length,
+                              separatorBuilder:
+                                  (_, __) => const SizedBox(width: 8),
+                              itemBuilder: (context, index) {
+                                return _SmartEditorImagePreview(
+                                  image: _pendingImages[index],
+                                  onRemove:
+                                      _isSubmitting
+                                          ? null
+                                          : () => setState(
+                                            () => _pendingImages.removeAt(
+                                              index,
+                                            ),
+                                          ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${_pendingImages.length}장 첨부됨 · 첫 번째 사진이 대표 이미지로 표시됩니다.',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF888888),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  // ─────────────────────────────────────────────────────────
+                  // 선택된 위치 표시
+                  // ─────────────────────────────────────────────────────────
+                  if (_pickedLocation != null)
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
-                        vertical: 12,
+                        vertical: 8,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: _pickedLocation == null ? _line : _mint,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFE5E5E5)),
                         ),
                       ),
                       child: Row(
                         children: <Widget>[
-                          Icon(
-                            Icons.map_rounded,
-                            size: 18,
-                            color: _pickedLocation == null ? DC.muted : _mint,
+                          const Icon(
+                            Icons.location_on_rounded,
+                            size: 16,
+                            color: Color(0xFF4CAF50),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              _pickedLocation == null
-                                  ? '촬영 위치를 지도에서 선택 (필수)'
-                                  : (_pickedLocationLabel ??
-                                      '선택됨: ${_pickedLocation!.latitude.toStringAsFixed(5)}, ${_pickedLocation!.longitude.toStringAsFixed(5)}'),
-                              style: AppText.smallStrong.copyWith(
-                                color: _pickedLocation == null ? DC.muted : _ink,
+                              _pickedLocationLabel ?? '위치 선택됨',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF333333),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Text(
-                            _pickedLocation == null ? '선택하기' : '변경',
-                            style: AppText.metricLabel.copyWith(color: _mint),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  if (_isSubmitting) ...<Widget>[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEAF2FF),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFCFE0FF)),
-                      ),
-                      child: Row(
-                        children: const <Widget>[
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              '피드 등록 대기중',
-                              style: AppText.metricLabel,
+                          GestureDetector(
+                            onTap: () => setState(() {
+                              _pickedLocation = null;
+                              _pickedLocationLabel = null;
+                            }),
+                            child: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Color(0xFF999999),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                  ModeButton(
-                    onPressed: _isSubmitting ? null : _submit,
-                    variant: ModeButtonVariant.primary,
-                    fullWidth: true,
-                    label: '등록',
+                  // ─────────────────────────────────────────────────────────
+                  // 본문 에디터 영역
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 200),
+                    padding: const EdgeInsets.all(12),
+                    child: TextField(
+                      controller: _captionController,
+                      maxLines: null,
+                      minLines: 8,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF333333),
+                        height: 1.6,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: '내용을 입력하세요.\n\n촬영 장소, 작업 내용, 사용 장비 등을 자유롭게 작성해주세요.',
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFFAAAAAA),
+                          height: 1.6,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  // ─────────────────────────────────────────────────────────
+                  // 태그달기 행
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF7F7F7),
+                      border: Border(
+                        top: BorderSide(color: Color(0xFFE5E5E5)),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Text(
+                          '태그달기',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            height: 28,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: const Color(0xFFCCCCCC)),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                            child: const TextField(
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF333333),
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '태그를 쉼표로 구분하여 입력하세요',
+                                hintStyle: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF999999),
+                                ),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // ─────────────────────────────────────────────────────────────
+            // 등록 버튼
+            // ─────────────────────────────────────────────────────────────
+            if (_isSubmitting)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF2FF),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFFCFE0FF)),
+                ),
+                child: const Row(
+                  children: <Widget>[
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '피드 등록 대기중',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF666666),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF03C75A),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  '등록',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -1328,6 +1508,125 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// SmartEditor 스타일 툴 버튼
+class _SmartEditorToolButton extends StatelessWidget {
+  const _SmartEditorToolButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFDDDDDD)),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF555555),
+              ),
+            ),
+            if (badge != null) ...<Widget>[
+              const SizedBox(width: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  badge!,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// SmartEditor 스타일 이미지 프리뷰
+class _SmartEditorImagePreview extends StatelessWidget {
+  const _SmartEditorImagePreview({
+    required this.image,
+    this.onRemove,
+  });
+
+  final PickedFile image;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: <Widget>[
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFDDDDDD)),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: Image.memory(
+              Uint8List.fromList(image.bytes),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        if (onRemove != null)
+          Positioned(
+            top: 2,
+            right: 2,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 12,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
