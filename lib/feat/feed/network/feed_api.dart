@@ -100,6 +100,28 @@ class FeedApi {
     return _postsFromRows(rows);
   }
 
+  Future<FeedPost?> fetchPostById(String postId) async {
+    final rows = await _client
+        .from('feed_posts')
+        .select('''
+          id,
+          author_id,
+          title,
+          body,
+          location_label,
+          latitude,
+          longitude,
+          created_at,
+          category:service_categories(label),
+          operator:operator_profiles(id, display_name, specialty, avatar_url),
+          likes:feed_likes(count)
+        ''')
+        .eq('id', postId)
+        .limit(1);
+    final posts = await _postsFromRows(rows);
+    return posts.isEmpty ? null : posts.first;
+  }
+
   Future<List<FeedPost>> fetchPostsByOperator(
     String operatorId, {
     int limit = 30,

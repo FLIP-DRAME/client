@@ -382,7 +382,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
               (point) => setState(() {
                 _selectedMapPostId = point.post.id;
               }),
-          onOpenPost: (post) => _openPostDialog(context, post),
+          onOpenPost: (post) => context.push('/feed/${post.id}'),
           onShowPhotos: () => setState(() => _showPhotoFeed = true),
         ),
       );
@@ -437,7 +437,7 @@ class _DroneFeedSectionState extends ConsumerState<DroneFeedSection> {
                   final item = visibleItems[index];
                   return _FeedGalleryCard(
                     post: item,
-                    onTap: () => _openPostDialog(context, item),
+                    onTap: () => context.push('/feed/${item.id}'),
                   );
                 },
               );
@@ -1298,6 +1298,7 @@ class _FeedCategoryChip extends StatelessWidget {
   }
 }
 
+/// 네이버 카페 게시글 스타일 다이얼로그
 class _FeedPostDialog extends ConsumerStatefulWidget {
   const _FeedPostDialog({required this.post, required this.loadPilot});
 
@@ -1353,319 +1354,573 @@ class _FeedPostDialogState extends ConsumerState<_FeedPostDialog> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final compact = size.width < 900;
-    final compactImageHeight =
-        (size.height * 0.34).clamp(180.0, 420.0).toDouble();
-
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-      backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 1180,
-          maxHeight: size.height * 0.86,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Material(
-            color: Colors.white,
-            child:
-                compact
-                    ? Column(
-                      children: <Widget>[
-                        SizedBox(
-                          height: compactImageHeight,
-                          child: _imagePane(),
-                        ),
-                        Expanded(child: _metaPane()),
-                      ],
-                    )
-                    : Row(
-                      children: <Widget>[
-                        Expanded(flex: 7, child: _imagePane()),
-                        Expanded(flex: 4, child: _metaPane()),
-                      ],
-                    ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _imagePane() {
-    if (widget.post.images.isEmpty) {
-      return const _FeedEmptyCover();
-    }
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        PageView.builder(
-          controller: _pageController,
-          itemCount: widget.post.images.length,
-          onPageChanged: (index) {
-            setState(() {
-              _imageIndex = index;
-            });
-          },
-          itemBuilder: (context, index) {
-            return _FeedNetworkCover(imageUrl: widget.post.images[index]);
-          },
-        ),
-        if (widget.post.images.length > 1) ...<Widget>[
-          Positioned(
-            left: 16,
-            top: 0,
-            bottom: 0,
-            child: _ImageNavButton(
-              icon: Icons.chevron_left_rounded,
-              onTap:
-                  _imageIndex == 0 ? null : () => _jumpImage(_imageIndex - 1),
-            ),
-          ),
-          Positioned(
-            right: 16,
-            top: 0,
-            bottom: 0,
-            child: _ImageNavButton(
-              icon: Icons.chevron_right_rounded,
-              onTap:
-                  _imageIndex == widget.post.images.length - 1
-                      ? null
-                      : () => _jumpImage(_imageIndex + 1),
-            ),
-          ),
-          Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List<Widget>.generate(widget.post.images.length, (
-                index,
-              ) {
-                final selected = index == _imageIndex;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 160),
-                  width: selected ? 18 : 7,
-                  height: 7,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(
-                      alpha: selected ? 0.95 : 0.55,
-                    ),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _metaPane() {
     final avatarUrl = widget.post.authorAvatarUrl;
     final initial =
         widget.post.authorName.isNotEmpty
             ? widget.post.authorName.substring(0, 1)
             : '모';
 
-    return Column(
-      children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 16, 10, 16),
-          child: Row(
-            children: <Widget>[
-              CircleAvatar(
-                backgroundColor: _navy,
-                backgroundImage:
-                    avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                child:
-                    avatarUrl == null
-                        ? ModeSemiBoldText(initial, size: 14, color: Colors.white)
-                        : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    ModeSemiBoldText(widget.post.authorName, size: 14, color: _ink, height: 1.35),
-                    const SizedBox(height: 3),
-                    ModeMediumText(widget.post.authorRole, size: 13, color: _muted, height: 1.35),
-                  ],
-                ),
-              ),
-              ReportBlockMenuButton(
-                reportTargetType: ReportTargetType.feedPost,
-                reportTargetId: widget.post.id,
-                targetUserId:
-                    widget.post.authorId.isEmpty ? null : widget.post.authorId,
-                targetUserName: widget.post.authorName,
-                isOwnContent:
-                    widget.post.authorId.isNotEmpty &&
-                    widget.post.authorId ==
-                        Supabase.instance.client.auth.currentUser?.id,
-              ),
-              IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close_rounded),
-              ),
-            ],
-          ),
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 800,
+          maxHeight: size.height * 0.92,
         ),
-        const Divider(height: 1, color: _line),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(18),
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _navy,
-                        foregroundColor: Colors.white,
-                        textStyle: FeedText.button,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 13,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Material(
+            color: Colors.white,
+            child: Column(
+              children: <Widget>[
+                // ─────────────────────────────────────────────────────────
+                // 헤더 (닫기 버튼)
+                // ─────────────────────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: _line)),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      const Expanded(
+                        child: Text(
+                          '게시글',
+                          style: TextStyle(
+                            fontFamily: DT.fontFamily,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: _ink,
+                          ),
                         ),
                       ),
-                      onPressed:
-                          widget.post.operatorId == null
-                              ? null
-                              : () async {
-                                final pilot = await widget.loadPilot(
-                                  widget.post.operatorId!,
-                                );
-                                if (!mounted || pilot == null) return;
-                                Navigator.of(context).pop();
-                                _openPortfolio(context, pilot);
-                              },
-                      icon: const Icon(Icons.grid_view_rounded, size: 17),
-                      label: const Text('포트폴리오 보러가기'),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                        iconSize: 22,
+                      ),
+                    ],
+                  ),
+                ),
+                // ─────────────────────────────────────────────────────────
+                // 스크롤 가능한 본문
+                // ─────────────────────────────────────────────────────────
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        // 제목 영역
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                          child: Text(
+                            widget.post.caption.isNotEmpty
+                                ? widget.post.caption
+                                : '${widget.post.location} ${widget.post.category}',
+                            style: const TextStyle(
+                              fontFamily: DT.fontFamily,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              color: _ink,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                        // 작성자 정보 + 날짜
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: <Widget>[
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: _navy,
+                                backgroundImage:
+                                    avatarUrl != null
+                                        ? NetworkImage(avatarUrl)
+                                        : null,
+                                child:
+                                    avatarUrl == null
+                                        ? Text(
+                                          initial,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        )
+                                        : null,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      widget.post.authorName,
+                                      style: const TextStyle(
+                                        fontFamily: DT.fontFamily,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: _ink,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${widget.post.date} · ${widget.post.location}',
+                                      style: const TextStyle(
+                                        fontFamily: DT.fontFamily,
+                                        fontSize: 13,
+                                        color: _muted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // 카테고리 칩
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEAF2FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  widget.post.category,
+                                  style: const TextStyle(
+                                    fontFamily: DT.fontFamily,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: DC.primary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              ReportBlockMenuButton(
+                                reportTargetType: ReportTargetType.feedPost,
+                                reportTargetId: widget.post.id,
+                                targetUserId:
+                                    widget.post.authorId.isEmpty
+                                        ? null
+                                        : widget.post.authorId,
+                                targetUserName: widget.post.authorName,
+                                isOwnContent:
+                                    widget.post.authorId.isNotEmpty &&
+                                    widget.post.authorId ==
+                                        Supabase.instance.client.auth.currentUser?.id,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(height: 1, color: _line),
+                        // ─────────────────────────────────────────────────
+                        // 본문 내용
+                        // ─────────────────────────────────────────────────
+                        if (widget.post.caption.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                            child: Text(
+                              widget.post.caption,
+                              style: const TextStyle(
+                                fontFamily: DT.fontFamily,
+                                fontSize: 15,
+                                color: _ink,
+                                height: 1.7,
+                              ),
+                            ),
+                          ),
+                        // ─────────────────────────────────────────────────
+                        // 이미지 갤러리
+                        // ─────────────────────────────────────────────────
+                        if (widget.post.images.isNotEmpty) ...<Widget>[
+                          // 메인 이미지
+                          AspectRatio(
+                            aspectRatio: 16 / 10,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: <Widget>[
+                                PageView.builder(
+                                  controller: _pageController,
+                                  itemCount: widget.post.images.length,
+                                  onPageChanged: (index) {
+                                    setState(() => _imageIndex = index);
+                                  },
+                                  itemBuilder: (context, index) {
+                                    return Image.network(
+                                      widget.post.images[index],
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) =>
+                                          const _FeedEmptyCover(),
+                                    );
+                                  },
+                                ),
+                                // 네비게이션 버튼
+                                if (widget.post.images.length > 1) ...<Widget>[
+                                  Positioned(
+                                    left: 12,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: _ImageNavButton(
+                                      icon: Icons.chevron_left_rounded,
+                                      onTap:
+                                          _imageIndex == 0
+                                              ? null
+                                              : () => _jumpImage(_imageIndex - 1),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 12,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: _ImageNavButton(
+                                      icon: Icons.chevron_right_rounded,
+                                      onTap:
+                                          _imageIndex ==
+                                                  widget.post.images.length - 1
+                                              ? null
+                                              : () => _jumpImage(_imageIndex + 1),
+                                    ),
+                                  ),
+                                  // 인디케이터
+                                  Positioned(
+                                    bottom: 12,
+                                    left: 0,
+                                    right: 0,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 5,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.6),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${_imageIndex + 1} / ${widget.post.images.length}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          // 썸네일 (3장 이상일 때)
+                          if (widget.post.images.length > 2)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                              child: SizedBox(
+                                height: 60,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: widget.post.images.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 8),
+                                  itemBuilder: (context, index) {
+                                    final selected = index == _imageIndex;
+                                    return GestureDetector(
+                                      onTap: () => _jumpImage(index),
+                                      child: Container(
+                                        width: 80,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                            color:
+                                                selected
+                                                    ? DC.primary
+                                                    : Colors.transparent,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: Image.network(
+                                            widget.post.images[index],
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                        ],
+                        const SizedBox(height: 16),
+                        // ─────────────────────────────────────────────────
+                        // 포트폴리오 버튼
+                        // ─────────────────────────────────────────────────
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed:
+                                  widget.post.operatorId == null
+                                      ? null
+                                      : () async {
+                                        final pilot = await widget.loadPilot(
+                                          widget.post.operatorId!,
+                                        );
+                                        if (!mounted || pilot == null) return;
+                                        Navigator.of(context).pop();
+                                        _openPortfolio(context, pilot);
+                                      },
+                              icon: const Icon(Icons.grid_view_rounded, size: 18),
+                              label: const Text('운용자 포트폴리오 보기'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: _navy,
+                                side: const BorderSide(color: _line),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                textStyle: const TextStyle(
+                                  fontFamily: DT.fontFamily,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Divider(height: 1, color: _line),
+                        // ─────────────────────────────────────────────────
+                        // 좋아요 + 공유
+                        // ─────────────────────────────────────────────────
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                          child: Row(
+                            children: <Widget>[
+                              GestureDetector(
+                                onTap: () async {
+                                  try {
+                                    final api = ref.read(feedApiProvider);
+                                    final nowLiked = await api.toggleLike(
+                                      widget.post.id,
+                                    );
+                                    if (!mounted) return;
+                                    setState(() {
+                                      _liked = nowLiked;
+                                      _likeCount += nowLiked ? 1 : -1;
+                                    });
+                                  } catch (e) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('좋아요 오류: $e')),
+                                    );
+                                  }
+                                },
+                                child: Row(
+                                  children: <Widget>[
+                                    Icon(
+                                      _liked
+                                          ? Icons.favorite_rounded
+                                          : Icons.favorite_border_rounded,
+                                      color:
+                                          _liked
+                                              ? const Color(0xFFE54866)
+                                              : _muted,
+                                      size: 22,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '좋아요 $_likeCount',
+                                      style: TextStyle(
+                                        fontFamily: DT.fontFamily,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: _liked ? const Color(0xFFE54866) : _muted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Row(
+                                children: <Widget>[
+                                  const Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    color: _muted,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '댓글 ${_comments.length}',
+                                    style: const TextStyle(
+                                      fontFamily: DT.fontFamily,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: _muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1, color: _line),
+                        // ─────────────────────────────────────────────────
+                        // 댓글 섹션
+                        // ─────────────────────────────────────────────────
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                          child: Row(
+                            children: <Widget>[
+                              const Text(
+                                '댓글',
+                                style: TextStyle(
+                                  fontFamily: DT.fontFamily,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: _ink,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${_comments.length}',
+                                style: const TextStyle(
+                                  fontFamily: DT.fontFamily,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: DC.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_loadingComments)
+                          const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        else if (_comments.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: _soft,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  '첫 번째 댓글을 남겨보세요!',
+                                  style: TextStyle(
+                                    fontFamily: DT.fontFamily,
+                                    fontSize: 14,
+                                    color: _muted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                            child: Column(
+                              children:
+                                  _comments
+                                      .map((c) => _CommentTile(comment: c))
+                                      .toList(),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: <Widget>[
-                  _PostMetaPill(
-                    icon: Icons.calendar_today_outlined,
-                    text: widget.post.date,
-                  ),
-                  const SizedBox(width: 8),
-                  _PostMetaPill(
-                    icon: Icons.sell_outlined,
-                    text: widget.post.category,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              ModeMediumText(
-                '${widget.post.location}에서 진행한 ${widget.post.category} 작업입니다.',
-                size: 14,
-                color: _ink,
-                height: 1.55,
-              ),
-              const SizedBox(height: 20),
-              const ModeSemiBoldText('댓글', size: 17, color: _ink, height: 1.35),
-              const SizedBox(height: 12),
-              if (_loadingComments)
-                const Center(child: CircularProgressIndicator(strokeWidth: 2))
-              else if (_comments.isEmpty)
-                const ModeText('아직 댓글이 없습니다.', size: 14, color: _ink, height: 1.55)
-              else
-                ..._comments.map((c) => _CommentTile(comment: c)),
-            ],
-          ),
-        ),
-        const Divider(height: 1, color: _line),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-          child: Row(
-            children: <Widget>[
-              IconButton(
-                onPressed: () async {
-                  try {
-                    final api = ref.read(feedApiProvider);
-                    final nowLiked = await api.toggleLike(widget.post.id);
-                    if (!mounted) return;
-                    setState(() {
-                      _liked = nowLiked;
-                      _likeCount += nowLiked ? 1 : -1;
-                    });
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('좋아요 오류: $e')));
-                  }
-                },
-                icon: Icon(
-                  _liked
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: _liked ? const Color(0xFFE54866) : _ink,
                 ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: ModeMediumText('좋아요 $_likeCount개', size: 14, color: _ink, height: 1.35),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: TextField(
-                  controller: _commentController,
-                  style: FeedText.input,
-                  decoration: const InputDecoration(
-                    hintText: '댓글 달기...',
-                    hintStyle: TextStyle(
-                      fontFamily: DT.fontFamily,
-                      color: _muted,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
+                // ─────────────────────────────────────────────────────────
+                // 댓글 입력
+                // ─────────────────────────────────────────────────────────
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  decoration: const BoxDecoration(
+                    color: _soft,
+                    border: Border(top: BorderSide(color: _line)),
                   ),
-                  onSubmitted: (_) => _submitComment(),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: _line),
+                          ),
+                          child: TextField(
+                            controller: _commentController,
+                            style: const TextStyle(
+                              fontFamily: DT.fontFamily,
+                              fontSize: 14,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: '댓글을 입력하세요...',
+                              hintStyle: TextStyle(
+                                fontFamily: DT.fontFamily,
+                                color: _muted,
+                                fontSize: 14,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 10),
+                            ),
+                            onSubmitted: (_) => _submitComment(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        height: 38,
+                        child: FilledButton(
+                          onPressed: _submittingComment ? null : _submitComment,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _navy,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          child:
+                              _submittingComment
+                                  ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                  : const Text(
+                                    '등록',
+                                    style: TextStyle(
+                                      fontFamily: DT.fontFamily,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: _submittingComment ? null : _submitComment,
-                style: TextButton.styleFrom(
-                  textStyle: FeedText.button,
-                  foregroundColor: _navy,
-                ),
-                child:
-                    _submittingComment
-                        ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                        : const Text('게시'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 

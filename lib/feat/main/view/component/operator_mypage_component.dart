@@ -853,6 +853,19 @@ class _OperatorFeedSection extends StatefulWidget {
   State<_OperatorFeedSection> createState() => _OperatorFeedSectionState();
 }
 
+/// 에디터 블록 타입 (텍스트 또는 이미지)
+sealed class _EditorBlock {}
+
+class _TextBlock extends _EditorBlock {
+  _TextBlock({String? text}) : controller = TextEditingController(text: text);
+  final TextEditingController controller;
+}
+
+class _ImageBlock extends _EditorBlock {
+  _ImageBlock(this.file);
+  final PickedFile file;
+}
+
 class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   static const int _maxImageCount = 10;
   static const List<String> _categoryOptions = <String>[
@@ -871,23 +884,36 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   String? _pickedLocationLabel;
   String _selectedCategory = '항공촬영';
 
-  // Flutter Quill 리치 텍스트 에디터 컨트롤러
-  late quill.QuillController _quillController;
+  // 블록 에디터 (텍스트와 이미지를 섞어서 배치)
+  final List<_EditorBlock> _contentBlocks = <_EditorBlock>[];
+  int _focusedBlockIndex = 0;
+
+  // 리치 텍스트 에디터 (네이티브에서만 사용)
+  quill.QuillController? _quillController;
   final FocusNode _editorFocusNode = FocusNode();
   final ScrollController _editorScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _quillController = quill.QuillController.basic();
+    if (kIsWeb) {
+      // 웹: 블록 에디터 - 초기 텍스트 블록 추가
+      _contentBlocks.add(_TextBlock());
+    } else {
+      // 네이티브: Quill 에디터
+      _quillController = quill.QuillController.basic();
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    _quillController.dispose();
+    _quillController?.dispose();
     _editorFocusNode.dispose();
     _editorScrollController.dispose();
+    for (final block in _contentBlocks) {
+      if (block is _TextBlock) block.controller.dispose();
+    }
     super.dispose();
   }
 
@@ -903,7 +929,16 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     });
   }
 
-  // 현재 삽입된 이미지들을 추적
+  // 전체 이미지 개수 계산 (블록에서)
+  int get _imageCount {
+    if (kIsWeb) {
+      return _contentBlocks.whereType<_ImageBlock>().length;
+    } else {
+      return _embeddedImages.length;
+    }
+  }
+
+  // 현재 삽입된 이미지들을 추적 (네이티브용)
   final List<PickedFile> _embeddedImages = <PickedFile>[];
 
   Future<void> _pickImages() async {
@@ -915,7 +950,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     if (files.isEmpty) return;
     if (!mounted) return;
 
-    final remaining = _maxImageCount - _embeddedImages.length;
+    final remaining = _maxImageCount - _imageCount;
     if (files.length > remaining) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -925,23 +960,35 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       );
     }
 
-    // 현재 커서 위치에 이미지 삽입
-    for (final file in files.take(remaining)) {
-      _embeddedImages.add(file);
-      // 이미지를 base64로 변환하여 Quill 에디터에 삽입
-      final base64Image = 'data:image/${file.name.split('.').last};base64,${base64Encode(file.bytes)}';
-      final index = _quillController.selection.baseOffset;
-      _quillController.document.insert(index, quill.BlockEmbed.image(base64Image));
-      _quillController.updateSelection(
-        TextSelection.collapsed(offset: index + 1),
-        quill.ChangeSource.local,
-      );
-      // 이미지 뒤에 새 줄 추가
-      _quillController.document.insert(index + 1, '\n');
-      _quillController.updateSelection(
-        TextSelection.collapsed(offset: index + 2),
-        quill.ChangeSource.local,
-      );
+    if (kIsWeb) {
+      // 웹: 블록 에디터에 이미지 삽입
+      for (final file in files.take(remaining)) {
+        // 포커스된 텍스트 블록 다음에 이미지 삽입
+        final insertIndex = _focusedBlockIndex + 1;
+        _contentBlocks.insert(insertIndex, _ImageBlock(file));
+        // 이미지 다음에 새 텍스트 블록 추가
+        _contentBlocks.insert(insertIndex + 1, _TextBlock());
+        _focusedBlockIndex = insertIndex + 1;
+      }
+    } else {
+      // 네이티브: Quill 에디터에 이미지 삽입
+      for (final file in files.take(remaining)) {
+        _embeddedImages.add(file);
+        if (_quillController != null) {
+          final base64Image = 'data:image/${file.name.split('.').last};base64,${base64Encode(file.bytes)}';
+          final index = _quillController!.selection.baseOffset;
+          _quillController!.document.insert(index, quill.BlockEmbed.image(base64Image));
+          _quillController!.updateSelection(
+            TextSelection.collapsed(offset: index + 1),
+            quill.ChangeSource.local,
+          );
+          _quillController!.document.insert(index + 1, '\n');
+          _quillController!.updateSelection(
+            TextSelection.collapsed(offset: index + 2),
+            quill.ChangeSource.local,
+          );
+        }
+      }
     }
     setState(() {});
   }
@@ -972,15 +1019,17 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // 선택한 색상을 Quill 에디터에 적용
-                final r = currentColor.r.toInt();
-                final g = currentColor.g.toInt();
-                final b = currentColor.b.toInt();
-                final hexColor = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
-                if (isBackground) {
-                  _quillController.formatSelection(quill.BackgroundAttribute(hexColor));
-                } else {
-                  _quillController.formatSelection(quill.ColorAttribute(hexColor));
+                // 선택한 색상을 Quill 에디터에 적용 (네이티브만)
+                if (!kIsWeb && _quillController != null) {
+                  final r = currentColor.r.toInt();
+                  final g = currentColor.g.toInt();
+                  final b = currentColor.b.toInt();
+                  final hexColor = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
+                  if (isBackground) {
+                    _quillController!.formatSelection(quill.BackgroundAttribute(hexColor));
+                  } else {
+                    _quillController!.formatSelection(quill.ColorAttribute(hexColor));
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -994,22 +1043,166 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     );
   }
 
+  /// 블록 에디터 빌드 (웹용)
+  Widget _buildBlockEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        for (int i = 0; i < _contentBlocks.length; i++)
+          _buildBlock(i),
+        // 이미지 개수 표시
+        if (_imageCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              '$_imageCount장 첨부됨 · 첫 번째 사진이 대표 이미지로 표시됩니다.',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF888888),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 개별 블록 빌드
+  Widget _buildBlock(int index) {
+    final block = _contentBlocks[index];
+    if (block is _TextBlock) {
+      return TextField(
+        controller: block.controller,
+        maxLines: null,
+        minLines: index == 0 ? 4 : 2,
+        enabled: !_isSubmitting,
+        onTap: () => setState(() => _focusedBlockIndex = index),
+        decoration: InputDecoration(
+          hintText: index == 0
+              ? '내용을 입력하세요.\n\n촬영 장소, 작업 내용, 사용 장비 등을 자유롭게 작성해주세요.\n\n사진 버튼을 눌러 원하는 위치에 이미지를 삽입할 수 있습니다.'
+              : '이미지 아래 텍스트를 입력하세요...',
+          hintStyle: const TextStyle(
+            color: Color(0xFF999999),
+            fontSize: 14,
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+        style: const TextStyle(
+          fontSize: 14,
+          height: 1.6,
+        ),
+      );
+    } else if (block is _ImageBlock) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+        ),
+        child: Stack(
+          children: <Widget>[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(7),
+              child: Image.memory(
+                Uint8List.fromList(block.file.bytes),
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            // 삭제 버튼
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: _isSubmitting
+                    ? null
+                    : () => _removeBlockAt(index),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  /// 블록 삭제
+  void _removeBlockAt(int index) {
+    final block = _contentBlocks[index];
+    if (block is _TextBlock) {
+      block.controller.dispose();
+    }
+    setState(() {
+      _contentBlocks.removeAt(index);
+      // 이미지 삭제 후 빈 텍스트 블록 병합
+      if (index > 0 && index < _contentBlocks.length) {
+        final prev = _contentBlocks[index - 1];
+        final next = _contentBlocks[index];
+        if (prev is _TextBlock && next is _TextBlock) {
+          // 두 텍스트 블록 병합
+          prev.controller.text = '${prev.controller.text}\n${next.controller.text}'.trim();
+          next.controller.dispose();
+          _contentBlocks.removeAt(index);
+        }
+      }
+      // 블록이 비었으면 초기 텍스트 블록 추가
+      if (_contentBlocks.isEmpty) {
+        _contentBlocks.add(_TextBlock());
+      }
+      _focusedBlockIndex = (_focusedBlockIndex >= _contentBlocks.length)
+          ? _contentBlocks.length - 1
+          : _focusedBlockIndex;
+    });
+  }
+
   /// 텍스트 색상 적용
   void _applyTextColor(Color color) {
     final r = color.r.toInt();
     final g = color.g.toInt();
     final b = color.b.toInt();
     final hexColor = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
-    _quillController.formatSelection(quill.ColorAttribute(hexColor));
+    _quillController?.formatSelection(quill.ColorAttribute(hexColor));
   }
 
   Future<void> _submit() async {
     if (_isSubmitting) return;
-    // Quill 에디터에서 플레인 텍스트 추출
-    final caption = _quillController.document.toPlainText().trim();
+
+    // 에디터에서 텍스트와 이미지 추출
+    String caption;
+    List<PickedFile> images;
+
+    if (kIsWeb) {
+      // 블록 에디터에서 추출
+      final textParts = <String>[];
+      images = <PickedFile>[];
+      for (final block in _contentBlocks) {
+        if (block is _TextBlock) {
+          final text = block.controller.text.trim();
+          if (text.isNotEmpty) textParts.add(text);
+        } else if (block is _ImageBlock) {
+          images.add(block.file);
+        }
+      }
+      caption = textParts.join('\n\n');
+    } else {
+      caption = _quillController?.document.toPlainText().trim() ?? '';
+      images = _embeddedImages;
+    }
 
     final messenger = ScaffoldMessenger.of(context);
-    if (_embeddedImages.isEmpty) {
+    if (images.isEmpty) {
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -1046,7 +1239,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       await widget.store.addFeedPost(
         caption: caption,
         images:
-            _embeddedImages
+            images
                 .map(
                   (image) => FeedImageUpload(
                     bytes: image.bytes,
@@ -1080,8 +1273,17 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     }
     if (!mounted) return;
     _titleController.clear();
-    // Quill 에디터 초기화
-    _quillController = quill.QuillController.basic();
+    // 에디터 초기화 (웹: 블록 에디터, 네이티브: Quill)
+    if (kIsWeb) {
+      for (final block in _contentBlocks) {
+        if (block is _TextBlock) block.controller.dispose();
+      }
+      _contentBlocks.clear();
+      _contentBlocks.add(_TextBlock());
+      _focusedBlockIndex = 0;
+    } else {
+      _quillController = quill.QuillController.basic();
+    }
     setState(() {
       _isSubmitting = false;
       _isExpanded = false;
@@ -1345,9 +1547,9 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     ),
                   ),
                   // ─────────────────────────────────────────────────────────
-                  // 텍스트 서식 툴바 (Custom Toolbar - Quill actions)
+                  // 텍스트 서식 툴바 (Custom Toolbar - Quill actions) - 네이티브만
                   // ─────────────────────────────────────────────────────────
-                  Container(
+                  if (!kIsWeb) Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 4,
@@ -1386,7 +1588,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                                 ],
                                 onChanged: _isSubmitting ? null : (size) {
                                   if (size != null) {
-                                    _quillController.formatSelection(quill.Attribute.fromKeyValue('size', '${size}px'));
+                                    _quillController!.formatSelection(quill.Attribute.fromKeyValue('size', '${size}px'));
                                   }
                                 },
                               ),
@@ -1398,7 +1600,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                             label: 'B',
                             fontWeight: FontWeight.bold,
                             onTap: _isSubmitting ? null : () {
-                              _quillController.formatSelection(quill.Attribute.bold);
+                              _quillController!.formatSelection(quill.Attribute.bold);
                             },
                           ),
                           const SizedBox(width: 4),
@@ -1407,7 +1609,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                             label: 'I',
                             fontStyle: FontStyle.italic,
                             onTap: _isSubmitting ? null : () {
-                              _quillController.formatSelection(quill.Attribute.italic);
+                              _quillController!.formatSelection(quill.Attribute.italic);
                             },
                           ),
                           const SizedBox(width: 4),
@@ -1416,7 +1618,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                             label: 'U',
                             textDecoration: TextDecoration.underline,
                             onTap: _isSubmitting ? null : () {
-                              _quillController.formatSelection(quill.Attribute.underline);
+                              _quillController!.formatSelection(quill.Attribute.underline);
                             },
                           ),
                           const SizedBox(width: 8),
@@ -1478,9 +1680,9 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                     ),
                   ),
                   // ─────────────────────────────────────────────────────────
-                  // 첨부된 사진 미리보기 (이미지가 에디터에 삽입된 경우 표시)
+                  // 네이티브용 첨부된 사진 미리보기
                   // ─────────────────────────────────────────────────────────
-                  if (_embeddedImages.isNotEmpty)
+                  if (!kIsWeb && _embeddedImages.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: const BoxDecoration(
@@ -1572,80 +1774,25 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                       ),
                     ),
                   // ─────────────────────────────────────────────────────────
-                  // 본문 에디터 영역 (Quill Rich Text Editor)
+                  // 본문 에디터 영역 (웹: 블록 에디터, 네이티브: Quill)
                   // ─────────────────────────────────────────────────────────
                   Container(
                     constraints: const BoxConstraints(minHeight: 200),
                     padding: const EdgeInsets.all(12),
                     color: Colors.white,
-                    child: quill.QuillEditor(
-                      controller: _quillController,
-                      focusNode: _editorFocusNode,
-                      scrollController: _editorScrollController,
-                      config: quill.QuillEditorConfig(
-                        placeholder: '내용을 입력하세요.\n\n촬영 장소, 작업 내용, 사용 장비 등을 자유롭게 작성해주세요.\n\n텍스트를 선택한 후 위 툴바에서 서식을 적용할 수 있습니다.',
-                        padding: EdgeInsets.zero,
-                        autoFocus: false,
-                        expands: false,
-                      ),
-                    ),
-                  ),
-                  // ─────────────────────────────────────────────────────────
-                  // 태그달기 행
-                  // ─────────────────────────────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF7F7F7),
-                      border: Border(
-                        top: BorderSide(color: Color(0xFFE5E5E5)),
-                      ),
-                    ),
-                    child: Row(
-                      children: <Widget>[
-                        const Text(
-                          '태그달기',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF666666),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Container(
-                            height: 28,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: const Color(0xFFCCCCCC)),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: const TextField(
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF333333),
-                              ),
-                              decoration: InputDecoration(
-                                hintText: '태그를 쉼표로 구분하여 입력하세요',
-                                hintStyle: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF999999),
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                              ),
+                    child: kIsWeb
+                        ? _buildBlockEditor()
+                        : quill.QuillEditor(
+                            controller: _quillController!,
+                            focusNode: _editorFocusNode,
+                            scrollController: _editorScrollController,
+                            config: quill.QuillEditorConfig(
+                              placeholder: '내용을 입력하세요.\n\n촬영 장소, 작업 내용, 사용 장비 등을 자유롭게 작성해주세요.\n\n텍스트를 선택한 후 위 툴바에서 서식을 적용할 수 있습니다.',
+                              padding: EdgeInsets.zero,
+                              autoFocus: false,
+                              expands: false,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ],
               ),
