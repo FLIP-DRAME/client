@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 import '../../../../app_providers.dart';
 import '../../../../common/drame_navigation.dart';
@@ -24,6 +26,7 @@ import '../component/feed_location_picker.dart';
 import '../../../quote/model/quote_model.dart';
 import '../../../quote/view/component/quote_component.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 part '../component/main_component.dart';
