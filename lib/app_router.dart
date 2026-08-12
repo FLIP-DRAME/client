@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mode/feat/main/network/drone_pilot_api.dart';
 
 import 'app_providers.dart';
+import 'feat/feed/network/feed_api.dart';
+import 'feat/feed/view/pages/feed_page.dart';
 import 'feat/auth/view/pages/login_page.dart';
 import 'feat/auth/view/pages/signup_page.dart';
 import 'feat/legal/view/pages/privacy_policy_page.dart';
@@ -74,6 +76,17 @@ final GoRouter appRouter = GoRouter(
       name: 'feed',
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: FeedStandalonePage()),
+    ),
+    GoRoute(
+      path: '/feed/:postId',
+      name: 'feed-detail',
+      pageBuilder: (context, state) {
+        final postId = state.pathParameters['postId']!;
+        final post = state.extra is FeedPost ? state.extra! as FeedPost : null;
+        return NoTransitionPage(
+          child: FeedDetailPage(postId: postId, post: post),
+        );
+      },
     ),
     GoRoute(
       path: '/portfolio',

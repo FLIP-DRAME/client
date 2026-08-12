@@ -853,19 +853,67 @@ class _OperatorFeedSection extends StatefulWidget {
   State<_OperatorFeedSection> createState() => _OperatorFeedSectionState();
 }
 
+/// 에디터 블록 타입 (텍스트 또는 이미지)
+sealed class _EditorBlock {}
+
+class _TextBlock extends _EditorBlock {
+  _TextBlock({String? text}) : controller = TextEditingController(text: text);
+  final TextEditingController controller;
+}
+
+class _ImageBlock extends _EditorBlock {
+  _ImageBlock(this.file);
+  final PickedFile file;
+}
+
 class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   static const int _maxImageCount = 10;
+  static const List<String> _categoryOptions = <String>[
+    '항공촬영',
+    '농약방제',
+    '부동산',
+    '측량·매핑',
+    '시설점검',
+    '행사촬영',
+  ];
 
-  final TextEditingController _captionController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
   bool _isExpanded = false;
   bool _isSubmitting = false;
-  final List<PickedFile> _pendingImages = <PickedFile>[];
   LatLng? _pickedLocation;
   String? _pickedLocationLabel;
+  String _selectedCategory = '항공촬영';
+
+  // 블록 에디터 (텍스트와 이미지를 섞어서 배치)
+  final List<_EditorBlock> _contentBlocks = <_EditorBlock>[];
+  int _focusedBlockIndex = 0;
+
+  // 리치 텍스트 에디터 (네이티브에서만 사용)
+  quill.QuillController? _quillController;
+  final FocusNode _editorFocusNode = FocusNode();
+  final ScrollController _editorScrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) {
+      // 웹: 블록 에디터 - 초기 텍스트 블록 추가
+      _contentBlocks.add(_TextBlock());
+    } else {
+      // 네이티브: Quill 에디터
+      _quillController = quill.QuillController.basic();
+    }
+  }
 
   @override
   void dispose() {
-    _captionController.dispose();
+    _titleController.dispose();
+    _quillController?.dispose();
+    _editorFocusNode.dispose();
+    _editorScrollController.dispose();
+    for (final block in _contentBlocks) {
+      if (block is _TextBlock) block.controller.dispose();
+    }
     super.dispose();
   }
 
@@ -881,6 +929,18 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     });
   }
 
+  // 전체 이미지 개수 계산 (블록에서)
+  int get _imageCount {
+    if (kIsWeb) {
+      return _contentBlocks.whereType<_ImageBlock>().length;
+    } else {
+      return _embeddedImages.length;
+    }
+  }
+
+  // 현재 삽입된 이미지들을 추적 (네이티브용)
+  final List<PickedFile> _embeddedImages = <PickedFile>[];
+
   Future<void> _pickImages() async {
     if (_isSubmitting) return;
     final files = await pickPlatformFiles(
@@ -889,10 +949,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
     );
     if (files.isEmpty) return;
     if (!mounted) return;
-    final remaining = _maxImageCount - _pendingImages.length;
-    setState(() {
-      _pendingImages.addAll(files.take(remaining));
-    });
+
+    final remaining = _maxImageCount - _imageCount;
     if (files.length > remaining) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -901,14 +959,250 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
         ),
       );
     }
+
+    if (kIsWeb) {
+      // 웹: 블록 에디터에 이미지 삽입
+      for (final file in files.take(remaining)) {
+        // 포커스된 텍스트 블록 다음에 이미지 삽입
+        final insertIndex = _focusedBlockIndex + 1;
+        _contentBlocks.insert(insertIndex, _ImageBlock(file));
+        // 이미지 다음에 새 텍스트 블록 추가
+        _contentBlocks.insert(insertIndex + 1, _TextBlock());
+        _focusedBlockIndex = insertIndex + 1;
+      }
+    } else {
+      // 네이티브: Quill 에디터에 이미지 삽입
+      for (final file in files.take(remaining)) {
+        _embeddedImages.add(file);
+        if (_quillController != null) {
+          final base64Image = 'data:image/${file.name.split('.').last};base64,${base64Encode(file.bytes)}';
+          final index = _quillController!.selection.baseOffset;
+          _quillController!.document.insert(index, quill.BlockEmbed.image(base64Image));
+          _quillController!.updateSelection(
+            TextSelection.collapsed(offset: index + 1),
+            quill.ChangeSource.local,
+          );
+          _quillController!.document.insert(index + 1, '\n');
+          _quillController!.updateSelection(
+            TextSelection.collapsed(offset: index + 2),
+            quill.ChangeSource.local,
+          );
+        }
+      }
+    }
+    setState(() {});
+  }
+
+  /// 커스텀 색상 선택기 표시
+  void _showColorPicker({required bool isBackground}) {
+    Color currentColor = Colors.black;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(isBackground ? '배경색 선택' : '텍스트 색상 선택'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: currentColor,
+              onColorChanged: (color) {
+                currentColor = color;
+              },
+              enableAlpha: false,
+              labelTypes: const [],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // 선택한 색상을 Quill 에디터에 적용 (네이티브만)
+                if (!kIsWeb && _quillController != null) {
+                  final r = currentColor.r.toInt();
+                  final g = currentColor.g.toInt();
+                  final b = currentColor.b.toInt();
+                  final hexColor = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
+                  if (isBackground) {
+                    _quillController!.formatSelection(quill.BackgroundAttribute(hexColor));
+                  } else {
+                    _quillController!.formatSelection(quill.ColorAttribute(hexColor));
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF222222),
+              ),
+              child: const Text('적용', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 블록 에디터 빌드 (웹용)
+  Widget _buildBlockEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        for (int i = 0; i < _contentBlocks.length; i++)
+          _buildBlock(i),
+        // 이미지 개수 표시
+        if (_imageCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              '$_imageCount장 첨부됨 · 첫 번째 사진이 대표 이미지로 표시됩니다.',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF888888),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 개별 블록 빌드
+  Widget _buildBlock(int index) {
+    final block = _contentBlocks[index];
+    if (block is _TextBlock) {
+      return TextField(
+        controller: block.controller,
+        maxLines: null,
+        minLines: index == 0 ? 4 : 2,
+        enabled: !_isSubmitting,
+        onTap: () => setState(() => _focusedBlockIndex = index),
+        decoration: InputDecoration(
+          hintText: index == 0
+              ? '내용을 입력하세요.\n\n촬영 장소, 작업 내용, 사용 장비 등을 자유롭게 작성해주세요.\n\n사진 버튼을 눌러 원하는 위치에 이미지를 삽입할 수 있습니다.'
+              : '이미지 아래 텍스트를 입력하세요...',
+          hintStyle: const TextStyle(
+            color: Color(0xFF999999),
+            fontSize: 14,
+          ),
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+        ),
+        style: const TextStyle(
+          fontSize: 14,
+          height: 1.6,
+        ),
+      );
+    } else if (block is _ImageBlock) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+        ),
+        child: Stack(
+          children: <Widget>[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(7),
+              child: Image.memory(
+                Uint8List.fromList(block.file.bytes),
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+            // 삭제 버튼
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: _isSubmitting
+                    ? null
+                    : () => _removeBlockAt(index),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  /// 블록 삭제
+  void _removeBlockAt(int index) {
+    final block = _contentBlocks[index];
+    if (block is _TextBlock) {
+      block.controller.dispose();
+    }
+    setState(() {
+      _contentBlocks.removeAt(index);
+      // 이미지 삭제 후 빈 텍스트 블록 병합
+      if (index > 0 && index < _contentBlocks.length) {
+        final prev = _contentBlocks[index - 1];
+        final next = _contentBlocks[index];
+        if (prev is _TextBlock && next is _TextBlock) {
+          // 두 텍스트 블록 병합
+          prev.controller.text = '${prev.controller.text}\n${next.controller.text}'.trim();
+          next.controller.dispose();
+          _contentBlocks.removeAt(index);
+        }
+      }
+      // 블록이 비었으면 초기 텍스트 블록 추가
+      if (_contentBlocks.isEmpty) {
+        _contentBlocks.add(_TextBlock());
+      }
+      _focusedBlockIndex = (_focusedBlockIndex >= _contentBlocks.length)
+          ? _contentBlocks.length - 1
+          : _focusedBlockIndex;
+    });
+  }
+
+  /// 텍스트 색상 적용
+  void _applyTextColor(Color color) {
+    final r = color.r.toInt();
+    final g = color.g.toInt();
+    final b = color.b.toInt();
+    final hexColor = '#${r.toRadixString(16).padLeft(2, '0')}${g.toRadixString(16).padLeft(2, '0')}${b.toRadixString(16).padLeft(2, '0')}';
+    _quillController?.formatSelection(quill.ColorAttribute(hexColor));
   }
 
   Future<void> _submit() async {
     if (_isSubmitting) return;
-    final caption = _captionController.text.trim();
+
+    // 에디터에서 텍스트와 이미지 추출
+    String caption;
+    List<PickedFile> images;
+
+    if (kIsWeb) {
+      // 블록 에디터에서 추출
+      final textParts = <String>[];
+      images = <PickedFile>[];
+      for (final block in _contentBlocks) {
+        if (block is _TextBlock) {
+          final text = block.controller.text.trim();
+          if (text.isNotEmpty) textParts.add(text);
+        } else if (block is _ImageBlock) {
+          images.add(block.file);
+        }
+      }
+      caption = textParts.join('\n\n');
+    } else {
+      caption = _quillController?.document.toPlainText().trim() ?? '';
+      images = _embeddedImages;
+    }
 
     final messenger = ScaffoldMessenger.of(context);
-    if (_pendingImages.isEmpty) {
+    if (images.isEmpty) {
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -945,7 +1239,7 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       await widget.store.addFeedPost(
         caption: caption,
         images:
-            _pendingImages
+            images
                 .map(
                   (image) => FeedImageUpload(
                     bytes: image.bytes,
@@ -953,9 +1247,8 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ),
                 )
                 .toList(),
-        categoryLabel: widget.store.selectedPilot?.categories.firstOrNull ?? '',
-        locationLabel:
-            widget.store.selectedPilot?.availableAreas.firstOrNull ?? '',
+        categoryLabel: _selectedCategory,
+        locationLabel: _pickedLocationLabel ?? '',
         latitude: _pickedLocation!.latitude,
         longitude: _pickedLocation!.longitude,
       );
@@ -979,13 +1272,25 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
       return;
     }
     if (!mounted) return;
-    _captionController.clear();
+    _titleController.clear();
+    // 에디터 초기화 (웹: 블록 에디터, 네이티브: Quill)
+    if (kIsWeb) {
+      for (final block in _contentBlocks) {
+        if (block is _TextBlock) block.controller.dispose();
+      }
+      _contentBlocks.clear();
+      _contentBlocks.add(_TextBlock());
+      _focusedBlockIndex = 0;
+    } else {
+      _quillController = quill.QuillController.basic();
+    }
     setState(() {
       _isSubmitting = false;
       _isExpanded = false;
-      _pendingImages.clear();
+      _embeddedImages.clear();
       _pickedLocation = null;
       _pickedLocationLabel = null;
+      _selectedCategory = '항공촬영';
     });
     messenger
       ..hideCurrentSnackBar()
@@ -1023,183 +1328,532 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
                   ],
                 ),
               ),
-              ModeButton(
-                onPressed:
-                    _isSubmitting
-                        ? null
-                        : () => setState(() => _isExpanded = !_isExpanded),
-                icon: _isExpanded ? Icons.close_rounded : Icons.add_rounded,
-                label: _isExpanded ? '닫기' : '새 게시물',
-                variant: ModeButtonVariant.primary,
-              ),
+              _isExpanded
+                  ? OutlinedButton.icon(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => setState(() => _isExpanded = false),
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                      label: const Text('닫기'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF222222),
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF222222)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    )
+                  : ElevatedButton.icon(
+                      onPressed: () => setState(() => _isExpanded = true),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('새 게시물'),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: const Color(0xFF222222),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        elevation: 0,
+                      ),
+                    ),
             ],
           ),
           const SizedBox(height: 20),
           if (_isExpanded) ...<Widget>[
-            ModeCard(
-              variant: ModeCardVariant.softFilled,
-              radius: 12,
-              padding: const EdgeInsets.all(20),
+            // ═══════════════════════════════════════════════════════════════
+            // SmartEditor 스타일 피드 작성 폼
+            // ═══════════════════════════════════════════════════════════════
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE0E0E0)),
+              ),
+              clipBehavior: Clip.antiAlias,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  TextFormField(
-                    controller: _captionController,
-                    maxLines: 3,
-                    style: AppText.smallStrong.copyWith(color: _ink),
-                    decoration: InputDecoration(
-                      hintText: '작업 내용이나 소개글을 입력하세요...',
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.all(14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
+                  // ─────────────────────────────────────────────────────────
+                  // 카테고리 행
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF7F7F7),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _line),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Text(
+                          '카테고리',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            height: 32,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: const Color(0xFFDDDDDD)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedCategory,
+                                isExpanded: true,
+                                isDense: true,
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 18,
+                                  color: Color(0xFF666666),
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF333333),
+                                ),
+                                items:
+                                    _categoryOptions.map((category) {
+                                      return DropdownMenuItem<String>(
+                                        value: category,
+                                        child: Text(category),
+                                      );
+                                    }).toList(),
+                                onChanged:
+                                    _isSubmitting
+                                        ? null
+                                        : (value) {
+                                          if (value != null) {
+                                            setState(
+                                              () => _selectedCategory = value,
+                                            );
+                                          }
+                                        },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ─────────────────────────────────────────────────────────
+                  // 제목 행
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: _focus, width: 1.2),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Text(
+                          '제목',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: TextField(
+                            controller: _titleController,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF333333),
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: '제목을 입력하세요',
+                              hintStyle: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF999999),
+                              ),
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(vertical: 6),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ─────────────────────────────────────────────────────────
+                  // 파일첨부 툴바
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF7F7F7),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
+                      ),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        const Text(
+                          '파일첨부',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF666666),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        _SmartEditorToolButton(
+                          icon: Icons.photo_camera_rounded,
+                          label: '사진',
+                          color: const Color(0xFFFF6B35),
+                          onTap: _isSubmitting ? null : _pickImages,
+                          badge:
+                              _embeddedImages.isNotEmpty
+                                  ? '${_embeddedImages.length}'
+                                  : null,
+                        ),
+                        const SizedBox(width: 4),
+                        _SmartEditorToolButton(
+                          icon: Icons.map_rounded,
+                          label: '지도',
+                          color: const Color(0xFF4CAF50),
+                          onTap: _isSubmitting ? null : _pickLocation,
+                          badge: _pickedLocation != null ? '✓' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ─────────────────────────────────────────────────────────
+                  // 텍스트 서식 툴바 (Custom Toolbar - Quill actions) - 네이티브만
+                  // ─────────────────────────────────────────────────────────
+                  if (!kIsWeb) Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFAFAFA),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE5E5E5)),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: <Widget>[
+                          // 폰트 크기 드롭다운
+                          Container(
+                            height: 28,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: const Color(0xFFDDDDDD)),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<int>(
+                                value: 14,
+                                isDense: true,
+                                style: const TextStyle(fontSize: 12, color: Color(0xFF333333)),
+                                items: const [
+                                  DropdownMenuItem(value: 12, child: Text('12pt')),
+                                  DropdownMenuItem(value: 14, child: Text('14pt')),
+                                  DropdownMenuItem(value: 16, child: Text('16pt')),
+                                  DropdownMenuItem(value: 18, child: Text('18pt')),
+                                  DropdownMenuItem(value: 20, child: Text('20pt')),
+                                  DropdownMenuItem(value: 24, child: Text('24pt')),
+                                ],
+                                onChanged: _isSubmitting ? null : (size) {
+                                  if (size != null) {
+                                    _quillController!.formatSelection(quill.Attribute.fromKeyValue('size', '${size}px'));
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // B (Bold) 버튼
+                          _FormatButton(
+                            label: 'B',
+                            fontWeight: FontWeight.bold,
+                            onTap: _isSubmitting ? null : () {
+                              _quillController!.formatSelection(quill.Attribute.bold);
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          // I (Italic) 버튼
+                          _FormatButton(
+                            label: 'I',
+                            fontStyle: FontStyle.italic,
+                            onTap: _isSubmitting ? null : () {
+                              _quillController!.formatSelection(quill.Attribute.italic);
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          // U (Underline) 버튼
+                          _FormatButton(
+                            label: 'U',
+                            textDecoration: TextDecoration.underline,
+                            onTap: _isSubmitting ? null : () {
+                              _quillController!.formatSelection(quill.Attribute.underline);
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 1,
+                            height: 24,
+                            color: const Color(0xFFDDDDDD),
+                          ),
+                          const SizedBox(width: 8),
+                          // 텍스트 색상 버튼 - 프리셋 색상
+                          _TextColorButton(
+                            color: const Color(0xFF333333),
+                            onTap: _isSubmitting ? null : () => _applyTextColor(const Color(0xFF333333)),
+                          ),
+                          const SizedBox(width: 4),
+                          _TextColorButton(
+                            color: const Color(0xFFE53935),
+                            onTap: _isSubmitting ? null : () => _applyTextColor(const Color(0xFFE53935)),
+                          ),
+                          const SizedBox(width: 4),
+                          _TextColorButton(
+                            color: const Color(0xFF1E88E5),
+                            onTap: _isSubmitting ? null : () => _applyTextColor(const Color(0xFF1E88E5)),
+                          ),
+                          const SizedBox(width: 4),
+                          _TextColorButton(
+                            color: const Color(0xFF43A047),
+                            onTap: _isSubmitting ? null : () => _applyTextColor(const Color(0xFF43A047)),
+                          ),
+                          const SizedBox(width: 4),
+                          // 커스텀 색상 버튼
+                          GestureDetector(
+                            onTap: _isSubmitting ? null : () => _showColorPicker(isBackground: false),
+                            child: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Colors.red, Colors.orange, Colors.yellow, Colors.green, Colors.blue, Colors.purple],
+                                ),
+                                border: Border.all(color: const Color(0xFFDDDDDD)),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  '...',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    shadows: [Shadow(blurRadius: 2, color: Colors.black)],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: _isSubmitting ? null : _pickLocation,
-                    child: Container(
-                      width: double.infinity,
+                  // ─────────────────────────────────────────────────────────
+                  // 네이티브용 첨부된 사진 미리보기
+                  // ─────────────────────────────────────────────────────────
+                  if (!kIsWeb && _embeddedImages.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFE5E5E5)),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          SizedBox(
+                            height: 80,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _embeddedImages.length,
+                              separatorBuilder:
+                                  (_, __) => const SizedBox(width: 8),
+                              itemBuilder: (context, index) {
+                                return _SmartEditorImagePreview(
+                                  image: _embeddedImages[index],
+                                  onRemove:
+                                      _isSubmitting
+                                          ? null
+                                          : () => setState(
+                                            () => _embeddedImages.removeAt(
+                                              index,
+                                            ),
+                                          ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${_embeddedImages.length}장 첨부됨 · 첫 번째 사진이 대표 이미지로 표시됩니다.',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF888888),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  // ─────────────────────────────────────────────────────────
+                  // 선택된 위치 표시
+                  // ─────────────────────────────────────────────────────────
+                  if (_pickedLocation != null)
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
-                        vertical: 12,
+                        vertical: 8,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: _pickedLocation == null ? _line : _mint,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFE5E5E5)),
                         ),
                       ),
                       child: Row(
                         children: <Widget>[
-                          Icon(
-                            Icons.map_rounded,
-                            size: 18,
-                            color: _pickedLocation == null ? DC.muted : _mint,
+                          const Icon(
+                            Icons.location_on_rounded,
+                            size: 16,
+                            color: Color(0xFF4CAF50),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              _pickedLocation == null
-                                  ? '촬영 위치를 지도에서 선택 (필수)'
-                                  : (_pickedLocationLabel ??
-                                      '선택됨: ${_pickedLocation!.latitude.toStringAsFixed(5)}, ${_pickedLocation!.longitude.toStringAsFixed(5)}'),
-                              style: AppText.smallStrong.copyWith(
-                                color: _pickedLocation == null ? DC.muted : _ink,
+                              _pickedLocationLabel ?? '위치 선택됨',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF333333),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Text(
-                            _pickedLocation == null ? '선택하기' : '변경',
-                            style: AppText.metricLabel.copyWith(color: _mint),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  if (_pendingImages.isNotEmpty) ...<Widget>[
-                    SizedBox(
-                      height: 104,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount:
-                            _pendingImages.length < _maxImageCount
-                                ? _pendingImages.length + 1
-                                : _pendingImages.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          if (index == _pendingImages.length) {
-                            return _AddFeedImagesButton(
-                              onTap: _isSubmitting ? null : _pickImages,
-                            );
-                          }
-                          return _PendingFeedImage(
-                            image: _pendingImages[index],
-                            index: index,
-                            onRemove:
-                                _isSubmitting
-                                    ? null
-                                    : () => setState(
-                                      () => _pendingImages.removeAt(index),
-                                    ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: <Widget>[
-                        Icon(Icons.image_rounded, size: 13, color: _mint),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            '${_pendingImages.length}장 선택됨 · 첫 번째 사진이 대표로 표시됩니다.',
-                            style: AppText.metricLabel,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ] else
-                    _AddFeedImagesButton(
-                      onTap: _isSubmitting ? null : _pickImages,
-                      wide: true,
-                    ),
-                  const SizedBox(height: 14),
-                  if (_isSubmitting) ...<Widget>[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEAF2FF),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFCFE0FF)),
-                      ),
-                      child: Row(
-                        children: const <Widget>[
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              '피드 등록 대기중',
-                              style: AppText.metricLabel,
+                          GestureDetector(
+                            onTap: () => setState(() {
+                              _pickedLocation = null;
+                              _pickedLocationLabel = null;
+                            }),
+                            child: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Color(0xFF999999),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                  ModeButton(
-                    onPressed: _isSubmitting ? null : _submit,
-                    variant: ModeButtonVariant.primary,
-                    fullWidth: true,
-                    label: '피드에 등록',
+                  // ─────────────────────────────────────────────────────────
+                  // 본문 에디터 영역 (웹: 블록 에디터, 네이티브: Quill)
+                  // ─────────────────────────────────────────────────────────
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 200),
+                    padding: const EdgeInsets.all(12),
+                    color: Colors.white,
+                    child: kIsWeb
+                        ? _buildBlockEditor()
+                        : quill.QuillEditor(
+                            controller: _quillController!,
+                            focusNode: _editorFocusNode,
+                            scrollController: _editorScrollController,
+                            config: quill.QuillEditorConfig(
+                              placeholder: '내용을 입력하세요.\n\n촬영 장소, 작업 내용, 사용 장비 등을 자유롭게 작성해주세요.\n\n텍스트를 선택한 후 위 툴바에서 서식을 적용할 수 있습니다.',
+                              padding: EdgeInsets.zero,
+                              autoFocus: false,
+                              expands: false,
+                            ),
+                          ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // ─────────────────────────────────────────────────────────────
+            // 등록 버튼
+            // ─────────────────────────────────────────────────────────────
+            if (_isSubmitting)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF2FF),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFFCFE0FF)),
+                ),
+                child: const Row(
+                  children: <Widget>[
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '피드 등록 대기중',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF666666),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF222222),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  '등록',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -1249,38 +1903,108 @@ class _OperatorFeedSectionState extends State<_OperatorFeedSection> {
   }
 }
 
-class _AddFeedImagesButton extends StatelessWidget {
-  const _AddFeedImagesButton({required this.onTap, this.wide = false});
+/// SmartEditor 스타일 툴 버튼
+class _SmartEditorToolButton extends StatelessWidget {
+  const _SmartEditorToolButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+    this.badge,
+  });
 
+  final IconData icon;
+  final String label;
+  final Color color;
   final VoidCallback? onTap;
-  final bool wide;
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: wide ? double.infinity : 104,
-      height: wide ? 96 : 104,
-      child: ModeCard(
-        variant: ModeCardVariant.flatBordered,
-        radius: 8,
-        padding: EdgeInsets.zero,
-        onTap: onTap,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Icon(
-                Icons.add_photo_alternate_outlined,
-                color: onTap == null ? DC.muted.withValues(alpha: 0.5) : DC.muted,
-                size: 26,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFDDDDDD)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(icon, size: 15, color: color),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF555555),
               ),
-              const SizedBox(height: 6),
-              Text(
-                wide ? '사진 여러 장 추가 (필수)' : '사진 여러 장 추가',
-                style: AppText.metricLabel,
+            ),
+            if (badge != null) ...<Widget>[
+              const SizedBox(width: 5),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  badge!,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 서식 버튼 (B, I, U)
+class _FormatButton extends StatelessWidget {
+  const _FormatButton({
+    required this.label,
+    this.fontWeight,
+    this.fontStyle,
+    this.textDecoration,
+    this.onTap,
+  });
+
+  final String label;
+  final FontWeight? fontWeight;
+  final FontStyle? fontStyle;
+  final TextDecoration? textDecoration;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFDDDDDD)),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: fontWeight ?? FontWeight.normal,
+              fontStyle: fontStyle ?? FontStyle.normal,
+              decoration: textDecoration,
+              color: const Color(0xFF333333),
+            ),
           ),
         ),
       ),
@@ -1288,59 +2012,84 @@ class _AddFeedImagesButton extends StatelessWidget {
   }
 }
 
-class _PendingFeedImage extends StatelessWidget {
-  const _PendingFeedImage({
+/// 텍스트 색상 버튼
+class _TextColorButton extends StatelessWidget {
+  const _TextColorButton({
+    required this.color,
+    this.onTap,
+  });
+
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: color,
+          border: Border.all(color: const Color(0xFFDDDDDD)),
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
+  }
+}
+
+/// SmartEditor 스타일 이미지 프리뷰
+class _SmartEditorImagePreview extends StatelessWidget {
+  const _SmartEditorImagePreview({
     required this.image,
-    required this.index,
-    required this.onRemove,
+    this.onRemove,
   });
 
   final PickedFile image;
-  final int index;
   final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: 104,
-      child: Stack(
-        children: <Widget>[
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.memory(
-                Uint8List.fromList(image.bytes),
-                fit: BoxFit.cover,
+    return Stack(
+      children: <Widget>[
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFDDDDDD)),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: Image.memory(
+              Uint8List.fromList(image.bytes),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        if (onRemove != null)
+          Positioned(
+            top: 2,
+            right: 2,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 12,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
-          Positioned(
-            left: 6,
-            bottom: 6,
-            child: ModeChip(
-              label: index == 0 ? '대표' : '${index + 1}',
-              background: Colors.black.withValues(alpha: 0.68),
-              foreground: Colors.white,
-            ),
-          ),
-          Positioned(
-            right: 4,
-            top: 4,
-            child: IconButton.filled(
-              onPressed: onRemove,
-              tooltip: '사진 삭제',
-              icon: const Icon(Icons.close_rounded, size: 14),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.black.withValues(alpha: 0.68),
-                foregroundColor: Colors.white,
-                minimumSize: const Size.square(26),
-                maximumSize: const Size.square(26),
-                padding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
